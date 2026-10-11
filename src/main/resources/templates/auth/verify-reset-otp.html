@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xác minh OTP | CinemaSystem</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#08090d;color:#f7f5f2;font-family:Arial,sans-serif;display:grid;place-items:center;padding:24px;background-image:linear-gradient(90deg,#080509d9,#08090df0),url('/images/cinema-login-hero.png');background-size:cover;background-position:center}
+.card{width:min(100%,470px);padding:38px;border:1px solid #3c3b41;border-radius:22px;background:rgba(15,16,22,.95);box-shadow:0 24px 70px #0008}
+.brand{color:#f5a04b;font-size:12px;font-weight:bold;letter-spacing:.22em;margin-bottom:24px}
+.eyebrow{color:#f5a04b;font-size:12px;letter-spacing:.15em}
+h1{font-family:Georgia,serif;font-size:34px;font-weight:500;margin:10px 0}
+p{color:#b7b5be;line-height:1.65;font-size:14px}
+label{display:block;font-size:13px;font-weight:bold;margin:24px 0 9px}
+input{width:100%;padding:15px;border:1px solid #444650;border-radius:10px;background:#090a0f;color:white;outline:none;font-size:22px;letter-spacing:.35em;text-align:center}
+input:focus{border-color:#f5a04b;box-shadow:0 0 0 3px #f5a04b25}
+.btn{width:100%;border:0;border-radius:10px;padding:15px;background:linear-gradient(100deg,#f5a04b,#e77a24);color:#1d1007;font-weight:800;cursor:pointer;margin-top:22px}
+.error{color:#ffd09b;background:#6e421b35;border:1px solid #b87a3b;border-radius:9px;padding:12px;font-size:13px;margin:16px 0}
+a{color:#f5a04b;text-decoration:none;display:block;text-align:center;margin-top:24px;font-size:14px}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand">CinemaSystem</div>
+  <div class="eyebrow">Email verification</div>
+  <h1>Nhập mã OTP</h1>
+  <p>Chúng tôi đã gửi mã 6 chữ số đến <strong th:text="${email}">email***@example.com</strong>. Mã có hiệu lực trong 5 phút.</p>
+  <div class="error" th:if="${formError}" th:text="${formError}" role="alert"></div>
+  <form th:action="@{/verify-reset-otp}" th:object="${resetOtpForm}" method="post">
+    <label for="otp">MÃ XÁC MINH</label>
+    <input id="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" th:field="*{otp}" placeholder="••••••" autocomplete="one-time-code" required>
+    <div class="error" th:if="${otpError}" th:text="${otpError}" role="alert"></div>
+    <button class="btn" type="submit">XÁC MINH MÃ</button>
+  </form>
+  <a th:href="@{/forgot-password}">Yêu cầu mã mới</a>
+</main>
+<script>
+(() => { const otp = document.getElementById('otp');
+  otp.addEventListener('input', () => { otp.value = otp.value.replace(/\D/g,'').slice(0,6); });
+})();
+</script>
+</body>
+</html>
