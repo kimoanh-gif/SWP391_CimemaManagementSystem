@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quản lý phòng chiếu</title>
+    <link rel="stylesheet" th:href="@{/static/css/manager-rooms.css}" />
+    <script th:src="@{/static/js/manager-rooms.js}" defer></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <a th:href="@{/manager/dashboard}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/dashboard') ? 'active' : ''}">Dashboard</a>
+        <a th:href="@{/manager/movies}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/movies') ? 'active' : ''}">Quản lý phim</a>
+        <a th:href="@{/manager/genres}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/genres') ? 'active' : ''}">Quản lý thể loại</a>
+        <a th:href="@{/manager/rooms}" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/rooms') ? 'active' : ''}">Quản lý phòng</a>
+        <!-- other links -->
+    </nav>
+
+    <!-- Topbar -->
+    <header class="topbar">
+        <h1>Quản lý phòng chiếu</h1>
+    </header>
+
+    <!-- KPI cards -->
+    <section class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-number" th:text="${rooms.size()}">0</div>
+            <div>Tổng số phòng</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-number" th:text="${rooms.?sum(r -> r.capacity)}">0</div>
+            <div>Tổng sức chứa</div>
+        </div>
+        <!-- Add more KPI as needed -->
+    </section>
+
+    <!-- Filter bar -->
+    <section class="filter-bar">
+        <input type="text" placeholder="Tìm kiếm" th:value="${keyword}" name="keyword" id="keyword" />
+        <select name="status" id="status-select">
+            <option th:value="" th:selected="${status == null}">Tất cả trạng thái</option>
+            <option th:value="Ready" th:selected="${status == 'Ready'}">Ready</option>
+            <option th:value="Screening" th:selected="${status == 'Screening'}">Screening</option>
+            <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning</option>
+            <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance</option>
+        </select>
+        <button id="filter-btn" onclick="location.search='keyword=' + document.getElementById('keyword').value + '&status=' + document.getElementById('status-select').value;">Lọc</button>
+        <button id="add-room-btn" class="action-btn">Thêm phòng</button>
+    </section>
+
+    <!-- Room table -->
+    <table class="room-table">
+        <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Loại</th>
+                <th>Sức chứa</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${rooms.empty}">
+                <td colspan="6" style="text-align:center;">Chưa có phòng nào.</td>
+            </tr>
+            <tr th:each="room : ${rooms}">
+                <td th:text="${room.roomCode}">R001</td>
+                <td th:text="${room.roomName}">Phòng 1</td>
+                <td th:text="${room.roomType}">IMAX Laser</td>
+                <td th:text="${room.capacity}">200</td>
+                <td>
+                    <span class="badge" th:classappend="${room.status.toLowerCase()}" th:text="${room.status}">Ready</span>
+                </td>
+                <td>
+                    <button class="action-btn edit-room-btn" th:data-id="${room.roomId}">Sửa</button>
+                    <button class="action-btn deactivate-room-btn" th:data-id="${room.roomId}">Bảo trì</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal for Add / Edit -->
+    <div class="modal" id="room-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thông tin phòng</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div id="form-success" class="success-msg"></div>
+            <div id="form-error" class="error-msg"></div>
+            <form id="room-form">
+                <input type="hidden" name="roomId" />
+                <label>Mã phòng</label>
+                <input type="text" name="roomCode" required />
+                <label>Tên phòng</label>
+                <input type="text" name="roomName" required />
+                <label>Loại phòng</label>
+                <select name="roomType" required>
+                    <option value="IMAX Laser">IMAX Laser</option>
+                    <option value="Gold Class">Gold Class</option>
+                    <option value="Dolby Atmos">Dolby Atmos</option>
+                    <option value="Standard Laser">Standard Laser</option>
+                    <option value="Tech Lab">Tech Lab</option>
+                </select>
+                <label>Sức chứa</label>
+                <input type="number" name="capacity" min="1" max="5000" required />
+                <label>Số hàng (tùy chọn)</label>
+                <input type="number" name="totalRows" min="0" />
+                <label>Số ghế mỗi hàng (tùy chọn)</label>
+                <input type="number" name="seatsPerRow" min="0" />
+                <label>Máy chiếu</label>
+                <input type="text" name="projector" />
+                <label>Hệ thống âm thanh</label>
+                <input type="text" name="soundSystem" />
+                <label>Kích thước màn hình</label>
+                <input type="text" name="screenSize" />
+                <label>Trạng thái</label>
+                <select name="status" required>
+                    <option value="Ready">Ready</option>
+                    <option value="Screening">Screening</option>
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+                <label>Mô tả (tùy chọn)</label>
+                <textarea name="description" rows="3"></textarea>
+                <button type="submit" class="action-btn">Lưu</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
