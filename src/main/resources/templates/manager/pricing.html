@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Giá Vé (Screen 60) - CineVerse Cinema System</title>
+    <link rel="stylesheet" th:href="@{/css/manager-pricing.css}">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <a class="brand" th:href="@{/}">
+        <span class="brand-icon">C</span>
+        CineVerse
+    </a>
+
+    <nav class="nav-menu">
+        <div class="nav-section-title">Hệ Thống Rạp Phim</div>
+        <a th:href="@{/}">⌂ Trang chủ</a>
+        <a th:href="@{/manager/movies}">▣ Quản lý phim (Screen 54)</a>
+        <a th:href="@{/manager/genres}">● Quản lý thể loại (Screen 55)</a>
+
+        <div class="nav-section-title">Vận Hành & Rạp</div>
+        <a th:href="@{/manager/rooms}">◫ Quản lý phòng chiếu (Screen 56)</a>
+        <a class="active" th:href="@{/manager/pricing}">◇ Cấu hình giá vé (Screen 60)</a>
+        <a href="#">◷ Quản lý lịch chiếu</a>
+        <a href="#">♨ Đồ ăn & Thức uống</a>
+        <a href="#">★ Khuyến mãi & Voucher</a>
+        <a href="#">📈 Báo cáo & Thống kê</a>
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="avatar">M</div>
+        <div class="sidebar-user-info">
+            <strong>Quản Lý Rạp</strong>
+            <small>MANAGER</small>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Container -->
+<div class="main">
+    <header class="topbar">
+        <div class="breadcrumbs">
+            Quản Lý › Rạp Phim › <b>Cấu Hình Bảng Giá Vé (Screen 60 / UC-31)</b>
+        </div>
+        <div>
+            <span class="badge badge-active">Chính sách đang áp dụng</span>
+        </div>
+    </header>
+
+    <div class="content-container">
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <!-- Header Actions -->
+        <div class="header-row">
+            <div class="page-title">
+                <h1>Bảng Ma Trận Định Giá Vé</h1>
+                <p>Công thức BR-50: Giá vé đơn vị = (Giá cơ sở suất chiếu + Phụ thu định dạng) × Hệ số giá loại ghế, làm tròn đến 1.000 đ</p>
+            </div>
+            <div class="action-buttons">
+                <button id="btnCreatePricing" class="btn btn-primary">+ Tạo Quy Tắc Định Giá Mới</button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Giá 2D Tiêu Chuẩn</div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(base2D, 0, 'COMMA', 0, 'POINT')} + ' đ'">85.000 đ</div>
+                <div class="kpi-subtitle">Ngày thường (12:00 - 17:00 Standard)</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Giá Vé Trung Bình (ATP)</div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(atp, 0, 'COMMA', 0, 'POINT')} + ' đ'">92.500 đ</div>
+                <div class="kpi-subtitle">Toàn hệ thống phòng chiếu</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Quy Tắc Đang Áp Dụng</div>
+                <div class="kpi-value" th:text="${activeRulesCount}">6</div>
+                <div class="kpi-subtitle">Khung giờ & định dạng hoạt động</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Hệ Thống Phụ Thu Định Dạng</div>
+                <div class="kpi-value">+60.000 đ</div>
+                <div class="kpi-subtitle">Mức phụ thu cao nhất (IMAX Laser)</div>
+            </div>
+        </div>
+
+        <!-- Matrix Table Section -->
+        <div class="card-section">
+            <div class="section-header">
+                <h2>Ma Trận Giá Vé Theo Loại Ghế & Khung Giờ (BR-50)</h2>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="matrix-table">
+                    <thead>
+                    <tr>
+                        <th>Khung Giờ / Định Dạng</th>
+                        <th>Loại Ngày</th>
+                        <th>Giá Cơ Sở 2D</th>
+                        <th>Phụ Thu</th>
+                        <!-- Dynamic Seat Types Columns -->
+                        <th th:each="st : ${seatTypes}">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <span th:text="${st.typeName}">Standard</span>
+                                <span class="multiplier-tag" th:text="'×' + ${st.priceMultiplier}">×1.0</span>
+                                <button class="btn btn-secondary btn-edit-multiplier"
+                                        style="padding: 2px 6px; font-size: 11px;"
+                                        th:data-id="${st.seatTypeId}"
+                                        th:data-name="${st.typeName}"
+                                        th:data-multiplier="${st.priceMultiplier}">Sửa</button>
+                            </div>
+                        </th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${rules}">
+                        <td>
+                            <strong th:text="${r.ruleName}">Quy tắc</strong>
+                            <div style="font-size: 11px; color: var(--text-muted);" th:text="${r.pricingCode} + ' • ' + ${r.experienceType}">CODE</div>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${r.dayType == 'WEEKEND' ? 'badge-inactive' : 'badge-active'}"
+                                  th:text="${r.dayType}">WEEKDAY</span>
+                        </td>
+                        <td class="price-cell" th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">85.000 đ</td>
+                        <td style="color: var(--accent-gold); font-weight: 600;" th:text="'+' + ${#numbers.formatDecimal(r.formatSurcharge, 0, 'COMMA', 0, 'POINT')} + ' đ'">+0 đ</td>
+
+                        <!-- Calculated Prices for Each Seat Type -->
+                        <td th:each="st : ${seatTypes}" class="price-cell">
+                            <span th:if="${matrix.get(r.pricingId) != null and matrix.get(r.pricingId).get(st.seatTypeId) != null}"
+                                  th:text="${#numbers.formatDecimal(matrix.get(r.pricingId).get(st.seatTypeId), 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                85.000 đ
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge" th:classappend="${r.active ? 'badge-active' : 'badge-inactive'}"
+                                  th:text="${r.status}">Active</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-secondary btn-edit-rule"
+                                        style="padding: 4px 8px; font-size: 12px;"
+                                        th:data-id="${r.pricingId}"
+                                        th:data-code="${r.pricingCode}"
+                                        th:data-name="${r.ruleName}"
+                                        th:data-baseprice="${r.basePrice}"
+                                        th:data-surcharge="${r.formatSurcharge}"
+                                        th:data-daytype="${r.dayType}"
+                                        th:data-timeslot="${r.timeSlot}"
+                                        th:data-exptype="${r.experienceType}">
+                                    Sửa
+                                </button>
+                                <form th:action="@{'/manager/pricing/status/' + ${r.pricingId}}" method="post" style="display:inline;">
+                                    <input type="hidden" name="status" th:value="${r.active ? 'Inactive' : 'Active'}">
+                                    <button type="submit" class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;"
+                                            th:text="${r.active ? 'Khóa' : 'Bật'}">Đổi</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Premium Surcharge Cards -->
+            <div class="surcharge-grid">
+                <div class="surcharge-card">
+                    <span class="surcharge-name">Phụ thu RealD 3D</span>
+                    <span class="surcharge-val">+20.000 đ</span>
+                </div>
+                <div class="surcharge-card">
+                    <span class="surcharge-name">Phụ thu Dolby Atmos</span>
+                    <span class="surcharge-val">+15.000 đ</span>
+                </div>
+                <div class="surcharge-card">
+                    <span class="surcharge-name">Phụ thu IMAX Laser</span>
+                    <span class="surcharge-val">+60.000 đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Tạo / Sửa Quy Tắc Định Giá -->
+<div id="pricingModal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Cấu Hình Quy Tắc Định Giá</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form th:action="@{/manager/pricing/save}" th:object="${pricingForm}" method="post">
+            <input type="hidden" id="formPricingId" th:field="*{pricingId}">
+
+            <div class="form-group">
+                <label>Mã Quy Tắc (Pricing Code) *</label>
+                <input type="text" id="formPricingCode" th:field="*{pricingCode}" class="form-control" placeholder="VD: PRICE-WD-STD" required>
+            </div>
+            <div class="form-group">
+                <label>Tên Quy Tắc Định Giá *</label>
+                <input type="text" id="formRuleName" th:field="*{ruleName}" class="form-control" placeholder="VD: Ngày thường - Khung giờ chuẩn" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Loại Ngày *</label>
+                    <select id="formDayType" th:field="*{dayType}" class="form-control">
+                        <option value="WEEKDAY">Ngày trong tuần (Mon-Fri)</option>
+                        <option value="WEEKEND">Cuối tuần (Sat-Sun)</option>
+                        <option value="HOLIDAY">Ngày lễ tết</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Khung Giờ *</label>
+                    <select id="formTimeSlot" th:field="*{timeSlot}" class="form-control">
+                        <option value="MORNING">Buổi sáng (< 12:00)</option>
+                        <option value="STANDARD">Tiêu chuẩn (12:00 - 17:00)</option>
+                        <option value="GOLDEN_HOUR">Giờ vàng tối (> 17:00)</option>
+                        <option value="ALL_DAY">Cả ngày</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Giá Vé Cơ Sở 2D (VND) *</label>
+                    <input type="number" id="formBasePrice" th:field="*{basePrice}" class="form-control" step="1000" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Phụ Thu Định Dạng (VND) *</label>
+                    <input type="number" id="formFormatSurcharge" th:field="*{formatSurcharge}" class="form-control" step="1000" min="0" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Định Dạng Trải Nghiệm</label>
+                <select id="formExperienceType" th:field="*{experienceType}" class="form-control">
+                    <option value="2D Digital">2D Digital</option>
+                    <option value="3D RealD">3D RealD</option>
+                    <option value="Dolby Atmos">Dolby Atmos</option>
+                    <option value="IMAX Laser">IMAX Laser</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
+                <button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Chỉnh Sửa Multiplier Loại Ghế -->
+<div id="multiplierModal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Chỉnh Sửa Hệ Số Giá Ghế (Multiplier)</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form th:action="@{/manager/pricing/multiplier}" method="post">
+            <input type="hidden" id="multSeatTypeId" name="seatTypeId">
+
+            <div class="form-group">
+                <label>Loại Ghế</label>
+                <strong id="multTypeName" style="color: #fff; font-size: 16px;">Standard</strong>
+            </div>
+
+            <div class="form-group">
+                <label>Hệ Số Giá Multiplier (0.50 - 3.00) *</label>
+                <input type="number" id="multInput" name="multiplier" class="form-control" step="0.05" min="0.50" max="3.00" required>
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                    Ví dụ: 1.00 (Chuẩn), 1.25 (VIP +25%), 1.80 (Ghế đôi +80%).
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
+                <button type="submit" class="btn btn-primary">Cập Nhật Hệ Số</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/manager-pricing.js}"></script>
+</body>
+</html>
