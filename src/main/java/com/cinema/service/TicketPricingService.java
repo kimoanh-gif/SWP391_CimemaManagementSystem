@@ -108,6 +108,33 @@ public class TicketPricingService {
                 .orElseThrow(() -> new IllegalStateException("Lỗi tạo loại ghế mới"));
     }
 
+    @Transactional
+    public SeatType updateSeatType(int id, SeatTypeForm form) {
+        SeatType existing = getSeatTypeById(id);
+        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) {
+            throw new InvalidPricingConfigurationException("Hệ số giá ghế phải nằm trong khoảng từ 0.50 đến 3.00");
+        }
+        seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
+            if (!s.getSeatTypeId().equals(id)) {
+                throw new InvalidPricingConfigurationException("Mã loại ghế '" + form.getTypeCode() + "' đã được sử dụng");
+            }
+        });
+        seatTypeDao.findByName(form.getTypeName().trim()).ifPresent(s -> {
+            if (!s.getSeatTypeId().equals(id)) {
+                throw new InvalidPricingConfigurationException("Tên loại ghế '" + form.getTypeName() + "' đã được sử dụng");
+            }
+        });
+        seatTypeDao.update(id, form);
+        return getSeatTypeById(id);
+    }
+
+    @Transactional
+    public SeatType updateSeatTypeStatus(int id, String status) {
+        SeatType existing = getSeatTypeById(id);
+        seatTypeDao.updateStatus(id, status);
+        return getSeatTypeById(id);
+    }
+
     /**
      * Calculates the calculated ticket unit price according to BR-50:
      * Ticket unit price = Showtime base ticket price x SeatType price multiplier,
