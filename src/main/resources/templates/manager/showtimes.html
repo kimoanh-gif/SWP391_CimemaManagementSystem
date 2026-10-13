@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Suất Chiếu (Screen 59) - CineVerse Cinema System</title>
+    <link rel="stylesheet" th:href="@{/css/manager-showtimes.css}">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <a class="brand" th:href="@{/}">
+        <span class="brand-icon">C</span>
+        CineVerse
+    </a>
+
+    <nav class="nav-menu">
+        <div class="nav-section-title">Hệ Thống Rạp Phim</div>
+        <a th:href="@{/}">⌂ Trang chủ</a>
+        <a th:href="@{/manager/movies}">▣ Quản lý phim (Screen 54)</a>
+        <a th:href="@{/manager/genres}">● Quản lý thể loại (Screen 55)</a>
+
+        <div class="nav-section-title">Vận Hành & Rạp</div>
+        <a th:href="@{/manager/rooms}">◫ Quản lý phòng chiếu (Screen 56)</a>
+        <a class="active" th:href="@{/manager/showtimes}">◷ Quản lý lịch chiếu (Screen 59)</a>
+        <a th:href="@{/manager/pricing}">◇ Cấu hình giá vé (Screen 60)</a>
+        <a href="#">♨ Đồ ăn & Thức uống</a>
+        <a href="#">★ Khuyến mãi & Voucher</a>
+        <a href="#">📈 Báo cáo & Thống kê</a>
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="avatar">M</div>
+        <div class="sidebar-user-info">
+            <strong>Quản Lý Rạp</strong>
+            <small>MANAGER</small>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Container -->
+<div class="main">
+    <header class="topbar">
+        <div class="breadcrumbs">
+            Quản Lý › Rạp Phim › <b>Quản Lý Lịch Chiếu / Suất Chiếu (Screen 59 / UC-30)</b>
+        </div>
+        <div>
+            <span class="badge badge-showing">Hệ thống lập lịch sẵn sàng</span>
+        </div>
+    </header>
+
+    <div class="content-container">
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <!-- Header Actions -->
+        <div class="header-row">
+            <div class="page-title">
+                <h1>Quản Lý Lịch Chiếu & Suất Chiếu</h1>
+                <p>Tuân thủ BR-07 (Phim đang/sắp chiếu), BR-08 (Phòng sẵn sàng), BR-09 (Không trùng lịch + 15p dọn phòng), BR-54 & BR-55</p>
+            </div>
+            <div class="action-buttons">
+                <button id="btnCreateShowtime" class="btn btn-primary">+ Tạo Lịch Chiếu Mới</button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Tổng Suất Chiếu Ngày Chọn</div>
+                <div class="kpi-value" th:text="${totalShowtimes}">1</div>
+                <div class="kpi-subtitle">Ngày: <b th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}">13/10/2026</b></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Đã Lên Lịch (Scheduled)</div>
+                <div class="kpi-value" th:text="${scheduledCount}">1</div>
+                <div class="kpi-subtitle">Chờ đến giờ chiếu</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Đang Chiếu (Showing)</div>
+                <div class="kpi-value" th:text="${showingCount}">0</div>
+                <div class="kpi-subtitle">Suất chiếu diễn ra tại phòng</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Thời Gian Dọn Phòng (Buffer)</div>
+                <div class="kpi-value" th:text="${cleaningBuffer} + ' phút'">15 phút</div>
+                <div class="kpi-subtitle">Tự động cộng sau mỗi suất (BR-09)</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form th:action="@{/manager/showtimes}" method="get" class="filter-bar">
+            <div class="filter-group">
+                <label>Chọn Ngày:</label>
+                <input type="date" name="date" class="form-control" th:value="${selectedDate}">
+            </div>
+
+            <div class="filter-group">
+                <label>Phòng Chiếu:</label>
+                <select name="roomId" class="form-control">
+                    <option value="0">-- Tất cả phòng --</option>
+                    <option th:each="r : ${allRooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.roomName} + ' (' + ${r.roomType} + ')'"
+                            th:selected="${selectedRoomId == r.roomId}">Phòng 1</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Phim:</label>
+                <select name="movieId" class="form-control">
+                    <option value="0">-- Tất cả phim --</option>
+                    <option th:each="m : ${allMovies}"
+                            th:value="${m.movieId}"
+                            th:text="${m.title} + ' (' + ${m.status} + ')'"
+                            th:selected="${selectedMovieId == m.movieId}">Phim</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Trạng Thái:</label>
+                <select name="status" class="form-control">
+                    <option value="ALL">-- Tất cả --</option>
+                    <option value="Scheduled" th:selected="${selectedStatus == 'Scheduled'}">Scheduled</option>
+                    <option value="Showing" th:selected="${selectedStatus == 'Showing'}">Showing</option>
+                    <option value="Stopped" th:selected="${selectedStatus == 'Stopped'}">Stopped</option>
+                    <option value="Cancelled" th:selected="${selectedStatus == 'Cancelled'}">Cancelled</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-secondary">Lọc Lịch Chiếu</button>
+        </form>
+
+        <!-- Showtimes Table Section -->
+        <div class="card-section">
+            <div class="section-header">
+                <h2>Danh Sách Suất Chiếu Trong Ngày</h2>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="showtime-table">
+                    <thead>
+                    <tr>
+                        <th>Khung Giờ Chiếu</th>
+                        <th>Phim Chiếu (BR-07)</th>
+                        <th>Phòng Chiếu (BR-08)</th>
+                        <th>Thời Lượng</th>
+                        <th>Giá Vé Cơ Sở</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(showtimes)}">
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                            Chưa có suất chiếu nào cho ngày hoặc bộ lọc đã chọn. Bấm <b>+ Tạo Lịch Chiếu Mới</b> để xếp lịch.
+                        </td>
+                    </tr>
+                    <tr th:each="st : ${showtimes}">
+                        <td>
+                            <div class="time-slot">
+                                <span th:text="${#temporals.format(st.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(st.endTime, 'HH:mm')}">14:00 - 16:30</span>
+                            </div>
+                            <div class="buffer-indicator">+ 15p dọn dẹp đến <span th:text="${#temporals.format(st.endTime.plusMinutes(15), 'HH:mm')}">16:45</span></div>
+                        </td>
+                        <td>
+                            <strong th:text="${st.movieTitle}" style="color: #fff; font-size: 15px;">Tên Phim</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);" th:text="'Độ tuổi: ' + ${st.movieAgeRating}">T16</div>
+                        </td>
+                        <td>
+                            <span th:text="${st.roomName}" style="font-weight: 600;">Phòng Chiếu</span>
+                            <div style="font-size: 12px; color: var(--text-secondary);" th:text="${st.roomType} + ' • ' + ${st.roomCapacity} + ' ghế'">Laser</div>
+                        </td>
+                        <td th:text="${st.movieDuration} + ' phút'">120 phút</td>
+                        <td style="font-weight: 700; color: #fff;" th:text="${#numbers.formatDecimal(st.baseTicketPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">85.000 đ</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${st.status == 'Scheduled' ? 'badge-scheduled' : (st.status == 'Showing' ? 'badge-showing' : 'badge-stopped')}"
+                                  th:text="${st.status}">Scheduled</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-edit-showtime"
+                                        style="padding: 4px 10px; font-size: 12px;"
+                                        th:data-id="${st.showtimeId}"
+                                        th:data-movieid="${st.movieId}"
+                                        th:data-roomid="${st.roomId}"
+                                        th:data-starttime="${#temporals.format(st.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                        th:data-price="${st.baseTicketPrice}">Sửa</button>
+                                <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/stop'}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px; color: #f87171;"
+                                            onclick="return confirm('Bạn có chắc chắn muốn dừng/hủy suất chiếu này?');">Dừng</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Tạo / Sửa Suất Chiếu -->
+<div id="showtimeModal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Lập Lịch Chiếu Phim Mới</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form th:action="@{/manager/showtimes/save}" th:object="${showtimeForm}" method="post">
+            <input type="hidden" id="formShowtimeId" th:field="*{showtimeId}">
+
+            <!-- Select Movie (BR-07: Only Upcoming or Now Showing) -->
+            <div class="form-group">
+                <label>Chọn Phim (Chỉ hiển thị phim Đang chiếu & Sắp chiếu - BR-07) *</label>
+                <select id="formMovieId" th:field="*{movieId}" class="form-control" required>
+                    <option value="">-- Chọn phim --</option>
+                    <option th:each="m : ${eligibleMovies}"
+                            th:value="${m.movieId}"
+                            th:data-duration="${m.duration}"
+                            th:text="${m.title} + ' (' + ${m.duration} + 'p, ' + ${m.status} + ')'">Phim</option>
+                </select>
+            </div>
+
+            <!-- Select Room (BR-08: Only Ready or Screening) -->
+            <div class="form-group">
+                <label>Chọn Phòng Chiếu (Chỉ hiển thị phòng Sẵn sàng - BR-08) *</label>
+                <select id="formRoomId" th:field="*{roomId}" class="form-control" required>
+                    <option value="">-- Chọn phòng chiếu --</option>
+                    <option th:each="r : ${eligibleRooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.roomName} + ' [' + ${r.roomType} + ' - ' + ${r.capacity} + ' ghế]' ">Phòng</option>
+                </select>
+            </div>
+
+            <!-- Start Time -->
+            <div class="form-group">
+                <label>Thời Gian Bắt Đầu Chiếu (Tương lai - BR-55) *</label>
+                <input type="datetime-local" id="formStartTime" th:field="*{startTime}" class="form-control" required>
+            </div>
+
+            <!-- Calculated End Time preview -->
+            <div class="form-group" style="background-color: #1a2233; padding: 12px; border-radius: 8px;">
+                <label style="margin: 0; color: var(--text-muted);">Thời Gian Kết Thúc Dự Kiến (BR-55 + Buffer BR-09):</label>
+                <div id="endTimeDisplay" style="color: var(--accent-gold); font-weight: 700; margin-top: 4px; font-size: 15px;">--:--</div>
+            </div>
+
+            <!-- Base Ticket Price -->
+            <div class="form-group">
+                <label>Giá Vé Cơ Sở (Base Price - VND) *</label>
+                <input type="number" id="formBaseTicketPrice" th:field="*{baseTicketPrice}" class="form-control" step="1000" min="0" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
+                <button type="submit" class="btn btn-primary">Xác Nhận Lưu Lịch Chiếu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/manager-showtimes.js}"></script>
+</body>
+</html>
