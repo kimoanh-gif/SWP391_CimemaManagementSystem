@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Ghế Phòng Chiếu (Screen 58) - CineVerse Cinema System</title>
+    <link rel="stylesheet" th:href="@{/css/manager-seats.css}">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <a class="brand" th:href="@{/manager/dashboard}">
+        <span class="brand-icon">C</span>
+        CineVerse
+    </a>
+
+    <nav class="nav-menu">
+        <div class="nav-section-title">Hệ Thống Rạp Phim</div>
+        <a th:href="@{/manager/dashboard}">⌂ Tổng quan (Dashboard)</a>
+        <a th:href="@{/manager/movies}">▣ Quản lý phim (Screen 54)</a>
+        <a th:href="@{/manager/genres}">● Quản lý thể loại (Screen 55)</a>
+
+        <div class="nav-section-title">Vận Hành & Rạp</div>
+        <a th:href="@{/manager/rooms}">◫ Quản lý phòng chiếu (Screen 56)</a>
+        <a th:href="@{/manager/seat-types}">💺 Quản lý loại ghế (Screen 57)</a>
+        <a class="active" th:href="@{/manager/seats}">▦ Sơ đồ bố trí ghế (Screen 58)</a>
+        <a th:href="@{/manager/showtimes}">◷ Quản lý lịch chiếu (Screen 59)</a>
+        <a th:href="@{/manager/pricing}">◇ Cấu hình giá vé (Screen 60)</a>
+        <a th:href="@{/manager/fb}">♨ Đồ ăn & Thức uống (Screen 61)</a>
+
+        <div class="nav-section-title">Mở Rộng</div>
+        <a href="#" class="nav-disabled">★ Khuyến mãi & Voucher</a>
+        <a href="#" class="nav-disabled">📈 Báo cáo & Thống kê</a>
+        <a href="#" class="nav-disabled">📰 Tin tức & Bài viết</a>
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="avatar">M</div>
+        <div class="sidebar-user-info">
+            <strong>Quản Lý Rạp</strong>
+            <small>MANAGER</small>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Container -->
+<div class="main">
+    <header class="topbar">
+        <div class="breadcrumbs">
+            <a th:href="@{/manager/dashboard}">Quản Lý</a> › Rạp Phim › <b>Sơ Đồ Bố Trí Ghế (Screen 58 / UC-29)</b>
+        </div>
+        <div>
+            <span class="badge badge-active">Trực Quan Hóa Phòng Chiếu</span>
+        </div>
+    </header>
+
+    <div class="content-container">
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <!-- Room Selector & Actions -->
+        <div class="header-row">
+            <div class="page-title">
+                <h1>Quản Lý Sơ Đồ Ghế Ngồi</h1>
+                <p>Cấu hình vị trí, phân bổ loại ghế (Standard, VIP, Couple) và quản lý trạng thái bảo trì từng ghế trong phòng chiếu.</p>
+            </div>
+            <div class="action-buttons" th:if="${selectedRoom != null}">
+                <form th:action="@{/manager/seats/generate-default}" method="post" style="display:inline;">
+                    <input type="hidden" name="roomId" th:value="${selectedRoom.roomId}">
+                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Bạn có chắc muốn tự động khởi tạo lại sơ đồ tiêu chuẩn cho phòng này?');">
+                        ⚡ Khởi Tạo Sơ Đồ Chuẩn
+                    </button>
+                </form>
+                <a th:href="@{'/manager/seats?roomId=' + ${selectedRoom.roomId}}" class="btn btn-secondary">
+                    ↻ Tải Lại
+                </a>
+            </div>
+        </div>
+
+        <!-- Room Selection Bar -->
+        <div class="filter-bar">
+            <form method="get" th:action="@{/manager/seats}" class="filter-form">
+                <div class="filter-group">
+                    <label>Chọn Phòng Chiếu:</label>
+                    <select name="roomId" onchange="this.form.submit()" class="room-select">
+                        <option th:each="r : ${rooms}"
+                                th:value="${r.roomId}"
+                                th:text="${r.roomName + ' (' + r.roomCode + ' - ' + r.roomType + ')'}"
+                                th:selected="${selectedRoom != null and selectedRoom.roomId == r.roomId}">
+                            Phòng 01
+                        </option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Room Info Summary & KPI -->
+        <div class="room-summary" th:if="${selectedRoom != null}">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Phòng Chiếu</div>
+                    <div class="kpi-value" th:text="${selectedRoom.roomName}">Phòng 01</div>
+                    <div class="kpi-subtitle" th:text="${selectedRoom.roomType + ' • Sức chứa: ' + selectedRoom.capacity + ' chỗ'}">Laser</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Tổng Số Ghế Thiết Kế</div>
+                    <div class="kpi-value" th:text="${totalSeats}">96</div>
+                    <div class="kpi-subtitle" th:text="'Lưới: ' + ${selectedRoom.totalRows} + ' hàng × ' + ${selectedRoom.seatsPerRow} + ' ghế'">8 x 12</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Ghế Sẵn Sàng (Active)</div>
+                    <div class="kpi-value" th:text="${activeSeats}">92</div>
+                    <div class="kpi-subtitle">Đang sẵn sàng mở bán</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Bảo Trì / Khóa</div>
+                    <div class="kpi-value" th:text="${maintenanceSeats}">4</div>
+                    <div class="kpi-subtitle">Không thể chọn đặt vé</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Seat Layout Box -->
+        <div class="card-section" th:if="${selectedRoom != null}">
+            <div class="section-header">
+                <h2>Sơ Đồ Phòng Chiếu Trực Quan</h2>
+            </div>
+
+            <!-- Screen Curve Banner -->
+            <div class="screen-area">
+                <div class="screen-curve"></div>
+                <span class="screen-text">MÀN HÌNH CHIẾU / SCREEN</span>
+            </div>
+
+            <!-- Empty Layout State -->
+            <div th:if="${#lists.isEmpty(seats)}" class="empty-state">
+                <p>Phòng này chưa có sơ đồ ghế nào được thiết lập.</p>
+                <form th:action="@{/manager/seats/generate-default}" method="post">
+                    <input type="hidden" name="roomId" th:value="${selectedRoom.roomId}">
+                    <button type="submit" class="btn btn-primary">⚡ Khởi Tạo Sơ Đồ Tự Động Ngay</button>
+                </form>
+            </div>
+
+            <!-- Visual Seat Grid -->
+            <div class="seat-grid-container" th:if="${not #lists.isEmpty(seats)}">
+                <div class="seat-grid">
+                    <div th:each="seat : ${seats}"
+                         class="seat-item"
+                         th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(seat.seatTypeName)))}"
+                         th:data-id="${seat.seatId}"
+                         th:data-roomid="${seat.roomId}"
+                         th:data-row="${seat.rowLabel}"
+                         th:data-num="${seat.seatNumber}"
+                         th:data-type="${seat.seatTypeName}"
+                         th:data-status="${seat.status}"
+                         onclick="openSeatModal(this)">
+                        <span class="seat-label" th:text="${seat.rowLabel + seat.seatNumber}">A1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend Bar -->
+            <div class="legend-bar">
+                <div class="legend-item">
+                    <span class="legend-box seat-standard"></span>
+                    <span>Ghế Thường (Standard)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box seat-vip"></span>
+                    <span>Ghế VIP</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box seat-couple"></span>
+                    <span>Ghế Đôi (Couple)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box seat-front"></span>
+                    <span>Ghế Hàng Đầu (Front)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box seat-maintenance"></span>
+                    <span>Đang Bảo Trì</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box seat-unavailable"></span>
+                    <span>Vô Hiệu Hóa</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Chỉnh Sửa Thuộc Tính Ghế -->
+<div id="seatModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 440px;">
+        <div class="modal-header">
+            <h3 id="seatModalTitle">Cấu Hình Ghế</h3>
+            <button class="modal-close" onclick="closeSeatModal()">&times;</button>
+        </div>
+        <form th:action="@{/manager/seats/update-seat}" method="post">
+            <input type="hidden" id="modalSeatId" name="seatId">
+            <input type="hidden" id="modalRoomId" name="roomId">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Vị Trí Ghế:</label>
+                    <strong id="modalSeatPos" style="color: var(--accent-gold); font-size: 18px;">A1</strong>
+                </div>
+                <div class="form-group">
+                    <label>Phân Loại Ghế: <span class="required">*</span></label>
+                    <select id="modalSeatTypeName" name="seatTypeName" required>
+                        <option th:each="st : ${seatTypes}"
+                                th:value="${st.typeName}"
+                                th:text="${st.typeName + ' (×' + st.priceMultiplier + ')'}">Standard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Trạng Thái Ghế: <span class="required">*</span></label>
+                    <select id="modalSeatStatus" name="status" required>
+                        <option value="Active">Hoạt động (Active)</option>
+                        <option value="Maintenance">Bảo trì (Maintenance)</option>
+                        <option value="Unavailable">Không sử dụng (Unavailable)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeSeatModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/manager-seats.js}"></script>
+</body>
+</html>
