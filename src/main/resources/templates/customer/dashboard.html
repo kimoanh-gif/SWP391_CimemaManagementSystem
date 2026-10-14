@@ -1,9 +1,20 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Customer Dashboard</title></head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Customer Dashboard | CineVerse</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head>
 <body>
-<h1>Customer Dashboard</h1>
-<p>Xin chào khách hàng.</p>
-<form th:action="@{/logout}" method="post"><button type="submit">Đăng xuất</button></form>
+<header class="site-header">
+    <a class="brand" th:href="@{/customer/dashboard}"><span>C</span>CineVerse</a>
+    <nav><a class="active" th:href="@{/customer/dashboard}">Home</a><a th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/profile}">Profile</a></nav>
+    <div class="account-actions"><span th:text="${session.loggedInFullName}">Customer</span><form th:action="@{/logout}" method="post"><button class="link-button" type="submit">Sign out</button></form></div>
+</header>
+<main class="booking-shell">
+    <section class="hero-row">
+        <div><p class="eyebrow">Welcome to CineVerse</p><h1>Your next movie night starts here.</h1><p class="lead">Browse upcoming showtimes, choose your seats, and add your favorite snacks.</p></div>
+    </section>
+    <section class="movie-list">
+        <article class="panel empty-state"><span>🎟️</span><h2>Ready to book?</h2><p>Choose a movie and showtime to begin your booking.</p><p><a class="button primary" th:href="@{/customer/booking}">Browse Movies &amp; Showtimes</a></p></article>
+        <article class="panel empty-state"><span>👤</span><h2>Manage your account</h2><p>Review your personal details and membership points.</p><p><a class="button secondary" th:href="@{/customer/profile}">View My Profile</a></p></article>
+    </section>
+</main>
 </body>
 </html>
