@@ -8,20 +8,16 @@
 </head>
 <body>
 <aside class="sidebar">
-    <a class="brand" th:href="@{/}">
+    <a class="brand" th:href="@{/customer/dashboard}">
         <span class="brand-icon">C</span>
         CineVerse
     </a>
 
     <nav class="nav-menu">
-        <a th:href="@{/}">⌂ Home</a>
-        <a href="#">▣ Movies</a>
-        <a href="#">◷ Showtimes</a>
-        <a href="#">◫ Booking History</a>
-        <a href="#">◇ My Tickets</a>
-        <a href="#">★ Loyalty</a>
+        <a th:href="@{/customer/dashboard}">⌂ Home</a>
+        <a th:href="@{/customer/booking}">▣ Movies &amp; Showtimes</a>
         <a class="active"
-           th:href="@{/customer/profile(accountId=${profile.accountId})}">
+           th:href="@{/customer/profile}">
             ● Profile
         </a>
     </nav>
@@ -55,7 +51,7 @@
             </div>
 
             <a class="button button-primary"
-               th:href="@{/customer/profile/edit(accountId=${profile.accountId})}">
+               th:href="@{/customer/profile/edit}">
                 ✎ Edit Profile
             </a>
         </div>
@@ -127,11 +123,10 @@
                     <h3>Account Hub</h3>
 
                     <nav class="quick-links">
-                        <a th:href="@{/customer/profile/edit(accountId=${profile.accountId})}">
+                        <a th:href="@{/customer/profile/edit}">
                             <span>Edit Personal Profile</span><span>→</span>
                         </a>
-                        <a href="#"><span>Booking History</span><span>→</span></a>
-                        <a href="#"><span>My Tickets</span><span>→</span></a>
+                        <a th:href="@{/customer/booking}"><span>Browse Movies &amp; Showtimes</span><span>→</span></a>
                     </nav>
                 </section>
             </div>
@@ -164,7 +159,7 @@
 
                         <span class="detail-value"
                               th:if="${profile.dateOfBirth}"
-                              th:text="${#temporals.format(profile.dateOfBirth, 'dd/MM/yyyy')}">
+                              th:text="${#temporals.format(profile.dateOfBirth, 'MMM d, yyyy')}">
                         </span>
 
                         <span class="detail-value"
@@ -196,7 +191,7 @@
 
                 <div class="actions">
                     <a class="button button-primary"
-                       th:href="@{/customer/profile/edit(accountId=${profile.accountId})}">
+                       th:href="@{/customer/profile/edit}">
                         Edit Profile
                     </a>
                 </div>

@@ -88,6 +88,12 @@ public class SessionService {
         return (id instanceof Integer i) ? i : null;
     }
 
+    public void updateProfileSnapshot(HttpSession session, String fullName, String phone) {
+        if (session == null) return;
+        session.setAttribute(ATTR_FULL_NAME, fullName);
+        session.setAttribute(ATTR_PHONE, phone);
+    }
+
     public boolean hasRole(HttpSession session, String... allowed) {
         String role = currentRole(session);
         if (role == null) return false;

@@ -10,11 +10,11 @@ import java.time.LocalDate;
 public class ProfileUpdateForm {
 
     @NotBlank(message = "Full name is required.")
-    @Size(max = 100, message = "Full name must not exceed 100 characters.")
+    @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters.")
     private String fullName;
 
     @Pattern(
-            regexp = "^(0|\\+84)[0-9]{9,10}$",
+            regexp = "^(0[0-9]{9}|\\+84[0-9]{9})$",
             message = "Enter a valid Vietnamese phone number."
     )
     private String phone;
@@ -39,7 +39,7 @@ public class ProfileUpdateForm {
     }
 
     public void setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = fullName == null ? null : fullName.trim();
     }
 
     public String getPhone() {
@@ -47,7 +47,7 @@ public class ProfileUpdateForm {
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        this.phone = phone == null || phone.isBlank() ? null : phone.trim();
     }
 
     public LocalDate getDateOfBirth() {
@@ -63,6 +63,6 @@ public class ProfileUpdateForm {
     }
 
     public void setAddress(String address) {
-        this.address = address;
+        this.address = address == null || address.isBlank() ? null : address.trim();
     }
 }
