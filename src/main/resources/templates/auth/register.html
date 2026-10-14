@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng ký | Cineverse</title>
+<style>
+:root{--red:#e51f35;--ink:#08090e;--muted:#aeb0bb}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",Arial,sans-serif;background:#08090e;color:#fff}
+body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 70% 25%,#351117 0,transparent 40%),#08090e}
+.page{min-height:100vh;display:grid;place-items:center;padding:32px 16px}
+.panel{width:min(100%,560px);padding:clamp(28px,3vw,46px);border:1px solid rgba(255,255,255,.18);border-radius:22px;background:linear-gradient(145deg,rgba(23,23,31,.94),rgba(10,11,17,.96));box-shadow:0 28px 100px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.08)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:15px;letter-spacing:.19em;font-weight:700}.brand-mark{width:34px;height:34px;border-radius:50%;background:var(--red);display:grid;place-items:center;font-size:18px}
+.panel h1{font-family:Georgia,serif;font-size:clamp(28px,2.5vw,38px);font-weight:500;letter-spacing:-.025em;margin:0 0 8px}
+.intro{margin:0 0 26px;color:#aaaab5;font-size:14px;line-height:1.6}
+.notice{padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;margin:0 0 18px}.notice.error{background:rgba(157,22,42,.19);border:1px solid rgba(244,73,94,.55);color:#ffbfc7}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+.field{margin:0 0 16px}.field label{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;margin:0 0 8px;color:#e7e5e8}
+.input-wrap{display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border:1px solid #424653;border-radius:11px;background:rgba(5,7,12,.55);transition:border-color .18s,box-shadow .18s}
+.input-wrap:focus-within{border-color:#e83a4d;box-shadow:0 0 0 3px rgba(229,31,53,.13)}
+.input-wrap.invalid{border-color:#f15b6d}
+.input-wrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px;font-family:inherit}
+.input-wrap input::placeholder{color:#777b87}
+.field-error{margin:6px 2px 0;color:#ff9eaa;font-size:12px;line-height:1.4}
+.password-rules{margin:6px 2px 0;color:#9a9ba5;font-size:11px;line-height:1.5}
+.submit{width:100%;height:54px;border:1px solid #ff4053;border-radius:11px;color:white;background:linear-gradient(180deg,#f02b40,#bd1028);font-size:14px;letter-spacing:.06em;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(200,17,41,.24);transition:filter .18s,transform .18s}
+.submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.bottom{border-top:1px solid rgba(255,255,255,.08);margin-top:22px;padding-top:20px;text-align:center;color:#a6a4ae;font-size:13px}
+.bottom a{color:#ff586a;text-decoration:none;font-weight:700;margin-left:5px}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="panel" aria-labelledby="register-title">
+    <div class="brand"><span class="brand-mark">▶</span><span>CINEMA SYSTEM</span></div>
+    <h1 id="register-title">Tạo tài khoản</h1>
+    <p class="intro">Đăng ký để đặt vé, nhận điểm thưởng và nhận khuyến mãi từ Cineverse.</p>
+
+    <div class="notice error" role="alert" th:if="${formError}" th:text="${formError}"></div>
+
+    <form th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
+      <div class="field" th:classappend="${usernameError != null} ? 'has-error' : ''">
+        <label for="username">TÊN ĐĂNG NHẬP</label>
+        <div class="input-wrap" th:classappend="${usernameError != null} ? 'invalid' : ''">
+          <input id="username" type="text" th:field="*{username}" autocomplete="username" maxlength="50" placeholder="vi_du_123" required>
+        </div>
+        <p class="field-error" th:if="${usernameError}" th:text="${usernameError}"></p>
+      </div>
+
+      <div class="field" th:classappend="${emailError != null} ? 'has-error' : ''">
+        <label for="email">EMAIL</label>
+        <div class="input-wrap" th:classappend="${emailError != null} ? 'invalid' : ''">
+          <input id="email" type="email" th:field="*{email}" autocomplete="email" maxlength="255" placeholder="name@example.com" required>
+        </div>
+        <p class="field-error" th:if="${emailError}" th:text="${emailError}"></p>
+      </div>
+
+      <div class="field" th:classappend="${passwordError != null} ? 'has-error' : ''">
+        <label for="password">MẬT KHẨU</label>
+        <div class="input-wrap" th:classappend="${passwordError != null} ? 'invalid' : ''">
+          <input id="password" type="password" th:field="*{password}" autocomplete="new-password" maxlength="128" placeholder="≥ 8 ký tự, có chữ và số" required>
+        </div>
+        <p class="password-rules">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và chữ số.</p>
+        <p class="field-error" th:if="${passwordError}" th:text="${passwordError}"></p>
+      </div>
+
+      <div class="field" th:classappend="${phoneError != null} ? 'has-error' : ''">
+        <label for="phone">SỐ ĐIỆN THOẠI <span style="color:#666">(tuỳ chọn)</span></label>
+        <div class="input-wrap" th:classappend="${phoneError != null} ? 'invalid' : ''">
+          <input id="phone" type="tel" th:field="*{phone}" autocomplete="tel" maxlength="15" placeholder="0912345678">
+        </div>
+        <p class="field-error" th:if="${phoneError}" th:text="${phoneError}"></p>
+      </div>
+
+      <button class="submit" type="submit">ĐĂNG KÝ &amp; GỬI OTP</button>
+    </form>
+
+    <div class="bottom">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></div>
+  </section>
+</main>
+</body>
+</html>
