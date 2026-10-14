@@ -3,13 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bắp Nước &amp; F&amp;B – Royally Cinema Admin</title>
+    <title>Quản Lý Dịch Vụ Ẩm Thực &amp; Combo Bắp Nước (F&amp;B) – Royally Cinema Admin</title>
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
     <style>
+        .fb-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 1200px) {
+            .fb-layout { grid-template-columns: 1fr; }
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .cat-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-700);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .cat-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
         .fb-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 16px;
         }
         .fb-card {
             background: #fff;
@@ -20,89 +51,158 @@
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .fb-card:hover {
             box-shadow: var(--shadow-md);
             border-color: var(--primary);
             transform: translateY(-2px);
         }
+        .fb-thumb-wrap {
+            position: relative;
+            width: 100%;
+            height: 140px;
+            background: #E5E7EB;
+            overflow: hidden;
+        }
         .fb-thumb {
             width: 100%;
-            height: 160px;
+            height: 100%;
             object-fit: cover;
-            background: #E5E7EB;
         }
+        .badge-tag-wrap {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        .tag-pill {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tag-bestseller { background: #2563EB; color: #fff; }
+        .tag-limited    { background: #DC2626; color: #fff; }
+
         .fb-body {
-            padding: 16px;
+            padding: 14px 16px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
-        .fb-meta-row {
+        .fb-card-title-row {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-        }
-        .fb-sku {
-            font-size: 11px;
-            font-family: monospace;
-            font-weight: 700;
-            color: var(--text-400);
-            background: var(--bg-body);
-            padding: 2px 6px;
-            border-radius: 4px;
+            gap: 8px;
         }
         .fb-title {
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 700;
             color: var(--text-900);
             margin: 0;
             line-height: 1.3;
         }
         .fb-desc {
-            font-size: 12.5px;
+            font-size: 12px;
             color: var(--text-500);
             margin: 0;
             line-height: 1.4;
-            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
-        .fb-combo-list {
-            background: var(--bg-body);
-            padding: 8px 12px;
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            color: var(--text-700);
-        }
+
         .fb-price-row {
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
             padding-top: 10px;
             border-top: 1px solid var(--border);
+            margin-top: auto;
         }
         .fb-selling-price {
             font-size: 18px;
             font-weight: 800;
             color: var(--text-900);
+            line-height: 1.1;
         }
         .fb-cost-price {
-            font-size: 11.5px;
+            font-size: 11px;
             color: var(--text-400);
+            margin-top: 2px;
         }
-        .fb-margin-badge {
-            background: #D1FAE5;
-            color: #065F46;
-            font-size: 11.5px;
+        .margin-pill {
+            font-size: 11px;
             font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 20px;
+            color: #065F46;
+            background: #D1FAE5;
+            padding: 2px 7px;
+            border-radius: 4px;
         }
-        .fb-card-actions {
+
+        .fb-footer-row {
             display: flex;
-            gap: 8px;
-            margin-top: 4px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg-body);
+            border-top: 1px solid var(--border);
+            font-size: 11.5px;
+            color: var(--text-500);
         }
+        .fb-sku-tag {
+            font-family: monospace;
+            font-weight: 700;
+            color: var(--text-500);
+        }
+
+        /* Right Column Inventory Widget */
+        .widget-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .stock-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .stock-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .stock-row-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+        }
+        .stock-name { font-weight: 600; color: var(--text-900); }
+        .stock-val { font-weight: 700; color: var(--text-700); }
+        .stock-val.alert { color: var(--danger); font-weight: 800; }
+        .stock-bar-wrap {
+            height: 6px;
+            background: var(--bg-body);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .stock-bar {
+            height: 100%;
+            border-radius: 10px;
+        }
+        .stock-bar.green  { background: var(--success); }
+        .stock-bar.orange { background: var(--warning); }
+        .stock-bar.red    { background: var(--danger); }
 
         /* Modal classes for manager-fb.js */
         .modal-backdrop {
@@ -145,16 +245,18 @@
 <div class="main-wrapper">
 <div class="page-shell">
 
-    <!-- Page Header -->
+    <!-- Page Header (Image 2) -->
     <div class="page-header">
         <div class="page-header-left">
             <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Hệ thống</a>
+                <a th:href="@{/manager/dashboard}">Quản trị hệ thống</a>
                 <span>›</span>
-                <span>Bắp nước &amp; F&amp;B</span>
+                <span>Dịch vụ ăn uống</span>
+                <span>›</span>
+                <span>Quản lý thực đơn &amp; Combo Bắp Nước (UC-32)</span>
             </div>
-            <h1 class="page-title">Bắp Nước &amp; Ẩm Thực Rạp Chiếu</h1>
-            <p class="page-subtitle">Quản lý thực đơn F&amp;B, các gói combo bắp nước ưu đãi, giá bán lẻ, giá vốn và tỷ suất lợi nhuận (BR-15, BR-51).</p>
+            <h1 class="page-title">Quản Lý Dịch Vụ Ẩm Thực &amp; Combo Bắp Nước (F&amp;B)</h1>
+            <p class="page-subtitle">Quản lý danh mục bắp nước, combo phim độc quyền, định lượng nguyên liệu (BOM), thiết lập giá bán và giám sát kho thời gian thực.</p>
         </div>
         <div class="page-header-actions">
             <button id="btnCreateFB" class="btn btn-primary">+ Thêm món / Combo mới</button>
@@ -173,117 +275,228 @@
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
 
-    <!-- Stats Row -->
+    <!-- 4 Stats Cards (Image 2) -->
     <div class="stats-row">
         <div class="stat-card blue">
-            <div class="stat-label">Tổng mặt hàng F&amp;B</div>
-            <div class="stat-value" th:text="${totalCount}">8</div>
-            <div class="stat-sub">Mặt hàng trong hệ thống</div>
+            <div class="stat-label">Doanh thu F&amp;B hôm nay</div>
+            <div class="stat-value">28.400.000 <small>đ</small></div>
+            <div class="stat-sub"><span class="up">33.7% tổng rạp</span> • Mục tiêu 30%</div>
             <span class="stat-icon">🍿</span>
         </div>
         <div class="stat-card purple">
-            <div class="stat-label">Cinema Combos</div>
-            <div class="stat-value" th:text="${comboCount}">3</div>
-            <div class="stat-sub">Gói combo bắp nước ưu đãi</div>
-            <span class="stat-icon">🥤</span>
+            <div class="stat-label">Tỷ lệ đính kèm (Attach Rate)</div>
+            <div class="stat-value">42.6%</div>
+            <div class="stat-sub"><span class="up">↑ +3.8%</span> • 43 combo / 100 vé</div>
+            <span class="stat-icon">🛒</span>
         </div>
         <div class="stat-card green">
-            <div class="stat-label">Bắp rang &amp; Đồ ăn</div>
-            <div class="stat-value" th:text="${foodCount}">3</div>
-            <div class="stat-sub">Bắp bơ, phô mai, caramel</div>
-            <span class="stat-icon">🌭</span>
+            <div class="stat-label">Bán chạy nhất (Best Seller)</div>
+            <div class="stat-value" style="font-size:20px;">Combo Solo Phô Mai</div>
+            <div class="stat-sub">194 phần đã bán hôm nay</div>
+            <span class="stat-icon">⭐</span>
         </div>
-        <div class="stat-card orange">
-            <div class="stat-label">Thức uống &amp; Nước ngọt</div>
-            <div class="stat-value" th:text="${drinkCount}">2</div>
-            <div class="stat-sub">Nước có gas &amp; nước suối</div>
-            <span class="stat-icon">🧊</span>
+        <div class="stat-card red">
+            <div class="stat-label">Cảnh báo tồn kho</div>
+            <div class="stat-value" style="color:var(--danger)">02 mặt hàng</div>
+            <div class="stat-sub">Hạt bắp Mỹ &amp; Ly Dune 2</div>
+            <span class="stat-icon">⚠️</span>
         </div>
     </div>
 
-    <!-- Toolbar Filter -->
-    <div class="toolbar">
-        <form th:action="@{/manager/fb}" method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;padding:0;">
-            <div class="toolbar-search">
-                <span class="toolbar-search-icon">🔍</span>
-                <input type="text" name="keyword" placeholder="Tên món, mã SKU..." th:value="${keyword}">
+    <!-- 2-Column Layout (Image 2) -->
+    <div class="fb-layout">
+
+        <!-- Left: Category Tabs, Search & Product Cards -->
+        <div>
+            <!-- Category Pills -->
+            <div class="category-tabs">
+                <a th:href="@{/manager/fb}" class="cat-tab" th:classappend="${selectedCategory == 'ALL'} ? ' active' : ''">Tất cả món (<span th:text="${totalCount}">8</span>)</a>
+                <a th:href="@{/manager/fb(category='Combo')}" class="cat-tab" th:classappend="${selectedCategory == 'Combo'} ? ' active' : ''">Combo Rạp (<span th:text="${comboCount}">3</span>)</a>
+                <a th:href="@{/manager/fb(category='Food')}" class="cat-tab" th:classappend="${selectedCategory == 'Food'} ? ' active' : ''">Bắp rang bơ (<span th:text="${foodCount}">3</span>)</a>
+                <a th:href="@{/manager/fb(category='Drink')}" class="cat-tab" th:classappend="${selectedCategory == 'Drink'} ? ' active' : ''">Nước ngọt &amp; Ép (<span th:text="${drinkCount}">2</span>)</a>
+                <a th:href="@{/manager/fb(category='Snack')}" class="cat-tab" th:classappend="${selectedCategory == 'Snack'} ? ' active' : ''">Snack &amp; Hot Food</a>
             </div>
-            <select name="category" onchange="this.form.submit()">
-                <option value="ALL">Tất cả danh mục</option>
-                <option value="Combo" th:selected="${selectedCategory == 'Combo'}">Cinema Combos</option>
-                <option value="Food"  th:selected="${selectedCategory == 'Food'}">Bắp Rang Bơ &amp; Đồ Ăn</option>
-                <option value="Drink" th:selected="${selectedCategory == 'Drink'}">Nước Ngọt &amp; Nước Uống</option>
-                <option value="Snack" th:selected="${selectedCategory == 'Snack'}">Snack &amp; Ăn Vặt</option>
-            </select>
-            <select name="status" onchange="this.form.submit()">
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="Active"   th:selected="${selectedStatus == 'Active'}">Đang Bán (Active)</option>
-                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Ngừng Bán (Inactive)</option>
-            </select>
-            <button type="submit" class="btn btn-secondary btn-sm">🔍 Lọc</button>
-            <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
-        </form>
-    </div>
 
-    <!-- F&B Product Cards Grid -->
-    <div class="fb-grid" th:if="${not #lists.isEmpty(items)}">
-        <div th:each="it : ${items}" class="fb-card">
-            <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
-                 alt="Ảnh sản phẩm" class="fb-thumb">
-            <div class="fb-body">
-                <div class="fb-meta-row">
-                    <span class="badge"
-                          th:classappend="${it.category == 'Combo' ? 'badge-purple' : (it.category == 'Food' ? 'badge-orange' : 'badge-blue')}"
-                          th:text="${it.category}">Combo</span>
-                    <span class="fb-sku" th:text="${it.itemCode}">SKU</span>
-                    <span class="badge" th:classappend="${it.active ? 'badge-green' : 'badge-gray'}" th:text="${it.status}">Active</span>
-                </div>
-
-                <h3 class="fb-title" th:text="${it.itemName}">Tên Món</h3>
-                <p class="fb-desc" th:text="${it.description}">Mô tả chi tiết sản phẩm.</p>
-
-                <!-- Combo components if any -->
-                <div th:if="${it.combo and !#lists.isEmpty(it.comboComponents)}" class="fb-combo-list">
-                    <b>Bao gồm:</b>
-                    <span th:each="comp, iter : ${it.comboComponents}"
-                          th:text="${comp.quantity} + 'x ' + ${comp.componentName} + (iter.last ? '' : ', ')"></span>
-                </div>
-
-                <div class="fb-price-row">
-                    <div>
-                        <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">79.000 đ</div>
-                        <div class="fb-cost-price" th:text="'Vốn: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">Vốn: 25.000 đ</div>
+            <!-- Toolbar Filter -->
+            <div class="toolbar" style="margin-bottom:16px;">
+                <form th:action="@{/manager/fb}" method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;padding:0;">
+                    <div class="toolbar-search">
+                        <span class="toolbar-search-icon">🔍</span>
+                        <input type="text" name="keyword" placeholder="Tìm tên món, mã SKU..." th:value="${keyword}">
                     </div>
-                    <span class="fb-margin-badge" th:text="'Lãi: ' + ${it.profitMarginPercent} + '%'">Lãi: 68%</span>
-                </div>
+                    <select name="status" onchange="this.form.submit()">
+                        <option value="ALL">Tất cả trạng thái</option>
+                        <option value="Active" th:selected="${selectedStatus == 'Active'}">Đang Bán (Active)</option>
+                        <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Ngừng Bán (Inactive)</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm">🔍 Lọc</button>
+                    <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+                </form>
+            </div>
 
-                <div class="fb-card-actions">
-                    <button type="button" class="btn btn-secondary btn-sm btn-edit-fb" style="flex:1"
-                            th:data-id="${it.itemId}"
-                            th:data-code="${it.itemCode}"
-                            th:data-name="${it.itemName}"
-                            th:data-category="${it.category}"
-                            th:data-desc="${it.description}"
-                            th:data-sellingprice="${it.sellingPrice}"
-                            th:data-costprice="${it.costPrice}"
-                            th:data-image="${it.image}">✎ Sửa</button>
+            <!-- Product Cards Grid (Image 2) -->
+            <div class="fb-grid" th:if="${not #lists.isEmpty(items)}">
+                <div th:each="it : ${items}" class="fb-card">
+                    <div class="fb-thumb-wrap">
+                        <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
+                             alt="Ảnh sản phẩm" class="fb-thumb">
+                        <div class="badge-tag-wrap">
+                            <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">BEST-SELLER</span>
+                            <span class="tag-pill tag-limited" th:if="${it.itemCode == 'MERCH-DUNE2'}">LIMITED</span>
+                        </div>
+                    </div>
 
-                    <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
-                        <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
-                        <button type="submit" class="btn btn-secondary btn-sm"
-                                th:text="${it.active ? 'Khóa' : 'Mở'}">Khóa</button>
-                    </form>
+                    <div class="fb-body">
+                        <div class="fb-card-title-row">
+                            <h3 class="fb-title" th:text="${it.itemName}">Combo Couple</h3>
+                            <span class="badge" th:classappend="${it.active ? 'badge-green' : 'badge-gray'}" th:text="${it.active ? 'ĐANG BÁN' : 'TẠM KHÓA'}">ĐANG BÁN</span>
+                        </div>
+                        <p class="fb-desc" th:text="${it.description}">1 Bắp lớn 2 vị (Phô Mai + Caramel) + 2 Nước ngọt 32oz.</p>
+
+                        <div class="fb-price-row">
+                            <div>
+                                <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">125.000 đ</div>
+                                <div class="fb-cost-price" th:text="'Vốn: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">Cost: 28.000 đ</div>
+                            </div>
+                            <span class="margin-pill" th:text="'Lãi: ' + ${it.profitMarginPercent} + '%'">Lãi: 77.6%</span>
+                        </div>
+                    </div>
+
+                    <div class="fb-footer-row">
+                        <span class="fb-sku-tag" th:text="${it.itemCode}">CB-ROYAL-02</span>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="btn btn-secondary btn-sm btn-edit-fb"
+                                    style="padding:3px 8px;font-size:12px;"
+                                    th:data-id="${it.itemId}"
+                                    th:data-code="${it.itemCode}"
+                                    th:data-name="${it.itemName}"
+                                    th:data-category="${it.category}"
+                                    th:data-desc="${it.description}"
+                                    th:data-sellingprice="${it.sellingPrice}"
+                                    th:data-costprice="${it.costPrice}"
+                                    th:data-image="${it.image}">✎ Sửa giá</button>
+
+                            <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
+                                <button type="submit" class="action-btn action-btn-del" style="width:26px;height:26px;font-size:12px;"
+                                        th:title="${it.active ? 'Khóa bán món này' : 'Mở bán lại'}">
+                                    <span th:if="${it.active}">⏹</span>
+                                    <span th:unless="${it.active}">▶</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" th:if="${#lists.isEmpty(items)}">
-        <div class="empty-state-icon">🍿</div>
-        <h3>Không tìm thấy món ăn hoặc combo nào</h3>
-        <p>Bấm nút bên dưới để tạo mặt hàng ẩm thực hoặc gói combo mới.</p>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Thêm Món Mới</button>
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${#lists.isEmpty(items)}">
+                <div class="empty-state-icon">🍿</div>
+                <h3>Không tìm thấy món ăn hoặc combo nào</h3>
+                <p>Bấm nút bên dưới để tạo mặt hàng ẩm thực hoặc gói combo mới.</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Thêm Món Mới</button>
+            </div>
+        </div>
+
+        <!-- Right: Inventory & AI Upsell Widgets (Image 2) -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- Inventory Widget (Image 2) -->
+            <div class="widget-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;">📦</span>
+                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">Tồn Kho Nguyên Liệu Tiêu Hao</h3>
+                    </div>
+                    <span style="font-size:11.5px;color:var(--primary);font-weight:600;cursor:pointer;">+ Nhập kho</span>
+                </div>
+
+                <div class="stock-item">
+                    <div class="stock-row-top">
+                        <span class="stock-name">Hạt bắp nấm Mỹ (Mushroom)</span>
+                        <span class="stock-val alert">45 kg (3 bao - Thấp)</span>
+                    </div>
+                    <div class="stock-bar-wrap"><div class="stock-bar red" style="width:25%;"></div></div>
+                </div>
+
+                <div class="stock-item">
+                    <div class="stock-row-top">
+                        <span class="stock-name">Bơ hương thảo mộc vàng</span>
+                        <span class="stock-val">12 kg (Ổn định)</span>
+                    </div>
+                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:70%;"></div></div>
+                </div>
+
+                <div class="stock-item">
+                    <div class="stock-row-top">
+                        <span class="stock-name">Siro Coca/Sprite (BIB 20L)</span>
+                        <span class="stock-val">8 bình CO2</span>
+                    </div>
+                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:85%;"></div></div>
+                </div>
+
+                <div class="stock-item">
+                    <div class="stock-row-top">
+                        <span class="stock-name">Phô mai bột New Zealand</span>
+                        <span class="stock-val">26 hộp (Đầy đủ)</span>
+                    </div>
+                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:90%;"></div></div>
+                </div>
+
+                <div class="stock-item">
+                    <div class="stock-row-top">
+                        <span class="stock-name">Ly topper Dune 2 Sandworm</span>
+                        <span class="stock-val alert">14 cái (Báo động)</span>
+                    </div>
+                    <div class="stock-bar-wrap"><div class="stock-bar red" style="width:10%;"></div></div>
+                </div>
+
+                <button type="button" class="btn btn-secondary btn-sm" style="justify-content:center;margin-top:4px;" onclick="alert('Đã đồng bộ số liệu kiểm kê thực tế với quầy Bar!')">
+                    Đối Soát Kho
+                </button>
+            </div>
+
+            <!-- Upsell AI Widget (Image 2) -->
+            <div class="widget-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;">💡</span>
+                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">Gợi Ý Bán Kèm POS &amp; Kiosk</h3>
+                    </div>
+                    <span class="badge badge-blue" style="font-size:9.5px;">AI ENGINE</span>
+                </div>
+
+                <p style="font-size:11.5px;color:var(--text-500);margin:0;line-height:1.4;">
+                    Tự động xuất hiện popup gợi ý khi khách đặt vé trực tuyến hoặc tại quầy POS.
+                </p>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Nâng Cấp Size Bắp (+15.000 đ)</div>
+                        <div style="font-size:11px;color:var(--text-400);">Gợi ý tăng từ size M lên L</div>
+                    </div>
+                    <input type="checkbox" checked style="width:16px;height:16px;">
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Đổi Vị Bắp Phô Mai / Caramel</div>
+                        <div style="font-size:11px;color:var(--text-400);">Khuyến khích mix 2 vị (+10.000 đ)</div>
+                    </div>
+                    <input type="checkbox" checked style="width:16px;height:16px;">
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+                    <div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Kèm Snack Xúc Xích Đức (+35.000 đ)</div>
+                        <div style="font-size:11px;color:var(--text-400);">Gợi ý cho các suất chiếu sau 18:00</div>
+                    </div>
+                    <input type="checkbox" style="width:16px;height:16px;">
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
 </div>
