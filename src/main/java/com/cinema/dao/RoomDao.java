@@ -37,8 +37,10 @@ public class RoomDao {
         room.setScreenSize(rs.getString("ScreenSize"));
         room.setStatus(rs.getString("Status"));
         room.setDescription(rs.getString("Description"));
-        room.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
-        room.setUpdatedAt(rs.getTimestamp("UpdatedAt").toLocalDateTime());
+        java.sql.Timestamp createdAt = rs.getTimestamp("CreatedAt");
+        java.sql.Timestamp updatedAt = rs.getTimestamp("UpdatedAt");
+        room.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
+        room.setUpdatedAt(updatedAt != null ? updatedAt.toLocalDateTime() : null);
         room.setSeatCount(rs.getInt("SeatCount"));
         room.setShowtimeCount(rs.getInt("ShowtimeCount"));
         return room;

@@ -3,311 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Thể loại Phim | Screen 55 - CineVerse</title>
-    <link rel="stylesheet" th:href="@{/css/manager-genres.css}">
+    <title>Quản lý Thể loại Phim – Royally Cinema Admin</title>
+    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <style>
+        .badge-movies {
+            background: var(--primary-soft); color: var(--primary);
+            padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .badge-movies:hover { background: var(--primary); color: #fff; }
+        .genre-desc-cell {
+            max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: var(--text-500); font-size: 13px;
+        }
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            background: #fff; border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%; max-width: 540px; max-height: 90vh;
+            display: flex; flex-direction: column;
+        }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+        .modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
+        .modal-close {
+            width: 30px; height: 30px; border-radius: 6px;
+            background: var(--bg-body); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: var(--text-500);
+        }
+        .modal-close:hover { background: var(--border); }
+        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+        }
+        .movie-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .movie-chip {
+            background: var(--bg-body); border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: 20px; font-size: 12.5px;
+            color: var(--text-700); font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
-<!-- =====================================================================
-     Sidebar - Manager Navigation Portal
-     ===================================================================== -->
-<aside class="sidebar">
-    <a class="brand" th:href="@{/}">
-        <span class="brand-icon">C</span>
-        CineVerse
-    </a>
+<!-- Sidebar -->
+<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='movies')}"></div>
+<!-- Topbar -->
+<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Quản lý Thể loại')}"></div>
 
-    <nav class="nav-menu">
-        <div class="nav-section-title">Hệ Thống Rạp Phim</div>
-        <a th:href="@{/}">⌂ Trang chủ</a>
-        <a href="#">📊 Bảng điều khiển (Dashboard)</a>
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+<div class="page-shell">
 
-        <div class="nav-section-title">Quản Lý Phim</div>
-        <a th:href="@{/manager/movies}">▣ Quản lý phim (Screen 54)</a>
-        <a class="active" th:href="@{/manager/genres}">● Quản lý thể loại (Screen 55)</a>
-
-        <div class="nav-section-title">Vận Hành & Rạp</div>
-        <a href="#">◫ Quản lý phòng chiếu</a>
-        <a href="#">◷ Quản lý lịch chiếu</a>
-        <a href="#">◇ Cấu hình giá vé</a>
-        <a href="#">♨ Đồ ăn & Thức uống</a>
-        <a href="#">★ Khuyến mãi & Voucher</a>
-        <a href="#">📈 Báo cáo & Thống kê</a>
-    </nav>
-
-    <div class="sidebar-user">
-        <div class="avatar">M</div>
-        <div class="sidebar-user-info">
-            <strong>Quản Lý Rạp</strong>
-            <small>MANAGER</small>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="breadcrumb">
+                <a th:href="@{/manager/dashboard}">Vận hành</a>
+                <span>›</span>
+                <a th:href="@{/manager/movies}">Phim &amp; Thể loại</a>
+                <span>›</span>
+                <span>Quản lý Thể loại</span>
+            </div>
+            <h1 class="page-title">Quản lý Thể Loại Phim</h1>
+            <p class="page-subtitle">Thiết lập danh mục phân loại phim, mô tả và kích hoạt trạng thái sử dụng trong hệ thống.</p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/manager/movies}" class="btn btn-secondary">🎬 Danh sách phim</a>
+            <button type="button" class="btn btn-primary" onclick="openAddGenreModal()">+ Thêm thể loại mới</button>
         </div>
     </div>
-</aside>
 
-<!-- =====================================================================
-     Main Content Area
-     ===================================================================== -->
-<div class="main">
-    <!-- Topbar -->
-    <header class="topbar">
-        <div class="breadcrumbs">
-            Quản Lý › Phim › <b>Quản lý Thể loại Phim (Screen 55)</b>
+    <!-- Alerts -->
+    <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
+        <span class="alert-icon">✅</span>
+        <div class="alert-body" th:text="${successMessage}">Thao tác thành công.</div>
+        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+    </div>
+    <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="stat-label">Tổng số thể loại</div>
+            <div class="stat-value" th:text="${totalCount}">0</div>
+            <span class="stat-icon">📚</span>
         </div>
-        <div class="topbar-actions">
-            <span class="badge badge-active">Hệ thống sẵn sàng</span>
+        <div class="stat-card green">
+            <div class="stat-label">Đang hoạt động</div>
+            <div class="stat-value" th:text="${activeCount}">0</div>
+            <span class="stat-icon">✓</span>
         </div>
-    </header>
-
-    <main class="content">
-        <!-- Page Header -->
-        <div class="page-heading">
-            <div>
-                <p class="eyebrow">Phân Hệ Quản Lý (Manager)</p>
-                <h1>Quản Lý Thể Loại Phim</h1>
-                <p class="subtitle">
-                    Tạo mới, theo dõi, cập nhật thông tin và quản lý trạng thái phân loại phim (Screen 55 - Iteration 2).
-                </p>
-            </div>
-
-            <button type="button" class="btn btn-primary" onclick="openAddGenreModal()">
-                + Thêm Thể Loại Mới
-            </button>
+        <div class="stat-card orange">
+            <div class="stat-label">Ngưng hoạt động</div>
+            <div class="stat-value" th:text="${inactiveCount}">0</div>
+            <span class="stat-icon">✕</span>
         </div>
-
-        <!-- Success & Error Alert Messages -->
-        <div class="alert alert-success" th:if="${successMessage}">
-            <span th:text="${successMessage}">Thao tác thành công.</span>
-            <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+        <div class="stat-card purple">
+            <div class="stat-label">Thể loại có phim</div>
+            <div class="stat-value" th:text="${genresWithMovies}">0</div>
+            <span class="stat-icon">🎬</span>
         </div>
+    </div>
 
-        <div class="alert alert-danger" th:if="${errorMessage}">
-            <span th:text="${errorMessage}">Đã xảy ra lỗi.</span>
-            <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
-        </div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <form class="toolbar-search" method="get" th:action="@{/manager/genres}">
+            <span class="toolbar-search-icon">🔍</span>
+            <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên thể loại hoặc mô tả...">
+        </form>
+        <form method="get" th:action="@{/manager/genres}" style="display:contents">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+            <select name="status" onchange="this.form.submit()">
+                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Đang hoạt động (ACTIVE)</option>
+                <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">Ngưng hoạt động (INACTIVE)</option>
+            </select>
+            <a th:href="@{/manager/genres}" class="btn btn-secondary btn-sm" th:if="${keyword != '' or selectedStatus != 'ALL'}">⟲ Đặt lại</a>
+        </form>
+    </div>
 
-        <!-- Metric Statistics Cards -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-info">
-                    <h3>Tổng số thể loại</h3>
-                    <div class="metric-value" th:text="${totalCount}">0</div>
-                </div>
-                <div class="metric-icon total">📚</div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-info">
-                    <h3>Đang hoạt động</h3>
-                    <div class="metric-value" th:text="${activeCount}">0</div>
-                </div>
-                <div class="metric-icon active">✓</div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-info">
-                    <h3>Ngưng hoạt động</h3>
-                    <div class="metric-value" th:text="${inactiveCount}">0</div>
-                </div>
-                <div class="metric-icon inactive">✕</div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-info">
-                    <h3>Thể loại có phim</h3>
-                    <div class="metric-value" th:text="${genresWithMovies}">0</div>
-                </div>
-                <div class="metric-icon movies">🎬</div>
-            </div>
+    <!-- Table -->
+    <div class="table-wrapper">
+        <div class="table-header">
+            <span class="table-header-title">
+                Danh sách thể loại phim
+                <span class="badge badge-blue" style="margin-left:6px;" th:text="${#lists.size(genres)} + ' mục'">0 mục</span>
+            </span>
         </div>
 
-        <!-- Toolbar / Search and Filters -->
-        <div class="toolbar-card">
-            <form th:action="@{/manager/genres}" method="get" class="filter-form">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text"
-                           name="keyword"
-                           th:value="${keyword}"
-                           placeholder="Tìm kiếm theo tên thể loại hoặc mô tả...">
-                </div>
-
-                <select name="status" class="select-filter" onchange="this.form.submit()">
-                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
-                    <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Đang hoạt động (ACTIVE)</option>
-                    <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">Ngưng hoạt động (INACTIVE)</option>
-                </select>
-
-                <button type="submit" class="btn btn-secondary btn-sm">Tìm kiếm</button>
-                <a th:href="@{/manager/genres}" class="btn btn-secondary btn-sm" th:if="${keyword != '' or selectedStatus != 'ALL'}">
-                    Đặt lại
-                </a>
-            </form>
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${#lists.isEmpty(genres)}">
+            <div class="empty-state-icon">📂</div>
+            <h3>Không tìm thấy thể loại nào</h3>
+            <p>Hiện tại chưa có dữ liệu thể loại phù hợp với tiêu chí tìm kiếm.</p>
+            <button type="button" class="btn btn-primary" onclick="openAddGenreModal()" style="margin-top:12px;">+ Thêm thể loại mới</button>
         </div>
 
-        <!-- Genre List Data Table -->
-        <div class="table-card">
-            <table class="genre-table" th:if="${not #lists.isEmpty(genres)}">
-                <thead>
+        <table class="data-table" th:if="${not #lists.isEmpty(genres)}">
+            <thead>
                 <tr>
                     <th style="width: 70px;">#ID</th>
                     <th style="width: 220px;">Tên Thể Loại</th>
                     <th>Mô Tả Chi Tiết</th>
                     <th style="width: 140px; text-align: center;">Phim Liên Kết</th>
-                    <th style="width: 150px; text-align: center;">Trạng Thái</th>
-                    <th style="width: 230px; text-align: right;">Hành Động</th>
+                    <th style="width: 140px; text-align: center;">Trạng Thái</th>
+                    <th class="col-actions">Thao Tác</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 <tr th:each="genre : ${genres}">
-                    <td style="color: var(--text-dim); font-weight: 600;" th:text="${genre.genreId}">1</td>
-
+                    <td style="color: var(--text-400); font-weight: 600;" th:text="${genre.genreId}">1</td>
                     <td>
-                        <div class="genre-name-cell">
-                            <span th:text="${genre.name}">Hành động</span>
-                        </div>
+                        <strong style="color: var(--text-900); font-size: 14px;" th:text="${genre.name}">Hành động</strong>
                     </td>
-
                     <td>
-                        <div class="genre-desc-cell"
-                             th:text="${genre.description ?: 'Chưa có mô tả'}"
-                             th:title="${genre.description}">
+                        <div class="genre-desc-cell" th:text="${genre.description ?: 'Chưa có mô tả'}" th:title="${genre.description}">
                             Mô tả chi tiết thể loại...
                         </div>
                     </td>
-
                     <td style="text-align: center;">
-                        <span class="badge badge-movies btn-view-movies"
+                        <span class="badge-movies btn-view-movies"
                               th:data-id="${genre.genreId}"
                               th:data-name="${genre.name}"
                               title="Xem danh sách phim thuộc thể loại này">
                             🎬 <span th:text="${genre.movieCount}">0</span> phim
                         </span>
                     </td>
-
                     <td style="text-align: center;">
-                        <span th:if="${genre.active}" class="badge badge-active">Hoạt động</span>
-                        <span th:unless="${genre.active}" class="badge badge-inactive">Ngưng hoạt động</span>
+                        <span th:if="${genre.active}" class="badge badge-green">Hoạt động</span>
+                        <span th:unless="${genre.active}" class="badge badge-gray">Ngưng hoạt động</span>
                     </td>
+                    <td class="col-actions">
+                        <button type="button" class="action-btn action-btn-edit" title="Sửa"
+                                th:data-id="${genre.genreId}"
+                                th:data-name="${genre.name}"
+                                th:data-description="${genre.description}"
+                                th:data-status="${genre.status}"
+                                onclick="openEditGenreModal(this)">✎</button>
 
-                    <td>
-                        <div class="action-buttons" style="justify-content: flex-end;">
-                            <!-- Edit Button -->
-                            <button type="button"
-                                    class="btn btn-secondary btn-sm"
-                                    th:data-id="${genre.genreId}"
-                                    th:data-name="${genre.name}"
-                                    th:data-description="${genre.description}"
-                                    th:data-status="${genre.status}"
-                                    onclick="openEditGenreModal(this)">
-                                ✎ Sửa
+                        <button type="button" class="action-btn action-btn-view"
+                                th:data-id="${genre.genreId}"
+                                th:data-name="${genre.name}"
+                                th:data-status="${genre.status}"
+                                th:data-movies="${genre.movieCount}"
+                                onclick="toggleGenreStatus(this)"
+                                th:title="${genre.active ? 'Hủy kích hoạt thể loại' : 'Kích hoạt lại thể loại'}">
+                            <span th:if="${genre.active}">⏹</span>
+                            <span th:unless="${genre.active}">▶</span>
+                        </button>
+
+                        <form th:action="@{/manager/genres/{id}/delete(id=${genre.genreId})}"
+                              method="post" style="display: inline;" class="delete-genre-form"
+                              th:data-name="${genre.name}">
+                            <button type="submit" class="action-btn action-btn-del"
+                                    th:disabled="${genre.movieCount > 0}"
+                                    th:title="${genre.movieCount > 0 ? 'Không thể xóa thể loại đã có phim liên kết' : 'Xóa thể loại'}">
+                                🗑
                             </button>
-
-                            <!-- Toggle Status Button -->
-                            <button type="button"
-                                    class="btn btn-secondary btn-sm"
-                                    th:data-id="${genre.genreId}"
-                                    th:data-name="${genre.name}"
-                                    th:data-status="${genre.status}"
-                                    th:data-movies="${genre.movieCount}"
-                                    onclick="toggleGenreStatus(this)"
-                                    th:title="${genre.active ? 'Hủy kích hoạt thể loại' : 'Kích hoạt lại thể loại'}">
-                                <span th:if="${genre.active}">⏹ Khóa</span>
-                                <span th:unless="${genre.active}">▶ Mở</span>
-                            </button>
-
-                            <!-- Delete Form (Safe Delete) -->
-                            <form th:action="@{/manager/genres/{id}/delete(id=${genre.genreId})}"
-                                  method="post"
-                                  style="display: inline;"
-                                  class="delete-genre-form"
-                                  th:data-name="${genre.name}">
-                                <button type="submit"
-                                        class="btn btn-danger btn-sm"
-                                        th:disabled="${genre.movieCount > 0}"
-                                        th:title="${genre.movieCount > 0 ? 'Không thể xóa thể loại đã có phim liên kết' : 'Xóa thể loại'}">
-                                    🗑
-                                </button>
-                            </form>
-                        </div>
+                        </form>
                     </td>
                 </tr>
-                </tbody>
-            </table>
+            </tbody>
+        </table>
+    </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" th:if="${#lists.isEmpty(genres)}">
-                <div class="empty-icon">📂</div>
-                <h3>Không tìm thấy thể loại nào</h3>
-                <p>
-                    Hiện tại chưa có dữ liệu thể loại phù hợp với tiêu chí tìm kiếm hoặc hệ thống chưa có thể loại nào.
-                </p>
-                <button type="button" class="btn btn-primary" onclick="openAddGenreModal()">
-                    + Thêm Thể Loại Đầu Tiên
-                </button>
-            </div>
-        </div>
-    </main>
+</div>
 </div>
 
-<!-- =====================================================================
-     Modal: Create & Edit Genre (Form Modal)
-     ===================================================================== -->
+<!-- Modal: Create & Edit Genre -->
 <div id="genreModalBackdrop" class="modal-backdrop">
     <div class="modal">
         <div class="modal-header">
             <h2 id="genreModalTitle">Thêm Thể Loại Mới</h2>
             <button type="button" class="modal-close" onclick="closeGenreModal()">×</button>
         </div>
-
         <form id="genreModalForm" th:action="@{/manager/genres/save}" th:object="${genreForm}" method="post">
             <input type="hidden" id="genreId" th:field="*{id}">
-
             <div class="modal-body">
-                <div id="modalErrorAlert" class="alert alert-danger" style="display: none;"></div>
-
+                <div id="modalErrorAlert" class="alert alert-error" style="display: none; margin-bottom: 12px;"></div>
                 <div class="form-group">
-                    <label class="form-label" for="genreName">
-                        Tên Thể Loại <span class="required">*</span>
-                    </label>
-                    <input type="text"
-                           id="genreName"
-                           th:field="*{name}"
-                           class="form-control"
-                           placeholder="Ví dụ: Hành động, Kinh dị, Hài kịch..."
-                           maxlength="100"
-                           required>
-                    <div id="nameFeedback" class="invalid-feedback"></div>
-                    <small style="color: var(--text-dim); font-size: 0.75rem;">
-                        Tên thể loại phải là duy nhất (không trùng lặp) trong hệ thống theo quy định BR-Identity.
-                    </small>
+                    <label class="form-label" for="genreName">Tên Thể Loại <span class="req">*</span></label>
+                    <input type="text" id="genreName" th:field="*{name}" class="form-control" placeholder="Ví dụ: Hành động, Kinh dị, Hài kịch..." maxlength="100" required>
+                    <div id="nameFeedback" class="form-error"></div>
+                    <div class="form-hint">Tên thể loại phải là duy nhất theo quy định BR-Identity.</div>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label" for="genreDescription">Mô Tả Thể Loại</label>
-                    <textarea id="genreDescription"
-                              th:field="*{description}"
-                              class="form-control"
-                              rows="4"
-                              placeholder="Mô tả tóm tắt đặc trưng của thể loại phim này..."
-                              maxlength="500"></textarea>
-                    <div id="descFeedback" class="invalid-feedback"></div>
-                    <div id="descCharCounter" class="char-counter">0/500</div>
+                    <textarea id="genreDescription" th:field="*{description}" class="form-control" rows="3" placeholder="Mô tả tóm tắt đặc trưng thể loại..." maxlength="500"></textarea>
+                    <div id="descFeedback" class="form-error"></div>
+                    <div id="descCharCounter" class="form-hint">0/500</div>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="genreStatus">
-                        Trạng Thái Hoạt Động <span class="required">*</span>
-                    </label>
+                    <label class="form-label" for="genreStatus">Trạng Thái Hoạt Động <span class="req">*</span></label>
                     <select id="genreStatus" th:field="*{status}" class="form-control">
                         <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
                         <option value="INACTIVE">Ngưng hoạt động (INACTIVE)</option>
                     </select>
-                    <small style="color: var(--text-dim); font-size: 0.75rem;">
-                        Thể loại bị ngưng hoạt động sẽ không hiển thị khi tạo suất chiếu hoặc thêm phim mới.
-                    </small>
                 </div>
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeGenreModal()">Hủy bỏ</button>
                 <button type="submit" id="modalSubmitBtn" class="btn btn-primary">Lưu Thay Đổi</button>
@@ -316,22 +263,18 @@
     </div>
 </div>
 
-<!-- =====================================================================
-     Modal: Associated Movies Viewer
-     ===================================================================== -->
+<!-- Modal: Associated Movies Viewer -->
 <div id="moviesModalBackdrop" class="modal-backdrop">
     <div class="modal">
         <div class="modal-header">
             <h2>Phim Thuộc Thể Loại: <span id="moviesModalGenreName" style="color: var(--primary);"></span></h2>
             <button type="button" class="modal-close" onclick="closeMoviesModal()">×</button>
         </div>
-
         <div class="modal-body">
             <div id="moviesListContainer" class="movie-chip-list">
-                <!-- Populated dynamically via JavaScript API call -->
+                <!-- Populated dynamically via JS -->
             </div>
         </div>
-
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeMoviesModal()">Đóng</button>
         </div>

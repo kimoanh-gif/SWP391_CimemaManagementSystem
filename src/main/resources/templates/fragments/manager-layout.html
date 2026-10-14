@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/></head>
+<body>
+
+<!--
+  Shared Manager Sidebar Fragment
+  Usage: <div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='movies')}"></div>
+
+  activeMenu values:
+    dashboard | movies | genres | rooms | seat-types | seats | showtimes | pricing | fb
+-->
+<aside th:fragment="sidebar(activeMenu)" class="sidebar">
+
+    <!-- Brand -->
+    <a class="sidebar-brand" th:href="@{/manager/dashboard}">
+        <div class="sidebar-brand-icon">R</div>
+        <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">ROYALLY</div>
+            <div class="sidebar-brand-sub">Cinema Admin</div>
+        </div>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+
+        <span class="sidebar-section-label">Vận Hành</span>
+
+        <a th:href="@{/manager/dashboard}"
+           th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">📊</span> Tổng quan
+        </a>
+
+        <a th:href="@{/manager/movies}"
+           th:classappend="${activeMenu == 'movies'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🎬</span> Phim &amp; Thể loại
+        </a>
+
+        <a th:href="@{/manager/rooms}"
+           th:classappend="${activeMenu == 'rooms'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🏟</span> Phòng &amp; Sơ đồ ghế
+        </a>
+
+        <a th:href="@{/manager/showtimes}"
+           th:classappend="${activeMenu == 'showtimes'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🕐</span> Lịch &amp; Suất chiếu
+        </a>
+
+        <span class="sidebar-section-label">Hệ Thống</span>
+
+        <a th:href="@{/manager/pricing}"
+           th:classappend="${activeMenu == 'pricing'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🏷</span> Bảng giá &amp; Vé
+        </a>
+
+        <a th:href="@{/manager/fb}"
+           th:classappend="${activeMenu == 'fb'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🍿</span> Bắp nước &amp; F&amp;B
+        </a>
+
+        <a href="#" class="sidebar-link nav-disabled">
+            <span class="nav-icon">🎁</span> Khuyến mãi &amp; Voucher
+        </a>
+
+        <a href="#" class="sidebar-link nav-disabled">
+            <span class="nav-icon">📈</span> Báo cáo doanh thu
+        </a>
+
+    </nav>
+
+    <!-- Footer user -->
+    <div class="sidebar-footer">
+        <div class="avatar">M</div>
+        <div class="sidebar-footer-info">
+            <div class="sidebar-footer-name" th:text="${userName != null} ? ${userName} : 'Minh Anh'">Minh Anh</div>
+            <div class="sidebar-footer-role" th:text="${userRole != null} ? ${userRole} : 'Quản trị viên / Manager'">Quản trị viên / Manager</div>
+        </div>
+        <div class="sidebar-status-dot" title="Hệ thống hoạt động tốt"></div>
+    </div>
+
+</aside>
+
+<!--
+  Shared Topbar Fragment
+  Usage: <div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Quản lý Phim')}"></div>
+-->
+<header th:fragment="topbar(pageTitle)" class="topbar">
+
+    <div class="topbar-search">
+        <span class="topbar-search-icon">🔍</span>
+        <input type="text" th:placeholder="'Tìm kiếm nhanh...'"/>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-location">
+        <span class="loc-icon">📍</span>
+        <span>Vincom Landmark 81</span>
+        <span>▾</span>
+    </div>
+
+    <div class="topbar-date">
+        📅 <span th:text="${currentDateStr != null} ? ${currentDateStr} : 'Hôm nay'">Hôm nay</span>
+    </div>
+
+    <div class="topbar-icon-btn" title="Thông báo">
+        🔔
+        <span class="topbar-notif-badge">3</span>
+    </div>
+
+    <div class="topbar-user">
+        <div class="avatar">M</div>
+        <div class="topbar-user-info">
+            <span class="topbar-user-name" th:text="${userName != null} ? ${userName} : 'Minh Anh'">Minh Anh</span>
+            <span class="topbar-user-role">Manager</span>
+        </div>
+    </div>
+
+</header>
+
+</body>
+</html>

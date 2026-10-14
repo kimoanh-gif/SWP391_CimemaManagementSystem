@@ -39,7 +39,11 @@ public class SeatTypeDao {
 
     public List<SeatType> findAll(String status) {
         String sql = "SELECT * FROM SeatType WHERE (? IS NULL OR Status = ?) ORDER BY PriceMultiplier ASC";
-        return jdbcTemplate.query(sql, ps -> ps.setString(1, (status == null || "ALL".equalsIgnoreCase(status)) ? null : status), rowMapper);
+        String param = (status == null || "ALL".equalsIgnoreCase(status)) ? null : status;
+        return jdbcTemplate.query(sql, ps -> {
+            ps.setString(1, param);
+            ps.setString(2, param);
+        }, rowMapper);
     }
 
     public Optional<SeatType> findById(int id) {
