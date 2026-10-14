@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch &amp; Suất Chiếu – Royally Cinema Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
     <style>
         .time-slot {
@@ -238,6 +241,18 @@
                 </tr>
             </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div class="pagination-row" th:if="${not #lists.isEmpty(showtimes)}">
+            <span style="font-size: 13px; color: var(--text-500);">
+                Hiển thị 1 – <span th:text="${#lists.size(showtimes)}">1</span> trên tổng số <span th:text="${totalShowtimes}">1</span> suất chiếu
+            </span>
+            <div class="pagination">
+                <button type="button" class="page-btn" disabled>&lsaquo;</button>
+                <button type="button" class="page-btn active">1</button>
+                <button type="button" class="page-btn">&rsaquo;</button>
+            </div>
+        </div>
     </div>
 
 </div>

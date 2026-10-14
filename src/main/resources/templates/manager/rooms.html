@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Phòng Chiếu &amp; Thiết Bị – Royally Cinema Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
     <style>
         /* Room Cards Grid matching Image 2 */
@@ -322,6 +325,18 @@
                     <button type="button" class="action-btn action-btn-del deactivate-room-btn" th:data-id="${room.roomId}" title="Bảo trì">⏹</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);" th:if="${not #lists.isEmpty(rooms)}">
+        <span style="font-size: 13px; color: var(--text-500);">
+            Hiển thị 1 – <span th:text="${#lists.size(rooms)}">5</span> trên tổng số <span th:text="${rooms.size()}">5</span> phòng chiếu
+        </span>
+        <div class="pagination">
+            <button type="button" class="page-btn" disabled>&lsaquo;</button>
+            <button type="button" class="page-btn active">1</button>
+            <button type="button" class="page-btn">&rsaquo;</button>
         </div>
     </div>
 

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Dịch Vụ Ẩm Thực &amp; Combo Bắp Nước (F&amp;B) – Royally Cinema Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
     <style>
         .fb-layout {
@@ -386,6 +389,20 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Pagination (Image 2) -->
+            <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);margin-top:14px;" th:if="${not #lists.isEmpty(items)}">
+                <span style="font-size: 13px; color: var(--text-500);">
+                    Hiển thị 1 – <span th:text="${#lists.size(items)}">8</span> trên tổng số <span th:text="${totalCount}">8</span> món ăn &amp; combo tại quầy Landmark 81
+                </span>
+                <div class="pagination">
+                    <button type="button" class="page-btn" disabled>&lsaquo;</button>
+                    <button type="button" class="page-btn active">1</button>
+                    <button type="button" class="page-btn">2</button>
+                    <button type="button" class="page-btn">3</button>
+                    <button type="button" class="page-btn">&rsaquo;</button>
                 </div>
             </div>
 
