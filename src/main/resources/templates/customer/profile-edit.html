@@ -8,20 +8,16 @@
 </head>
 <body>
 <aside class="sidebar">
-    <a class="brand" th:href="@{/}">
+    <a class="brand" th:href="@{/customer/dashboard}">
         <span class="brand-icon">C</span>
         CineVerse
     </a>
 
     <nav class="nav-menu">
-        <a th:href="@{/}">⌂ Home</a>
-        <a href="#">▣ Movies</a>
-        <a href="#">◷ Showtimes</a>
-        <a href="#">◫ Booking History</a>
-        <a href="#">◇ My Tickets</a>
-        <a href="#">★ Loyalty</a>
+        <a th:href="@{/customer/dashboard}">⌂ Home</a>
+        <a th:href="@{/customer/booking}">▣ Movies &amp; Showtimes</a>
         <a class="active"
-           th:href="@{/customer/profile(accountId=${profile.accountId})}">
+           th:href="@{/customer/profile}">
             ● Profile
         </a>
     </nav>
@@ -57,7 +53,7 @@
             <h2>Personal and Contact Details</h2>
             <p>Information is validated before it is saved to your account.</p>
 
-            <form th:action="@{/customer/profile/edit(accountId=${profile.accountId})}"
+            <form th:action="@{/customer/profile/edit}"
                   th:object="${form}"
                   method="post">
 
@@ -67,7 +63,9 @@
                         <input id="fullName"
                                type="text"
                                th:field="*{fullName}"
+                               minlength="2"
                                maxlength="100"
+                               required
                                autocomplete="name">
 
                         <p class="field-error"
@@ -93,9 +91,10 @@
                                type="tel"
                                th:field="*{phone}"
                                maxlength="15"
+                               pattern="(0[0-9]{9}|\+84[0-9]{9})"
                                autocomplete="tel">
 
-                        <p class="hint">Use a valid Vietnamese phone number.</p>
+                        <p class="hint">Use a 10-digit number beginning with 0 or +84.</p>
 
                         <p class="field-error"
                            th:if="${#fields.hasErrors('phone')}"
@@ -107,6 +106,7 @@
                         <input id="dateOfBirth"
                                type="date"
                                th:field="*{dateOfBirth}"
+                               th:max="${latestDateOfBirth}"
                                autocomplete="bday">
 
                         <p class="hint">
@@ -133,7 +133,7 @@
 
                 <div class="actions">
                     <a class="button"
-                       th:href="@{/customer/profile(accountId=${profile.accountId})}">
+                       th:href="@{/customer/profile}">
                         Cancel
                     </a>
 
