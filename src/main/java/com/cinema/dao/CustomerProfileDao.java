@@ -90,6 +90,15 @@ public class CustomerProfileDao {
         );
     }
 
+    public boolean existsByPhoneExcludingAccount(String phone, int accountId) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM dbo.Account
+                WHERE Phone = ? AND AccountID <> ?
+                """, Integer.class, phone, accountId);
+        return count != null && count > 0;
+    }
+
     private String emptyToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
