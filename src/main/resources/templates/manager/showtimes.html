@@ -68,7 +68,7 @@
             background: none; border: none; line-height: 1; padding: 0;
         }
         .modal-close:hover { color: var(--text-900); }
-        form { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+        .modal-content form { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
         .form-actions {
             padding-top: 14px; border-top: 1px solid var(--border);
             display: flex; justify-content: flex-end; gap: 10px;
@@ -144,10 +144,10 @@
 
     <!-- Toolbar Filters -->
     <div class="toolbar">
-        <form th:action="@{/manager/showtimes}" method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;padding:0;">
-            <div style="display:flex;align-items:center;gap:6px;">
-                <label style="font-size:12.5px;font-weight:600;color:var(--text-700)">Ngày:</label>
-                <input type="date" name="date" class="form-control" style="width:auto;padding:6px 10px;" th:value="${selectedDate}">
+        <form th:action="@{/manager/showtimes}" method="get" class="toolbar-form">
+            <div class="toolbar-field">
+                <label>📅 Ngày chiếu:</label>
+                <input type="date" name="date" th:value="${selectedDate}">
             </div>
             <select name="roomId" onchange="this.form.submit()">
                 <option value="0">Tất cả phòng chiếu</option>

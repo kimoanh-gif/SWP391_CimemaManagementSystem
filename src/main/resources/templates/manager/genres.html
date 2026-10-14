@@ -124,18 +124,18 @@
 
     <!-- Toolbar -->
     <div class="toolbar">
-        <form class="toolbar-search" method="get" th:action="@{/manager/genres}">
-            <span class="toolbar-search-icon">🔍</span>
-            <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên thể loại hoặc mô tả...">
-        </form>
-        <form method="get" th:action="@{/manager/genres}" style="display:contents">
-            <input type="hidden" name="keyword" th:value="${keyword}">
+        <form class="toolbar-form" method="get" th:action="@{/manager/genres}">
+            <div class="toolbar-search">
+                <span class="toolbar-search-icon">🔍</span>
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên thể loại hoặc mô tả...">
+            </div>
             <select name="status" onchange="this.form.submit()">
                 <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
                 <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Đang hoạt động (ACTIVE)</option>
                 <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">Ngưng hoạt động (INACTIVE)</option>
             </select>
-            <a th:href="@{/manager/genres}" class="btn btn-secondary btn-sm" th:if="${keyword != '' or selectedStatus != 'ALL'}">⟲ Đặt lại</a>
+            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
+            <a th:href="@{/manager/genres}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
         </form>
     </div>
 

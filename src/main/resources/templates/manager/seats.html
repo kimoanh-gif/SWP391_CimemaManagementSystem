@@ -210,16 +210,18 @@
 
     <!-- Room Selector Toolbar -->
     <div class="toolbar">
-        <form method="get" th:action="@{/manager/seats}" style="display:flex;align-items:center;gap:12px;flex:1;">
-            <label style="font-weight:600;font-size:13px;color:var(--text-700)">Chọn Phòng Chiếu:</label>
-            <select name="roomId" onchange="this.form.submit()" style="min-width:280px;font-weight:600;">
-                <option th:each="r : ${rooms}"
-                        th:value="${r.roomId}"
-                        th:text="${r.roomName + ' (' + r.roomCode + ' - ' + r.roomType + ' • ' + r.capacity + ' ghế)'}"
-                        th:selected="${selectedRoom != null and selectedRoom.roomId == r.roomId}">
-                    Phòng 01: IMAX Laser
-                </option>
-            </select>
+        <form method="get" th:action="@{/manager/seats}" class="toolbar-form">
+            <div class="toolbar-field">
+                <label>🏟 Chọn phòng chiếu:</label>
+                <select name="roomId" onchange="this.form.submit()" style="min-width:320px;font-weight:600;">
+                    <option th:each="r : ${rooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.roomName + ' (' + r.roomCode + ' - ' + r.roomType + ' • ' + r.capacity + ' ghế)'}"
+                            th:selected="${selectedRoom != null and selectedRoom.roomId == r.roomId}">
+                        Phòng 01: IMAX Laser
+                    </option>
+                </select>
+            </div>
         </form>
     </div>
 

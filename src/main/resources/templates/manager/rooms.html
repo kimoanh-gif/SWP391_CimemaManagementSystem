@@ -255,21 +255,21 @@
 
     <!-- Filter Toolbar -->
     <div class="toolbar">
-        <div class="toolbar-search">
-            <span class="toolbar-search-icon">🔍</span>
-            <input type="text" placeholder="Tìm theo tên phòng, mã phòng..." th:value="${keyword}" name="keyword" id="keyword" />
-        </div>
-        <select name="status" id="status-select">
-            <option th:value="''" th:selected="${status == null or status == ''}">Tất cả trạng thái</option>
-            <option th:value="Ready" th:selected="${status == 'Ready'}">Ready (Sẵn sàng)</option>
-            <option th:value="Screening" th:selected="${status == 'Screening'}">Screening (Đang chiếu)</option>
-            <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning (Đang dọn)</option>
-            <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance (Bảo trì)</option>
-        </select>
-        <button id="filter-btn" class="btn btn-secondary btn-sm" onclick="location.search='keyword=' + document.getElementById('keyword').value + '&status=' + document.getElementById('status-select').value;">
-            🔍 Lọc
-        </button>
-        <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+        <form method="get" th:action="@{/manager/rooms}" class="toolbar-form">
+            <div class="toolbar-search">
+                <span class="toolbar-search-icon">🔍</span>
+                <input type="text" placeholder="Tìm theo tên phòng, mã phòng..." th:value="${keyword}" name="keyword" id="keyword" />
+            </div>
+            <select name="status" id="status-select" onchange="this.form.submit()">
+                <option th:value="''" th:selected="${status == null or status == ''}">Tất cả trạng thái</option>
+                <option th:value="Ready" th:selected="${status == 'Ready'}">Ready (Sẵn sàng)</option>
+                <option th:value="Screening" th:selected="${status == 'Screening'}">Screening (Đang chiếu)</option>
+                <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning (Đang dọn)</option>
+                <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance (Bảo trì)</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
+            <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+        </form>
     </div>
 
     <!-- Rooms Cards Grid (matching Image 2) -->

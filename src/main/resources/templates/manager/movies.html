@@ -118,12 +118,11 @@
 
     <!-- Toolbar -->
     <div class="toolbar">
-        <form class="toolbar-search" method="get" th:action="@{/manager/movies}">
-            <span class="toolbar-search-icon">🔍</span>
-            <input type="text" name="keyword" placeholder="Tìm kiếm tên phim, đạo diễn, diễn viên..." th:value="${keyword}">
-        </form>
-        <form method="get" th:action="@{/manager/movies}" style="display:contents">
-            <input type="hidden" name="keyword" th:value="${keyword}">
+        <form class="toolbar-form" method="get" th:action="@{/manager/movies}">
+            <div class="toolbar-search">
+                <span class="toolbar-search-icon">🔍</span>
+                <input type="text" name="keyword" placeholder="Tìm kiếm tên phim, đạo diễn, diễn viên..." th:value="${keyword}">
+            </div>
             <select name="genreId" onchange="this.form.submit()">
                 <option value="0" th:selected="${selectedGenreId == 0}">Tất cả thể loại</option>
                 <option th:each="g : ${allGenres}" th:value="${g.genreId}" th:text="${g.name}" th:selected="${g.genreId == selectedGenreId}"></option>
@@ -143,6 +142,7 @@
                 <option value="Ended"       th:selected="${selectedStatus == 'Ended'}">Kết thúc</option>
                 <option value="Archived"    th:selected="${selectedStatus == 'Archived'}">Lưu trữ</option>
             </select>
+            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
             <a th:href="@{/manager/movies}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
         </form>
     </div>

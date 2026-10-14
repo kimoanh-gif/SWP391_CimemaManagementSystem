@@ -125,7 +125,7 @@
 
     <!-- Toolbar -->
     <div class="toolbar">
-        <form method="get" th:action="@{/manager/seat-types}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;">
+        <form method="get" th:action="@{/manager/seat-types}" class="toolbar-form">
             <select name="status" onchange="this.form.submit()">
                 <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
                 <option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động (Active)</option>
