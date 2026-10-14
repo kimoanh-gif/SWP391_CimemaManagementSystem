@@ -5,10 +5,16 @@
 
 <!--
   Shared Manager Sidebar Fragment
-  Usage: <div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='movies')}"></div>
-
-  activeMenu values:
-    dashboard | movies | genres | rooms | seat-types | seats | showtimes | pricing | fb
+  Contains ALL 9 Manager Functions matching Hình 1:
+    1. dashboard   - Tổng quan (Dashboard)
+    2. movies      - Phim chiếu rạp
+    3. genres      - Thể loại phim
+    4. rooms       - Phòng chiếu & Thiết bị
+    5. seat-types  - Danh mục loại ghế
+    6. seats       - Sơ đồ bố trí ghế
+    7. showtimes   - Lịch & Suất chiếu
+    8. pricing     - Bảng giá & Vé
+    9. fb          - Bắp nước & F&B
 -->
 <aside th:fragment="sidebar(activeMenu)" class="sidebar">
 
@@ -21,54 +27,81 @@
         </div>
     </a>
 
-    <!-- Navigation -->
+    <!-- Navigation (Đầy đủ 9 chức năng độc lập) -->
     <nav class="sidebar-nav">
 
         <span class="sidebar-section-label">Vận Hành</span>
 
+        <!-- 1. Dashboard -->
         <a th:href="@{/manager/dashboard}"
            th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''"
            class="sidebar-link">
             <span class="nav-icon">📊</span> Tổng quan
         </a>
 
+        <!-- 2. Movies -->
         <a th:href="@{/manager/movies}"
            th:classappend="${activeMenu == 'movies'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🎬</span> Phim &amp; Thể loại
+            <span class="nav-icon">🎬</span> Phim chiếu rạp
         </a>
 
+        <!-- 3. Genres -->
+        <a th:href="@{/manager/genres}"
+           th:classappend="${activeMenu == 'genres'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🏷</span> Thể loại phim
+        </a>
+
+        <!-- 4. Rooms -->
         <a th:href="@{/manager/rooms}"
            th:classappend="${activeMenu == 'rooms'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🏟</span> Phòng &amp; Sơ đồ ghế
+            <span class="nav-icon">🏟</span> Phòng chiếu
         </a>
 
+        <!-- 5. Seat Types -->
+        <a th:href="@{/manager/seat-types}"
+           th:classappend="${activeMenu == 'seat-types'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">💺</span> Danh mục loại ghế
+        </a>
+
+        <!-- 6. Seats Layout -->
+        <a th:href="@{/manager/seats}"
+           th:classappend="${activeMenu == 'seats'} ? ' active' : ''"
+           class="sidebar-link">
+            <span class="nav-icon">🗺</span> Sơ đồ bố trí ghế
+        </a>
+
+        <!-- 7. Showtimes -->
         <a th:href="@{/manager/showtimes}"
            th:classappend="${activeMenu == 'showtimes'} ? ' active' : ''"
            class="sidebar-link">
             <span class="nav-icon">🕐</span> Lịch &amp; Suất chiếu
         </a>
 
-        <span class="sidebar-section-label">Hệ Thống</span>
+        <span class="sidebar-section-label">Hệ Thống &amp; Dịch Vụ</span>
 
+        <!-- 8. Pricing -->
         <a th:href="@{/manager/pricing}"
            th:classappend="${activeMenu == 'pricing'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🏷</span> Bảng giá &amp; Vé
+            <span class="nav-icon">💳</span> Bảng giá vé
         </a>
 
+        <!-- 9. F&B -->
         <a th:href="@{/manager/fb}"
            th:classappend="${activeMenu == 'fb'} ? ' active' : ''"
            class="sidebar-link">
             <span class="nav-icon">🍿</span> Bắp nước &amp; F&amp;B
         </a>
 
-        <a href="#" class="sidebar-link nav-disabled">
+        <a href="#" class="sidebar-link nav-disabled" title="Phân hệ giai đoạn mở rộng">
             <span class="nav-icon">🎁</span> Khuyến mãi &amp; Voucher
         </a>
 
-        <a href="#" class="sidebar-link nav-disabled">
+        <a href="#" class="sidebar-link nav-disabled" title="Phân hệ giai đoạn mở rộng">
             <span class="nav-icon">📈</span> Báo cáo doanh thu
         </a>
 
@@ -86,15 +119,12 @@
 
 </aside>
 
-<!--
-  Shared Topbar Fragment
-  Usage: <div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Quản lý Phim')}"></div>
--->
+<!-- Shared Topbar Fragment -->
 <header th:fragment="topbar(pageTitle)" class="topbar">
 
     <div class="topbar-search">
         <span class="topbar-search-icon">🔍</span>
-        <input type="text" th:placeholder="'Tìm kiếm nhanh...'"/>
+        <input type="text" th:placeholder="'Tìm phim, suất chiếu, phòng vé, đơn hàng...'"/>
     </div>
 
     <div class="topbar-spacer"></div>
