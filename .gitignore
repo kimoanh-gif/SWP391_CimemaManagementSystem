@@ -1,24 +1,34 @@
-# Build output
-target/
+# Tài liệu gốc (không commit)
+*.docx
+*.pdf
+*.txt
+!src/**/*.txt
+!database/**/*.txt
+!SWP391_CimemaManagementSystem-main/src/**/*.txt
+!SWP391_CimemaManagementSystem-main/database/**/*.txt
 
-# IDEs and editors
+# Build
+target/
+*.class
+*.jar
+!src/main/resources/**/*.jar
+!SWP391_CimemaManagementSystem-main/src/main/resources/**/*.jar
+
+# IDE
 .idea/
 .vscode/
 *.iml
-*.ipr
-*.iws
+.classpath
+.project
+.settings/
+.vs/
 
-# Logs and local configuration
+# Logs
 *.log
-.env
-application-local.properties
 
-# Operating systems
+# OS
 .DS_Store
 Thumbs.db
-Desktop.ini
 
-# Visual Studio
-.vs/
-bin/
-obj/
+# Env
+.env
