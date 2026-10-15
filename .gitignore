@@ -1,11 +1,29 @@
-# Tài liệu gốc (không commit)
+# Tài liệu nội bộ / tài liệu gốc (KHÔNG commit)
 *.docx
 *.pdf
+*.doc
+*.xlsx
+*.xls
+
+# Tài liệu thiết kế / kiến trúc / AI prompt
+docs/Architecture.md
+docs/PROMPT_AUTH_FEATURES.md
+docs/design.md
+docs/SRS_*.md
+ProjectTracking_*.xlsx
+PROMPT_*.md
+DESIGN_*.md
+TRACKING_*.xlsx
+response.html
+
+# Cho phép file .txt trong src/ và database/
 *.txt
 !src/**/*.txt
 !database/**/*.txt
 !SWP391_CimemaManagementSystem-main/src/**/*.txt
 !SWP391_CimemaManagementSystem-main/database/**/*.txt
+!*.md
+!README.md
 
 # Build
 target/

@@ -1,8 +1,37 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Staff Dashboard</title></head>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Nhân viên | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
 <body>
-<h1>Staff Dashboard</h1>
-<form th:action="@{/logout}" method="post"><button type="submit">Đăng xuất</button></form>
+<div class="dash-shell">
+  <header class="dash-header">
+    <div class="dash-brand">
+      <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
+    </div>
+    <div class="dash-user" th:if="${user != null}">
+      <span class="role-badge" th:text="${user.role}">STAFF</span>
+      <span th:text="${user.fullName}">Nhân viên</span>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="dash-logout" type="submit">Đăng xuất</button>
+      </form>
+    </div>
+    <!-- DEBUG: remove after testing -->
+    <div th:if="${user == null}" style="color:#f00;font-size:12px;background:#300;">
+      user==null | sessionId=<span th:text="${#session.id}">?</span>
+    </div>
+  </header>
+  <main class="dash-body">
+    <h1>Khu vực nhân viên</h1>
+    <p class="subtitle">Bán vé, check-in và hỗ trợ khách hàng tại quầy.</p>
+    <div class="dash-card">
+      <p>Xin chào <strong th:text="${user != null ? user.fullName : 'nhân viên'}">nhân viên</strong>.</p>
+      <p style="color: var(--cinema-text-muted);">Các nghiệp vụ bán vé, check-in sẽ được bổ sung trong các sprint tiếp theo.</p>
+    </div>
+  </main>
+</div>
 </body>
 </html>

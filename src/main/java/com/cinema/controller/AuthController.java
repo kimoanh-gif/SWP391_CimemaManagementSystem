@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.model.Account;
 import com.cinema.service.AuthService;
+import com.cinema.service.OtpService;
 import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,28 +17,38 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Single Thymeleaf controller handling every auth flow:
- *   GET  /register                      -> form
- *   POST /register                      -> create + send activation OTP
- *   GET  /verify-activation-otp         -> OTP form
- *   POST /verify-activation-otp         -> activate account
- *   GET  /login / POST /login           -> authenticate (form-based, session-backed)
- *   POST /logout                        -> invalidate session
- *   GET  /forgot-password / POST        -> request reset OTP
- *   GET  /verify-reset-otp / POST       -> verify reset OTP
- *   GET  /reset-password / POST         -> set new password
+ * <ul>
+ *   <li>GET/POST /register, /verify-activation-otp</li>
+ *   <li>GET/POST /login, /logout</li>
+ *   <li>GET/POST /forgot-password, /verify-reset-otp, /reset-password</li>
+ * </ul>
+ * Spring Security handles the OAuth2 /login/oauth2/... endpoints.
  */
 @Controller
 public class AuthController {
 
     private final AuthService   authService;
     private final SessionService sessionService;
+    private final OtpService    otpService;
 
-    public AuthController(AuthService authService, SessionService sessionService) {
+    public AuthController(AuthService authService, SessionService sessionService, OtpService otpService) {
         this.authService   = authService;
         this.sessionService = sessionService;
+        this.otpService    = otpService;
+    }
+
+    // ============================================================= HOME
+    @GetMapping("/")
+    public String home(HttpSession session, Model model) {
+        if (sessionService.isLoggedIn(session)) {
+            model.addAttribute("user", sessionService.getCurrentUser(session));
+            return sessionService.dashboardForRole(sessionService.currentRole(session));
+        }
+        return "index";
     }
 
     // ============================================================= REGISTER
@@ -62,20 +73,33 @@ public class AuthController {
         AuthService.RegisterResult r = authService.register(
                 form.getUsername(), form.getEmail(), form.getPassword(),
                 form.getFullName(), form.getPhone());
+        String rawOtp = r.rawOtp();
 
-        switch (r) {
-            case EMAIL_TAKEN        -> { model.addAttribute("emailError", "Email đã được sử dụng.");     return "auth/register"; }
-            case USERNAME_TAKEN     -> { model.addAttribute("usernameError", "Tên đăng nhập đã tồn tại."); return "auth/register"; }
-            case INVALID_EMAIL      -> { model.addAttribute("emailError", "Email không hợp lệ.");         return "auth/register"; }
-            case INVALID_USERNAME   -> { model.addAttribute("usernameError", "Tên đăng nhập phải 4-50 ký tự, chỉ chứa chữ, số, '.', '_' hoặc '-'."); return "auth/register"; }
-            case INVALID_PHONE      -> { model.addAttribute("phoneError", "Số điện thoại không hợp lệ.");return "auth/register"; }
-            case INVALID_PASSWORD   -> { model.addAttribute("passwordError", "Mật khẩu phải ≥ 8 ký tự, có chữ và số."); return "auth/register"; }
-            case ROLE_NOT_CONFIGURED-> { model.addAttribute("formError", "Hệ thống chưa cấu hình role CUSTOMER."); return "auth/register"; }
-            case OTP_DELIVERY_FAILED-> { model.addAttribute("formError", "Đăng ký thành công nhưng gửi email OTP thất bại. Vui lòng thử lại sau."); return "auth/register"; }
-            case SUCCESS -> { /* continue */ }
+        // Confirm-password check
+        if (!form.getPassword().equals(form.getConfirmPassword())) {
+            model.addAttribute("confirmPasswordError", "Mật khẩu xác nhận không khớp.");
+            return "auth/register";
         }
 
-        // Stash the email in session so the OTP page can be reached without re-typing.
+        String status = r.status();
+        switch (status) {
+            case "EMAIL_TAKEN"        -> { model.addAttribute("emailError", "Email đã được sử dụng."); return "auth/register"; }
+            case "USERNAME_TAKEN"     -> { model.addAttribute("usernameError", "Tên đăng nhập đã tồn tại."); return "auth/register"; }
+            case "INVALID_EMAIL"      -> { model.addAttribute("emailError", "Email không hợp lệ."); return "auth/register"; }
+            case "INVALID_USERNAME"   -> { model.addAttribute("usernameError", "Tên đăng nhập phải 4-50 ký tự, chỉ chứa chữ, số, '.', '_' hoặc '-'."); return "auth/register"; }
+            case "INVALID_PHONE"      -> { model.addAttribute("phoneError", "Số điện thoại không hợp lệ."); return "auth/register"; }
+            case "INVALID_PASSWORD"   -> { model.addAttribute("passwordError", "Mật khẩu phải ≥ 8 ký tự, có chữ và số."); return "auth/register"; }
+            case "INVALID_FULLNAME"  -> { model.addAttribute("fullNameError", "Họ tên không hợp lệ (2-100 ký tự)."); return "auth/register"; }
+            case "ROLE_NOT_CONFIGURED" -> { model.addAttribute("formError", "Hệ thống chưa cấu hình role CUSTOMER."); return "auth/register"; }
+            case "OTP_DELIVERY_FAILED" -> {
+                // Email failed — store OTP in session so the page can display it.
+                session.setAttribute("activationEmail", form.getEmail().trim().toLowerCase());
+                session.setAttribute("fallbackOtp", rawOtp);
+                return "redirect:/verify-activation-otp";
+            }
+            case "OK" -> { /* continue */ }
+        }
+
         session.setAttribute("activationEmail", form.getEmail().trim().toLowerCase());
         return "redirect:/verify-activation-otp";
     }
@@ -86,6 +110,13 @@ public class AuthController {
         String email = (String) session.getAttribute("activationEmail");
         if (email == null) return "redirect:/register";
         model.addAttribute("email", email);
+        model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION));
+        // Pass fallback OTP if email delivery failed
+        String fallbackOtp = (String) session.getAttribute("fallbackOtp");
+        if (fallbackOtp != null) {
+            model.addAttribute("fallbackOtp", fallbackOtp);
+            session.removeAttribute("fallbackOtp");
+        }
         if (!model.containsAttribute("activationForm"))
             model.addAttribute("activationForm", new OtpForm());
         return "auth/verify-activation-otp";
@@ -105,6 +136,7 @@ public class AuthController {
             }
             case TOO_MANY_ATTEMPTS -> {
                 model.addAttribute("formError", "Bạn đã nhập sai OTP quá số lần cho phép. Vui lòng yêu cầu mã mới.");
+                model.addAttribute("email", email);
                 return "auth/verify-activation-otp";
             }
             case NO_PENDING_TOKEN -> {
@@ -121,29 +153,87 @@ public class AuthController {
         return "redirect:/verify-activation-otp";
     }
 
+    @PostMapping("/verify-activation-otp/resend")
+    public String resendActivationOtp(HttpSession session, Model model) {
+        String email = (String) session.getAttribute("activationEmail");
+        if (email == null) return "redirect:/register";
+        AuthService.ResendResult r = authService.resendOtp(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION);
+        if (r.sent()) {
+            model.addAttribute("formSuccess", "Đã gửi lại mã OTP. Vui lòng kiểm tra email.");
+        } else if ("COOLDOWN".equals(r.code())) {
+            model.addAttribute("formError", "Vui lòng chờ " + r.retryAfterSeconds() + " giây trước khi gửi lại.");
+        } else {
+            // Email failed — show raw OTP.
+            model.addAttribute("formError", "Gửi email thất bại. Mã OTP của bạn:");
+            model.addAttribute("fallbackOtp", r.rawOtp());
+        }
+        model.addAttribute("email", email);
+        model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION));
+        return "auth/verify-activation-otp";
+    }
+
     // ================================================================ LOGIN
     @GetMapping("/login")
-    public String showLogin(HttpSession session, Model model) {
+    public String showLogin(HttpSession session, Model model,
+                            @RequestParam(name = "logout",     required = false) String logout,
+                            @RequestParam(name = "activated",  required = false) String activated,
+                            @RequestParam(name = "passwordResetSuccess", required = false) String resetOk,
+                            @RequestParam(name = "oauthError", required = false) String oauthError,
+                            @RequestParam(name = "oauthRejected", required = false) String oauthRejected,
+                            @RequestParam(name = "redirect",   required = false) String redirect) {
         if (sessionService.isLoggedIn(session))
             return sessionService.dashboardForRole(sessionService.currentRole(session));
         if (!model.containsAttribute("loginForm"))
             model.addAttribute("loginForm", new LoginForm());
+        if (redirect != null) model.addAttribute("redirect", redirect);
+        if ("true".equals(logout)) model.addAttribute("logoutSuccess", "Bạn đã đăng xuất thành công.");
+        if ("true".equals(activated)) model.addAttribute("activationSuccess", "Tài khoản đã kích hoạt thành công! Vui lòng đăng nhập.");
+        if ("true".equals(resetOk)) model.addAttribute("resetSuccess", "Mật khẩu đã được đặt lại. Vui lòng đăng nhập.");
+        if (oauthError != null) model.addAttribute("formError", "Đăng nhập Google thất bại: " + oauthError);
+        if (oauthRejected != null) model.addAttribute("formError", "Bạn đã từ chối đăng nhập Google.");
         return "auth/login";
     }
 
     @PostMapping("/login")
     public String doLogin(@Valid @ModelAttribute("loginForm") LoginForm form,
-                          BindingResult binding, Model model, HttpServletRequest request) {
+                          BindingResult binding, Model model, HttpServletRequest request,
+                          @RequestParam(name = "redirect", required = false) String redirect) {
         if (binding.hasErrors()) {
             binding.getFieldErrors().forEach(e ->
                     model.addAttribute(e.getField() + "Error", e.getDefaultMessage()));
             return "auth/login";
         }
 
-        AuthService.LoginResult result = authService.login(form.getIdentifier(), form.getPassword());
+        String ip = SessionService.resolveClientIp(request);
+        String ua = request.getHeader("User-Agent");
+        AuthService.LoginResult result =
+                authService.login(form.getIdentifier(), form.getPassword(), ip, ua);
         switch (result.status()) {
-            case EMAIL_NOT_FOUND -> { model.addAttribute("identifierError", "Tài khoản không tồn tại."); return "auth/login"; }
-            case WRONG_PASSWORD  -> { model.addAttribute("passwordError",  "Mật khẩu không chính xác.");  return "auth/login"; }
+            case LOCKED_OUT -> {
+                int sec = result.retryAfterSeconds();
+                String msg = sec > 60
+                        ? "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau " + (sec / 60) + " phút " + (sec % 60) + " giây."
+                        : "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau " + sec + " giây.";
+                model.addAttribute("formError", msg);
+                model.addAttribute("lockedSeconds", sec);
+                return "auth/login";
+            }
+            case TOO_MANY_IP_FAILURES -> {
+                int sec = result.retryAfterSeconds();
+                String msg = "Đã có quá nhiều yêu cầu đăng nhập từ thiết bị này. Vui lòng thử lại sau "
+                        + (sec / 60) + " phút " + (sec % 60) + " giây.";
+                model.addAttribute("formError", msg);
+                model.addAttribute("lockedSeconds", sec);
+                return "auth/login";
+            }
+            case EMAIL_NOT_FOUND, WRONG_PASSWORD -> {
+                model.addAttribute("formError", "Email hoặc mật khẩu không chính xác.");
+                return "auth/login";
+            }
+            case OAUTH_PASSWORD_NOT_SET -> {
+                model.addAttribute("formError", "Tài khoản này được tạo qua Google. Vui lòng đăng nhập bằng nút Google hoặc đặt mật khẩu mới.");
+                return "auth/login";
+            }
             case INACTIVE_ACCOUNT -> {
                 String reason = "Tài khoản chưa được kích hoạt hoặc đã bị khóa.";
                 if (result.account() != null
@@ -161,8 +251,8 @@ public class AuthController {
         HttpSession old = request.getSession(false);
         if (old != null) old.invalidate();
         HttpSession fresh = request.getSession(true);
-        sessionService.login(fresh, account);
-        return sessionService.dashboardForRole(sessionService.currentRole(fresh));
+        sessionService.login(fresh, account, SessionService.AUTH_METHOD_PASSWORD);
+        return sessionService.resolvePostLoginRedirect(fresh, redirect);
     }
 
     @PostMapping("/logout")
@@ -180,7 +270,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public String doForgot(@ModelAttribute("forgotForm") ForgotForm form,
+    public String doForgot(@Valid @ModelAttribute("forgotForm") ForgotForm form,
                            BindingResult binding, Model model, HttpSession session) {
         if (binding.hasErrors()) {
             binding.getFieldErrors().forEach(e ->
@@ -189,10 +279,11 @@ public class AuthController {
         }
         boolean ok = authService.requestPasswordReset(form.getEmail());
         if (!ok) {
-            model.addAttribute("formError", "Không thể gửi email lúc này. Vui lòng thử lại.");
+            // For privacy, even on failure we show a generic message.
+            model.addAttribute("formError", "Nếu email phù hợp với một tài khoản, hướng dẫn xác minh sẽ được gửi.");
             return "auth/forgot-password";
         }
-        // Save the email so the OTP page can be displayed without re-typing.
+        // Always show the same generic success message – never reveal account existence.
         session.setAttribute("resetEmail", form.getEmail().trim().toLowerCase());
         return "redirect:/verify-reset-otp";
     }
@@ -203,6 +294,7 @@ public class AuthController {
         String email = (String) session.getAttribute("resetEmail");
         if (email == null) return "redirect:/forgot-password";
         model.addAttribute("email", maskEmail(email));
+        model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD));
         if (!model.containsAttribute("resetOtpForm"))
             model.addAttribute("resetOtpForm", new OtpForm());
         return "auth/verify-reset-otp";
@@ -218,7 +310,6 @@ public class AuthController {
                 com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD);
         switch (r) {
             case SUCCESS -> {
-                // Keep the raw OTP in session – the next step will consume it.
                 session.setAttribute("resetOtpPending", form.getOtp().trim());
                 return "redirect:/reset-password";
             }
@@ -239,6 +330,23 @@ public class AuthController {
             }
         }
         return "redirect:/verify-reset-otp";
+    }
+
+    @PostMapping("/verify-reset-otp/resend")
+    public String resendResetOtp(HttpSession session, Model model) {
+        String email = (String) session.getAttribute("resetEmail");
+        if (email == null) return "redirect:/forgot-password";
+        AuthService.ResendResult r = authService.resendOtp(email, com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD);
+        if (r.sent()) {
+            model.addAttribute("formSuccess", "Đã gửi lại mã OTP. Vui lòng kiểm tra email.");
+        } else if ("COOLDOWN".equals(r.code())) {
+            model.addAttribute("formError", "Vui lòng chờ " + r.retryAfterSeconds() + " giây trước khi gửi lại.");
+        } else {
+            model.addAttribute("formError", "Không thể gửi lại mã lúc này. Vui lòng thử lại sau.");
+        }
+        model.addAttribute("email", maskEmail(email));
+        model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD));
+        return "auth/verify-reset-otp";
     }
 
     @GetMapping("/reset-password")
@@ -293,6 +401,12 @@ public class AuthController {
         return "redirect:/reset-password";
     }
 
+    // ================================================================ helpers
+
+    private int resendCooldownSeconds(String email, String purpose) {
+        return otpService.getResendCooldownSeconds(); // server value; the UI may show it
+    }
+
     private void clearResetSession(HttpSession session) {
         session.removeAttribute("resetEmail");
         session.removeAttribute("resetOtpPending");
@@ -340,12 +454,14 @@ public class AuthController {
         private String password;
 
         @NotBlank(message = "Vui lòng nhập họ tên.")
-        @Size(max = 100)
+        @Size(min = 2, max = 100, message = "Họ tên phải có độ dài 2-100 ký tự.")
         private String fullName;
 
         @Pattern(regexp = "^(0|\\+84)[0-9]{9,10}$",
                  message = "Số điện thoại không hợp lệ.")
         private String phone;
+
+        private String confirmPassword; // not a @ModelAttribute field – validated manually
 
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
@@ -357,6 +473,8 @@ public class AuthController {
         public void setFullName(String fullName) { this.fullName = fullName; }
         public String getPhone() { return phone; }
         public void setPhone(String phone) { this.phone = phone; }
+        public String getConfirmPassword() { return confirmPassword; }
+        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
     }
 
     public static class OtpForm {

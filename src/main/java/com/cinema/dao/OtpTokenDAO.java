@@ -39,37 +39,54 @@ public class OtpTokenDAO {
         t.setAttemptCount (rs.getInt("AttemptCount"));
         Timestamp crt = rs.getTimestamp("CreatedAt");
         if (crt != null) t.setCreatedAt(crt.toLocalDateTime());
+        Timestamp sent = rs.getTimestamp("LastSentAt");
+        if (sent != null) t.setLastSentAt(sent.toLocalDateTime());
         return t;
     }
 
-    /** Inserts a new OTP token and returns its generated ID. */
     public Long insert(OtpToken t) {
         return jdbcTemplate.queryForObject("""
-            INSERT INTO dbo.OtpToken (AccountID, Email, CodeHash, Purpose, ExpiresAt)
+            INSERT INTO dbo.OtpToken (AccountID, Email, CodeHash, Purpose, ExpiresAt, LastSentAt)
             OUTPUT inserted.OtpTokenID
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """, Long.class,
                 t.getAccountId(),
                 t.getEmail(),
                 t.getCodeHash(),
                 t.getPurpose(),
-                Timestamp.valueOf(t.getExpiresAt()));
+                Timestamp.valueOf(t.getExpiresAt()),
+                Timestamp.valueOf(t.getLastSentAt() == null ? LocalDateTime.now() : t.getLastSentAt()));
     }
 
     /**
      * Returns the latest unconsumed token for the email + purpose that has not yet expired.
-     * Order: most recent first.
      */
     public Optional<OtpToken> findActiveByEmailAndPurpose(String email, String purpose) {
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject("""
                 SELECT TOP 1 OtpTokenID, AccountID, Email, CodeHash, Purpose,
-                       ExpiresAt, ConsumedAt, AttemptCount, CreatedAt
+                       ExpiresAt, ConsumedAt, AttemptCount, CreatedAt, LastSentAt
                 FROM dbo.OtpToken
                 WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?)))
                   AND Purpose = ?
                   AND ConsumedAt IS NULL
                   AND ExpiresAt > SYSDATETIME()
+                ORDER BY CreatedAt DESC
+                """, otpRowMapper, email, purpose));
+        } catch (EmptyResultDataAccessException ex) {
+            return Optional.empty();
+        }
+    }
+
+    /** Returns the most recent token for the (email, purpose) regardless of consumed/expired state. */
+    public Optional<OtpToken> findLatestByEmailAndPurpose(String email, String purpose) {
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject("""
+                SELECT TOP 1 OtpTokenID, AccountID, Email, CodeHash, Purpose,
+                       ExpiresAt, ConsumedAt, AttemptCount, CreatedAt, LastSentAt
+                FROM dbo.OtpToken
+                WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?)))
+                  AND Purpose = ?
                 ORDER BY CreatedAt DESC
                 """, otpRowMapper, email, purpose));
         } catch (EmptyResultDataAccessException ex) {
@@ -86,7 +103,13 @@ public class OtpTokenDAO {
     public int markConsumed(long otpTokenId) {
         return jdbcTemplate.update(
                 "UPDATE dbo.OtpToken SET ConsumedAt = ? WHERE OtpTokenID = ?",
-                Timestamp.valueOf(LocalDateTime.now()), otpTokenId);
+                Timestamp.valueOf(LocalDateTime.now()));
+    }
+
+    public int touchLastSent(long otpTokenId) {
+        return jdbcTemplate.update(
+                "UPDATE dbo.OtpToken SET LastSentAt = SYSDATETIME() WHERE OtpTokenID = ?",
+                otpTokenId);
     }
 
     public int deleteAllByEmailAndPurpose(String email, String purpose) {
@@ -97,7 +120,8 @@ public class OtpTokenDAO {
 
     public List<OtpToken> findAllByEmailAndPurpose(String email, String purpose) {
         return jdbcTemplate.query("""
-            SELECT OtpTokenID, AccountID, Email, CodeHash, Purpose, ExpiresAt, ConsumedAt, AttemptCount, CreatedAt
+            SELECT OtpTokenID, AccountID, Email, CodeHash, Purpose, ExpiresAt, ConsumedAt,
+                   AttemptCount, CreatedAt, LastSentAt
             FROM dbo.OtpToken
             WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?))) AND Purpose = ?
             ORDER BY CreatedAt DESC

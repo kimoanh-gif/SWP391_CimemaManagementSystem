@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lỗi | CinemaSystem</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .error-box { background: #16213e; border: 1px solid #e94560; border-radius: 12px; padding: 32px; max-width: 900px; width: 100%; }
+  .error-box h1 { color: #e94560; font-size: 1.8rem; margin-bottom: 8px; }
+  .error-box .status { color: #e94560; font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 16px; }
+  .error-box .message { color: #ccc; font-size: 1.1rem; margin-bottom: 24px; }
+  .error-section { margin-bottom: 20px; }
+  .error-section h3 { color: #0f3460; background: #0f3460; color: #fff; padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 0.9rem; }
+  .error-section pre { background: #0a0a0a; border: 1px solid #333; border-top: none; border-radius: 0 0 6px 6px; padding: 14px; font-size: 0.75rem; color: #f8f8f2; overflow-x: auto; max-height: 300px; white-space: pre-wrap; word-break: break-all; }
+  .error-section table { background: #0a0a0a; border: 1px solid #333; border-top: none; border-radius: 0 0 6px 6px; padding: 14px; font-size: 0.8rem; width: 100%; }
+  .error-section td { padding: 4px 10px; }
+  .error-section td:first-child { color: #e94560; white-space: nowrap; }
+  .back { display: inline-block; margin-top: 24px; padding: 10px 24px; background: #e94560; color: #fff; text-decoration: none; border-radius: 8px; font-size: 0.95rem; }
+  .back:hover { background: #c73e54; }
+</style>
+</head>
+<body>
+<div class="error-box">
+  <div class="status" th:text="${status}">500</div>
+  <h1>Đã xảy ra lỗi!</h1>
+  <p class="message" th:text="${message}">Internal Server Error</p>
+
+  <div class="error-section">
+    <h3>📋 Chi tiết lỗi</h3>
+    <table>
+      <tr><td>Status:</td><td th:text="${status}">500</td></tr>
+      <tr><td>Error:</td><td th:text="${error}">Internal Server Error</td></tr>
+      <tr><td>Message:</td><td th:text="${message}">—</td></tr>
+      <tr><td>Path:</td><td th:text="${path}">—</td></tr>
+      <tr><td>Timestamp:</td><td th:text="${timestamp}">—</td></tr>
+    </table>
+  </div>
+
+  <div class="error-section" th:if="${trace != null and trace != ''}">
+    <h3>🔍 Stacktrace</h3>
+    <pre th:text="${trace}"></pre>
+  </div>
+
+  <div class="error-section" th:if="${exception != null}">
+    <h3>⚠️ Exception</h3>
+    <pre th:text="${exception}"></pre>
+  </div>
+
+  <a href="/" class="back">← Quay về trang chủ</a>
+  <a href="/login" class="back" style="background:#0f3460;margin-left:12px;">Đăng nhập</a>
+</div>
+</body>
+</html>
