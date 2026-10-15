@@ -2,81 +2,220 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng ký | Cineverse</title>
-<style>
-:root{--red:#e51f35;--ink:#08090e;--muted:#aeb0bb}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",Arial,sans-serif;background:#08090e;color:#fff}
-body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 70% 25%,#351117 0,transparent 40%),#08090e}
-.page{min-height:100vh;display:grid;place-items:center;padding:32px 16px}
-.panel{width:min(100%,560px);padding:clamp(28px,3vw,46px);border:1px solid rgba(255,255,255,.18);border-radius:22px;background:linear-gradient(145deg,rgba(23,23,31,.94),rgba(10,11,17,.96));box-shadow:0 28px 100px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.08)}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:15px;letter-spacing:.19em;font-weight:700}.brand-mark{width:34px;height:34px;border-radius:50%;background:var(--red);display:grid;place-items:center;font-size:18px}
-.panel h1{font-family:Georgia,serif;font-size:clamp(28px,2.5vw,38px);font-weight:500;letter-spacing:-.025em;margin:0 0 8px}
-.intro{margin:0 0 26px;color:#aaaab5;font-size:14px;line-height:1.6}
-.notice{padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;margin:0 0 18px}.notice.error{background:rgba(157,22,42,.19);border:1px solid rgba(244,73,94,.55);color:#ffbfc7}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
-.field{margin:0 0 16px}.field label{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;margin:0 0 8px;color:#e7e5e8}
-.input-wrap{display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border:1px solid #424653;border-radius:11px;background:rgba(5,7,12,.55);transition:border-color .18s,box-shadow .18s}
-.input-wrap:focus-within{border-color:#e83a4d;box-shadow:0 0 0 3px rgba(229,31,53,.13)}
-.input-wrap.invalid{border-color:#f15b6d}
-.input-wrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px;font-family:inherit}
-.input-wrap input::placeholder{color:#777b87}
-.field-error{margin:6px 2px 0;color:#ff9eaa;font-size:12px;line-height:1.4}
-.password-rules{margin:6px 2px 0;color:#9a9ba5;font-size:11px;line-height:1.5}
-.submit{width:100%;height:54px;border:1px solid #ff4053;border-radius:11px;color:white;background:linear-gradient(180deg,#f02b40,#bd1028);font-size:14px;letter-spacing:.06em;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(200,17,41,.24);transition:filter .18s,transform .18s}
-.submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.bottom{border-top:1px solid rgba(255,255,255,.08);margin-top:22px;padding-top:20px;text-align:center;color:#a6a4ae;font-size:13px}
-.bottom a{color:#ff586a;text-decoration:none;font-weight:700;margin-left:5px}
-</style>
+<title>Tạo tài khoản | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
 <body>
-<main class="page">
-  <section class="panel" aria-labelledby="register-title">
-    <div class="brand"><span class="brand-mark">▶</span><span>CINEMA SYSTEM</span></div>
-    <h1 id="register-title">Tạo tài khoản</h1>
-    <p class="intro">Đăng ký để đặt vé, nhận điểm thưởng và nhận khuyến mãi từ Cineverse.</p>
+<div class="auth-page">
+  <aside class="auth-hero" aria-label="Không gian rạp chiếu phim">
+    <div class="auth-hero-caption">
+      <div class="eyebrow">Your cinema experience</div>
+      <h1>Bắt đầu hành trình<br>điện ảnh của bạn.</h1>
+      <div class="line"></div>
+      <p>Tạo tài khoản để đặt vé, tích điểm và nhận ưu đãi thành viên.</p>
+    </div>
+  </aside>
 
-    <div class="notice error" role="alert" th:if="${formError}" th:text="${formError}"></div>
-
-    <form th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
-      <div class="field" th:classappend="${usernameError != null} ? 'has-error' : ''">
-        <label for="username">TÊN ĐĂNG NHẬP</label>
-        <div class="input-wrap" th:classappend="${usernameError != null} ? 'invalid' : ''">
-          <input id="username" type="text" th:field="*{username}" autocomplete="username" maxlength="50" placeholder="vi_du_123" required>
-        </div>
-        <p class="field-error" th:if="${usernameError}" th:text="${usernameError}"></p>
+  <main class="auth-panel-wrap">
+    <section class="auth-panel" aria-labelledby="register-title">
+      <div class="auth-brand-mobile">
+        <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
       </div>
+      <h2 id="register-title">Tạo tài khoản</h2>
+      <p class="auth-intro">Đăng ký để trở thành thành viên CinemaSystem. Tài khoản sẽ được kích hoạt bằng mã OTP gửi qua email.</p>
 
-      <div class="field" th:classappend="${emailError != null} ? 'has-error' : ''">
-        <label for="email">EMAIL</label>
-        <div class="input-wrap" th:classappend="${emailError != null} ? 'invalid' : ''">
-          <input id="email" type="email" th:field="*{email}" autocomplete="email" maxlength="255" placeholder="name@example.com" required>
+      <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
+      <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
+
+      <a class="auth-btn-google" th:href="@{/oauth2/authorization/google}" aria-label="Tiếp tục với Google">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.2 3.6l6.9-6.9C35.9 2.4 30.3 0 24 0 14.6 0 6.45 5.4 2.55 13.3l8.06 6.26C12.6 13.3 17.85 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.1 24.5c0-1.6-.14-3.1-.4-4.5H24v9h12.5c-.55 2.9-2.2 5.4-4.7 7.1l7.3 5.7c4.3-4 6.8-9.8 6.8-17.3z"/>
+          <path fill="#FBBC05" d="M10.6 28.6c-.5-1.5-.8-3.1-.8-4.6s.3-3.1.8-4.6l-8.06-6.26C.96 16.6 0 20.2 0 24s.96 7.4 2.54 10.86L10.6 28.6z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.9-2.13 15.9-5.8l-7.3-5.7c-2 1.4-4.6 2.2-8.6 2.2-6.15 0-11.4-3.8-13.4-9.1l-8.06 6.26C6.45 42.6 14.6 48 24 48z"/>
+        </svg>
+        <span>Đăng ký với Google</span>
+      </a>
+
+      <div class="auth-divider"><span>HOẶC TẠO BẰNG EMAIL</span></div>
+
+      <form th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <div class="auth-field" th:classappend="${fullNameError != null} ? 'has-error' : ''">
+          <label for="fullName">HỌ VÀ TÊN</label>
+          <div class="auth-input-wrap" th:classappend="${fullNameError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            <input id="fullName" type="text" th:field="*{fullName}" autocomplete="name" maxlength="100"
+                   placeholder="Nguyễn Văn A" required>
+          </div>
+          <p class="auth-error" th:if="${fullNameError}" th:text="${fullNameError}"></p>
         </div>
-        <p class="field-error" th:if="${emailError}" th:text="${emailError}"></p>
-      </div>
 
-      <div class="field" th:classappend="${passwordError != null} ? 'has-error' : ''">
-        <label for="password">MẬT KHẨU</label>
-        <div class="input-wrap" th:classappend="${passwordError != null} ? 'invalid' : ''">
-          <input id="password" type="password" th:field="*{password}" autocomplete="new-password" maxlength="128" placeholder="≥ 8 ký tự, có chữ và số" required>
+        <div class="auth-field" th:classappend="${usernameError != null} ? 'has-error' : ''">
+          <label for="username">TÊN ĐĂNG NHẬP</label>
+          <div class="auth-input-wrap" th:classappend="${usernameError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M16 4l2 2-2 2"/></svg>
+            <input id="username" type="text" th:field="*{username}" autocomplete="username" maxlength="50"
+                   placeholder="4-50 ký tự, chỉ chữ, số, ., _ hoặc -" required>
+          </div>
+          <p class="auth-error" th:if="${usernameError}" th:text="${usernameError}"></p>
         </div>
-        <p class="password-rules">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và chữ số.</p>
-        <p class="field-error" th:if="${passwordError}" th:text="${passwordError}"></p>
-      </div>
 
-      <div class="field" th:classappend="${phoneError != null} ? 'has-error' : ''">
-        <label for="phone">SỐ ĐIỆN THOẠI <span style="color:#666">(tuỳ chọn)</span></label>
-        <div class="input-wrap" th:classappend="${phoneError != null} ? 'invalid' : ''">
-          <input id="phone" type="tel" th:field="*{phone}" autocomplete="tel" maxlength="15" placeholder="0912345678">
+        <div class="auth-field" th:classappend="${emailError != null} ? 'has-error' : ''">
+          <label for="email">EMAIL</label>
+          <div class="auth-input-wrap" th:classappend="${emailError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+            <input id="email" type="email" th:field="*{email}" autocomplete="email" maxlength="255"
+                   placeholder="name@example.com" required>
+          </div>
+          <p class="auth-error" th:if="${emailError}" th:text="${emailError}"></p>
         </div>
-        <p class="field-error" th:if="${phoneError}" th:text="${phoneError}"></p>
-      </div>
 
-      <button class="submit" type="submit">ĐĂNG KÝ &amp; GỬI OTP</button>
-    </form>
+        <div class="auth-field" th:classappend="${phoneError != null} ? 'has-error' : ''">
+          <label for="phone">SỐ ĐIỆN THOẠI <span style="color:var(--cinema-text-disabled);font-weight:400;">(tùy chọn)</span></label>
+          <div class="auth-input-wrap" th:classappend="${phoneError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.79a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.29-1.29a2 2 0 0 1 2.11-.45c.89.35 1.83.59 2.79.72A2 2 0 0 1 22 16.92z"/></svg>
+            <input id="phone" type="tel" th:field="*{phone}" autocomplete="tel" maxlength="13"
+                   placeholder="0xxxxxxxxx hoặc +84xxxxxxxxx">
+          </div>
+          <p class="auth-error" th:if="${phoneError}" th:text="${phoneError}"></p>
+        </div>
 
-    <div class="bottom">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></div>
-  </section>
-</main>
+        <div class="auth-field" th:classappend="${passwordError != null} ? 'has-error' : ''">
+          <label for="password">MẬT KHẨU</label>
+          <div class="auth-input-wrap" th:classappend="${passwordError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <input id="password" type="password" th:field="*{password}" autocomplete="new-password" maxlength="128"
+                   placeholder="Tối thiểu 8 ký tự, có chữ và số" required>
+            <button class="auth-show-pw" type="button" id="togglePassword" aria-label="Hiện mật khẩu">
+              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="pwd-policy" id="pwdPolicy" aria-live="polite">
+            <div class="req" data-req="len">Ít nhất 8 ký tự</div>
+            <div class="req" data-req="letter">Có ít nhất một chữ cái</div>
+            <div class="req" data-req="digit">Có ít nhất một chữ số</div>
+          </div>
+          <p class="auth-error" th:if="${passwordError}" th:text="${passwordError}"></p>
+        </div>
+
+        <div class="auth-field" th:classappend="${confirmPasswordError != null} ? 'has-error' : ''">
+          <label for="confirmPassword">XÁC NHẬN MẬT KHẨU</label>
+          <div class="auth-input-wrap" th:classappend="${confirmPasswordError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>
+            <input id="confirmPassword" type="password" name="confirmPassword" autocomplete="new-password" maxlength="128"
+                   placeholder="Nhập lại mật khẩu" required>
+            <button class="auth-show-pw" type="button" id="toggleConfirmPassword" aria-label="Hiện mật khẩu">
+              <svg id="eyeIconConfirm" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="auth-error" th:if="${confirmPasswordError}" th:text="${confirmPasswordError}"></p>
+        </div>
+
+        <button class="auth-btn" type="submit" id="submitBtn">
+          <span class="label">TẠO TÀI KHOẢN</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="auth-bottom">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const pw      = document.getElementById('password');
+  const confirm = document.getElementById('confirmPassword');
+  const toggle  = document.getElementById('togglePassword');
+  const toggleC = document.getElementById('toggleConfirmPassword');
+
+  // Toggle password
+  if (toggle && pw) {
+    toggle.addEventListener('click', () => {
+      const visible = pw.type === 'password';
+      pw.type = visible ? 'text' : 'password';
+      toggle.setAttribute('aria-label', visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+    });
+  }
+
+  // Toggle confirm password
+  if (toggleC && confirm) {
+    toggleC.addEventListener('click', () => {
+      const visible = confirm.type === 'password';
+      confirm.type = visible ? 'text' : 'password';
+      toggleC.setAttribute('aria-label', visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+      document.getElementById('eyeIconConfirm').innerHTML = visible
+        ? '<path d="M3 3l18 18"/><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6.5 0 10 6 10 6a16 16 0 0 1-3.2 3.8M6.2 6.2C3.5 8 2 12 2 12s3.5 6 10 6c1.3 0 2.5-.3 3.5-.7"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'
+        : '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>';
+    });
+  }
+
+  // Live password policy
+  const policy = document.getElementById('pwdPolicy');
+  if (pw && policy) {
+    const check = () => {
+      const v = pw.value;
+      policy.querySelector('[data-req="len"]').classList.toggle('ok', v.length >= 8);
+      policy.querySelector('[data-req="letter"]').classList.toggle('ok', /[A-Za-z]/.test(v));
+      policy.querySelector('[data-req="digit"]').classList.toggle('ok', /\d/.test(v));
+    };
+    pw.addEventListener('input', check);
+    check();
+  }
+
+  // Live confirm-password match
+  if (pw && confirm) {
+    const confirmField = confirm.closest('.auth-field');
+    const confirmError = confirmField ? confirmField.querySelector('.auth-error') : null;
+    const checkMatch = () => {
+      if (confirm.value.length === 0) return;
+      const match = pw.value === confirm.value;
+      if (confirmError) {
+        confirmError.textContent = match ? '' : 'Mật khẩu xác nhận không khớp.';
+        confirmError.style.display = match ? 'none' : 'block';
+      }
+      confirm.closest('.auth-input-wrap').classList.toggle('invalid', !match && confirm.value.length > 0);
+    };
+    confirm.addEventListener('input', checkMatch);
+    pw.addEventListener('input', checkMatch);
+  }
+
+  // Submit – block if passwords don't match
+  const form = document.querySelector('form');
+  if (form && pw && confirm) {
+    form.addEventListener('submit', (e) => {
+      if (pw.value !== confirm.value) {
+        e.preventDefault();
+        const confirmField = confirm.closest('.auth-field');
+        const confirmError = confirmField ? confirmField.querySelector('.auth-error') : null;
+        if (confirmError) {
+          confirmError.textContent = 'Mật khẩu xác nhận không khớp.';
+          confirmError.style.display = 'block';
+        }
+        confirm.closest('.auth-input-wrap').classList.add('invalid');
+        confirm.focus();
+      }
+    });
+  }
+
+  const btn = document.getElementById('submitBtn');
+  if (btn) {
+    form.addEventListener('submit', () => {
+      btn.classList.add('loading');
+      btn.disabled = true;
+      setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 8000);
+    });
+  }
+})();
+</script>
 </body>
 </html>

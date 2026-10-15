@@ -9,15 +9,13 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Account DAO – Spring JdbcTemplate.
  * All queries are centralised; manual mapping goes through mapResultSetToModel().
- *
- * Note: RowMapper<T> has the signature T mapRow(ResultSet rs, int rowNum).
- * The second argument (rowNum) is ignored here – we only need ResultSet.
  */
 @Repository
 public class AccountDAO {
@@ -43,6 +41,13 @@ public class AccountDAO {
         a.setFullName     (rs.getString   ("FullName"));
         a.setPhone        (rs.getString   ("Phone"));
         a.setStatus       (rs.getString   ("Status"));
+        Timestamp verified = rs.getTimestamp("EmailVerifiedAt");
+        a.setEmailVerified(verified != null);
+        if (verified != null) a.setEmailVerifiedAt(verified.toLocalDateTime());
+        Timestamp created = rs.getTimestamp("CreatedAt");
+        if (created != null) a.setCreatedAt(created.toLocalDateTime());
+        Timestamp lastLogin = rs.getTimestamp("LastLoginAt");
+        if (lastLogin != null) a.setLastLoginAt(lastLogin.toLocalDateTime());
         return a;
     }
 
@@ -50,7 +55,8 @@ public class AccountDAO {
 
     public Optional<Account> findByEmail(String email) {
         final String sql = """
-            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status
+            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status,
+                   EmailVerifiedAt, CreatedAt, LastLoginAt
             FROM dbo.Account
             WHERE LOWER(LTRIM(RTRIM(Email))) = ?
             """;
@@ -64,7 +70,8 @@ public class AccountDAO {
 
     public Optional<Account> findByUsername(String username) {
         final String sql = """
-            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status
+            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status,
+                   EmailVerifiedAt, CreatedAt, LastLoginAt
             FROM dbo.Account
             WHERE LOWER(LTRIM(RTRIM(Username))) = ?
             """;
@@ -86,7 +93,8 @@ public class AccountDAO {
 
     public Optional<Account> findById(int accountId) {
         final String sql = """
-            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status
+            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status,
+                   EmailVerifiedAt, CreatedAt, LastLoginAt
             FROM dbo.Account WHERE AccountID = ?
             """;
         try {
@@ -112,7 +120,8 @@ public class AccountDAO {
 
     public List<Account> findAllByStatus(String status) {
         return jdbcTemplate.query("""
-            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status
+            SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status,
+                   EmailVerifiedAt, CreatedAt, LastLoginAt
             FROM dbo.Account WHERE Status = ? ORDER BY AccountID DESC
             """, accountRowMapper, status);
     }
@@ -122,6 +131,7 @@ public class AccountDAO {
     /**
      * Inserts a new account and returns the generated AccountID.
      * Status defaults to PENDING_VERIFICATION until the activation OTP is verified.
+     * PasswordHash is nullable for OAuth-only accounts.
      */
     public Integer insert(Account account) {
         final String sql = """
@@ -153,5 +163,17 @@ public class AccountDAO {
         return jdbcTemplate.update("""
                 UPDATE dbo.Account SET FullName = ?, Phone = ? WHERE AccountID = ?
                 """, fullName, phone, accountId);
+    }
+
+    public int markEmailVerified(int accountId) {
+        return jdbcTemplate.update(
+                "UPDATE dbo.Account SET EmailVerifiedAt = SYSDATETIME(), Status = 'ACTIVE' WHERE AccountID = ?",
+                accountId);
+    }
+
+    public int touchLastLogin(int accountId) {
+        return jdbcTemplate.update(
+                "UPDATE dbo.Account SET LastLoginAt = SYSDATETIME() WHERE AccountID = ?",
+                accountId);
     }
 }
