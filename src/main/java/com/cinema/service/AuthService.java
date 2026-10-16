@@ -54,16 +54,16 @@ public class AuthService {
     private final PasswordEncoder  passwordEncoder;
 
     @Value("${app.auth.otp.max-attempts:5}")
-    private int maxOtpAttempts;
+    private int maxOtpAttempts = 5;
 
     @Value("${app.auth.login.max-failures:5}")
-    private int maxLoginFailures;
+    private int maxLoginFailures = 5;
 
     @Value("${app.auth.login.lockout-minutes:5}")
-    private int lockoutMinutes;
+    private int lockoutMinutes = 5;
 
     @Value("${app.auth.login.max-failures-per-ip:20}")
-    private int maxLoginFailuresPerIp;
+    private int maxLoginFailuresPerIp = 20;
 
     public AuthService(AccountDAO accountDAO, RoleDAO roleDAO, CustomerDAO customerDAO,
                        OtpTokenDAO otpTokenDAO, LoginAttemptDAO loginAttemptDAO,

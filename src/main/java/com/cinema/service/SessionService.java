@@ -100,8 +100,12 @@ public class SessionService {
 
     public void updateProfileSnapshot(HttpSession session, String fullName, String phone) {
         if (session == null) return;
-        session.setAttribute(ATTR_FULL_NAME, fullName);
-        session.setAttribute(ATTR_PHONE, phone);
+        AuthenticatedUser current = getCurrentUser(session);
+        if (current == null) return;
+        session.setAttribute(ATTR_USER, new AuthenticatedUser(
+                current.getAccountId(), current.getUsername(), current.getEmail(),
+                fullName, phone, current.getRole(), current.getPermissions(),
+                current.isEmailVerified(), current.getAuthMethod()));
     }
 
     public boolean hasRole(HttpSession session, String... allowed) {
@@ -122,10 +126,10 @@ public class SessionService {
     public String dashboardForRole(String role) {
         if (role == null) return "redirect:/login";
         return switch (role.toUpperCase(Locale.ROOT)) {
-            case "ADMIN"    -> "/admin/dashboard";
-            case "MANAGER"  -> "/manager/dashboard";
-            case "STAFF"    -> "/staff/dashboard";
-            case "CUSTOMER" -> "/customer/dashboard";
+            case "ADMIN"    -> "redirect:/admin/dashboard";
+            case "MANAGER"  -> "redirect:/manager/dashboard";
+            case "STAFF"    -> "redirect:/staff/dashboard";
+            case "CUSTOMER" -> "redirect:/customer/dashboard";
             default         -> "redirect:/login";
         };
     }
