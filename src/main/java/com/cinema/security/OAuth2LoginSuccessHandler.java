@@ -101,7 +101,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         accountDAO.touchLastLogin(account.getAccountId());
         sessionService.login(fresh, account, SessionService.AUTH_METHOD_OAUTH_GOOGLE);
-        response.sendRedirect(request.getContextPath() + sessionService.dashboardForRole(sessionService.currentRole(fresh)));
+        String destination = sessionService.dashboardForRole(sessionService.currentRole(fresh));
+        String path = destination.startsWith("redirect:")
+                ? destination.substring("redirect:".length())
+                : destination;
+        response.sendRedirect(request.getContextPath() + path);
     }
 
     private Account resolveAccount(String subject, String email, String fullName, boolean verified) {

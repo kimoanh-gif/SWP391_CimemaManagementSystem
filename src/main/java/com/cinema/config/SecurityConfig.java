@@ -3,6 +3,7 @@ package com.cinema.config;
 import com.cinema.dao.AccountDAO;
 import com.cinema.model.Account;
 import com.cinema.security.OAuth2LoginSuccessHandler;
+import com.cinema.security.SessionAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -38,6 +40,12 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  */
 @Configuration
 public class SecurityConfig {
+
+    private final SessionAuthenticationFilter sessionAuthenticationFilter;
+
+    public SecurityConfig(SessionAuthenticationFilter sessionAuthenticationFilter) {
+        this.sessionAuthenticationFilter = sessionAuthenticationFilter;
+    }
 
     /**
      * Setter-injected (not constructor) to break the bean creation cycle:
@@ -121,6 +129,8 @@ public class SecurityConfig {
             // When an unauthenticated user hits a protected URL → redirect to /login
             .exceptionHandling(eh -> eh
                     .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+
+        http.addFilterBefore(sessionAuthenticationFilter, AuthorizationFilter.class);
 
         // Conditionally wire OAuth2 login
         if (googleOAuthEnabled) {

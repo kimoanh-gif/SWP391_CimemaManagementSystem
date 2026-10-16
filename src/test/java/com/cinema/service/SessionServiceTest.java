@@ -1,10 +1,32 @@
 package com.cinema.service;
 
+import com.cinema.model.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpSession;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SessionServiceTest {
+
+    @Test
+    void updateProfileSnapshot_replacesAuthenticatedUserSnapshot() {
+        SessionService service = new SessionService(null, null);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(SessionService.ATTR_USER, new AuthenticatedUser(
+                7, "customer", "customer@example.com", "Old Name", "0900000000",
+                "CUSTOMER", Set.of("BOOK_TICKETS"), true, SessionService.AUTH_METHOD_PASSWORD));
+
+        service.updateProfileSnapshot(session, "New Name", "0911111111");
+
+        AuthenticatedUser updated = service.getCurrentUser(session);
+        assertNotNull(updated);
+        assertEquals("New Name", updated.getFullName());
+        assertEquals("0911111111", updated.getPhone());
+        assertEquals(7, updated.getAccountId());
+        assertEquals(Set.of("BOOK_TICKETS"), updated.getPermissions());
+    }
 
     @Test
     void safeInternalRedirect_blocksAbsolute() {
