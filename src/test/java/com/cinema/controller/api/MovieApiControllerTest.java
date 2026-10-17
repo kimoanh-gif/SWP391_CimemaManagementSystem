@@ -153,13 +153,13 @@ class MovieApiControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/manager/movies/{id}/deactivate: Should return 400 when active showtimes exist")
+    @DisplayName("PATCH /api/manager/movies/{id}/deactivate: Should return 409 Conflict when active showtimes exist")
     void testDeactivateMovieApi_HasActiveShowtimes() throws Exception {
         when(movieService.deactivateMovie(8))
                 .thenThrow(new MovieHasActiveShowtimesException("Đang có suất chiếu"));
 
         mockMvc.perform(patch("/api/manager/movies/8/deactivate"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
     }
 

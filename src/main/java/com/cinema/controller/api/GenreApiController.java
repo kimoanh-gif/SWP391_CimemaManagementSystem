@@ -170,7 +170,7 @@ public class GenreApiController {
 
     @ExceptionHandler(GenreAssociationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAssociation(GenreAssociationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(UnauthorizedManagerException.class)

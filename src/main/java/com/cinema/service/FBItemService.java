@@ -39,6 +39,7 @@ public class FBItemService {
     @Transactional
     public FBItem createItem(FBItemForm form) {
         validateForm(form, null);
+        validateComboComponents(form, null);
 
         fbItemDao.insert(form);
         FBItem created = fbItemDao.findByCode(form.getItemCode().trim())
@@ -56,11 +57,15 @@ public class FBItemService {
     public FBItem updateItem(int id, FBItemForm form) {
         FBItem existing = getItemById(id);
         validateForm(form, id);
+        validateComboComponents(form, id);
 
         fbItemDao.update(id, form);
 
         if ("Combo".equalsIgnoreCase(form.getCategory())) {
             fbItemDao.replaceComboComponents(id, form.getComponentItemIds(), form.getComponentQuantities());
+        } else {
+            // If changed from Combo to Single item, clear any combo components
+            fbItemDao.replaceComboComponents(id, null, null);
         }
 
         return getItemById(id);
@@ -90,6 +95,11 @@ public class FBItemService {
         return getItemById(id);
     }
 
+    public boolean isItemAvailableForSale(int id) {
+        FBItem item = getItemById(id);
+        return item.isAvailableForSale();
+    }
+
     private void validateForm(FBItemForm form, Integer currentId) {
         if (form.getItemCode() == null || form.getItemCode().isBlank()) {
             throw new InvalidFBItemException("Mã sản phẩm / SKU không được để trống");
@@ -109,5 +119,59 @@ public class FBItemService {
                 throw new InvalidFBItemException("Mã sản phẩm / SKU '" + form.getItemCode() + "' đã tồn tại trong hệ thống");
             }
         });
+    }
+
+    private void validateComboComponents(FBItemForm form, Integer currentId) {
+        if (!"Combo".equalsIgnoreCase(form.getCategory())) {
+            return;
+        }
+
+        List<Integer> componentIds = form.getComponentItemIds();
+        List<Integer> quantities = form.getComponentQuantities();
+
+        if (componentIds == null || componentIds.isEmpty()) {
+            // If updating an existing combo and form did not supply component list, preserve existing or enforce minimum
+            if (currentId != null) {
+                List<FBItem.ComboComponent> existingComponents = fbItemDao.findComboComponents(currentId);
+                if (existingComponents != null && !existingComponents.isEmpty()) {
+                    return; // Existing components retained
+                }
+            }
+            throw new InvalidFBItemException("Gói Combo phải có ít nhất một mặt hàng thành phần hợp lệ.");
+        }
+
+        boolean hasValidComponent = false;
+        for (int i = 0; i < componentIds.size(); i++) {
+            Integer compId = componentIds.get(i);
+            if (compId == null) {
+                continue;
+            }
+
+            if (currentId != null && compId.equals(currentId)) {
+                throw new InvalidFBItemException("Gói Combo không thể chứa chính nó.");
+            }
+
+            Integer qty = (quantities != null && i < quantities.size()) ? quantities.get(i) : 1;
+            if (qty == null || qty <= 0) {
+                throw new InvalidFBItemException("Số lượng thành phần trong Combo phải lớn hơn 0.");
+            }
+
+            FBItem comp = fbItemDao.findById(compId)
+                    .orElseThrow(() -> new InvalidFBItemException("Mặt hàng thành phần ID " + compId + " không tồn tại trong hệ thống."));
+
+            if ("Combo".equalsIgnoreCase(comp.getCategory())) {
+                throw new InvalidFBItemException("Combo chỉ có thể chứa các mặt hàng đơn lẻ (Food, Drink, Snack), không thể lồng Combo vào Combo.");
+            }
+
+            if (!comp.isActive()) {
+                throw new InvalidFBItemException("Không thể đưa mặt hàng đang ngừng bán '" + comp.getItemName() + "' vào Combo.");
+            }
+
+            hasValidComponent = true;
+        }
+
+        if (!hasValidComponent) {
+            throw new InvalidFBItemException("Gói Combo phải có ít nhất một mặt hàng thành phần hợp lệ.");
+        }
     }
 }

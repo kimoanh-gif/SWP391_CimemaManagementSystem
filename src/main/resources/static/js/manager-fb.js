@@ -2,6 +2,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("fbModal");
     const openCreateBtn = document.getElementById("btnCreateFB");
 
+    const catSelect = document.getElementById("formCategory");
+    const comboSection = document.getElementById("comboComponentsSection");
+
+    function toggleComboSection() {
+        if (comboSection && catSelect) {
+            comboSection.style.display = (catSelect.value === "Combo") ? "block" : "none";
+        }
+    }
+
+    if (catSelect) {
+        catSelect.addEventListener("change", toggleComboSection);
+    }
+
     if (openCreateBtn) {
         openCreateBtn.addEventListener("click", () => {
             document.getElementById("formItemId").value = "";
@@ -13,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formCostPrice").value = "25000";
             document.getElementById("formImage").value = "https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400";
             document.getElementById("modalTitle").innerText = "Thêm Món / Combo F&B Mới";
+            toggleComboSection();
             modal.classList.add("open");
         });
     }
@@ -45,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formImage").value = image;
             document.getElementById("modalTitle").innerText = "Chỉnh Sửa Sản Phẩm #" + code;
 
+            toggleComboSection();
             modal.classList.add("open");
         });
     });

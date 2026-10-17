@@ -97,4 +97,19 @@ public class SeatTypeApiController {
         SeatType updated = pricingService.updateSeatTypeStatus(id, status);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái loại ghế thành công", updated));
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.SeatTypeNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(com.cinema.exception.SeatTypeNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
+    }
 }

@@ -141,6 +141,22 @@ public class MovieApiController {
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái thành công", updated));
     }
 
+    @GetMapping("/customer")
+    public ResponseEntity<ApiResponse<List<Movie>>> getCustomerMovies() {
+        List<Movie> movies = movieService.getCustomerMovies();
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách phim đang chiếu và sắp chiếu dành cho khách hàng", movies));
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteMovie(
+            @PathVariable int id,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        movieService.deleteMovie(id);
+        return ResponseEntity.ok(ApiResponse.ok("Đã lưu trữ / hủy kích hoạt phim thành công", null));
+    }
+
     @ExceptionHandler(MovieNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(MovieNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
@@ -148,7 +164,7 @@ public class MovieApiController {
 
     @ExceptionHandler(MovieHasActiveShowtimesException.class)
     public ResponseEntity<ApiResponse<Void>> handleActiveShowtimes(MovieHasActiveShowtimesException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidMovieStatusException.class)

@@ -278,35 +278,35 @@
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
 
-    <!-- 4 Stats Cards (Image 2) -->
+    <!-- 4 Stats Cards (Real Operational Data) -->
     <div class="stats-row">
         <div class="stat-card blue">
-            <div class="stat-label">Doanh thu F&amp;B hôm nay</div>
-            <div class="stat-value">28.400.000 <small>đ</small></div>
-            <div class="stat-sub"><span class="up">33.7% tổng rạp</span> • Mục tiêu 30%</div>
+            <div class="stat-label">Tổng thực đơn F&amp;B</div>
+            <div class="stat-value" th:text="${totalCount}">8</div>
+            <div class="stat-sub">Mặt hàng và gói combo niêm yết</div>
             <span class="stat-icon">🍿</span>
         </div>
         <div class="stat-card purple">
-            <div class="stat-label">Tỷ lệ đính kèm (Attach Rate)</div>
-            <div class="stat-value">42.6%</div>
-            <div class="stat-sub"><span class="up">↑ +3.8%</span> • 43 combo / 100 vé</div>
+            <div class="stat-label">Gói Combo Rạp</div>
+            <div class="stat-value" th:text="${comboCount}">3</div>
+            <div class="stat-sub">Tiết kiệm và kèm vé xem phim</div>
             <span class="stat-icon">🛒</span>
         </div>
         <div class="stat-card green">
-            <div class="stat-label">Bán chạy nhất (Best Seller)</div>
-            <div class="stat-value" style="font-size:20px;">Combo Solo Phô Mai</div>
-            <div class="stat-sub">194 phần đã bán hôm nay</div>
+            <div class="stat-label">Đang mở bán</div>
+            <div class="stat-value" style="color:var(--success)" th:text="${activeCount}">6</div>
+            <div class="stat-sub">Khả dụng cho khách chọn</div>
             <span class="stat-icon">⭐</span>
         </div>
         <div class="stat-card red">
-            <div class="stat-label">Cảnh báo tồn kho</div>
-            <div class="stat-value" style="color:var(--danger)">02 mặt hàng</div>
-            <div class="stat-sub">Hạt bắp Mỹ &amp; Ly Dune 2</div>
-            <span class="stat-icon">⚠️</span>
+            <div class="stat-label">Tạm ngừng bán</div>
+            <div class="stat-value" style="color:var(--danger)" th:text="${inactiveCount}">2</div>
+            <div class="stat-sub">Đã khóa kinh doanh</div>
+            <span class="stat-icon">⏹</span>
         </div>
     </div>
 
-    <!-- 2-Column Layout (Image 2) -->
+    <!-- 2-Column Layout -->
     <div class="fb-layout">
 
         <!-- Left: Category Tabs, Search & Product Cards -->
@@ -337,24 +337,35 @@
                 </form>
             </div>
 
-            <!-- Product Cards Grid (Image 2) -->
+            <!-- Product Cards Grid -->
             <div class="fb-grid" th:if="${not #lists.isEmpty(items)}">
                 <div th:each="it : ${items}" class="fb-card">
                     <div class="fb-thumb-wrap">
                         <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
                              alt="Ảnh sản phẩm" class="fb-thumb">
                         <div class="badge-tag-wrap">
-                            <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">BEST-SELLER</span>
-                            <span class="tag-pill tag-limited" th:if="${it.itemCode == 'MERCH-DUNE2'}">LIMITED</span>
+                            <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">COMBO</span>
+                            <span class="tag-pill tag-limited" th:if="${it.combo and it.hasInactiveComponents()}" style="background:#DC2626;">THIẾU THÀNH PHẦN</span>
                         </div>
                     </div>
 
                     <div class="fb-body">
                         <div class="fb-card-title-row">
                             <h3 class="fb-title" th:text="${it.itemName}">Combo Couple</h3>
-                            <span class="badge" th:classappend="${it.active ? 'badge-green' : 'badge-gray'}" th:text="${it.active ? 'ĐANG BÁN' : 'TẠM KHÓA'}">ĐANG BÁN</span>
+                            <span class="badge" th:classappend="${it.active ? (it.combo and it.hasInactiveComponents() ? 'badge-orange' : 'badge-green') : 'badge-gray'}"
+                                  th:text="${!it.active ? 'TẠM KHÓA' : (it.combo and it.hasInactiveComponents() ? 'TẠM NGỪNG (THIẾU MÓN)' : 'ĐANG BÁN')}">ĐANG BÁN</span>
                         </div>
-                        <p class="fb-desc" th:text="${it.description}">1 Bắp lớn 2 vị (Phô Mai + Caramel) + 2 Nước ngọt 32oz.</p>
+                        <p class="fb-desc" th:text="${it.description}">1 Bắp lớn 2 vị + 2 Nước ngọt.</p>
+
+                        <!-- Combo Components Breakdown -->
+                        <div th:if="${it.combo and not #lists.isEmpty(it.comboComponents)}" style="font-size:11.5px;color:var(--text-600);background:var(--bg-body);padding:6px 10px;border-radius:6px;border:1px dashed var(--border);">
+                            <span style="font-weight:700;">Gồm: </span>
+                            <span th:each="comp, iter : ${it.comboComponents}">
+                                <span th:text="${comp.quantity} + 'x ' + ${comp.componentName}"></span>
+                                <span th:if="${comp.status == 'Inactive'}" style="color:var(--danger);font-weight:700;">(Tạm ngưng)</span>
+                                <span th:if="${!iter.last}"> + </span>
+                            </span>
+                        </div>
 
                         <div class="fb-price-row">
                             <div>
@@ -369,15 +380,15 @@
                         <span class="fb-sku-tag" th:text="${it.itemCode}">CB-ROYAL-02</span>
                         <div style="display:flex;align-items:center;gap:6px;">
                             <button type="button" class="btn btn-secondary btn-sm btn-edit-fb"
-                                    style="padding:3px 8px;font-size:12px;"
-                                    th:data-id="${it.itemId}"
-                                    th:data-code="${it.itemCode}"
-                                    th:data-name="${it.itemName}"
-                                    th:data-category="${it.category}"
-                                    th:data-desc="${it.description}"
-                                    th:data-sellingprice="${it.sellingPrice}"
-                                    th:data-costprice="${it.costPrice}"
-                                    th:data-image="${it.image}">✎ Sửa giá</button>
+                                     style="padding:3px 8px;font-size:12px;"
+                                     th:data-id="${it.itemId}"
+                                     th:data-code="${it.itemCode}"
+                                     th:data-name="${it.itemName}"
+                                     th:data-category="${it.category}"
+                                     th:data-desc="${it.description}"
+                                     th:data-sellingprice="${it.sellingPrice}"
+                                     th:data-costprice="${it.costPrice}"
+                                     th:data-image="${it.image}">✎ Sửa giá</button>
 
                             <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
                                 <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
@@ -392,20 +403,6 @@
                 </div>
             </div>
 
-            <!-- Pagination (Image 2) -->
-            <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);margin-top:14px;" th:if="${not #lists.isEmpty(items)}">
-                <span style="font-size: 13px; color: var(--text-500);">
-                    Hiển thị 1 – <span th:text="${#lists.size(items)}">8</span> trên tổng số <span th:text="${totalCount}">8</span> món ăn &amp; combo tại quầy Landmark 81
-                </span>
-                <div class="pagination">
-                    <button type="button" class="page-btn" disabled>&lsaquo;</button>
-                    <button type="button" class="page-btn active">1</button>
-                    <button type="button" class="page-btn">2</button>
-                    <button type="button" class="page-btn">3</button>
-                    <button type="button" class="page-btn">&rsaquo;</button>
-                </div>
-            </div>
-
             <!-- Empty State -->
             <div class="empty-state" th:if="${#lists.isEmpty(items)}">
                 <div class="empty-state-icon">🍿</div>
@@ -415,65 +412,32 @@
             </div>
         </div>
 
-        <!-- Right: Inventory & AI Upsell Widgets (Image 2) -->
+        <!-- Right: Business Standards & Snapshot Pricing Rules -->
         <div style="display:flex;flex-direction:column;gap:16px;">
 
-            <!-- Inventory Widget (Image 2) -->
             <div class="widget-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:16px;">📦</span>
-                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">Tồn Kho Nguyên Liệu Tiêu Hao</h3>
-                    </div>
-                    <span style="font-size:11.5px;color:var(--primary);font-weight:600;cursor:pointer;">+ Nhập kho</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:16px;">📋</span>
+                    <h3 style="font-size:13.5px;font-weight:700;margin:0;">Quy Chuẩn Bán Hàng F&amp;B (UC-32)</h3>
                 </div>
 
-                <div class="stock-item">
-                    <div class="stock-row-top">
-                        <span class="stock-name">Hạt bắp nấm Mỹ (Mushroom)</span>
-                        <span class="stock-val alert">45 kg (3 bao - Thấp)</span>
+                <div style="font-size:12px;color:var(--text-600);line-height:1.5;display:flex;flex-direction:column;gap:10px;">
+                    <div style="border-left:3px solid var(--primary);padding-left:8px;">
+                        <strong style="color:var(--text-900);">1. Snapshot Giá Bán (BR-51):</strong>
+                        <div>Khi khách hoàn tất đặt vé và bắp nước, giá bán được lưu cố định (snapshot) vào hóa đơn. Việc điều chỉnh giá sau này không làm thay đổi doanh thu đơn cũ.</div>
                     </div>
-                    <div class="stock-bar-wrap"><div class="stock-bar red" style="width:25%;"></div></div>
-                </div>
-
-                <div class="stock-item">
-                    <div class="stock-row-top">
-                        <span class="stock-name">Bơ hương thảo mộc vàng</span>
-                        <span class="stock-val">12 kg (Ổn định)</span>
+                    <div style="border-left:3px solid var(--warning);padding-left:8px;">
+                        <strong style="color:var(--text-900);">2. Ràng Buộc Combo &amp; Thành Phần:</strong>
+                        <div>Combo chỉ được kết hợp từ các món đơn lẻ (Food, Drink, Snack). Khi một món thành phần bị ngừng bán, hệ thống tự động khóa bán gói combo liên quan để tránh phục vụ thiếu món.</div>
                     </div>
-                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:70%;"></div></div>
-                </div>
-
-                <div class="stock-item">
-                    <div class="stock-row-top">
-                        <span class="stock-name">Siro Coca/Sprite (BIB 20L)</span>
-                        <span class="stock-val">8 bình CO2</span>
+                    <div style="border-left:3px solid var(--success);padding-left:8px;">
+                        <strong style="color:var(--text-900);">3. Phạm Vi Quản Lý Kho:</strong>
+                        <div>Hệ thống quản lý định lượng giá bán và trạng thái niêm yết menu rạp. Việc xuất nhập bao bắp, bình siro được quản lý thực tế theo ca tại quầy Bar POS.</div>
                     </div>
-                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:85%;"></div></div>
                 </div>
-
-                <div class="stock-item">
-                    <div class="stock-row-top">
-                        <span class="stock-name">Phô mai bột New Zealand</span>
-                        <span class="stock-val">26 hộp (Đầy đủ)</span>
-                    </div>
-                    <div class="stock-bar-wrap"><div class="stock-bar green" style="width:90%;"></div></div>
-                </div>
-
-                <div class="stock-item">
-                    <div class="stock-row-top">
-                        <span class="stock-name">Ly topper Dune 2 Sandworm</span>
-                        <span class="stock-val alert">14 cái (Báo động)</span>
-                    </div>
-                    <div class="stock-bar-wrap"><div class="stock-bar red" style="width:10%;"></div></div>
-                </div>
-
-                <button type="button" class="btn btn-secondary btn-sm" style="justify-content:center;margin-top:4px;" onclick="alert('Đã đồng bộ số liệu kiểm kê thực tế với quầy Bar!')">
-                    Đối Soát Kho
-                </button>
             </div>
 
-            <!-- Upsell AI Widget (Image 2) -->
+            <!-- Upsell AI Widget -->
             <div class="widget-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -501,14 +465,6 @@
                         <div style="font-size:11px;color:var(--text-400);">Khuyến khích mix 2 vị (+10.000 đ)</div>
                     </div>
                     <input type="checkbox" checked style="width:16px;height:16px;">
-                </div>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
-                    <div>
-                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Kèm Snack Xúc Xích Đức (+35.000 đ)</div>
-                        <div style="font-size:11px;color:var(--text-400);">Gợi ý cho các suất chiếu sau 18:00</div>
-                    </div>
-                    <input type="checkbox" style="width:16px;height:16px;">
                 </div>
             </div>
 
@@ -564,6 +520,22 @@
             <div class="form-group">
                 <label class="form-label">Mô Tả / Thành Phần Món Ăn</label>
                 <textarea id="formDescription" th:field="*{description}" class="form-control" rows="2" placeholder="Chi tiết món ăn hoặc combo..."></textarea>
+            </div>
+            <!-- Dynamic Combo Component Selection -->
+            <div id="comboComponentsSection" class="form-group" style="display:none;background:#F9FAFB;padding:12px;border-radius:8px;border:1px solid var(--border);">
+                <label class="form-label" style="font-weight:700;margin-bottom:6px;">Thành phần tạo nên gói Combo (Chọn ít nhất 1 món):</label>
+                <div style="display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;padding-right:4px;">
+                    <div th:each="si : ${singleItems}" style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid var(--border);">
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
+                            <input type="checkbox" name="componentItemIds" th:value="${si.itemId}" class="combo-comp-cb">
+                            <span th:text="${si.itemName} + ' (' + ${si.category} + ')'">Bắp rang bơ</span>
+                        </label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:11.5px;color:var(--text-500);">Số lượng:</span>
+                            <input type="number" name="componentQuantities" value="1" min="1" max="10" style="width:48px;padding:2px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;" class="combo-comp-qty">
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>

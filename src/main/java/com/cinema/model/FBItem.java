@@ -155,17 +155,40 @@ public class FBItem {
         return profit.multiply(new BigDecimal("100")).divide(sellingPrice, 1, RoundingMode.HALF_UP);
     }
 
+    public boolean hasInactiveComponents() {
+        if (!isCombo() || comboComponents == null || comboComponents.isEmpty()) {
+            return false;
+        }
+        return comboComponents.stream().anyMatch(c -> "Inactive".equalsIgnoreCase(c.getStatus()));
+    }
+
+    public boolean isAvailableForSale() {
+        if (!isActive()) {
+            return false;
+        }
+        if (isCombo() && hasInactiveComponents()) {
+            return false;
+        }
+        return true;
+    }
+
     public static class ComboComponent {
         private Integer componentItemId;
         private String componentName;
         private Integer quantity;
+        private String status; // 'Active', 'Inactive'
 
         public ComboComponent() {}
 
         public ComboComponent(Integer componentItemId, String componentName, Integer quantity) {
+            this(componentItemId, componentName, quantity, "Active");
+        }
+
+        public ComboComponent(Integer componentItemId, String componentName, Integer quantity, String status) {
             this.componentItemId = componentItemId;
             this.componentName = componentName;
             this.quantity = quantity;
+            this.status = status;
         }
 
         public Integer getComponentItemId() { return componentItemId; }
@@ -174,5 +197,7 @@ public class FBItem {
         public void setComponentName(String componentName) { this.componentName = componentName; }
         public Integer getQuantity() { return quantity; }
         public void setQuantity(Integer quantity) { this.quantity = quantity; }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
     }
 }

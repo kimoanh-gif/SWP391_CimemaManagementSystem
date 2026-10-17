@@ -52,6 +52,8 @@ public class FBItemController {
         long comboCount = items.stream().filter(i -> "Combo".equalsIgnoreCase(i.getCategory())).count();
         long foodCount = items.stream().filter(i -> "Food".equalsIgnoreCase(i.getCategory()) || "Snack".equalsIgnoreCase(i.getCategory())).count();
         long drinkCount = items.stream().filter(i -> "Drink".equalsIgnoreCase(i.getCategory())).count();
+        long activeCount = items.stream().filter(FBItem::isActive).count();
+        long inactiveCount = items.stream().filter(i -> !i.isActive()).count();
 
         model.addAttribute("items", items);
         model.addAttribute("singleItems", singleItems);
@@ -63,6 +65,8 @@ public class FBItemController {
         model.addAttribute("comboCount", comboCount);
         model.addAttribute("foodCount", foodCount);
         model.addAttribute("drinkCount", drinkCount);
+        model.addAttribute("activeCount", activeCount);
+        model.addAttribute("inactiveCount", inactiveCount);
 
         if (!model.containsAttribute("fbForm")) {
             model.addAttribute("fbForm", new FBItemForm());

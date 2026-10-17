@@ -179,12 +179,12 @@
                         </div>
                     </td>
                     <td style="text-align: center;">
-                        <span class="badge-movies btn-view-movies"
-                              th:data-id="${genre.genreId}"
-                              th:data-name="${genre.name}"
-                              title="Xem danh sách phim thuộc thể loại này">
+                        <a th:href="@{/manager/movies(genreId=${genre.genreId})}"
+                           class="badge-movies"
+                           style="text-decoration:none;cursor:pointer;display:inline-block;"
+                           title="Xem danh sách phim thuộc thể loại này">
                             🎬 <span th:text="${genre.movieCount}">0</span> phim
-                        </span>
+                        </a>
                     </td>
                     <td style="text-align: center;">
                         <span th:if="${genre.active}" class="badge badge-green">Hoạt động</span>

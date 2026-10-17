@@ -156,6 +156,30 @@ public class MovieService {
         return movieDao.findMoviesAvailableForShowtimes();
     }
 
+    /**
+     * AC02 / BR-37: Deactivates or archives a movie while ensuring no active upcoming showtimes exist.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteMovie(int movieId) {
+        Movie movie = getMovieById(movieId);
+        int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
+        if (upcomingShowtimes > 0) {
+            throw new MovieHasActiveShowtimesException(
+                    "Không thể xóa phim '" + movie.getTitle()
+                            + "' vì đang có " + upcomingShowtimes
+                            + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước."
+            );
+        }
+        deactivateMovie(movieId);
+    }
+
+    /**
+     * AC04: Retrieves active movies for customer-facing views (Now Showing and Upcoming only, excluding Ended and Archived).
+     */
+    public List<Movie> getCustomerMovies() {
+        return movieDao.findMoviesAvailableForShowtimes();
+    }
+
     private void validateMovieForm(MovieForm form) {
         if (form == null) {
             throw new IllegalArgumentException("Dữ liệu phim không được để trống.");

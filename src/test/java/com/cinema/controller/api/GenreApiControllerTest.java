@@ -92,13 +92,13 @@ class GenreApiControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/manager/genres/{id}/toggle-status: Should return 400 when genre has active movies")
+    @DisplayName("PATCH /api/manager/genres/{id}/toggle-status: Should return 409 Conflict when genre has active movies")
     void testToggleStatusApi_ActiveMoviesConflict() throws Exception {
         when(genreService.toggleStatus(anyInt()))
                 .thenThrow(new GenreAssociationException("Không thể hủy kích hoạt thể loại đang có phim đang chiếu."));
 
         mockMvc.perform(patch("/api/manager/genres/1/toggle-status"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
     }
 

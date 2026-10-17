@@ -141,14 +141,15 @@ public class FBItemDao {
     }
 
     public List<FBItem.ComboComponent> findComboComponents(int comboId) {
-        String sql = "SELECT ci.ComponentItemID, f.ItemName, ci.Quantity " +
+        String sql = "SELECT ci.ComponentItemID, f.ItemName, ci.Quantity, f.Status " +
                 "FROM ComboItem ci " +
                 "JOIN FBItem f ON ci.ComponentItemID = f.ItemID " +
                 "WHERE ci.ComboID = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new FBItem.ComboComponent(
                 rs.getInt("ComponentItemID"),
                 rs.getString("ItemName"),
-                rs.getInt("Quantity")
+                rs.getInt("Quantity"),
+                rs.getString("Status")
         ), comboId);
     }
 

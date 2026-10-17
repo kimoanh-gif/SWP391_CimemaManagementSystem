@@ -301,23 +301,36 @@ public class MovieDao {
      * The same Genre must not be assigned to the same Movie more than once.
      */
     public void assignGenres(int movieId, List<Integer> genreIds) {
-        // Remove existing associations
-        jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
-
-        if (genreIds == null || genreIds.isEmpty()) {
-            return;
+        if (genreIds == null) {
+            return; // Preserve existing genres if null
         }
 
-        // De-duplicate genre IDs to satisfy BR-44
-        Set<Integer> uniqueGenreIds = new HashSet<>(genreIds);
+        // Fetch existing genre IDs
+        String currentSql = "SELECT GenreID FROM MovieGenre WHERE MovieID = ?";
+        List<Integer> currentGenres = jdbcTemplate.queryForList(currentSql, Integer.class, movieId);
+        Set<Integer> currentSet = new HashSet<>(currentGenres != null ? currentGenres : List.of());
 
+        Set<Integer> newSet = new HashSet<>();
+        for (Integer g : genreIds) {
+            if (g != null && g > 0) {
+                newSet.add(g);
+            }
+        }
+
+        // Delete genres removed from movie
+        for (Integer existingId : currentSet) {
+            if (!newSet.contains(existingId)) {
+                jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ? AND GenreID = ?", movieId, existingId);
+            }
+        }
+
+        // Insert new genres added to movie
         String insertSql = "INSERT INTO MovieGenre (MovieID, GenreID, AssignedAt) VALUES (?, ?, SYSUTCDATETIME())";
-        for (Integer genreId : uniqueGenreIds) {
-            if (genreId != null && genreId > 0) {
+        for (Integer newId : newSet) {
+            if (!currentSet.contains(newId)) {
                 try {
-                    jdbcTemplate.update(insertSql, movieId, genreId);
+                    jdbcTemplate.update(insertSql, movieId, newId);
                 } catch (DataAccessException ignored) {
-                    // Ignore if genreId does not exist or duplicate key error
                 }
             }
         }

@@ -95,5 +95,10 @@ public class SeatApiController {
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
+    }
 }
 

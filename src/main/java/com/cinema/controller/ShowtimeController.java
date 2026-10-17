@@ -96,7 +96,14 @@ public class ShowtimeController {
         model.addAttribute("cleaningBuffer", ShowtimeService.CLEANING_BUFFER_MINUTES);
 
         if (!model.containsAttribute("showtimeForm")) {
-            model.addAttribute("showtimeForm", new ShowtimeForm());
+            ShowtimeForm defaultForm = new ShowtimeForm();
+            if (movieId != null && movieId > 0) {
+                defaultForm.setMovieId(movieId);
+            }
+            if (roomId != null && roomId > 0) {
+                defaultForm.setRoomId(roomId);
+            }
+            model.addAttribute("showtimeForm", defaultForm);
         }
 
         return "manager/showtimes";

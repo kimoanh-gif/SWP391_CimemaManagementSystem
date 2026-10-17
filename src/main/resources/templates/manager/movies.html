@@ -209,7 +209,13 @@
                         <span class="badge-ended"       th:if="${movie.status == 'Ended'}">Kết thúc</span>
                         <span class="badge-archived"    th:if="${movie.status == 'Archived'}">Lưu trữ</span>
                     </td>
-                    <td style="text-align:center;font-weight:600;" th:text="${movie.showtimeCount}">0</td>
+                    <td style="text-align:center;">
+                        <a th:href="@{/manager/showtimes(movieId=${movie.id})}"
+                           style="color:var(--primary);text-decoration:none;font-weight:700;"
+                           th:title="'Xem các suất chiếu của phim ' + ${movie.title}">
+                            <span th:text="${movie.showtimeCount}">0</span> suất
+                        </a>
+                    </td>
                     <td class="col-actions">
                         <button type="button" class="action-btn action-btn-view" title="Chi tiết"
                                 onclick="openQuickViewModal(this)"

@@ -68,9 +68,23 @@ public class RoomApiController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Phòng đã được đưa vào bảo trì", null, null));
     }
 
-    // Global exception handler for RoomNotFoundException
     @ExceptionHandler(RoomNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(RoomNotFoundException ex) {
-        return ResponseEntity.status(404).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+    }
+
+    @ExceptionHandler(com.cinema.exception.RoomHasActiveShowtimesException.class)
+    public ResponseEntity<ApiResponse<Void>> handleActiveShowtimes(com.cinema.exception.RoomHasActiveShowtimesException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+    }
+
+    @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, ex.getMessage(), null, null));
     }
 }
