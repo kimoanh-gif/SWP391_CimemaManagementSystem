@@ -107,9 +107,85 @@ public class SeatDao {
         return jdbcTemplate.update(sql, roomId);
     }
 
+    public int deleteById(int seatId) {
+        String sql = "DELETE FROM Seat WHERE SeatID = ?";
+        return jdbcTemplate.update(sql, seatId);
+    }
+
     public boolean hasFutureBookings(int roomId) {
         String sql = "SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = ? AND sh.StartTime > GETDATE()";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
         return count != null && count > 0;
     }
+
+    /**
+     * Checks whether a seat is referenced in historical or active tickets/bookings (AC02).
+     */
+    public boolean isSeatReferenced(int seatId) {
+        // 1. Check Ticket table if it exists
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM Ticket WHERE SeatID = ?", Integer.class, seatId);
+            if (count != null && count > 0) return true;
+        } catch (Exception ignored) {}
+
+        // 2. Check BookingDetail table if it exists
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM BookingDetail WHERE SeatID = ?", Integer.class, seatId);
+            if (count != null && count > 0) return true;
+        } catch (Exception ignored) {}
+
+        // 3. Check BookingSeat table if it exists
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM BookingSeat WHERE SeatID = ?", Integer.class, seatId);
+            if (count != null && count > 0) return true;
+        } catch (Exception ignored) {}
+
+        return false;
+    }
+
+    /**
+     * Checks whether the room has any upcoming showtimes with active bookings.
+     */
+    public boolean hasUpcomingBookingsForRoom(int roomId) {
+        try {
+            String sql = """
+                SELECT COUNT(*)
+                FROM Booking b
+                JOIN Showtime s ON b.ShowtimeID = s.ShowtimeID
+                WHERE s.RoomID = ?
+                  AND s.StartTime >= SYSUTCDATETIME()
+                  AND s.Status NOT IN ('Cancelled', 'Stopped')
+                  AND b.Status IN ('Pending', 'Paid', 'Confirmed', 'Held')
+            """;
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
+            return count != null && count > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether a specific seat is booked in upcoming showtimes for this room.
+     */
+    public boolean isSeatBookedInUpcomingShowtimes(int seatId, int roomId) {
+        try {
+            String sql = """
+                SELECT COUNT(*)
+                FROM Ticket t
+                JOIN Showtime s ON t.ShowtimeID = s.ShowtimeID
+                WHERE t.SeatID = ?
+                  AND s.RoomID = ?
+                  AND s.StartTime >= SYSUTCDATETIME()
+                  AND s.Status NOT IN ('Cancelled', 'Stopped')
+            """;
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, seatId, roomId);
+            return count != null && count > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 }
+

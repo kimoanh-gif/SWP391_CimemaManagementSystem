@@ -7,6 +7,7 @@ import com.cinema.exception.MovieNotFoundException;
 import com.cinema.model.Movie;
 import com.cinema.model.MovieForm;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +45,7 @@ public class MovieService {
     /**
      * Creates a new movie ensuring valid fields and BR-44 genre uniqueness.
      */
+    @Transactional(rollbackFor = Exception.class)
     public Movie createMovie(MovieForm form) {
         validateMovieForm(form);
 
@@ -59,7 +61,9 @@ public class MovieService {
 
     /**
      * Updates movie information enforcing lifecycle rules, showtime integrity, and BR-44.
+     * P0-02: Enforces movie duration integrity against active upcoming showtimes.
      */
+    @Transactional(rollbackFor = Exception.class)
     public Movie updateMovie(int movieId, MovieForm form) {
         validateMovieForm(form);
         Movie existing = getMovieById(movieId);
@@ -79,10 +83,25 @@ public class MovieService {
             }
         }
 
+        // P0-02: Movie Duration Integrity Check
+        Integer oldDuration = existing.getDuration();
+        Integer newDuration = form.getDuration();
+        if (newDuration != null && oldDuration != null && !newDuration.equals(oldDuration)) {
+            int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
+            if (upcomingShowtimes > 0) {
+                throw new MovieHasActiveShowtimesException(
+                        "Không thể thay đổi thời lượng phim '" + existing.getTitle() + "' (từ " + oldDuration
+                                + " phút thành " + newDuration + " phút) vì phim đang có " + upcomingShowtimes
+                                + " suất chiếu trong tương lai. Vui lòng hủy hoặc điều chỉnh các suất chiếu tương lai trước khi thay đổi thời lượng."
+                );
+            }
+        }
+
         form.setStatus(newStatus);
         movieDao.update(movieId, form);
         return getMovieById(movieId);
     }
+
 
     /**
      * Deactivates a movie by setting status to 'Archived' (soft deactivation).

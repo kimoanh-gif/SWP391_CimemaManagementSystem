@@ -52,8 +52,11 @@ public class ShowtimeService {
                 .orElseThrow(() -> new ShowtimeNotFoundException("Không tìm thấy suất chiếu với ID: " + id));
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Showtime createShowtime(ShowtimeForm form) {
+        if (form.getRoomId() != null && form.getRoomId() > 0) {
+            roomDao.lockRoomForUpdate(form.getRoomId());
+        }
         validateShowtime(form, null);
 
         showtimeDao.insert(form);
@@ -71,9 +74,16 @@ public class ShowtimeService {
         return showtimeDao.findAll(form.getStartTime().toLocalDate(), form.getRoomId(), form.getMovieId(), null).get(0);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Showtime updateShowtime(int id, ShowtimeForm form) {
         Showtime existing = getShowtimeById(id);
+
+        if (form.getRoomId() != null && form.getRoomId() > 0) {
+            roomDao.lockRoomForUpdate(form.getRoomId());
+            if (existing.getRoomId() != null && !existing.getRoomId().equals(form.getRoomId())) {
+                roomDao.lockRoomForUpdate(existing.getRoomId());
+            }
+        }
 
         // BR-54: Showtime with bookings cannot change movie, room, start time, or be stopped
         if (showtimeDao.hasActiveBookings(id)) {
@@ -90,7 +100,7 @@ public class ShowtimeService {
         return getShowtimeById(id);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Showtime stopShowtime(int id) {
         Showtime existing = getShowtimeById(id);
 
@@ -103,7 +113,7 @@ public class ShowtimeService {
         return getShowtimeById(id);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Showtime cancelShowtime(int id) {
         Showtime existing = getShowtimeById(id);
 
@@ -158,15 +168,11 @@ public class ShowtimeService {
         int duration = (movie.getDuration() != null && movie.getDuration() > 0) ? movie.getDuration() : 120;
         form.setEndTime(form.getStartTime().plusMinutes(duration));
 
-        // BR-09: Overlap checking (newStart < existingEnd AND newEnd > existingStart) + cleaning buffer
-        // Apply buffer: Interval considered occupied is [start, end + CLEANING_BUFFER_MINUTES]
-        LocalDateTime startWithBuffer = form.getStartTime();
-        LocalDateTime endWithBuffer = form.getEndTime().plusMinutes(CLEANING_BUFFER_MINUTES);
-
+        // BR-09: Overlap checking (newStart < existingEnd + 15m AND existingStart < newEnd + 15m)
         List<Showtime> conflicts = showtimeDao.findOverlappingShowtimes(
                 form.getRoomId(),
-                startWithBuffer,
-                endWithBuffer,
+                form.getStartTime(),
+                form.getEndTime(),
                 currentShowtimeId
         );
 
@@ -182,4 +188,5 @@ public class ShowtimeService {
             );
         }
     }
+
 }

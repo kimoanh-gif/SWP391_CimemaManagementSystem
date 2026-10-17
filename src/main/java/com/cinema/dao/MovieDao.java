@@ -375,6 +375,7 @@ public class MovieDao {
 
     /**
      * Counts how many upcoming/active showtimes are scheduled for this movie.
+     * Considers all active showtimes (Scheduled, Selling, etc.) except Cancelled or Stopped.
      */
     public int countUpcomingShowtimesByMovieId(int movieId) {
         String sql = """
@@ -382,7 +383,7 @@ public class MovieDao {
                 FROM Showtime
                 WHERE MovieID = ?
                   AND StartTime >= SYSUTCDATETIME()
-                  AND [Status] = 'Scheduled'
+                  AND [Status] NOT IN ('Cancelled', 'Stopped')
                 """;
         try {
             Integer count = jdbcTemplate.queryForObject(sql, Integer.class, movieId);

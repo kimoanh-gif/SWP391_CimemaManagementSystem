@@ -31,10 +31,15 @@ public class ManagerDashboardController {
 
         ManagerDashboardStats stats = dashboardService.getDashboardStats();
         model.addAttribute("stats", stats);
+        model.addAttribute("movieCount", stats.getTotalMovies());
+        model.addAttribute("roomCount", stats.getActiveRooms());
+        model.addAttribute("upcomingShowtimeCount", stats.getTodayShowtimesCount());
         model.addAttribute("todayShowtimes", dashboardService.getTodayShowtimes());
         model.addAttribute("activeMovies", dashboardService.getActiveMovies());
         model.addAttribute("rooms", dashboardService.getRoomsSummary());
         model.addAttribute("userRole", ManagerSecurityUtils.resolveRole(request));
+
+
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, 'ngày' dd/MM/yyyy", new Locale("vi", "VN"));
         model.addAttribute("currentDateStr", LocalDate.now().format(dateFormatter));

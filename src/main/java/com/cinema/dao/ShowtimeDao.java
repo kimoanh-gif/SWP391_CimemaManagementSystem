@@ -100,8 +100,10 @@ public class ShowtimeDao {
 
     /**
      * Checks if there are overlapping showtimes in the same room.
-     * Overlap rule per SRS: newStart < existingEnd AND newEnd > existingStart
-     * Exclude current record if updating (currentShowtimeId != null).
+     * Overlap rule per SRS (BR-09): NextStart >= PreviousEnd + 15 minutes.
+     * Symmetrical conflict condition:
+     *   newStart < DATEADD(minute, 15, s.EndTime) AND s.StartTime < DATEADD(minute, 15, newEnd)
+     * Exclude current record if updating (excludeShowtimeId != null).
      * Exclude cancelled or stopped showtimes.
      */
     public List<Showtime> findOverlappingShowtimes(int roomId, LocalDateTime start, LocalDateTime end, Integer excludeShowtimeId) {
@@ -113,7 +115,7 @@ public class ShowtimeDao {
                 "LEFT JOIN Room r ON s.RoomID = r.RoomID " +
                 "WHERE s.RoomID = ? " +
                 "AND s.Status NOT IN ('Cancelled', 'Stopped') " +
-                "AND (? < s.EndTime AND ? > s.StartTime) " +
+                "AND (? < DATEADD(minute, 15, s.EndTime) AND s.StartTime < DATEADD(minute, 15, ?)) " +
                 (excludeShowtimeId != null ? "AND s.ShowtimeID <> ? " : "");
 
         List<Object> params = new ArrayList<>();
@@ -126,6 +128,7 @@ public class ShowtimeDao {
 
         return jdbcTemplate.query(sql, params.toArray(), rowMapper);
     }
+
 
     public int insert(ShowtimeForm form) {
         String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +

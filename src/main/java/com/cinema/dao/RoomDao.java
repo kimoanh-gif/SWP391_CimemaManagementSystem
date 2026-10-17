@@ -129,4 +129,22 @@ public class RoomDao {
         Integer cnt = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
         return cnt != null && cnt > 0;
     }
+
+    /**
+     * Locks the Room record within the current transaction using UPDLOCK, HOLDLOCK.
+     * Serializes concurrent modifications (Showtime creation, Seat layout updates) per Room.
+     */
+    public void lockRoomForUpdate(int roomId) {
+        String sql = "SELECT RoomID FROM Room WITH (UPDLOCK, HOLDLOCK) WHERE RoomID = ?";
+        jdbcTemplate.queryForObject(sql, Integer.class, roomId);
+    }
+
+    /**
+     * Updates the UpdatedAt timestamp on the Room record to track layout/room updates.
+     */
+    public void updateRoomTimestamp(int roomId) {
+        String sql = "UPDATE Room SET UpdatedAt = SYSUTCDATETIME() WHERE RoomID = ?";
+        jdbcTemplate.update(sql, roomId);
+    }
 }
+

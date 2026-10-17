@@ -5,9 +5,12 @@ import com.cinema.model.Seat;
 import com.cinema.service.SeatService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -47,12 +50,14 @@ public class SeatApiController {
     public ResponseEntity<ApiResponse<List<Seat>>> saveLayout(
             @PathVariable int roomId,
             @RequestBody List<Seat> seats,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime expectedUpdatedAt,
             HttpServletRequest request
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
-        List<Seat> saved = seatService.saveRoomLayout(roomId, seats);
+        List<Seat> saved = seatService.saveRoomLayout(roomId, seats, expectedUpdatedAt);
         return ResponseEntity.ok(ApiResponse.ok("Lưu sơ đồ ghế thành công", saved));
     }
+
 
     @PostMapping("/room/{roomId}/generate-default")
     public ResponseEntity<ApiResponse<List<Seat>>> generateDefault(
@@ -75,4 +80,20 @@ public class SeatApiController {
         Seat updated = seatService.updateSeat(id, seatTypeName, status);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật ghế thành công", updated));
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.InvalidSeatLayoutException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidSeatLayout(com.cinema.exception.InvalidSeatLayoutException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.RoomNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRoomNotFound(com.cinema.exception.RoomNotFoundException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
 }
+
