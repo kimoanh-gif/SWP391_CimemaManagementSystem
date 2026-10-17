@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" th:content="${_csrf.token}">
+  <title>Soạn tin tức | CinemaSystem</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff-features.css}">
+  <script th:src="@{/js/staff-news.js}" defer></script>
+</head>
+<body>
+<div class="dash-shell">
+  <header class="dash-header">
+    <a class="dash-brand" th:href="@{/staff/dashboard}">
+      <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
+    </a>
+    <div class="dash-user" th:if="${user != null}">
+      <span class="role-badge" th:text="${user.role}">STAFF</span>
+      <span th:text="${user.fullName}">Nhân viên</span>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="dash-logout" type="submit">Đăng xuất</button>
+      </form>
+    </div>
+  </header>
+  <main class="dash-body staff-page">
+    <a class="staff-back-link" th:href="@{/staff/dashboard}">← Quay lại khu vực nhân viên</a>
+    <h1>Soạn tin tức</h1>
+    <p class="subtitle">Lưu nháp hoặc gửi bài viết để chờ duyệt.</p>
+
+    <div class="staff-editor-layout">
+      <section class="dash-card staff-editor-card" aria-labelledby="editorTitle">
+        <h2 id="editorTitle">Bài viết mới</h2>
+        <p id="newsFeedback" class="staff-feedback" role="status" aria-live="polite"></p>
+        <form id="newsForm">
+          <label class="staff-label" for="newsTitle">Tiêu đề</label>
+          <input class="staff-control" id="newsTitle" name="title" maxlength="255" required>
+
+          <label class="staff-label" for="newsSummary">Tóm tắt</label>
+          <textarea class="staff-control" id="newsSummary" name="summary" maxlength="500" rows="3" required></textarea>
+
+          <label class="staff-label" for="newsThumbnail">Ảnh Thumbnail (URL)</label>
+          <input class="staff-control" id="newsThumbnail" name="thumbnailUrl" type="url" maxlength="500"
+                 placeholder="https://...">
+
+          <label class="staff-label" for="newsContent">Nội dung</label>
+          <textarea class="staff-control" id="newsContent" name="content" rows="10" required></textarea>
+
+          <div class="staff-form-actions">
+            <button class="staff-button staff-button-secondary" type="submit" value="DRAFT">Lưu nháp</button>
+            <button class="staff-button staff-button-primary" type="submit" value="PENDING">Gửi duyệt</button>
+            <button class="staff-button staff-button-secondary" id="cancelEdit" type="button" hidden>Hủy chỉnh sửa</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="dash-card staff-list-card" aria-labelledby="newsListTitle">
+        <h2 id="newsListTitle">Danh sách bài viết</h2>
+        <p id="newsListMessage" class="staff-muted">Đang tải danh sách...</p>
+        <div id="newsList" class="staff-news-list"></div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>
