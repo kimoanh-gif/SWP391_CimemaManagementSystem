@@ -85,6 +85,17 @@ public class CustomerBookingController {
         }
     }
 
+    @GetMapping("/select")
+    public String selectShowtimeDirect(@RequestParam(name = "showtimeId", required = false) String showtimeId,
+                                       HttpSession session,
+                                       RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) {
+            return "redirect:/login?redirect=/customer/booking/select" + (showtimeId != null ? "?showtimeId=" + showtimeId : "");
+        }
+        return selectShowtime(showtimeId, session, redirectAttributes);
+    }
+
     @GetMapping("/seats")
     public String showSeatSelection(HttpSession session, Model model,
                                     RedirectAttributes redirectAttributes) {

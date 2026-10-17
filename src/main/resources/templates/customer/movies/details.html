@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead(${movie.title} + ' - Chi Tiết Phim')}">
+    <title>CineVerse - Chi Tiết Phim</title>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
+
+<main>
+    <!-- Success/Error alert banner -->
+    <div th:if="${successMessage != null}" style="background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.4);color:#10b981;padding:12px 2rem;text-align:center;font-weight:600;">
+        <span th:text="${successMessage}">Đã gửi thành công!</span>
+    </div>
+    <div th:if="${errorMessage != null}" style="background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.4);color:#ef4444;padding:12px 2rem;text-align:center;font-weight:600;">
+        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+    </div>
+
+    <!-- =====================================================================
+         1. MOVIE HERO SECTION
+         ===================================================================== -->
+    <section class="movie-details-hero">
+        <div class="movie-details-container">
+            <!-- Movie Poster -->
+            <div class="movie-details-poster-wrap">
+                <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-details-poster"
+                     onerror="this.src='/images/cinema-login-hero.png'" />
+            </div>
+
+            <!-- Movie Info -->
+            <div class="movie-details-info">
+                <div style="font-size:0.85rem;color:var(--text-muted);">
+                    <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
+                    <span> / </span>
+                    <a th:href="@{/movies}" style="color:var(--text-secondary);">Phim</a>
+                    <span> / </span>
+                    <span style="color:var(--primary-light);" th:text="${movie.title}">Tên Phim</span>
+                </div>
+
+                <h1 class="movie-details-title" th:text="${movie.title}">Tên Bộ Phim</h1>
+
+                <div class="movie-meta-pills">
+                    <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">T13</span>
+                    <span class="meta-pill" th:text="${movie.duration + ' phút'}">118 phút</span>
+                    <span class="meta-pill" th:text="${movie.genres}">Hành Động, Phiêu Lưu</span>
+                    <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
+                        ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5.0
+                        <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ' đánh giá)'}">(12 đánh giá)</span>
+                    </span>
+                </div>
+
+                <div class="movie-info-table">
+                    <div class="info-label">Đạo diễn:</div>
+                    <div class="info-val" th:text="${movie.director != null ? movie.director : 'Đang cập nhật'}">Nguyễn Minh</div>
+
+                    <div class="info-label">Ngôn ngữ:</div>
+                    <div class="info-val" th:text="${movie.language != null ? movie.language : 'Tiếng Việt / Phụ đề'}">Tiếng Anh - Phụ đề Tiếng Việt</div>
+
+                    <div class="info-label">Khởi chiếu:</div>
+                    <div class="info-val" th:text="${movie.formattedReleaseDate}">18/10/2026</div>
+
+                    <div class="info-label">Phân loại tuổi:</div>
+                    <div class="info-val" th:text="${movie.ageRatingDescription}">T13 - Phim cấm khán giả dưới 13 tuổi</div>
+                </div>
+
+                <div class="hero-actions">
+                    <a href="#showtimes" class="btn-primary">
+                        <span>🎟️ Mua Vé Ngay</span>
+                    </a>
+                    <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
+                            type="button"
+                            class="btn-secondary"
+                            th:attr="onclick=|openTrailer('${movie.trailerUrl}')|">
+                        <span>▶ Xem Trailer</span>
+                    </button>
+                </div>
+
+                <!-- Synopsis Box -->
+                <div class="movie-synopsis-box">
+                    <h3 style="font-size:1.15rem;margin-bottom:8px;color:#fff;">Nội Dung Phim</h3>
+                    <p th:text="${movie.description}">
+                        Nội dung chi tiết tóm tắt cốt truyện bộ phim. Một câu chuyện kịch tính và hấp dẫn mang lại trải nghiệm mãn nhãn cho khán giả.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         2. LỊCH CHIẾU THEO PHIM (SHOWTIMES FOR THIS MOVIE)
+         ===================================================================== -->
+    <section class="section-shell" id="showtimes" style="padding-top:4rem;">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Đặt Vé Xem Phim</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">📅</span> Lịch Chiếu: <span th:text="${movie.title}" style="color:var(--primary-light);">Tên Phim</span>
+                </h2>
+            </div>
+        </div>
+
+        <!-- Date Selector Pills -->
+        <div class="date-selector-bar">
+            <a th:each="d, stat : ${availableDates}"
+               th:href="@{/movies/{id}(id=${movie.movieId}, date=${d})} + '#showtimes'"
+               class="date-pill"
+               th:classappend="${d.equals(selectedDate)} ? 'active'">
+                <span class="date-pill-day" th:text="${#temporals.format(d, 'EEE')}">Thứ 7</span>
+                <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
+                <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
+            </a>
+        </div>
+
+        <!-- Showtimes List for Selected Date -->
+        <div th:if="${showtimes != null && !showtimes.isEmpty()}"
+             style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2rem;">
+            
+            <div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-subtle);padding-bottom:1rem;">
+                <h3 style="font-size:1.2rem;">
+                    Suất chiếu ngày <span th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}" style="color:var(--gold);">18/10/2026</span>
+                </h3>
+                <span style="font-size:0.85rem;color:var(--text-muted);">Nhấn vào khung giờ để tiến hành chọn ghế</span>
+            </div>
+
+            <div class="showtime-slots-grid">
+                <a th:each="st : ${showtimes}"
+                   th:href="@{/customer/booking/select(showtimeId=${st.showtimeId})}"
+                   class="showtime-slot-btn"
+                   th:classappend="${st.soldOut} ? 'seat-sold-out'">
+                    <span class="room-format-badge" th:text="${st.roomType + ' · ' + st.roomName}">2D · Cinema 01</span>
+                    <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
+                    <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
+                    <span class="slot-price" th:text="${st.formattedPrice}">85.000 đ</span>
+                    <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">Còn 36 ghế</span>
+                </a>
+            </div>
+        </div>
+
+        <div th:if="${showtimes == null || showtimes.isEmpty()}"
+             style="text-align:center;padding:3.5rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🎟️</div>
+            <h4 style="font-size:1.2rem;margin-bottom:6px;">Chưa có suất chiếu cho ngày này</h4>
+            <p style="color:var(--text-muted);font-size:0.9rem;">Vui lòng chọn một ngày khác ở thanh lịch chiếu bên trên để xem suất chiếu có sẵn.</p>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         3. ĐÁNH GIÁ & BÌNH LUẬN (MOVIE REVIEWS)
+         ===================================================================== -->
+    <section class="section-shell" id="reviews">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Cộng Đồng Khán Giả</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">💬</span> Đánh Giá Từ Khán Giả
+                </h2>
+            </div>
+        </div>
+
+        <!-- Add Review Form (If Logged In Customer) -->
+        <div th:if="${currentUser != null && currentUser.role == 'CUSTOMER'}" class="review-form-card">
+            <h4 style="font-size:1.15rem;margin-bottom:12px;">Viết đánh giá của bạn cho bộ phim này</h4>
+            <form th:action="@{/movies/{id}/reviews(id=${movie.movieId})}" method="post">
+                <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
+                <input type="hidden" id="ratingValue" name="rating" value="5" />
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.85rem;color:var(--text-secondary);display:block;margin-bottom:6px;">Chấm điểm (1 - 5 sao):</label>
+                    <div class="star-rating-input" id="starRatingInput">
+                        <span class="star-icon" data-value="1">★</span>
+                        <span class="star-icon" data-value="2">★</span>
+                        <span class="star-icon" data-value="3">★</span>
+                        <span class="star-icon" data-value="4">★</span>
+                        <span class="star-icon" data-value="5" style="color:var(--gold);">★</span>
+                    </div>
+                </div>
+
+                <textarea name="content" class="review-textarea" placeholder="Chia sẻ cảm nghĩ của bạn về bộ phim (diễn xuất, cốt truyện, kỹ xảo, âm thanh)..." required></textarea>
+
+                <button type="submit" class="btn-primary" style="padding:10px 22px;">
+                    <span>Gửi Đánh Giá</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- If Not Logged In -->
+        <div th:if="${currentUser == null || currentUser.role != 'CUSTOMER'}"
+             style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div>
+                <h4 style="font-size:1.05rem;margin-bottom:4px;">Bạn đã xem bộ phim này?</h4>
+                <p style="font-size:0.88rem;color:var(--text-muted);">Đăng nhập bằng tài khoản thành viên để chia sẻ cảm nhận và tích lũy điểm thưởng.</p>
+            </div>
+            <a th:href="@{/login(redirect='/movies/' + ${movie.movieId})}" class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">
+                Đăng Nhập Để Đánh Giá
+            </a>
+        </div>
+
+        <!-- Reviews List -->
+        <div th:if="${reviews != null && !reviews.isEmpty()}">
+            <div class="review-item" th:each="r : ${reviews}">
+                <div class="review-item-header">
+                    <div class="reviewer-profile">
+                        <div class="reviewer-avatar" th:text="${r.initial}">K</div>
+                        <div>
+                            <div style="font-size:0.92rem;font-weight:700;" th:text="${r.customerName}">Nguyễn Văn A</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);" th:text="${r.formattedDate}">18/10/2026 21:00</div>
+                        </div>
+                    </div>
+                    <div class="movie-rating-stars">
+                        <span th:text="${#strings.repeat('★', r.rating)}">★★★★★</span>
+                    </div>
+                </div>
+                <p style="color:var(--text-secondary);font-size:0.92rem;line-height:1.6;" th:text="${r.content}">
+                    Phim xem rất lôi cuốn, kỹ xảo đỉnh cao và âm thanh sống động tại phòng chiếu. Rất đáng tiền vé!
+                </p>
+            </div>
+        </div>
+
+        <div th:if="${reviews == null || reviews.isEmpty()}"
+             style="text-align:center;padding:2.5rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+            <p style="color:var(--text-muted);">Chưa có đánh giá nào cho bộ phim này. Hãy là người đầu tiên để lại cảm nghĩ nhé!</p>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         4. PHIM CÙNG THỂ LOẠI / GỢI Ý (RELATED MOVIES)
+         ===================================================================== -->
+    <section class="section-shell" th:if="${relatedMovies != null && !relatedMovies.isEmpty()}" style="margin-top:2rem;">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Khám Phá Thêm</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">🍿</span> Phim Khác Đang Chiếu
+                </h2>
+            </div>
+        </div>
+
+        <div class="movie-grid">
+            <article class="movie-card" th:each="m : ${relatedMovies}">
+                <div class="movie-poster-wrap">
+                    <img th:src="${m.posterUrl}" th:alt="${m.title}" class="movie-poster"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="badge-rating" th:classappend="${m.ageRatingBadgeClass}" th:text="${m.ageRating}">P</span>
+                </div>
+                <div class="movie-card-body">
+                    <h3 class="movie-card-title">
+                        <a th:href="@{/movies/{id}(id=${m.movieId})}" th:text="${m.title}">Tên Phim</a>
+                    </h3>
+                    <div class="movie-card-genres" th:text="${m.genres}">Thể loại</div>
+                    <div class="movie-card-actions">
+                        <a th:href="@{/movies/{id}(id=${m.movieId})}" class="btn-card-detail">Chi Tiết</a>
+                        <a th:href="@{/movies/{id}(id=${m.movieId})}#showtimes" class="btn-card-book">Mua Vé</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+<!-- Trailer Modal & Toast -->
+<div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
+
+<!-- Footer -->
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Lịch Chiếu Phim Toàn Quốc')}">
+    <title>CineVerse - Lịch Chiếu Phim</title>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/cinema-header-footer :: header('showtimes')}"></div>
+
+<main class="section-shell" style="padding-top:2.5rem;">
+    <!-- Breadcrumb & Title -->
+    <div style="margin-bottom:2rem;">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
+            <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
+            <span> / </span>
+            <span style="color:var(--primary-light);">Lịch chiếu</span>
+        </div>
+        <h1 style="font-size:2.5rem;font-weight:900;">Lịch Chiếu Phim Toàn Quốc</h1>
+        <p style="color:var(--text-secondary);margin-top:6px;">Xem thông tin các suất chiếu theo ngày, phòng chiếu và đặt vé nhanh chóng tại CineVerse.</p>
+    </div>
+
+    <!-- Date Selector Bar (14 Days) -->
+    <div class="date-selector-bar">
+        <a th:each="d, stat : ${upcomingDates}"
+           th:href="@{/showtimes(date=${d}, movieId=${selectedMovieId}, roomType=${selectedRoomType}, timeSlot=${selectedTimeSlot})}"
+           class="date-pill"
+           th:classappend="${d.equals(selectedDate)} ? 'active'">
+            <span class="date-pill-day" th:text="${stat.index == 0 ? 'Hôm nay' : (stat.index == 1 ? 'Ngày mai' : #temporals.format(d, 'EEE'))}">Hôm nay</span>
+            <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
+            <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
+        </a>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <form th:action="@{/showtimes}" method="get" class="filter-toolbar">
+        <input type="hidden" name="date" th:value="${selectedDate}" />
+
+        <div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;font-weight:700;">
+            <span>⚡ Bộ Lọc Suất Chiếu:</span>
+        </div>
+
+        <div class="filter-controls">
+            <!-- Filter by Movie -->
+            <select name="movieId" class="filter-select" onchange="this.form.submit()">
+                <option value="">-- Tất cả phim --</option>
+                <option th:each="m : ${allMovies}"
+                        th:value="${m.movieId}"
+                        th:text="${m.title}"
+                        th:selected="${selectedMovieId == m.movieId}">
+                    Light Speedway
+                </option>
+            </select>
+
+            <!-- Filter by Room Format -->
+            <select name="roomType" class="filter-select" onchange="this.form.submit()">
+                <option value="ALL" th:selected="${selectedRoomType == 'ALL'}">Tất cả định dạng</option>
+                <option value="2D" th:selected="${selectedRoomType == '2D'}">2D Standard</option>
+                <option value="3D" th:selected="${selectedRoomType == '3D'}">3D Laser</option>
+                <option value="VIP" th:selected="${selectedRoomType == 'VIP'}">VIP Recliner</option>
+            </select>
+
+            <!-- Filter by Time Slot -->
+            <select name="timeSlot" class="filter-select" onchange="this.form.submit()">
+                <option value="ALL" th:selected="${selectedTimeSlot == 'ALL'}">Tất cả khung giờ</option>
+                <option value="morning" th:selected="${selectedTimeSlot == 'morning'}">Buổi Sáng (Trước 12:00)</option>
+                <option value="afternoon" th:selected="${selectedTimeSlot == 'afternoon'}">Buổi Chiều (12:00 - 18:00)</option>
+                <option value="evening" th:selected="${selectedTimeSlot == 'evening'}">Buổi Tối (Sau 18:00)</option>
+            </select>
+
+            <button type="submit" class="btn-card-book" style="padding:8px 16px;cursor:pointer;">
+                Áp Dụng
+            </button>
+            <a th:if="${selectedMovieId != null || (selectedRoomType != null && selectedRoomType != 'ALL') || (selectedTimeSlot != null && selectedTimeSlot != 'ALL')}"
+               th:href="@{/showtimes(date=${selectedDate})}" class="btn-card-detail" style="padding:8px 12px;font-size:0.85rem;" title="Xóa bộ lọc">
+                ✕ Xóa lọc
+            </a>
+        </div>
+    </form>
+
+    <!-- Showtimes Grouped by Movie -->
+    <div th:if="${groupedShowtimes != null && !groupedShowtimes.isEmpty()}">
+        <div class="showtime-movie-card" th:each="entry : ${groupedShowtimes}" th:with="movieShowtimes=${entry.value}, firstShowtime=${entry.value[0]}">
+            <!-- Movie Poster Thumbnail -->
+            <div>
+                <img th:src="${firstShowtime.moviePosterUrl}" th:alt="${firstShowtime.movieTitle}" class="showtime-movie-poster"
+                     onerror="this.src='/images/cinema-login-hero.png'" />
+            </div>
+
+            <!-- Movie & Showtimes Info -->
+            <div class="showtime-movie-info">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                    <span class="badge-rating" th:classappend="${firstShowtime.movieAgeRating == 'T18' ? 'badge-t18' : (firstShowtime.movieAgeRating == 'T16' ? 'badge-t16' : (firstShowtime.movieAgeRating == 'T13' ? 'badge-t13' : 'badge-p'))}"
+                          th:text="${firstShowtime.movieAgeRating}">T13</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);" th:text="${firstShowtime.movieDuration + ' phút'}">118 phút</span>
+                    <span>·</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);" th:text="${firstShowtime.movieGenres}">Hành Động, Phiêu Lưu</span>
+                </div>
+
+                <h3>
+                    <a th:href="@{/movies/{id}(id=${firstShowtime.movieId})}" th:text="${firstShowtime.movieTitle}" style="color:#fff;">Tên Bộ Phim</a>
+                </h3>
+
+                <!-- Room and Slots -->
+                <div class="showtime-room-block">
+                    <div class="room-block-title">
+                        <span>🏛️ Cụm Rạp CineVerse</span>
+                        <span class="room-format-badge">Định Dạng Tiêu Chuẩn &amp; VIP</span>
+                    </div>
+
+                    <div class="showtime-slots-grid">
+                        <a th:each="st : ${movieShowtimes}"
+                           th:href="@{/customer/booking/select(showtimeId=${st.showtimeId})}"
+                           class="showtime-slot-btn"
+                           th:classappend="${st.soldOut} ? 'seat-sold-out'">
+                            <span class="room-format-badge" style="font-size:0.7rem;margin-bottom:2px;" th:text="${st.roomName + ' · ' + st.roomType}">Cinema 01 · 2D</span>
+                            <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
+                            <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
+                            <span class="slot-price" th:text="${st.formattedPrice}">85.000 đ</span>
+                            <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">Còn 36 ghế</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${groupedShowtimes == null || groupedShowtimes.isEmpty()}"
+         style="text-align:center;padding:5rem 2rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
+        <div style="font-size:3.5rem;margin-bottom:1rem;">📅</div>
+        <h3 style="font-size:1.5rem;margin-bottom:8px;">Không có suất chiếu phù hợp</h3>
+        <p style="color:var(--text-secondary);max-width:500px;margin:0 auto 1.5rem;">
+            Không tìm thấy suất chiếu nào cho ngày <strong th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}">18/10/2026</strong> với các bộ lọc bạn đã chọn.
+        </p>
+        <a th:href="@{/showtimes}" class="btn-primary">
+            <span>Xem tất cả suất chiếu hôm nay</span>
+        </a>
+    </div>
+</main>
+
+<!-- Trailer Modal & Toast -->
+<div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
+
+<!-- Footer -->
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+
+</body>
+</html>
