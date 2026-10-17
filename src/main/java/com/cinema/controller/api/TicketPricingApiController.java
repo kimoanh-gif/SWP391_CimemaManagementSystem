@@ -158,4 +158,9 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<Void>> handleInvalid(InvalidPricingConfigurationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
+
+    @ExceptionHandler(com.cinema.exception.DuplicatePricingRuleException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicatePricingRule(com.cinema.exception.DuplicatePricingRuleException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
 }

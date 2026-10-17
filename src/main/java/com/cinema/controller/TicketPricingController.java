@@ -106,7 +106,7 @@ public class TicketPricingController {
                 pricingService.updatePricing(form.getPricingId(), form);
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật quy tắc định giá '" + form.getRuleName() + "' thành công!");
             }
-        } catch (InvalidPricingConfigurationException ex) {
+        } catch (InvalidPricingConfigurationException | com.cinema.exception.DuplicatePricingRuleException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("pricingForm", form);
         } catch (Exception ex) {
@@ -152,6 +152,8 @@ public class TicketPricingController {
             TicketPricing tp = pricingService.updatePricingStatus(id, status);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Cập nhật trạng thái quy tắc '" + tp.getRuleName() + "' thành " + status + " thành công!");
+        } catch (com.cinema.exception.DuplicatePricingRuleException | InvalidPricingConfigurationException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi đổi trạng thái: " + ex.getMessage());
         }

@@ -2,6 +2,7 @@ package com.cinema.service;
 
 import com.cinema.dao.MovieDao;
 import com.cinema.dao.RoomDao;
+import com.cinema.dao.SeatDao;
 import com.cinema.dao.ShowtimeDao;
 import com.cinema.exception.InvalidShowtimeException;
 import com.cinema.exception.ShowtimeConflictException;
@@ -27,6 +28,7 @@ import java.util.List;
  * - BR-09: Overlap checking (newStart < existingEnd AND newEnd > existingStart) + cleaning buffer.
  * - BR-54: Showtime with Held/Paid bookings cannot change movie, room, start time or be stopped.
  * - BR-55: End time = Start time + Movie duration. New showtime must start in the future.
+ * - P1-01: Room must have at least 1 active usable seat to be scheduled.
  */
 @Service
 public class ShowtimeService {
@@ -36,11 +38,18 @@ public class ShowtimeService {
     private final ShowtimeDao showtimeDao;
     private final MovieDao movieDao;
     private final RoomDao roomDao;
+    private final SeatDao seatDao;
 
     public ShowtimeService(ShowtimeDao showtimeDao, MovieDao movieDao, RoomDao roomDao) {
+        this(showtimeDao, movieDao, roomDao, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ShowtimeService(ShowtimeDao showtimeDao, MovieDao movieDao, RoomDao roomDao, SeatDao seatDao) {
         this.showtimeDao = showtimeDao;
         this.movieDao = movieDao;
         this.roomDao = roomDao;
+        this.seatDao = seatDao;
     }
 
     public List<Showtime> getAllShowtimes(LocalDate date, Integer roomId, Integer movieId, String status) {
@@ -162,6 +171,14 @@ public class ShowtimeService {
 
         if (!room.isActiveForShowtimes()) {
             throw new InvalidShowtimeException("Phòng chiếu '" + room.getRoomName() + "' không ở trạng thái sẵn sàng đón khách (BR-08). Trạng thái hiện tại: " + room.getStatus());
+        }
+
+        // P1-01: Room readiness and seat availability validation (AC01, AC02)
+        if (seatDao != null) {
+            int usableSeats = seatDao.countActiveSeatsByRoomId(form.getRoomId());
+            if (usableSeats <= 0) {
+                throw new InvalidShowtimeException("Phòng chiếu '" + room.getRoomName() + "' chưa có sơ đồ ghế khả dụng. Vui lòng thiết lập sơ đồ ghế trước khi tạo suất chiếu.");
+            }
         }
 
         // Calculate and auto-set EndTime = StartTime + Movie Duration (BR-55)

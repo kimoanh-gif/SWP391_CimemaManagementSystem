@@ -23,6 +23,7 @@ public class Room {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private int seatCount;
+    private int activeSeatCount; // Usable / Active seats in Seat table (P1-01)
     private int showtimeCount;
 
     public Room() {
@@ -83,6 +84,9 @@ public class Room {
     public int getSeatCount() { return seatCount; }
     public void setSeatCount(int seatCount) { this.seatCount = seatCount; }
 
+    public int getActiveSeatCount() { return activeSeatCount; }
+    public void setActiveSeatCount(int activeSeatCount) { this.activeSeatCount = activeSeatCount; }
+
     public int getShowtimeCount() { return showtimeCount; }
     public void setShowtimeCount(int showtimeCount) { this.showtimeCount = showtimeCount; }
 
@@ -91,6 +95,13 @@ public class Room {
      */
     public boolean isActiveForShowtimes() {
         return "Ready".equalsIgnoreCase(this.status) || "Screening".equalsIgnoreCase(this.status);
+    }
+
+    /**
+     * P1-01: Room is ready for scheduling if active status AND has at least 1 active usable seat.
+     */
+    public boolean isReadyForScheduling() {
+        return isActiveForShowtimes() && this.activeSeatCount > 0;
     }
 
     public boolean isUnderMaintenance() {

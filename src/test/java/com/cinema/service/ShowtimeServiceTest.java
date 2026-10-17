@@ -39,6 +39,9 @@ public class ShowtimeServiceTest {
     @Mock
     private RoomDao roomDao;
 
+    @Mock
+    private com.cinema.dao.SeatDao seatDao;
+
     @InjectMocks
     private ShowtimeService showtimeService;
 
@@ -68,6 +71,7 @@ public class ShowtimeServiceTest {
 
         when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie));
         when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(96);
         when(showtimeDao.findOverlappingShowtimes(eq(1), any(), any(), isNull()))
                 .thenReturn(Collections.emptyList());
         when(showtimeDao.insert(any())).thenReturn(1);
@@ -125,6 +129,7 @@ public class ShowtimeServiceTest {
 
         when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie));
         when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(96);
 
         Showtime existing = new Showtime(99, 1, 1, start.plusMinutes(60), start.plusMinutes(200), new BigDecimal("85000"), "Scheduled");
         existing.setMovieTitle("Avatar 2");
@@ -135,6 +140,24 @@ public class ShowtimeServiceTest {
         ShowtimeConflictException ex = assertThrows(ShowtimeConflictException.class, () ->
                 showtimeService.createShowtime(form));
         assertTrue(ex.getMessage().contains("BR-09"));
+    }
+
+    @Test
+    void testCreateShowtime_RejectRoomWithoutSeats_P1_01() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withHour(10).withMinute(0);
+        ShowtimeForm form = new ShowtimeForm();
+        form.setMovieId(1);
+        form.setRoomId(1);
+        form.setStartTime(start);
+        form.setBaseTicketPrice(new BigDecimal("85000"));
+
+        when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie));
+        when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(0); // 0 usable seats!
+
+        InvalidShowtimeException ex = assertThrows(InvalidShowtimeException.class, () ->
+                showtimeService.createShowtime(form));
+        assertTrue(ex.getMessage().contains("chưa có sơ đồ ghế khả dụng"));
     }
 
     @Test

@@ -67,6 +67,29 @@ public class TicketPricingDao {
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
+    /**
+     * Checks if there is an existing ACTIVE pricing rule for (DayType, TimeSlot, ExperienceType) per P1-03.
+     */
+    public Optional<TicketPricing> findActiveConflict(String dayType, String timeSlot, String experienceType, Integer excludePricingId) {
+        String exp = (experienceType != null && !experienceType.isBlank()) ? experienceType.trim() : "2D Digital";
+        String sql = "SELECT * FROM TicketPricing WHERE Status = 'Active' " +
+                "AND DayType = ? AND TimeSlot = ? AND ExperienceType = ? " +
+                "AND (? IS NULL OR PricingID <> ?)";
+        List<TicketPricing> list = jdbcTemplate.query(sql, ps -> {
+            ps.setString(1, dayType);
+            ps.setString(2, timeSlot);
+            ps.setString(3, exp);
+            if (excludePricingId != null) {
+                ps.setInt(4, excludePricingId);
+                ps.setInt(5, excludePricingId);
+            } else {
+                ps.setNull(4, java.sql.Types.INTEGER);
+                ps.setNull(5, java.sql.Types.INTEGER);
+            }
+        }, rowMapper);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
     public int insert(TicketPricingForm form) {
         String sql = "INSERT INTO TicketPricing (PricingCode, RuleName, DayType, TimeSlot, BasePrice, FormatSurcharge, ExperienceType, Status, Description, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";

@@ -57,6 +57,7 @@ public class SeatService {
                 throw new InvalidSeatLayoutException("Không thể đổi loại ghế vì ghế đã có vé đặt trong suất chiếu sắp diễn ra.");
             }
             seat.setSeatTypeName(seatTypeName.trim());
+            seat.setSeatTypeId(resolveSeatTypeId(seatTypeName.trim()));
         }
 
         if (status != null && !status.isBlank()) {
@@ -133,6 +134,10 @@ public class SeatService {
                 validateSeatType(seat.getSeatTypeName().trim());
             }
 
+            if (seat.getSeatTypeId() == null) {
+                seat.setSeatTypeId(resolveSeatTypeId(seat.getSeatTypeName()));
+            }
+
             if (seat.getStatus() == null || seat.getStatus().isBlank()) {
                 seat.setStatus("Active");
             } else {
@@ -159,7 +164,8 @@ public class SeatService {
                 Seat existing = currentSeatMap.get(posKey);
                 remainingExistingKeys.remove(posKey);
 
-                boolean typeChanged = !Objects.equals(existing.getSeatTypeName(), incomingSeat.getSeatTypeName());
+                boolean typeChanged = !Objects.equals(existing.getSeatTypeName(), incomingSeat.getSeatTypeName())
+                        || !Objects.equals(existing.getSeatTypeId(), incomingSeat.getSeatTypeId());
                 boolean statusChanged = !Objects.equals(existing.getStatus(), incomingSeat.getStatus());
                 boolean gridRowChanged = !Objects.equals(existing.getGridRow(), incomingSeat.getGridRow());
                 boolean gridColChanged = !Objects.equals(existing.getGridColumn(), incomingSeat.getGridColumn());
@@ -176,6 +182,7 @@ public class SeatService {
                                 + posKey + " vì ghế đã có vé đặt trong suất chiếu sắp diễn ra.");
                     }
 
+                    existing.setSeatTypeId(incomingSeat.getSeatTypeId() != null ? incomingSeat.getSeatTypeId() : resolveSeatTypeId(incomingSeat.getSeatTypeName()));
                     existing.setSeatTypeName(incomingSeat.getSeatTypeName());
                     existing.setStatus(incomingSeat.getStatus());
                     existing.setGridRow(incomingSeat.getGridRow());
@@ -186,6 +193,9 @@ public class SeatService {
             } else {
                 // New seat position -> INSERT
                 incomingSeat.setRoomId(roomId);
+                if (incomingSeat.getSeatTypeId() == null) {
+                    incomingSeat.setSeatTypeId(resolveSeatTypeId(incomingSeat.getSeatTypeName()));
+                }
                 seatDao.insert(incomingSeat);
             }
         }
@@ -249,12 +259,32 @@ public class SeatService {
                 s.setGridRow(r);
                 s.setGridColumn(c);
                 s.setSeatTypeName(defaultType);
+                s.setSeatTypeId(resolveSeatTypeId(defaultType));
                 s.setStatus("Active");
                 generated.add(s);
             }
         }
 
         return saveRoomLayout(roomId, generated);
+    }
+
+    private Integer resolveSeatTypeId(String typeName) {
+        if (typeName == null || typeName.isBlank()) return 1;
+        try {
+            List<SeatType> all = seatTypeDao.findAll("ALL");
+            for (SeatType st : all) {
+                if (st.getTypeName() != null && st.getTypeName().equalsIgnoreCase(typeName)) {
+                    return st.getSeatTypeId();
+                }
+                if (st.getTypeCode() != null && st.getTypeCode().equalsIgnoreCase(typeName)) {
+                    return st.getSeatTypeId();
+                }
+                if (st.getTypeName() != null && st.getTypeName().toLowerCase().contains(typeName.toLowerCase())) {
+                    return st.getSeatTypeId();
+                }
+            }
+        } catch (Exception ignored) {}
+        return 1;
     }
 
     private Room ensureRoomExists(int roomId) {

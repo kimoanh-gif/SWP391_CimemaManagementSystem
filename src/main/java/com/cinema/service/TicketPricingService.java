@@ -2,6 +2,7 @@ package com.cinema.service;
 
 import com.cinema.dao.SeatTypeDao;
 import com.cinema.dao.TicketPricingDao;
+import com.cinema.exception.DuplicatePricingRuleException;
 import com.cinema.exception.InvalidPricingConfigurationException;
 import com.cinema.exception.SeatTypeNotFoundException;
 import com.cinema.exception.TicketPricingNotFoundException;
@@ -81,6 +82,17 @@ public class TicketPricingService {
     @Transactional
     public TicketPricing updatePricingStatus(int id, String status) {
         TicketPricing existing = getPricingById(id);
+        if ("Active".equalsIgnoreCase(status)) {
+            ticketPricingDao.findActiveConflict(existing.getDayType(), existing.getTimeSlot(), existing.getExperienceType(), id)
+                    .ifPresent(conflict -> {
+                        throw new DuplicatePricingRuleException(
+                                "Đã tồn tại quy tắc giá đang kích hoạt '" + conflict.getRuleName() +
+                                "' (Mã: " + conflict.getPricingCode() + ") cho tổ hợp DayType=" + existing.getDayType() +
+                                ", TimeSlot=" + existing.getTimeSlot() + ", ExperienceType=" + existing.getExperienceType() +
+                                ". Vui lòng vô hiệu hóa quy tắc cũ trước khi kích hoạt quy tắc này."
+                        );
+                    });
+        }
         ticketPricingDao.updateStatus(id, status);
         return getPricingById(id);
     }
@@ -176,6 +188,47 @@ public class TicketPricingService {
         return ticketPricingDao.getAverageTicketPrice();
     }
 
+    /**
+     * P1-03: Determine time slot based on strict boundary rules:
+     * - MORNING: < 12:00
+     * - STANDARD: 12:00 - 17:00
+     * - GOLDEN_HOUR: >= 17:00
+     */
+    public String determineTimeSlot(java.time.LocalTime time) {
+        if (time == null) return "STANDARD";
+        if (time.isBefore(java.time.LocalTime.of(12, 0))) {
+            return "MORNING";
+        } else if (time.isBefore(java.time.LocalTime.of(17, 0))) {
+            return "STANDARD";
+        } else {
+            return "GOLDEN_HOUR";
+        }
+    }
+
+    /**
+     * Calculates ticket price for a seat by SeatTypeID, with fallback to SeatTypeName per P1-02.
+     */
+    public BigDecimal calculatePriceForSeat(BigDecimal basePrice, Integer seatTypeId, String seatTypeName) {
+        BigDecimal multiplier = BigDecimal.ONE;
+        if (seatTypeId != null) {
+            java.util.Optional<SeatType> st = seatTypeDao.findById(seatTypeId);
+            if (st.isPresent()) {
+                multiplier = st.get().getPriceMultiplier();
+                return calculateTicketUnitPrice(basePrice, multiplier);
+            }
+        }
+        if (seatTypeName != null && !seatTypeName.isBlank()) {
+            java.util.Optional<SeatType> st = seatTypeDao.findByName(seatTypeName.trim());
+            if (st.isEmpty()) {
+                st = seatTypeDao.findByCode(seatTypeName.trim());
+            }
+            if (st.isPresent()) {
+                multiplier = st.get().getPriceMultiplier();
+            }
+        }
+        return calculateTicketUnitPrice(basePrice, multiplier);
+    }
+
     private void validatePricingForm(TicketPricingForm form, Integer currentId) {
         if (form.getBasePrice() == null || form.getBasePrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidPricingConfigurationException("Giá vé cơ sở không được để trống hoặc là số âm");
@@ -189,5 +242,25 @@ public class TicketPricingService {
                 throw new InvalidPricingConfigurationException("Mã cấu hình giá '" + form.getPricingCode() + "' đã tồn tại trong hệ thống");
             }
         });
+
+        if (form.getDayType() == null || form.getDayType().isBlank()) {
+            throw new InvalidPricingConfigurationException("Loại ngày không được để trống");
+        }
+        if (form.getTimeSlot() == null || form.getTimeSlot().isBlank()) {
+            throw new InvalidPricingConfigurationException("Khung giờ chiếu không được để trống");
+        }
+
+        // P1-03: Collision check for active pricing rules
+        boolean isActive = form.getStatus() == null || "Active".equalsIgnoreCase(form.getStatus().trim());
+        if (isActive) {
+            ticketPricingDao.findActiveConflict(form.getDayType().trim(), form.getTimeSlot().trim(), form.getExperienceType(), currentId)
+                    .ifPresent(conflict -> {
+                        throw new DuplicatePricingRuleException(
+                                "Đã tồn tại quy tắc giá đang kích hoạt '" + conflict.getRuleName() +
+                                "' (Mã: " + conflict.getPricingCode() + ") cho tổ hợp DayType=" + form.getDayType() +
+                                ", TimeSlot=" + form.getTimeSlot() + ", ExperienceType=" + form.getExperienceType() + "."
+                        );
+                    });
+        }
     }
 }

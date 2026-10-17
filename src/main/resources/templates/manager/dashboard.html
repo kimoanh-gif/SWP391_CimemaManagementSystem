@@ -112,13 +112,13 @@
             <div class="stat-sub">Khung giờ sáng, chiều &amp; giờ vàng tối</div>
             <span class="stat-icon">🕐</span>
         </a>
-        <a th:href="@{/manager/pricing}" class="stat-card purple" style="text-decoration:none;">
-            <div class="stat-label">Giá Vé Cơ Sở</div>
+        <a th:href="@{/manager/pricing}" class="stat-card purple" style="text-decoration:none;" title="Giá vé cơ sở trung bình tính từ bảng giá hiện hành">
+            <div class="stat-label">Giá Vé Cơ Sở TB (Bảng Giá)</div>
             <div class="stat-value">
                 <span th:text="${#numbers.formatDecimal(stats.baseTicketPrice, 0, 'COMMA', 0, 'POINT')}">85.000</span>
                 <small>đ</small>
             </div>
-            <div class="stat-sub">ATP: <b th:text="${#numbers.formatDecimal(stats.averageTicketPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">100.833đ</b></div>
+            <div class="stat-sub">ATP: <b th:text="${#numbers.formatDecimal(stats.averageTicketPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">100.833đ</b> (Niêm yết)</div>
             <span class="stat-icon">🏷</span>
         </a>
         <a th:href="@{/manager/fb}" class="stat-card red" style="text-decoration:none;">
@@ -133,6 +133,52 @@
             <div class="stat-sub">Cấu hình loại ghế &amp; danh mục thể loại</div>
             <span class="stat-icon">⚙️</span>
         </a>
+    </div>
+
+    <!-- Real Transaction & Performance KPIs (P1-04) -->
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 class="card-title" style="margin:0;font-size:15px;">Hiệu Suất Vận Hành &amp; Doanh Thu Thực Tế</h2>
+                <small style="color:var(--text-400);">Dữ liệu tổng hợp từ các giao dịch vé và suất chiếu đã xác nhận</small>
+            </div>
+            <span th:if="${stats.hasTransactionData}" class="badge badge-green">Dữ liệu thực tế</span>
+            <span th:unless="${stats.hasTransactionData}" class="badge badge-gray">Chưa có dữ liệu</span>
+        </div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;">
+                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
+                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Doanh Thu Vé Thực Tế</div>
+                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
+                        <span th:text="${#numbers.formatDecimal(stats.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                    </div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
+                        Chưa có dữ liệu
+                    </div>
+                    <small style="display:block;color:var(--text-400);margin-top:4px;">Chỉ tính đơn hàng 'Paid' / 'Confirmed'</small>
+                </div>
+                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
+                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Tỷ Lệ Lấp Đầy Ghế (Occupancy)</div>
+                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
+                        <span th:text="${stats.seatOccupancyRate}">0.0</span>%
+                    </div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
+                        Chưa có dữ liệu
+                    </div>
+                    <small style="display:block;color:var(--text-400);margin-top:4px;">Số vé bán / tổng ghế các suất chiếu</small>
+                </div>
+                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
+                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Số Vé Đã Đặt</div>
+                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
+                        <span th:text="${stats.totalBookedTickets}">0</span> <small style="font-size:13px;font-weight:500;">vé</small>
+                    </div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
+                        Chưa có dữ liệu
+                    </div>
+                    <small style="display:block;color:var(--text-400);margin-top:4px;">Vé qua quầy &amp; đặt trực tuyến</small>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Quick Nav Tiles -->

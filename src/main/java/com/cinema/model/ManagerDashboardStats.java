@@ -22,9 +22,22 @@ public class ManagerDashboardStats {
     private int totalFBItems;
     private int activeFBItems;
 
+    // Real transaction and operational performance metrics (P1-04)
+    private boolean hasTransactionData;
+    private BigDecimal totalRevenue;
+    private BigDecimal ticketRevenue;
+    private BigDecimal fbRevenue;
+    private Double seatOccupancyRate;
+    private int totalBookedTickets;
+
     public ManagerDashboardStats() {
         this.baseTicketPrice = BigDecimal.ZERO;
         this.averageTicketPrice = BigDecimal.ZERO;
+        this.totalRevenue = BigDecimal.ZERO;
+        this.ticketRevenue = BigDecimal.ZERO;
+        this.fbRevenue = BigDecimal.ZERO;
+        this.hasTransactionData = false;
+        this.seatOccupancyRate = null;
     }
 
     // Getters and Setters
@@ -66,4 +79,22 @@ public class ManagerDashboardStats {
 
     public int getActiveFBItems() { return activeFBItems; }
     public void setActiveFBItems(int activeFBItems) { this.activeFBItems = activeFBItems; }
+
+    public boolean isHasTransactionData() { return hasTransactionData; }
+    public void setHasTransactionData(boolean hasTransactionData) { this.hasTransactionData = hasTransactionData; }
+
+    public BigDecimal getTotalRevenue() { return totalRevenue; }
+    public void setTotalRevenue(BigDecimal totalRevenue) { this.totalRevenue = totalRevenue; }
+
+    public BigDecimal getTicketRevenue() { return ticketRevenue; }
+    public void setTicketRevenue(BigDecimal ticketRevenue) { this.ticketRevenue = ticketRevenue; }
+
+    public BigDecimal getFbRevenue() { return fbRevenue; }
+    public void setFbRevenue(BigDecimal fbRevenue) { this.fbRevenue = fbRevenue; }
+
+    public Double getSeatOccupancyRate() { return seatOccupancyRate; }
+    public void setSeatOccupancyRate(Double seatOccupancyRate) { this.seatOccupancyRate = seatOccupancyRate; }
+
+    public int getTotalBookedTickets() { return totalBookedTickets; }
+    public void setTotalBookedTickets(int totalBookedTickets) { this.totalBookedTickets = totalBookedTickets; }
 }

@@ -239,6 +239,7 @@ public class P0CriticalFixesTest {
         @Mock private ShowtimeDao showtimeDao;
         @Mock private MovieDao movieDao;
         @Mock private RoomDao roomDao;
+        @Mock private SeatDao seatDao;
         @InjectMocks private ShowtimeService showtimeService;
 
         private Movie movie120m;
@@ -248,6 +249,7 @@ public class P0CriticalFixesTest {
         void setUp() {
             movie120m = new Movie(1, "Movie 120m", 120, "Now Showing");
             room1 = new Room(1, "ROOM-01", "Phòng 1", "Standard Laser", 100, "Ready");
+            lenient().when(seatDao.countActiveSeatsByRoomId(anyInt())).thenReturn(100);
         }
 
         @Test

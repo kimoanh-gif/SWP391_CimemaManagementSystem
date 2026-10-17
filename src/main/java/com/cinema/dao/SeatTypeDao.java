@@ -104,9 +104,10 @@ public class SeatTypeDao {
 
     public boolean isReferencedBySeats(int id) {
         String sql = "SELECT COUNT(*) FROM Seat s " +
-                "JOIN SeatType st ON s.SeatTypeName = st.TypeName OR s.SeatTypeName = st.TypeCode " +
-                "WHERE st.SeatTypeID = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+                "WHERE s.SeatTypeID = ? " +
+                "OR (s.SeatTypeID IS NULL AND (s.SeatTypeName = (SELECT TypeName FROM SeatType WHERE SeatTypeID = ?) " +
+                "OR s.SeatTypeName = (SELECT TypeCode FROM SeatType WHERE SeatTypeID = ?)))";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id, id, id);
         return count != null && count > 0;
     }
 }

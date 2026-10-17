@@ -25,6 +25,12 @@ public class SeatDao {
         Seat seat = new Seat();
         seat.setSeatId(rs.getInt("SeatID"));
         seat.setRoomId(rs.getInt("RoomID"));
+        try {
+            Integer seatTypeId = rs.getObject("SeatTypeID", Integer.class);
+            seat.setSeatTypeId(seatTypeId);
+        } catch (Exception ignored) {
+            // In case column is missing in legacy schema or mock
+        }
         seat.setSeatTypeName(rs.getString("SeatTypeName"));
         seat.setRowLabel(rs.getString("RowLabel"));
         seat.setSeatNumber(rs.getInt("SeatNumber"));
@@ -64,11 +70,18 @@ public class SeatDao {
         return count != null ? count : 0;
     }
 
+    public int countActiveSeatsByRoomId(int roomId) {
+        String sql = "SELECT COUNT(*) FROM Seat WHERE RoomID = ? AND Status = 'Active'";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
+        return count != null ? count : 0;
+    }
+
     public int insert(Seat seat) {
-        String sql = "INSERT INTO Seat (RoomID, SeatTypeName, RowLabel, SeatNumber, GridRow, GridColumn, Status, CreatedAt) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
+        String sql = "INSERT INTO Seat (RoomID, SeatTypeID, SeatTypeName, RowLabel, SeatNumber, GridRow, GridColumn, Status, CreatedAt) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 seat.getRoomId(),
+                seat.getSeatTypeId(),
                 seat.getSeatTypeName() != null ? seat.getSeatTypeName() : "Standard",
                 seat.getRowLabel(),
                 seat.getSeatNumber(),
@@ -79,9 +92,10 @@ public class SeatDao {
     }
 
     public int update(Seat seat) {
-        String sql = "UPDATE Seat SET SeatTypeName = ?, RowLabel = ?, SeatNumber = ?, GridRow = ?, GridColumn = ?, Status = ? " +
+        String sql = "UPDATE Seat SET SeatTypeID = ?, SeatTypeName = ?, RowLabel = ?, SeatNumber = ?, GridRow = ?, GridColumn = ?, Status = ? " +
                 "WHERE SeatID = ?";
         return jdbcTemplate.update(sql,
+                seat.getSeatTypeId(),
                 seat.getSeatTypeName(),
                 seat.getRowLabel(),
                 seat.getSeatNumber(),
@@ -92,9 +106,16 @@ public class SeatDao {
         );
     }
 
+    public int updateSeatType(int seatId, Integer seatTypeId, String seatTypeName) {
+        String sql = "UPDATE Seat SET SeatTypeID = ?, SeatTypeName = ? WHERE SeatID = ?";
+        return jdbcTemplate.update(sql, seatTypeId, seatTypeName, seatId);
+    }
+
     public int updateSeatType(int seatId, String seatTypeName) {
-        String sql = "UPDATE Seat SET SeatTypeName = ? WHERE SeatID = ?";
-        return jdbcTemplate.update(sql, seatTypeName, seatId);
+        String sql = "UPDATE Seat SET SeatTypeName = ?, " +
+                "SeatTypeID = (SELECT TOP 1 SeatTypeID FROM SeatType WHERE TypeCode = ? OR TypeName LIKE '%' + ? + '%') " +
+                "WHERE SeatID = ?";
+        return jdbcTemplate.update(sql, seatTypeName, seatTypeName, seatTypeName, seatId);
     }
 
     public int updateStatus(int seatId, String status) {

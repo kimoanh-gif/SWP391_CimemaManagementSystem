@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 public class Seat {
     private Integer seatId;
     private Integer roomId;
-    private String seatTypeName; // e.g., Standard, VIP, Couple
+    private Integer seatTypeId;  // Foreign Key to SeatType(SeatTypeID) per P1-02
+    private String seatTypeName; // e.g., Standard, VIP, Couple (kept for display & backward compatibility)
     private String rowLabel;     // e.g., A, B, C
     private Integer seatNumber;  // column number within the row
     private Integer gridRow;     // numeric row index (1‑based)
@@ -32,9 +33,24 @@ public class Seat {
         this.status = status;
     }
 
+    public Seat(Integer seatId, Integer roomId, Integer seatTypeId, String seatTypeName, String rowLabel,
+                Integer seatNumber, Integer gridRow, Integer gridColumn, String status) {
+        this.seatId = seatId;
+        this.roomId = roomId;
+        this.seatTypeId = seatTypeId;
+        this.seatTypeName = seatTypeName;
+        this.rowLabel = rowLabel;
+        this.seatNumber = seatNumber;
+        this.gridRow = gridRow;
+        this.gridColumn = gridColumn;
+        this.status = status;
+    }
+
     // Getters & Setters
     public Integer getSeatId() { return seatId; }
     public void setSeatId(Integer seatId) { this.seatId = seatId; }
+    public Integer getSeatTypeId() { return seatTypeId; }
+    public void setSeatTypeId(Integer seatTypeId) { this.seatTypeId = seatTypeId; }
     public Integer getRoomId() { return roomId; }
     public void setRoomId(Integer roomId) { this.roomId = roomId; }
     public String getSeatTypeName() { return seatTypeName; }

@@ -69,4 +69,13 @@ public class RoomService {
         form.setDescription(room.getDescription());
         roomDao.update(form);
     }
+
+    /**
+     * Checks if a room is eligible for showtime scheduling:
+     * Room status must be Ready/Screening AND have at least 1 active usable seat (P1-01).
+     */
+    public boolean isRoomReadyForShowtime(int roomId) {
+        Room room = getById(roomId);
+        return room.isActiveForShowtimes() && room.getActiveSeatCount() > 0;
+    }
 }

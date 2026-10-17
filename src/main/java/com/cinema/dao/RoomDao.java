@@ -42,6 +42,11 @@ public class RoomDao {
         room.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         room.setUpdatedAt(updatedAt != null ? updatedAt.toLocalDateTime() : null);
         room.setSeatCount(rs.getInt("SeatCount"));
+        try {
+            room.setActiveSeatCount(rs.getInt("ActiveSeatCount"));
+        } catch (Exception ignored) {
+            room.setActiveSeatCount(rs.getInt("SeatCount"));
+        }
         room.setShowtimeCount(rs.getInt("ShowtimeCount"));
         return room;
     };
@@ -49,6 +54,7 @@ public class RoomDao {
     public List<Room> findAll(String keyword, String status) {
         String sql = "SELECT r.*, " +
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID) AS SeatCount, " +
+                "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID AND s.Status = 'Active') AS ActiveSeatCount, " +
                 "(SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = r.RoomID) AS ShowtimeCount " +
                 "FROM Room r " +
                 "WHERE ( ? IS NULL OR r.RoomName LIKE ? OR r.RoomCode LIKE ? ) " +
@@ -69,6 +75,7 @@ public class RoomDao {
     public Optional<Room> findById(int roomId) {
         String sql = "SELECT r.*, " +
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID) AS SeatCount, " +
+                "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID AND s.Status = 'Active') AS ActiveSeatCount, " +
                 "(SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = r.RoomID) AS ShowtimeCount " +
                 "FROM Room r WHERE r.RoomID = ?";
         List<Room> list = jdbcTemplate.query(sql, roomRowMapper, roomId);

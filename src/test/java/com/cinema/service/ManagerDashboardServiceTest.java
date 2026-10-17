@@ -38,6 +38,9 @@ class ManagerDashboardServiceTest {
     @Mock
     private FBItemService fbItemService;
 
+    @Mock
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @InjectMocks
     private ManagerDashboardService dashboardService;
 
