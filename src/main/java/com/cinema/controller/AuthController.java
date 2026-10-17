@@ -41,15 +41,7 @@ public class AuthController {
         this.otpService    = otpService;
     }
 
-    // ============================================================= HOME
-    @GetMapping("/")
-    public String home(HttpSession session, Model model) {
-        if (sessionService.isLoggedIn(session)) {
-            model.addAttribute("user", sessionService.getCurrentUser(session));
-            return sessionService.dashboardForRole(sessionService.currentRole(session));
-        }
-        return "index";
-    }
+    // Home route is handled by HomeController (Screen 21 - Home Page).
 
     // ============================================================= REGISTER
     @GetMapping("/register")

@@ -98,9 +98,13 @@ public class SecurityConfig {
             // Authorisation rules
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.GET,
-                        "/", "/login", "/register",
+                        "/", "/home", "/login", "/register",
                         "/forgot-password", "/verify-activation-otp",
                         "/verify-reset-otp", "/reset-password",
+                        "/movies", "/movies/**",
+                        "/showtimes", "/showtimes/**",
+                        "/promotions-news", "/promotions-news/**",
+                        "/promotions/**", "/news/**",
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/error", "/favicon.ico",
                         "/oauth2/**", "/login/oauth2/**"
@@ -111,7 +115,8 @@ public class SecurityConfig {
                         "/login", "/register",
                         "/forgot-password", "/verify-activation-otp",
                         "/verify-reset-otp", "/reset-password",
-                        "/logout"
+                        "/logout",
+                        "/movies/*/reviews"
                 ).permitAll();
 
                 // Dashboards are role-gated.
