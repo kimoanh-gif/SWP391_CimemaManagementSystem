@@ -3,17 +3,56 @@
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Customer Dashboard | CineVerse</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head>
 <body>
 <header class="site-header">
-    <a class="brand" th:href="@{/customer/dashboard}"><span>C</span>CineVerse</a>
-    <nav><a class="active" th:href="@{/customer/dashboard}">Home</a><a th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/profile}">Profile</a></nav>
-    <div class="account-actions"><span th:text="${session.loggedInFullName}">Customer</span><form th:action="@{/logout}" method="post"><button class="link-button" type="submit">Sign out</button></form></div>
+    <a class="brand" th:href="@{/}"><span>C</span>CineVerse</a>
+    <nav>
+        <a th:href="@{/}">Trang Chủ</a>
+        <a th:href="@{/movies}">Phim</a>
+        <a th:href="@{/showtimes}">Lịch Chiếu</a>
+        <a th:href="@{/promotions-news}">Ưu Đãi &amp; Tin Tức</a>
+        <a class="active" th:href="@{/customer/dashboard}">Bảng Điều Khiển</a>
+        <a th:href="@{/customer/profile}">Hồ Sơ</a>
+    </nav>
+    <div class="account-actions">
+        <span th:text="${session['auth.user'] != null ? session['auth.user'].fullName : 'Customer'}">Customer</span>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
+            <button class="link-button" type="submit">Sign out</button>
+        </form>
+    </div>
 </header>
 <main class="booking-shell">
     <section class="hero-row">
-        <div><p class="eyebrow">Welcome to CineVerse</p><h1>Your next movie night starts here.</h1><p class="lead">Browse upcoming showtimes, choose your seats, and add your favorite snacks.</p></div>
+        <div>
+            <p class="eyebrow">Welcome to CineVerse</p>
+            <h1>Your next movie night starts here.</h1>
+            <p class="lead">Browse upcoming showtimes, choose your seats, and add your favorite snacks.</p>
+        </div>
     </section>
     <section class="movie-list">
-        <article class="panel empty-state"><span>🎟️</span><h2>Ready to book?</h2><p>Choose a movie and showtime to begin your booking.</p><p><a class="button primary" th:href="@{/customer/booking}">Browse Movies &amp; Showtimes</a></p></article>
-        <article class="panel empty-state"><span>👤</span><h2>Manage your account</h2><p>Review your personal details and membership points.</p><p><a class="button secondary" th:href="@{/customer/profile}">View My Profile</a></p></article>
+        <article class="panel empty-state">
+            <span>🎟️</span>
+            <h2>Khám Phá Phim Chiếu Rạp</h2>
+            <p>Xem danh sách các bộ phim bom tấn mới nhất đang và sắp chiếu.</p>
+            <p><a class="button primary" th:href="@{/movies}">Xem Danh Sách Phim</a></p>
+        </article>
+        <article class="panel empty-state">
+            <span>📅</span>
+            <h2>Lịch Chiếu Phim</h2>
+            <p>Chọn suất chiếu theo ngày và cụm rạp để đặt vé giữ chỗ.</p>
+            <p><a class="button secondary" th:href="@{/showtimes}">Xem Lịch Chiếu</a></p>
+        </article>
+        <article class="panel empty-state">
+            <span>🎁</span>
+            <h2>Khuyến Mãi &amp; Tin Tức</h2>
+            <p>Nhận mã ưu đãi giảm giá và đọc tin tức sự kiện điện ảnh.</p>
+            <p><a class="button secondary" th:href="@{/promotions-news}">Xem Khuyến Mãi</a></p>
+        </article>
+        <article class="panel empty-state">
+            <span>👤</span>
+            <h2>Hồ Sơ &amp; Điểm Thưởng</h2>
+            <p>Quản lý thông tin cá nhân và tích lũy điểm thưởng thành viên.</p>
+            <p><a class="button secondary" th:href="@{/customer/profile}">Xem Hồ Sơ</a></p>
+        </article>
     </section>
 </main>
 </body>

@@ -51,3 +51,7 @@ Thumbs.db
 # Env
 .env
 src/main/resources/application-local.properties
+
+# AI / Assistant tools
+.claude/
+CLAUDE.md
