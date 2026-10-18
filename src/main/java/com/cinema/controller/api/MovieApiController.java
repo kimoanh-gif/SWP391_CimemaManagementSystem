@@ -125,6 +125,16 @@ public class MovieApiController {
         return ResponseEntity.ok(ApiResponse.ok("Hủy kích hoạt phim thành công", deactivated));
     }
 
+    @PatchMapping("/{id}/reactivate")
+    public ResponseEntity<ApiResponse<Movie>> reactivateMovie(
+            @PathVariable int id,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        Movie reactivated = movieService.reactivateMovie(id);
+        return ResponseEntity.ok(ApiResponse.ok("Mở lại và kích hoạt phim '" + reactivated.getTitle() + "' thành công", reactivated));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Movie>> updateStatus(
             @PathVariable int id,

@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller for Screen 58: Seat Management / Seat Layout Management (UC-29).
@@ -73,6 +76,18 @@ public class SeatController {
         model.addAttribute("totalSeats", totalSeats);
         model.addAttribute("activeSeats", activeSeats);
         model.addAttribute("maintenanceSeats", maintenanceSeats);
+
+        Map<String, List<Seat>> seatsByRow = new LinkedHashMap<>();
+        for (Seat seat : seats) {
+            seatsByRow.computeIfAbsent(seat.getRowLabel(), k -> new ArrayList<>()).add(seat);
+        }
+        model.addAttribute("seatsByRow", seatsByRow);
+
+        int seatsPerRow = (selectedRoom != null && selectedRoom.getSeatsPerRow() != null && selectedRoom.getSeatsPerRow() > 0)
+                ? selectedRoom.getSeatsPerRow()
+                : 8;
+        int midPoint = seatsPerRow / 2;
+        model.addAttribute("midPoint", midPoint);
 
         return "manager/seats";
     }

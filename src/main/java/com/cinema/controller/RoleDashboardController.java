@@ -36,19 +36,7 @@ public class RoleDashboardController {
         return "staff/dashboard";
     }
 
-
-    @GetMapping("/admin/dashboard")
-    public String admin(HttpSession session, Model model) {
-        System.out.println("=== ADMIN DASHBOARD ===");
-        System.out.println("session id: " + session.getId());
-        System.out.println("hasRole: " + sessionService.hasRole(session, "ADMIN"));
-        System.out.println("currentUser: " + sessionService.getCurrentUser(session));
-        if (!sessionService.hasRole(session, "ADMIN"))
-            return "redirect:/login";
-        model.addAttribute("user", sessionService.getCurrentUser(session));
-        System.out.println("model user: " + model.getAttribute("user"));
-        return "admin/dashboard";
-    }
+    // Note: /admin/dashboard mapping is handled by AdminController
 
     /** Logged-in header fragment – exposes the current user. */
     @GetMapping("/me")

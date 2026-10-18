@@ -57,11 +57,12 @@ public class MovieController {
         List<Movie> movies = movieService.getAllMovies(keyword, genreId, ageRating, status);
         List<Genre> allGenres = genreService.getAllGenres(null, "ACTIVE");
 
-        // Compute summary metrics
-        long totalCount = movies.size();
-        long nowShowingCount = movies.stream().filter(m -> "Now Showing".equalsIgnoreCase(m.getStatus())).count();
-        long upcomingCount = movies.stream().filter(m -> "Upcoming".equalsIgnoreCase(m.getStatus())).count();
-        long archivedCount = movies.stream().filter(m -> "Archived".equalsIgnoreCase(m.getStatus()) || "Ended".equalsIgnoreCase(m.getStatus())).count();
+        // Compute system-wide metrics so top KPI cards remain true system counts regardless of filters
+        List<Movie> allSystemMovies = movieService.getAllMovies(null, null, "ALL", "ALL");
+        long totalCount = allSystemMovies.size();
+        long nowShowingCount = allSystemMovies.stream().filter(m -> "Now Showing".equalsIgnoreCase(m.getStatus())).count();
+        long upcomingCount = allSystemMovies.stream().filter(m -> "Upcoming".equalsIgnoreCase(m.getStatus())).count();
+        long archivedCount = allSystemMovies.stream().filter(m -> "Archived".equalsIgnoreCase(m.getStatus()) || "Ended".equalsIgnoreCase(m.getStatus())).count();
 
         model.addAttribute("movies", movies);
         model.addAttribute("allGenres", allGenres);
@@ -71,6 +72,7 @@ public class MovieController {
         model.addAttribute("selectedStatus", status);
 
         model.addAttribute("totalCount", totalCount);
+        model.addAttribute("filteredCount", movies.size());
         model.addAttribute("nowShowingCount", nowShowingCount);
         model.addAttribute("upcomingCount", upcomingCount);
         model.addAttribute("archivedCount", archivedCount);
@@ -171,6 +173,30 @@ public class MovieController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/movies";
+    }
+
+    /**
+     * Reactivates an archived movie back to active status.
+     */
+    @PostMapping("/{id}/reactivate")
+    public String reactivateMovie(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            Movie movie = movieService.reactivateMovie(id);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Đã mở lại và chuyển phim '" + movie.getTitle() + "' sang trạng thái " + movie.getStatus() + "."
+            );
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể kích hoạt lại phim: " + ex.getMessage());
         }
 
         return "redirect:/manager/movies";

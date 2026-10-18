@@ -238,8 +238,13 @@
                                 th:data-actors="${movie.actors}" th:data-language="${movie.language}"
                                 th:data-description="${movie.description}" th:data-poster="${movie.poster}"
                                 th:data-trailer="${movie.trailer}" th:data-genre-ids="${movie.genreIdsString}">✎</button>
-                        <button type="button" class="action-btn action-btn-del" title="Khóa / Lưu trữ"
-                                th:disabled="${movie.isArchived()}"
+                        <button type="button" class="action-btn" title="Mở lại / Kích hoạt phim"
+                                th:if="${movie.isArchived() or movie.status == 'Ended'}"
+                                style="color:#10B981;border-color:#10B981;background:#ECFDF5;"
+                                onclick="reactivateMovie(this)"
+                                th:data-id="${movie.id}" th:data-title="${movie.title}">▶</button>
+                        <button type="button" class="action-btn action-btn-del" title="Dừng hoạt động / Lưu trữ"
+                                th:unless="${movie.isArchived() or movie.status == 'Ended'}"
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
                     </td>
@@ -250,7 +255,7 @@
         <!-- Pagination -->
         <div class="pagination-row" th:if="${movies != null and !movies.isEmpty()}">
             <span style="font-size: 13px; color: var(--text-500);">
-                Hiển thị 1 – <span th:text="${#lists.size(movies)}">5</span> trên tổng số <span th:text="${totalCount}">5</span> bản ghi phim
+                Hiển thị 1 – <span th:text="${#lists.size(movies)}">5</span> trên <span th:text="${filteredCount}">5</span> phim phù hợp (Tổng hệ thống: <span th:text="${totalCount}">5</span> phim)
             </span>
             <div class="pagination">
                 <button type="button" class="page-btn" disabled>&lsaquo;</button>

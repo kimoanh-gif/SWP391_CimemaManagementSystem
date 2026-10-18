@@ -171,12 +171,20 @@ async function viewAssociatedMovies(genreId, genreName) {
             if (movies.length === 0) {
                 container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">Chưa có phim nào liên kết với thể loại này.</p>';
             } else {
-                container.innerHTML = movies.map(function (m) {
-                    return '<div class="movie-chip-item">' +
-                        '<span class="movie-chip-title">🎬 ' + escapeHtml(m.title) + '</span>' +
-                        '<span class="movie-chip-status">' + escapeHtml(m.status || "Chưa mở") + '</span>' +
-                        '</div>';
-                }).join("");
+                container.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+                    movies.map(function (m) {
+                        var statusBadge = m.status === 'Now Showing' ? '<span class="badge badge-green" style="font-size:11px;padding:3px 8px;">Đang chiếu</span>' :
+                            (m.status === 'Upcoming' ? '<span class="badge badge-orange" style="font-size:11px;padding:3px 8px;">Sắp chiếu</span>' :
+                            '<span class="badge badge-gray" style="font-size:11px;padding:3px 8px;">' + escapeHtml(m.status || 'Chưa mở') + '</span>');
+                        return '<div class="movie-chip-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">' +
+                            '<span class="movie-chip-title" style="font-weight:700;color:var(--text-900);">🎬 ' + escapeHtml(m.title) + '</span>' +
+                            statusBadge +
+                            '</div>';
+                    }).join("") +
+                    '</div>' +
+                    '<div style="margin-top:16px;text-align:center;">' +
+                    '<a href="/manager/movies?genreId=' + genreId + '" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;">🔍 Đi tới Màn Hình Quản Lý Phim (Lọc theo thể loại này) ➔</a>' +
+                    '</div>';
             }
         } else {
             container.innerHTML = '<p style="color: var(--danger); text-align: center;">' + escapeHtml(result.message || "Không thể tải danh sách phim.") + '</p>';

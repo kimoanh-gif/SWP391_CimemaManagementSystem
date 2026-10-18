@@ -5,6 +5,85 @@
  */
 
 // =====================================================================
+// Global Helper Utilities
+// =====================================================================
+function setValue(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.value = (val !== null && val !== undefined) ? val : "";
+}
+
+function getValue(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : "";
+}
+
+function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = (text !== null && text !== undefined) ? text : "";
+}
+
+function showError(inputId, feedbackId, msg) {
+    var input = document.getElementById(inputId);
+    if (input) input.classList.add("is-invalid");
+    var fb = document.getElementById(feedbackId);
+    if (fb) fb.textContent = msg;
+}
+
+function clearError(inputId, feedbackId) {
+    var input = document.getElementById(inputId);
+    if (input) input.classList.remove("is-invalid");
+    clearFeedback(feedbackId);
+}
+
+function clearFeedback(id) {
+    var fb = document.getElementById(id);
+    if (fb) fb.textContent = "";
+}
+
+function showModalAlert(msg) {
+    var el = document.getElementById("modalErrorAlert");
+    if (el) {
+        el.textContent = msg;
+        el.style.display = "block";
+    }
+}
+
+function hideModalAlert() {
+    var el = document.getElementById("modalErrorAlert");
+    if (el) {
+        el.textContent = "";
+        el.style.display = "none";
+    }
+}
+
+function setLoading(btn, isLoading) {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    if (isLoading) {
+        btn.setAttribute("data-orig-text", btn.innerHTML);
+        btn.innerHTML = '<span class="spinner"></span> Đang lưu...';
+    } else {
+        var orig = btn.getAttribute("data-orig-text");
+        if (orig) btn.innerHTML = orig;
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function getCsrfToken() {
+    var match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
+    return match ? decodeURIComponent(match[2]) : "";
+}
+
+// =====================================================================
 // Global Modal Controls (available immediately to inline onclick)
 // =====================================================================
 function openAddMovieModal() {
@@ -175,7 +254,7 @@ async function deactivateMovie(button) {
     var title = button.getAttribute("data-title");
     var showtimes = parseInt(button.getAttribute("data-showtimes") || "0", 10);
 
-    var confirmMsg = "Bạn có chắc chắn muốn hủy kích hoạt và lưu trữ phim '" + title + "'?\n" +
+    var confirmMsg = "Bạn có chắc chắn muốn dừng hoạt động và lưu trữ phim '" + title + "'?\n" +
         "Phim sẽ chuyển sang trạng thái Archived và không thể chọn để tạo suất chiếu mới.";
     if (showtimes > 0) {
         confirmMsg += "\n\nLưu ý: Phim hiện có " + showtimes + " suất chiếu trong hệ thống.";
@@ -190,9 +269,13 @@ async function deactivateMovie(button) {
     button.innerHTML = '<span class="spinner"></span>';
 
     try {
+        var headers = { "Accept": "application/json" };
+        var csrf = getCsrfToken();
+        if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
         var response = await fetch("/api/manager/movies/" + id + "/deactivate", {
             method: "PATCH",
-            headers: { "Accept": "application/json" }
+            headers: headers
         });
 
         var result = await response.json();
@@ -200,7 +283,51 @@ async function deactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể hủy kích hoạt: " + (result.message || "Lỗi không xác định"));
+            alert("Không thể dừng hoạt động phim: " + (result.message || "Lỗi không xác định"));
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    } catch (err) {
+        alert("Lỗi kết nối: " + err.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+// =====================================================================
+// Reactivate Movie Action (Reopen Archived/Ended to Active)
+// =====================================================================
+async function reactivateMovie(button) {
+    var id = button.getAttribute("data-id");
+    var title = button.getAttribute("data-title");
+
+    var confirmMsg = "Bạn có chắc chắn muốn mở lại và kích hoạt phim '" + title + "'?\n" +
+        "Phim sẽ được kích hoạt để có thể xếp lịch và tạo suất chiếu mới.";
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    var originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner"></span>';
+
+    try {
+        var headers = { "Accept": "application/json" };
+        var csrf = getCsrfToken();
+        if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
+        var response = await fetch("/api/manager/movies/" + id + "/reactivate", {
+            method: "PATCH",
+            headers: headers
+        });
+
+        var result = await response.json();
+
+        if (response.ok && result.success) {
+            window.location.reload();
+        } else {
+            alert("Không thể kích hoạt lại phim: " + (result.message || "Lỗi không xác định"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
@@ -217,7 +344,12 @@ window.openEditMovieModal = openEditMovieModal;
 window.openQuickViewModal = openQuickViewModal;
 window.closeMovieModal = closeMovieModal;
 window.closeQuickViewModal = closeQuickViewModal;
+window.resetMovieForm = resetMovieForm;
 window.deactivateMovie = deactivateMovie;
+window.reactivateMovie = reactivateMovie;
+window.setValue = setValue;
+window.getValue = getValue;
+window.setText = setText;
 
 // =====================================================================
 // Event Listeners on DOM Ready
@@ -320,12 +452,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 var url = (id && parseInt(id, 10) > 0) ? "/api/manager/movies/" + id : "/api/manager/movies";
                 var method = (id && parseInt(id, 10) > 0) ? "PUT" : "POST";
 
+                var headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                };
+                var csrf = getCsrfToken();
+                if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
                 var response = await fetch(url, {
                     method: method,
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
+                    headers: headers,
                     body: JSON.stringify(payload)
                 });
 
@@ -345,75 +481,4 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
-
-    function setValue(id, val) {
-        var el = document.getElementById(id);
-        if (el) el.value = val;
-    }
-
-    function getValue(id) {
-        var el = document.getElementById(id);
-        return el ? el.value : "";
-    }
-
-    function setText(id, text) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = text;
-    }
-
-    function showError(inputId, feedbackId, msg) {
-        var input = document.getElementById(inputId);
-        if (input) input.classList.add("is-invalid");
-        var fb = document.getElementById(feedbackId);
-        if (fb) fb.textContent = msg;
-    }
-
-    function clearError(inputId, feedbackId) {
-        var input = document.getElementById(inputId);
-        if (input) input.classList.remove("is-invalid");
-        clearFeedback(feedbackId);
-    }
-
-    function clearFeedback(id) {
-        var fb = document.getElementById(id);
-        if (fb) fb.textContent = "";
-    }
-
-    function showModalAlert(msg) {
-        var el = document.getElementById("modalErrorAlert");
-        if (el) {
-            el.textContent = msg;
-            el.style.display = "block";
-        }
-    }
-
-    function hideModalAlert() {
-        var el = document.getElementById("modalErrorAlert");
-        if (el) {
-            el.textContent = "";
-            el.style.display = "none";
-        }
-    }
-
-    function setLoading(btn, isLoading) {
-        if (!btn) return;
-        btn.disabled = isLoading;
-        if (isLoading) {
-            btn.setAttribute("data-orig-text", btn.innerHTML);
-            btn.innerHTML = '<span class="spinner"></span> Đang lưu...';
-        } else {
-            var orig = btn.getAttribute("data-orig-text");
-            if (orig) btn.innerHTML = orig;
-        }
-    }
 });
-
-function escapeHtml(str) {
-    if (!str) return "";
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
