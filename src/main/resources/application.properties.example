@@ -26,8 +26,8 @@ spring.datasource.hikari.maximum-pool-size=10
 # ----- Mail (SMTP) ---------------------------------------------------------
 spring.mail.host=${MAIL_HOST:smtp.gmail.com}
 spring.mail.port=${MAIL_PORT:587}
-spring.mail.username=${MAIL_USERNAME:your_email@gmail.com}
-spring.mail.password=${MAIL_PASSWORD:your_app_password_here}
+spring.mail.username=${MAIL_USERNAME:}
+spring.mail.password=${MAIL_PASSWORD:}
 
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
@@ -52,9 +52,10 @@ app.auth.login.lockout-minutes=5
 
 # ----- Google OAuth2 -------------------------------------------------------
 # Lấy từ https://console.cloud.google.com/apis/credentials
-app.auth.oauth.google.enabled=true
-spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:your_client_id_here}
-spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:your_client_secret_here}
+# Enable only after GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET have been provided.
+app.auth.oauth.google.enabled=${GOOGLE_OAUTH_ENABLED:false}
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:}
 spring.security.oauth2.client.registration.google.scope=openid,email,profile
 spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
 

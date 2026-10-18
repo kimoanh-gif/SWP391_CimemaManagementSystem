@@ -157,7 +157,7 @@ public class PublicShowtimeDAO {
                 ORDER BY st.StartTime ASC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, rowMapper);
     }

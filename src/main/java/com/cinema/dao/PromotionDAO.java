@@ -87,7 +87,7 @@ public class PromotionDAO {
                 ORDER BY p.StartDate DESC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         List<Promotion> promotions = jdbcTemplate.query(sql, promoMapper);
         for (Promotion p : promotions) {

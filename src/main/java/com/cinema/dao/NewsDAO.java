@@ -67,7 +67,7 @@ public class NewsDAO {
                 ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, rowMapper);
     }
