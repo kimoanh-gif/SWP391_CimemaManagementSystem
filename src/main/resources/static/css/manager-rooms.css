@@ -1,0 +1,188 @@
+/* manager-rooms.css – adapted from manager-movies.css */
+:root {
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --text-primary: #e0e0e0;
+    --accent: #ff9800;
+    --success: #4caf50;
+    --danger: #f44336;
+    --border-radius: 8px;
+}
+
+/* Global */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar – reuse same layout */
+.sidebar {
+    width: 240px;
+    background: var(--bg-secondary);
+    height: 100vh;
+    position: fixed;
+    top: 0; left: 0;
+    padding: 1rem;
+}
+.sidebar a {
+    display: block;
+    color: var(--text-primary);
+    padding: .5rem 0;
+    text-decoration: none;
+}
+.sidebar a.active {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+/* Topbar */
+.topbar {
+    margin-left: 240px;
+    height: 64px;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid #333;
+}
+
+/* KPI cards */
+.kpi-grid {
+    margin-left: 240px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+.kpi-card {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+}
+.kpi-number {
+    font-size: 1.8rem;
+    color: var(--accent);
+}
+
+/* Filter bar */
+.filter-bar {
+    margin-left: 240px;
+    display: flex;
+    gap: .5rem;
+    padding: 0 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.filter-bar input,
+.filter-bar select {
+    padding: .4rem .6rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #555;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+.filter-bar button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: .4rem .8rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+/* Table */
+.room-table {
+    margin-left: 240px;
+    width: calc(100% - 250px);
+    border-collapse: collapse;
+}
+.room-table th,
+.room-table td {
+    border: 1px solid #444;
+    padding: .6rem;
+    text-align: left;
+}
+.room-table th {
+    background: var(--bg-secondary);
+}
+.room-table tr:nth-child(even) {
+    background: var(--bg-primary);
+}
+
+/* Status badge */
+.badge {
+    padding: .2rem .5rem;
+    border-radius: 12px;
+    font-size: .85rem;
+    display: inline-block;
+}
+.badge.ready { background: #2196f3; }
+.badge.screening { background: #4caf50; }
+.badge.cleaning { background: #ff9800; }
+.badge.maintenance { background: #9e9e9e; }
+
+/* Action buttons */
+.action-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: .3rem .6rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-right: .3rem;
+}
+.action-btn.deactivate { background: var(--danger); }
+
+/* Modals – similar to movies modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.6);
+    z-index: 1000;
+}
+.modal.open { display: flex; }
+.modal-content {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.modal-header h2 { margin: 0; font-size: 1.3rem; }
+.close-btn { cursor: pointer; font-size: 1.5rem; }
+
+/* Form inputs */
+.modal-content label {
+    display: block;
+    margin-top: .5rem;
+    font-weight: 500;
+}
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+    width: 100%;
+    padding: .4rem;
+    margin-top: .2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #555;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Validation messages */
+.error-msg { color: var(--danger); font-size: .85rem; }
+.success-msg { color: var(--success); font-size: .9rem; }
