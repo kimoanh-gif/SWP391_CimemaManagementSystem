@@ -250,7 +250,7 @@
                     <div class="movie-card-genres" th:text="${m.genres}">Thể loại</div>
                     <div class="movie-card-actions">
                         <a th:href="@{/movies/{id}(id=${m.movieId})}" class="btn-card-detail">Chi Tiết</a>
-                        <a th:href="@{/movies/{id}(id=${m.movieId})}#showtimes" class="btn-card-book">Mua Vé</a>
+                        <a th:href="@{/movies/{id}(id=${m.movieId})#showtimes}" class="btn-card-book">Mua Vé</a>
                     </div>
                 </div>
             </article>

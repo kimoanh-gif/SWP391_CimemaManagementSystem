@@ -101,7 +101,7 @@ public class MovieDAO {
                 ORDER BY m.ReleaseDate DESC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, movieRowMapper);
     }
@@ -113,7 +113,7 @@ public class MovieDAO {
                 ORDER BY m.ReleaseDate ASC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, movieRowMapper);
     }
@@ -124,7 +124,7 @@ public class MovieDAO {
                 ORDER BY m.ReleaseDate DESC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, movieRowMapper);
     }
@@ -187,7 +187,7 @@ public class MovieDAO {
                 ORDER BY m.ReleaseDate DESC
                 """;
         if (limit > 0) {
-            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + sql + ") sub";
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
         }
         return jdbcTemplate.query(sql, movieRowMapper, movieId);
     }

@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ import java.util.Locale;
  */
 @Service
 public class OtpService {
+
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
     private static final int    BCRYPT_STRENGTH = 10;
     private static final int    CODE_LENGTH     = 6;
@@ -138,8 +142,17 @@ public class OtpService {
             mailSender.send(message);
             return true;
         } catch (MailException ex) {
-            // Email failed – return false so caller can surface the raw OTP code to the user.
+            // Log the delivery failure, but never include the OTP or mail credentials.
+            log.error("OTP email delivery failed (purpose={}, recipient={})", purpose, maskEmail(to), ex);
             return false;
         }
+    }
+
+    private String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 0) return "[invalid]";
+        String local = email.substring(0, at);
+        String visible = local.length() == 1 ? local : local.substring(0, 2);
+        return visible + "***" + email.substring(at);
     }
 }

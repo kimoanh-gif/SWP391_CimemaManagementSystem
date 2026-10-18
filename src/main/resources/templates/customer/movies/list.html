@@ -118,7 +118,7 @@
                 </div>
                 <div class="movie-card-actions">
                     <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Chi Tiết</a>
-                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})}#showtimes" class="btn-card-book">Mua Vé</a>
+                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Mua Vé</a>
                     <a th:if="${movie.comingSoon}" th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail" style="border-color:var(--gold);color:var(--gold);">Sắp Chiếu</a>
                 </div>
             </div>

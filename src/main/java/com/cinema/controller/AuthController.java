@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -35,10 +36,18 @@ public class AuthController {
     private final SessionService sessionService;
     private final OtpService    otpService;
 
+    @Value("${app.auth.oauth.google.enabled:false}")
+    private boolean googleOAuthEnabled;
+
     public AuthController(AuthService authService, SessionService sessionService, OtpService otpService) {
         this.authService   = authService;
         this.sessionService = sessionService;
         this.otpService    = otpService;
+    }
+
+    @ModelAttribute("googleOAuthEnabled")
+    public boolean googleOAuthEnabled() {
+        return googleOAuthEnabled;
     }
 
     // Home route is handled by HomeController (Screen 21 - Home Page).
@@ -172,6 +181,7 @@ public class AuthController {
                             @RequestParam(name = "passwordResetSuccess", required = false) String resetOk,
                             @RequestParam(name = "oauthError", required = false) String oauthError,
                             @RequestParam(name = "oauthRejected", required = false) String oauthRejected,
+                            @RequestParam(name = "oauthUnavailable", required = false) String oauthUnavailable,
                             @RequestParam(name = "redirect",   required = false) String redirect) {
         if (sessionService.isLoggedIn(session))
             return sessionService.dashboardForRole(sessionService.currentRole(session));
@@ -183,7 +193,17 @@ public class AuthController {
         if ("true".equals(resetOk)) model.addAttribute("resetSuccess", "Mật khẩu đã được đặt lại. Vui lòng đăng nhập.");
         if (oauthError != null) model.addAttribute("formError", "Đăng nhập Google thất bại: " + oauthError);
         if (oauthRejected != null) model.addAttribute("formError", "Bạn đã từ chối đăng nhập Google.");
+        if (oauthUnavailable != null) model.addAttribute("formError", "Đăng nhập Google chưa được cấu hình.");
         return "auth/login";
+    }
+
+    /**
+     * Spring Security handles this path when Google OAuth is enabled. When it
+     * is disabled, return the visitor to login instead of exposing a 404 page.
+     */
+    @GetMapping("/oauth2/authorization/google")
+    public String googleOAuthUnavailable() {
+        return "redirect:/login?oauthUnavailable";
     }
 
     @PostMapping("/login")

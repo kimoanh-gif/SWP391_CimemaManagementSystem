@@ -32,7 +32,7 @@
       <div class="auth-notice error"   role="alert"  th:if="${oauthRejected}" th:text="${oauthRejected}"></div>
 
       <!-- Google OAuth2 button – Spring Security's filter chain handles the redirect -->
-      <a class="auth-btn-google" th:href="@{/oauth2/authorization/google}" aria-label="Tiếp tục với Google">
+      <a class="auth-btn-google" th:if="${googleOAuthEnabled}" th:href="@{/oauth2/authorization/google}" aria-label="Tiếp tục với Google">
         <svg viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.2 3.6l6.9-6.9C35.9 2.4 30.3 0 24 0 14.6 0 6.45 5.4 2.55 13.3l8.06 6.26C12.6 13.3 17.85 9.5 24 9.5z"/>
           <path fill="#4285F4" d="M46.1 24.5c0-1.6-.14-3.1-.4-4.5H24v9h12.5c-.55 2.9-2.2 5.4-4.7 7.1l7.3 5.7c4.3-4 6.8-9.8 6.8-17.3z"/>
