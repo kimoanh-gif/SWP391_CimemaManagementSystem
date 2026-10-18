@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff & Manager Accounts | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm); }
+.stat-num { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+.stat-card.purple .stat-num { color: var(--purple-600); }
+.stat-card.green  .stat-num { color: #059669; }
+.stat-card.blue   .stat-num { color: #2563EB; }
+.stat-card.red    .stat-num { color: #DC2626; }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.search-box { display: flex; gap: 8px; }
+.search-box input { height: 38px; padding: 0 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: var(--surface-raised); color: var(--text-primary); font-size: 13px; width: 280px; transition: border-color .15s; }
+.search-box input:focus { outline: none; border-color: var(--purple-400); box-shadow: 0 0 0 3px rgba(167,139,250,.15); }
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { background: var(--surface-raised); color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--purple-50); }
+.empty-row td { text-align: center; color: var(--text-muted); padding: 48px; font-size: 15px; }
+.badge { padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: 700; display: inline-block; }
+.badge-admin   { background: var(--purple-100); color: var(--purple-700); }
+.badge-manager { background: #D1FAE5; color: #065F46; }
+.badge-staff   { background: #DBEAFE; color: #1E40AF; }
+.badge-active     { background: var(--success-bg); color: var(--success-text); }
+.badge-suspended  { background: var(--error-bg); color: var(--error-text); }
+.actions { display: flex; gap: 6px; align-items: center; }
+.btn-warning { background: #FEF3C7 !important; color: #92400E !important; border: 1px solid #FCD34D !important; }
+.btn-warning:hover { background: #FDE68A !important; }
+
+/* Modal styles */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,27,75,.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 520px; max-width: calc(100vw - 48px); max-height: 90vh; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-5) var(--sp-6); border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 18px; }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px; border-radius: 6px; }
+.modal-close:hover { background: var(--purple-50); color: var(--purple-600); }
+.modal-body { padding: var(--sp-6); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: var(--sp-4) var(--sp-6); border-top: 1px solid var(--border); }
+
+.form-group { margin-bottom: var(--sp-4); }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.form-group input, .form-group select { width: 100%; padding: 10px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: var(--surface-raised); color: var(--text-primary); font-size: 14px; font-family: inherit; transition: border-color .15s; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--purple-400); box-shadow: 0 0 0 3px rgba(167,139,250,.2); background: #fff; }
+.form-group input.error { border-color: var(--error-icon); }
+.form-group .field-error { color: var(--error-icon); font-size: 12px; margin-top: 4px; display: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; z-index: 2000; display: none; min-width: 280px; }
+.toast.show { display: block; animation: slideUp .3s ease; }
+.toast-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.toast-error   { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.loading { display: none; text-align: center; padding: 40px; color: var(--text-muted); }
+.loading.show { display: block; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--purple-100); border-top-color: var(--purple-600); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search-box input { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">&#9654;</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-label">Customers</span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link active">
+        <span class="link-label">Staff & Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link">
+        <span class="link-label">Roles & Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link">
+        <span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">Staff & Manager Accounts</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openCreateModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Staff
+        </button>
+      </div>
+    </div>
+    <div class="admin-content">
+
+      <!-- Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num purple" id="stat-total">0</div>
+          <div class="stat-label">Total Staff</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num green" id="stat-admin">0</div>
+          <div class="stat-label">Administrators</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num blue" id="stat-manager">0</div>
+          <div class="stat-label">Managers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num red" id="stat-staff">0</div>
+          <div class="stat-label">Staff</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search staff by name, email, or username..." onkeydown="if(event.key==='Enter')loadStaffs(1)">
+          <button class="btn btn-secondary" onclick="loadStaffs(1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </button>
+          <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+        </div>
+        <div style="color:var(--text-secondary);font-size:13px;">
+          <span id="rowCountStart">0</span>-<span id="rowCountEnd">0</span> of <span id="rowCountTotal">0</span> account(s)
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div>Loading staff accounts...</div>
+      </div>
+
+      <!-- Table -->
+      <table id="staffTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Account Info</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          <tr class="empty-row">
+            <td colspan="7">Loading staff accounts...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-wrap" id="paginationWrap">
+        <div class="pagination-info">
+          Page <strong id="pgCurrent">1</strong> of <strong id="pgTotal">1</strong>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">New Staff Account</h2>
+      <button class="modal-close" onclick="closeFormModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="staffForm" onsubmit="submitForm(event)">
+        <input type="hidden" id="formAccountId">
+        <div class="form-group">
+          <label for="fUsername">Username *</label>
+          <input type="text" id="fUsername" required minlength="3" placeholder="e.g. johndoe123" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="fFullName">Full Name *</label>
+          <input type="text" id="fFullName" required placeholder="e.g. John Doe" autocomplete="name">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fEmail">Email *</label>
+            <input type="email" id="fEmail" required placeholder="john@cinema.com">
+          </div>
+          <div class="form-group">
+            <label for="fPhone">Phone *</label>
+            <input type="tel" id="fPhone" required pattern="0[0-9]{9,10}" placeholder="0912345678">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fRole">Role *</label>
+            <select id="fRole" required>
+              <option value="STAFF">Staff</option>
+              <option value="MANAGER">Manager</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+          <div class="form-group" id="pwGroup">
+            <label for="fPassword">Password *</label>
+            <input type="password" id="fPassword" placeholder="Min. 6 characters">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
+      <button class="btn btn-primary" id="formSubmitBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// CSRF Helper
+function getCsrfHeaders() {
+  const token = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+  return token ? { 'X-XSRF-TOKEN': token } : {};
+}
+
+// State
+let staffs = [];
+let pagination = { currentPage: 1, pageSize: 10, totalItems: 0, totalPages: 1 };
+let editMode = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadStaffs(1);
+  loadStats();
+});
+
+async function loadStats() {
+  try {
+    const resp = await fetch('/api/admin/staffs/stats', { headers: getCsrfHeaders() });
+    if (resp.ok) {
+      const json = await resp.json();
+      if (json.success) {
+        document.getElementById('stat-total').textContent = json.data.total;
+        document.getElementById('stat-admin').textContent = json.data.admin;
+        document.getElementById('stat-manager').textContent = json.data.manager;
+        document.getElementById('stat-staff').textContent = json.data.staff;
+      }
+    }
+  } catch (e) { console.log('Stats loading skipped'); }
+}
+
+async function loadStaffs(page) {
+  const search = document.getElementById('searchInput').value.trim();
+  const pageNum = page || pagination.currentPage;
+
+  document.getElementById('loadingIndicator').classList.add('show');
+  document.getElementById('staffTableBody').innerHTML = '<tr class="empty-row"><td colspan="7">Loading...</td></tr>';
+
+  try {
+    let url = `/api/admin/staffs?page=${pageNum}&size=${pagination.pageSize}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const resp = await fetch(url);
+    const json = await resp.json();
+    staffs = json.data || [];
+    pagination = json.pagination || pagination;
+    pagination.currentPage = pageNum;
+
+    renderTable();
+    renderPagination();
+    updateRowCount();
+  } catch (e) {
+    showToast('Failed to load staff accounts.', 'error');
+    document.getElementById('staffTableBody').innerHTML = '<tr class="empty-row"><td colspan="7">Error loading data.</td></tr>';
+  } finally {
+    document.getElementById('loadingIndicator').classList.remove('show');
+  }
+}
+
+function updateRowCount() {
+  const total = pagination.totalItems;
+  const size = pagination.pageSize;
+  const cur = pagination.currentPage;
+  const start = total === 0 ? 0 : (cur - 1) * size + 1;
+  const end = Math.min(cur * size, total);
+  document.getElementById('rowCountStart').textContent = start;
+  document.getElementById('rowCountEnd').textContent = end;
+  document.getElementById('rowCountTotal').textContent = total;
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  loadStaffs(1);
+}
+
+function renderTable() {
+  const tbody = document.getElementById('staffTableBody');
+  if (!staffs.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No staff accounts found.</td></tr>';
+    return;
+  }
+  const start = (pagination.currentPage - 1) * pagination.pageSize;
+  tbody.innerHTML = staffs.map((s, i) => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:13px;">${start + i + 1}</td>
+      <td>
+        <div style="font-weight:600;">${escHtml(s.fullName || '-')}</div>
+        <div class="sub">@${escHtml(s.username || '-')}</div>
+      </td>
+      <td style="font-size:14px;">${escHtml(s.email || '-')}</td>
+      <td style="font-size:14px;">${escHtml(s.phone || '-')}</td>
+      <td><span class="badge ${roleBadge(s.role)}">${s.role || '-'}</span></td>
+      <td><span class="badge ${statusBadge(s.status)}">${s.status || '-'}</span></td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-sm btn-secondary" onclick="openEditModal(${s.accountId})">Edit</button>
+          <button class="btn btn-sm btn-warning" onclick="resetPassword(${s.accountId}, '${escHtml(s.fullName)}')">Reset PW</button>
+          ${s.status === 'ACTIVE'
+            ? `<button class="btn btn-sm btn-danger" onclick="confirmAction(${s.accountId}, '${escHtml(s.fullName)}', 'suspend')">Suspend</button>`
+            : `<button class="btn btn-sm btn-success" onclick="confirmAction(${s.accountId}, '${escHtml(s.fullName)}', 'reactivate')">Activate</button>`
+          }
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function roleBadge(role) {
+  return { ADMIN:'badge-admin', MANAGER:'badge-manager', STAFF:'badge-staff' }[role] || '';
+}
+
+function statusBadge(status) {
+  return { ACTIVE:'badge-active', SUSPENDED:'badge-suspended' }[status] || '';
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderPagination() {
+  const { currentPage: cur, totalPages: total } = pagination;
+  document.getElementById('pgCurrent').textContent = cur;
+  document.getElementById('pgTotal').textContent = total;
+  const wrap = document.getElementById('paginationControls');
+  if (total <= 1) { wrap.innerHTML = ''; return; }
+  
+  let html = `<button class="pg-btn" ${cur === 1 ? 'disabled' : ''} onclick="loadStaffs(${cur - 1})">&laquo;</button>`;
+  for (let i = 1; i <= total; i++) {
+    html += `<button class="pg-btn ${i === cur ? 'active' : ''}" onclick="loadStaffs(${i})">${i}</button>`;
+  }
+  html += `<button class="pg-btn" ${cur === total ? 'disabled' : ''} onclick="loadStaffs(${cur + 1})">&raquo;</button>`;
+  wrap.innerHTML = html;
+}
+
+function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+function openCreateModal() {
+  editMode = false;
+  document.getElementById('modalTitle').textContent = 'New Staff Account';
+  document.getElementById('formSubmitBtn').textContent = 'Create Account';
+  document.getElementById('pwGroup').style.display = 'block';
+  document.getElementById('fPassword').required = true;
+  document.getElementById('staffForm').reset();
+  document.getElementById('formAccountId').value = '';
+  document.getElementById('formModal').classList.add('show');
+}
+
+function openEditModal(accountId) {
+  editMode = true;
+  const s = staffs.find(x => x.accountId === accountId);
+  if (!s) { showToast('Staff not found.', 'error'); return; }
+  
+  document.getElementById('modalTitle').textContent = 'Edit Staff Account';
+  document.getElementById('formSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('pwGroup').style.display = 'none';
+  document.getElementById('fPassword').required = false;
+  
+  document.getElementById('formAccountId').value = accountId;
+  document.getElementById('fUsername').value = s.username || '';
+  document.getElementById('fFullName').value = s.fullName || '';
+  document.getElementById('fEmail').value = s.email || '';
+  document.getElementById('fPhone').value = s.phone || '';
+  document.getElementById('fRole').value = s.role || 'STAFF';
+  
+  document.getElementById('formModal').classList.add('show');
+}
+
+function closeFormModal() {
+  document.getElementById('formModal').classList.remove('show');
+}
+
+async function submitForm(e) {
+  if (e) e.preventDefault();
+  
+  const accountId = document.getElementById('formAccountId').value;
+  const payload = {
+    username: document.getElementById('fUsername').value.trim(),
+    fullName: document.getElementById('fFullName').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    role: document.getElementById('fRole').value
+  };
+  
+  if (!payload.username || payload.username.length < 3) { showToast('Username must be at least 3 characters.', 'error'); return; }
+  if (!payload.fullName) { showToast('Full name is required.', 'error'); return; }
+  if (!payload.email || !/^[^\s@]+@[^\s@]+\.\w+/.test(payload.email)) { showToast('Invalid email format.', 'error'); return; }
+  if (!payload.phone || !/^0[0-9]{9,10}$/.test(payload.phone)) { showToast('Phone must be 10-11 digits starting with 0.', 'error'); return; }
+  
+  if (!editMode) {
+    payload.password = document.getElementById('fPassword').value;
+    if (!payload.password || payload.password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+  }
+  
+  const url = editMode ? `/api/admin/staffs/${accountId}` : '/api/admin/staffs';
+  const method = editMode ? 'PUT' : 'POST';
+  
+  try {
+    const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() }, body: JSON.stringify(payload) });
+    const json = await resp.json();
+    if (json.success) {
+      showToast(json.message, 'success');
+      closeFormModal();
+      await loadStaffs(pagination.currentPage);
+      await loadStats();
+    } else {
+      showToast(json.message || 'Operation failed.', 'error');
+    }
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+async function confirmAction(accountId, name, action) {
+  if (!confirm(`${action === 'suspend' ? 'Suspend' : 'Activate'} "${name}"?`)) return;
+  
+  try {
+    const resp = await fetch(`/api/admin/staffs/${accountId}/${action}`, { method: 'POST', headers: getCsrfHeaders() });
+    const json = await resp.json();
+    showToast(json.message, json.success ? 'success' : 'error');
+    if (json.success) {
+      await loadStaffs(pagination.currentPage);
+      await loadStats();
+    }
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+/**
+ * A5 - Reset Password
+ * 1. Confirm with Admin
+ * 2. Call API to reset password
+ * 3. Show temporary password in result modal
+ * 4. Copy to clipboard option
+ */
+async function resetPassword(accountId, name) {
+  if (!confirm(`Reset password for "${name}"?\n\nA new temporary password will be generated and displayed to you.`)) return;
+  
+  try {
+    const resp = await fetch(`/api/admin/staffs/${accountId}/reset-password`, { method: 'POST', headers: getCsrfHeaders() });
+    const json = await resp.json();
+    
+    if (json.success) {
+      showResetResultModal(name, json.tempPassword, json.message);
+    } else {
+      showToast(json.message || 'Failed to reset password.', 'error');
+    }
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+/**
+ * Show modal with temporary password and copy option
+ */
+function showResetResultModal(name, tempPassword, message) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML = `
+    <div class="modal" style="width: 460px;">
+      <div class="modal-header">
+        <h2>Password Reset Successful</h2>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 24px; margin-bottom: 16px;">
+          <div style="color: #065F46; font-size: 13px; font-weight: 600; margin-bottom: 8px;">TEMPORARY PASSWORD</div>
+          <div style="font-family: monospace; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px; background: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #A7F3D0; display: inline-block;" id="tempPwDisplay">${escHtml(tempPassword)}</div>
+        </div>
+        <p style="color: #6B7280; font-size: 14px; margin-bottom: 16px;">
+          Password for <strong>${escHtml(name)}</strong> has been reset.
+        </p>
+        <p style="color: #92400E; font-size: 13px; background: #FEF3C7; padding: 10px 14px; border-radius: 8px; text-align: left;">
+          <strong>⚠️ Important:</strong> Please securely communicate this password to the user. Instruct them to change it after logging in.
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button class="btn btn-secondary" onclick="copyPassword('${escHtml(tempPassword)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy Password
+        </button>
+        <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Done</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function copyPassword(password) {
+  navigator.clipboard.writeText(password).then(() => {
+    showToast('Password copied to clipboard!', 'success');
+  }).catch(() => {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = password;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('Password copied to clipboard!', 'success');
+  });
+}
+
+function showToast(message, type) {
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = `toast show toast-${type}`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

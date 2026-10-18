@@ -41,6 +41,10 @@ public class OtpTokenDAO {
         if (crt != null) t.setCreatedAt(crt.toLocalDateTime());
         Timestamp sent = rs.getTimestamp("LastSentAt");
         if (sent != null) t.setLastSentAt(sent.toLocalDateTime());
+        // SendCount tracking (nullable in older schemas)
+        try { t.setSendCount(rs.getInt("SendCount")); } catch (SQLException ignored) {}
+        Timestamp sendDate = rs.getTimestamp("SendCountDate");
+        if (sendDate != null) t.setSendCountDate(sendDate.toLocalDateTime());
         return t;
     }
 
@@ -103,13 +107,51 @@ public class OtpTokenDAO {
     public int markConsumed(long otpTokenId) {
         return jdbcTemplate.update(
                 "UPDATE dbo.OtpToken SET ConsumedAt = ? WHERE OtpTokenID = ?",
-                Timestamp.valueOf(LocalDateTime.now()));
+                Timestamp.valueOf(LocalDateTime.now()), otpTokenId);
     }
 
     public int touchLastSent(long otpTokenId) {
         return jdbcTemplate.update(
                 "UPDATE dbo.OtpToken SET LastSentAt = SYSDATETIME() WHERE OtpTokenID = ?",
                 otpTokenId);
+    }
+
+    /**
+     * Increment send count, resetting if it's a new day.
+     * Returns the new send count.
+     */
+    public int incrementSendCount(long otpTokenId) {
+        jdbcTemplate.update("""
+            UPDATE dbo.OtpToken
+            SET SendCount = CASE
+                WHEN CONVERT(DATE, SendCountDate) = CONVERT(DATE, GETDATE()) THEN SendCount + 1
+                ELSE 1
+              END,
+              SendCountDate = GETDATE()
+            WHERE OtpTokenID = ?
+            """, otpTokenId);
+        
+        // Return the new count
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT SendCount FROM dbo.OtpToken WHERE OtpTokenID = ?",
+                Integer.class, otpTokenId);
+        return count != null ? count : 1;
+    }
+
+    /**
+     * Get today's send count for an email + purpose.
+     */
+    public int getTodaySendCount(String email, String purpose) {
+        Integer count = jdbcTemplate.queryForObject("""
+            SELECT ISNULL(SUM(CASE
+                WHEN CONVERT(DATE, SendCountDate) = CONVERT(DATE, GETDATE()) THEN SendCount
+                ELSE 0
+            END), 0)
+            FROM dbo.OtpToken
+            WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?)))
+              AND Purpose = ?
+            """, Integer.class, email, purpose);
+        return count != null ? count : 0;
     }
 
     public int deleteAllByEmailAndPurpose(String email, String purpose) {

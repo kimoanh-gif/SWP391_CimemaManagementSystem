@@ -4,6 +4,79 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nhập mã OTP | CinemaSystem</title>
 <link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+.otp-input-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 24px;
+  flex-wrap: nowrap;
+}
+.otp-digit {
+  width: 50px;
+  height: 60px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  border: 2px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: var(--surface-raised, #fff);
+  color: var(--text-primary, #111827);
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+  flex: 0 0 auto;
+  -moz-appearance: textfield;
+}
+.otp-digit::-webkit-outer-spin-button,
+.otp-digit::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.otp-digit:focus { outline: none; border-color: var(--purple-400, #a78bfa); box-shadow: 0 0 0 3px rgba(167,139,250,.2); }
+.otp-digit.error { border-color: #ef4444; animation: shake .4s; }
+.otp-digit.success { border-color: #10b981; background: rgba(16,185,129,.1); }
+.otp-digit:disabled { background: #f3f4f6; cursor: not-allowed; opacity: .7; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.otp-status {
+  text-align: center;
+  font-size: 15px;
+  margin: 0 0 16px;
+  min-height: 24px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+.otp-status:empty { display: none; }
+.otp-status.success { color: #047857; background: #d1fae5; border: 1px solid #10b981; }
+.otp-status.error   { color: #b91c1c; background: #fee2e2; border: 1px solid #ef4444; }
+.otp-status.waiting { color: #6b7280; background: #f3f4f6; }
+
+.otp-countdown-wrap { margin: 20px 0; text-align: center; }
+.otp-countdown-bar {
+  width: 100%; max-width: 320px; height: 6px;
+  background: #e5e7eb; border-radius: 3px;
+  overflow: hidden; margin: 0 auto;
+}
+.otp-countdown-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  transition: width 1s linear;
+}
+.otp-countdown-text { font-size: 13px; color: #6b7280; margin-top: 10px; }
+.otp-countdown-text span { color: #7c3aed; font-weight: 700; font-size: 15px; }
+
+.next-step-notice {
+  text-align: center; padding: 14px; margin: 16px 0;
+  background: #d1fae5; border: 1px solid #10b981;
+  border-radius: 8px; color: #047857; font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .otp-digit { width: 42px; height: 52px; font-size: 22px; }
+  .otp-input-wrap { gap: 6px; }
+}
+</style>
 </head>
 <body>
 <div class="auth-page">
@@ -12,7 +85,7 @@
       <div class="eyebrow">Password recovery</div>
       <h1>Đặt lại mật khẩu</h1>
       <div class="line"></div>
-      <p>Nhập mã OTP gồm 6 chữ số đã gửi đến <strong th:text="${email}">email của bạn</strong>. Mã có hiệu lực trong vài phút.</p>
+      <p>Nhập mã OTP gồm 6 chữ số đã gửi đến <strong th:text="${email}">email của bạn</strong>.</p>
     </div>
   </aside>
 
@@ -24,27 +97,39 @@
       <h2 id="reset-otp-title">Xác minh OTP</h2>
       <p class="auth-intro">Mã xác minh đã được gửi đến <strong th:text="${email}">email của bạn</strong>.</p>
 
+      <!-- Error/Success from server -->
       <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
       <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
 
-      <form th:action="@{/verify-reset-otp}" th:object="${resetOtpForm}" method="post" novalidate>
-        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-        <div class="auth-field" th:classappend="${otpError != null} ? 'has-error' : ''">
-          <label for="otp">MÃ OTP</label>
-          <div class="auth-input-wrap" th:classappend="${otpError != null} ? 'invalid' : ''">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-            <input id="otp" class="otp-input" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6"
-                   th:field="*{otp}" autocomplete="one-time-code" placeholder="••••••" required>
-          </div>
-          <p class="auth-error" th:if="${otpError}" th:text="${otpError}"></p>
-        </div>
+      <!-- OTP Status (JavaScript updates this) -->
+      <div class="otp-status" id="otpStatus"></div>
 
-        <button class="auth-btn" type="submit" id="submitBtn">
-          <span class="label">XÁC MINH</span><span class="spinner" aria-hidden="true"></span>
-        </button>
-      </form>
+      <!-- OTP Input -->
+      <div class="otp-input-wrap" id="otpInputWrap">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" autocomplete="off">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" autocomplete="off">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" autocomplete="off">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" autocomplete="off">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" autocomplete="off">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp6" autocomplete="off">
+      </div>
 
+      <button class="auth-btn" type="button" id="verifyBtn">
+        <span class="label">XÁC MINH</span><span class="spinner" aria-hidden="true"></span>
+      </button>
+
+      <!-- Countdown (shown after successful OTP) -->
+      <div class="otp-countdown-wrap" id="otpCountdownWrap" style="display:none;">
+        <div class="otp-countdown-bar"><div class="otp-countdown-fill" id="otpCountdownFill"></div></div>
+        <div class="otp-countdown-text">Mời bạn chờ <span id="otpCountdownText">5</span> giây trước khi tiếp tục...</div>
+      </div>
+
+      <!-- Next step notice -->
+      <div class="next-step-notice" id="nextStepNotice" style="display:none;">
+        ✓ Mã OTP đúng! Đang chuyển sang trang đặt mật khẩu...
+      </div>
+
+      <!-- Resend OTP -->
       <div class="otp-resend" id="otpResend">
         <span class="cooldown">Không nhận được mã?
           <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Gửi lại</a>
@@ -57,26 +142,135 @@
 </div>
 
 <script>
-(() => {
-  const otp = document.getElementById('otp');
-  const form = document.querySelector('form');
-  if (otp && form) {
-    otp.addEventListener('input', () => {
-      otp.value = otp.value.replace(/\D/g, '').slice(0, 6);
-      if (otp.value.length === 6) form.submit();
+// Expose verifyOtp to global scope (called by inline onclick)
+// and bind after DOM is ready.
+document.addEventListener('DOMContentLoaded', function() {
+  const otpIds = ['otp1','otp2','otp3','otp4','otp5','otp6'];
+  const otpInputs = otpIds.map(id => document.getElementById(id));
+
+  // OTP Input Navigation
+  otpInputs.forEach((input, idx) => {
+    input.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '').slice(-1);
+      e.target.value = val;
+      if (val && idx < otpInputs.length - 1) {
+        otpInputs[idx + 1].focus();
+      }
     });
-    otp.addEventListener('paste', (e) => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+        otpInputs[idx - 1].focus();
+      }
+    });
+    input.addEventListener('paste', (e) => {
       e.preventDefault();
-      const data = (e.clipboardData || window.clipboardData).getData('text') || '';
-      otp.value = data.replace(/\D/g, '').slice(0, 6);
-      otp.dispatchEvent(new Event('input'));
+      const data = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      data.split('').forEach((char, i) => {
+        if (otpInputs[i]) otpInputs[i].value = char;
+      });
+      if (data.length === 6) verifyOtp();
+    });
+  });
+
+  function getOtpValue() {
+    return otpInputs.map(i => i.value).join('');
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('otpStatus');
+    el.textContent = msg;
+    el.className = 'otp-status ' + type;
+  }
+
+  function shakeInputs() {
+    otpInputs.forEach(d => {
+      if (d) {
+        d.classList.add('error');
+        setTimeout(() => d.classList.remove('error'), 400);
+      }
     });
   }
 
+  // Global so onclick can call it
+  window.verifyOtp = async function() {
+    const otp = getOtpValue();
+    if (otp.length !== 6) {
+      showStatus('Vui lòng nhập đủ 6 chữ số.', 'error');
+      shakeInputs();
+      return;
+    }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const csrfToken = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '';
+      const resp = await fetch('/api/auth/verify-reset-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ otp: otp })
+      });
+      const json = await resp.json();
+
+      if (json.success) {
+        showStatus('✓ Mã OTP đúng!', 'success');
+        otpInputs.forEach(d => d && d.classList.add('success'));
+        otpInputs.forEach(i => i.disabled = true);
+        startRedirectCountdown();
+      } else {
+        showStatus('✗ ' + (json.message || 'Mã OTP không đúng hoặc đã hết hạn.'), 'error');
+        shakeInputs();
+        btn.disabled = false;
+      }
+    } catch (e) {
+      showStatus('Đã xảy ra lỗi. Vui lòng thử lại.', 'error');
+      btn.disabled = false;
+    } finally {
+      btn.classList.remove('loading');
+    }
+  };
+
+  function startRedirectCountdown() {
+    const COUNTDOWN = 5;
+    const countdownWrap = document.getElementById('otpCountdownWrap');
+    const countdownFill = document.getElementById('otpCountdownFill');
+    const countdownText = document.getElementById('otpCountdownText');
+    const notice = document.getElementById('nextStepNotice');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resendSection = document.getElementById('otpResend');
+
+    countdownWrap.style.display = 'block';
+    notice.style.display = 'block';
+    verifyBtn.style.display = 'none';
+    resendSection.style.display = 'none';
+    countdownFill.style.width = '100%';
+
+    let remaining = COUNTDOWN;
+    countdownText.textContent = remaining;
+
+    const interval = setInterval(() => {
+      remaining--;
+      countdownText.textContent = remaining;
+      countdownFill.style.width = ((remaining / COUNTDOWN) * 100) + '%';
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        window.location.href = '/reset-password';
+      }
+    }, 1000);
+  }
+
+  // Bind button click
+  document.getElementById('verifyBtn').addEventListener('click', window.verifyOtp);
+
+  // Auto-focus first input
+  if (otpInputs[0]) otpInputs[0].focus();
+
+  // Resend OTP cooldown
   const resend = document.getElementById('resendLink');
   if (resend) {
-    const cooldown = parseInt(resend.getAttribute('data-cooldown') || '60', 10);
-    let remaining = cooldown;
+    let remaining = parseInt(resend.getAttribute('data-cooldown') || '60', 10);
     const update = () => {
       if (remaining <= 0) {
         resend.textContent = 'Gửi lại';
@@ -84,10 +278,10 @@
         resend.style.opacity = '1';
         return;
       }
-      resend.innerHTML = 'Gửi lại sau <span class="otp-countdown">' + remaining + 's</span>';
+      resend.innerHTML = 'Gửi lại sau <span style="color:#7c3aed;font-weight:600;">' + remaining + 's</span>';
       resend.style.pointerEvents = 'none';
       resend.style.opacity = '.6';
-      remaining -= 1;
+      remaining--;
       setTimeout(update, 1000);
     };
     update();
@@ -100,16 +294,7 @@
       document.body.appendChild(f); f.submit();
     });
   }
-
-  const btn = document.getElementById('submitBtn');
-  if (btn && form) {
-    form.addEventListener('submit', () => {
-      btn.classList.add('loading');
-      btn.disabled = true;
-      setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 8000);
-    });
-  }
-})();
+});
 </script>
 </body>
 </html>

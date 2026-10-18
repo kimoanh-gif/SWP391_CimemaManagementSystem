@@ -27,7 +27,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  * <p>Authentication strategy:
  * <ul>
  *   <li>Form login (email/username + password) handled by our own AuthController
- *       – Spring Security is only used for the filter chain, password encoder,
+ *       - Spring Security is only used for the filter chain, password encoder,
  *       and authorization rules. Custom auth happens via SessionService.</li>
  *   <li>OAuth2 Login with Google (Customer-only). Spring Security takes over the
  *       callback; the success handler hands the verified principal off to our
@@ -49,7 +49,7 @@ public class SecurityConfig {
 
     /**
      * Setter-injected (not constructor) to break the bean creation cycle:
-     * SecurityConfig → OAuth2LoginSuccessHandler → AuthService → SecurityConfig.
+     * SecurityConfig -> OAuth2LoginSuccessHandler -> AuthService -> SecurityConfig.
      * Spring resolves the cycle once the {@code securityFilterChain} bean method
      * runs (after the SecurityConfig instance is fully constructed).
      */
@@ -66,7 +66,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Strength 10 – aligned with the OTP and password hash format.
+        // Strength 10 - aligned with the OTP and password hash format.
         return new BCryptPasswordEncoder(10);
     }
 
@@ -86,7 +86,8 @@ public class SecurityConfig {
                             new AntPathRequestMatcher("/reset-password"),
                             new AntPathRequestMatcher("/logout"),
                             new AntPathRequestMatcher("/oauth2/**"),
-                            new AntPathRequestMatcher("/login/oauth2/**")
+                            new AntPathRequestMatcher("/login/oauth2/**"),
+                            new AntPathRequestMatcher("/api/auth/**")
                     )
             )
             // Session: keep server-side; default URL rewriting off.
@@ -107,7 +108,8 @@ public class SecurityConfig {
                         "/promotions/**", "/news/**",
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/error", "/favicon.ico",
-                        "/oauth2/**", "/login/oauth2/**"
+                        "/oauth2/**", "/login/oauth2/**",
+                        "/api/auth/**"
                 ).permitAll();
 
                 // Form POSTs are also public (we do our own validation/rate-limit).
@@ -116,7 +118,8 @@ public class SecurityConfig {
                         "/forgot-password", "/verify-activation-otp",
                         "/verify-reset-otp", "/reset-password",
                         "/logout",
-                        "/movies/*/reviews"
+                        "/movies/*/reviews",
+                        "/api/auth/**"
                 ).permitAll();
 
                 // Dashboards are role-gated.
@@ -127,11 +130,11 @@ public class SecurityConfig {
 
                 auth.anyRequest().authenticated();
             })
-            // We do our own login/logout forms — Spring Security only provides the filter chain.
+            // We do our own login/logout forms - Spring Security only provides the filter chain.
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .logout(AbstractHttpConfigurer::disable)
-            // When an unauthenticated user hits a protected URL → redirect to /login
+            // When an unauthenticated user hits a protected URL -> redirect to /login
             .exceptionHandling(eh -> eh
                     .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
 

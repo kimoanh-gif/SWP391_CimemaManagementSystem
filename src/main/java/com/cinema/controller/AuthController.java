@@ -12,13 +12,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import java.util.Map;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Single Thymeleaf controller handling every auth flow:
@@ -86,6 +90,7 @@ public class AuthController {
         switch (status) {
             case "EMAIL_TAKEN"        -> { model.addAttribute("emailError", "Email đã được sử dụng."); return "auth/register"; }
             case "USERNAME_TAKEN"     -> { model.addAttribute("usernameError", "Tên đăng nhập đã tồn tại."); return "auth/register"; }
+            case "PHONE_TAKEN"        -> { model.addAttribute("phoneError", "Số điện thoại đã được sử dụng."); return "auth/register"; }
             case "INVALID_EMAIL"      -> { model.addAttribute("emailError", "Email không hợp lệ."); return "auth/register"; }
             case "INVALID_USERNAME"   -> { model.addAttribute("usernameError", "Tên đăng nhập phải 4-50 ký tự, chỉ chứa chữ, số, '.', '_' hoặc '-'."); return "auth/register"; }
             case "INVALID_PHONE"      -> { model.addAttribute("phoneError", "Số điện thoại không hợp lệ."); return "auth/register"; }
@@ -97,6 +102,11 @@ public class AuthController {
                 session.setAttribute("activationEmail", form.getEmail().trim().toLowerCase());
                 session.setAttribute("fallbackOtp", rawOtp);
                 return "redirect:/verify-activation-otp";
+            }
+            case "OTP_LIMIT_EXCEEDED" -> {
+                // Daily send limit exceeded — show error message.
+                model.addAttribute("formError", rawOtp != null ? rawOtp : "Đã gửi tối đa mã OTP trong ngày. Vui lòng thử lại vào ngày mai.");
+                return "auth/register";
             }
             case "OK" -> { /* continue */ }
         }
@@ -132,8 +142,10 @@ public class AuthController {
         AuthService.OtpResult r = authService.activate(email, form.getOtp());
         switch (r) {
             case SUCCESS -> {
-                session.removeAttribute("activationEmail");
-                return "redirect:/login?activated";
+                // Show success message on OTP page before redirecting (so user actually sees it)
+                model.addAttribute("activationSuccess", "✅ Tài khoản đã được kích hoạt thành công! Đang chuyển hướng đến trang đăng nhập...");
+                model.addAttribute("email", email);
+                return "auth/verify-activation-otp";
             }
             case TOO_MANY_ATTEMPTS -> {
                 model.addAttribute("formError", "Bạn đã nhập sai OTP quá số lần cho phép. Vui lòng yêu cầu mã mới.");
@@ -146,8 +158,10 @@ public class AuthController {
                 return "auth/verify-activation-otp";
             }
             case INVALID_OR_EXPIRED -> {
-                model.addAttribute("otpError", "Mã OTP không đúng hoặc đã hết hạn.");
+                model.addAttribute("otpError", "Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.");
                 model.addAttribute("email", email);
+                // Mark that an error just occurred — prevents auto-submit race
+                session.setAttribute("otpErrorJustShown", true);
                 return "auth/verify-activation-otp";
             }
         }
@@ -342,6 +356,39 @@ public class AuthController {
             }
         }
         return "redirect:/verify-reset-otp";
+    }
+
+    // ========================================== API: AJAX verify reset OTP
+    @PostMapping("/api/auth/verify-reset-otp")
+    public ResponseEntity<?> apiVerifyResetOtp(@RequestBody Map<String, String> body, HttpSession session) {
+        String email = (String) session.getAttribute("resetEmail");
+        if (email == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Phiên hết hạn. Vui lòng yêu cầu mã mới."));
+        }
+        String otp = body.getOrDefault("otp", "").trim();
+        if (otp.length() != 6) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã OTP phải có 6 chữ số."));
+        }
+
+        AuthService.OtpResult r = authService.preCheckOtp(email, otp, com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD);
+        switch (r) {
+            case SUCCESS -> {
+                session.setAttribute("resetOtpPending", otp);
+                return ResponseEntity.ok(Map.of("success", true, "message", "Xác minh thành công!"));
+            }
+            case TOO_MANY_ATTEMPTS -> {
+                clearResetSession(session);
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Bạn đã nhập sai OTP quá số lần cho phép. Vui lòng yêu cầu mã mới."));
+            }
+            case NO_PENDING_TOKEN -> {
+                clearResetSession(session);
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới."));
+            }
+            case INVALID_OR_EXPIRED -> {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã OTP không đúng hoặc đã hết hạn."));
+            }
+        }
+        return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Xác minh thất bại."));
     }
 
     @PostMapping("/verify-reset-otp/resend")

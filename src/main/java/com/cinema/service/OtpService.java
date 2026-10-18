@@ -1,6 +1,8 @@
 package com.cinema.service;
 
+import com.cinema.dao.OtpTokenDAO;
 import com.cinema.model.OtpToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -28,6 +30,7 @@ public class OtpService {
     private static final int    CODE_LENGTH     = 6;
 
     private final JavaMailSender mailSender;
+    private final OtpTokenDAO otpTokenDAO;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(BCRYPT_STRENGTH);
     private final SecureRandom random = new SecureRandom();
 
@@ -38,6 +41,10 @@ public class OtpService {
     @Value("${app.auth.otp.resend-cooldown-seconds:60}")
     private int resendCooldownSeconds;
 
+    /** Maximum OTP codes that can be sent per email per day. */
+    @Value("${app.auth.otp.max-send-daily:5}")
+    private int maxSendDaily;
+
     /** Brand / display name shown in the email. */
     @Value("${app.auth.brand:CinemaSystem}")
     private String brand;
@@ -46,13 +53,35 @@ public class OtpService {
     @Value("${app.auth.mail.from:}")
     private String fromAddress;
 
-    public OtpService(JavaMailSender mailSender) {
+    public OtpService(JavaMailSender mailSender, OtpTokenDAO otpTokenDAO) {
         this.mailSender = mailSender;
+        this.otpTokenDAO = otpTokenDAO;
     }
 
     public int getOtpTtlSeconds() { return otpTtlSeconds; }
     public int getResendCooldownSeconds() { return resendCooldownSeconds; }
     public int getMaxAttemptsDefault() { return 5; }
+    public int getMaxSendDaily() { return maxSendDaily; }
+
+    /**
+     * Check if OTP can be sent to this email today.
+     * Returns null if OK, or an error message if limit exceeded.
+     */
+    public String canSendOtp(String email, String purpose) {
+        int todayCount = otpTokenDAO.getTodaySendCount(email, purpose);
+        if (todayCount >= maxSendDaily) {
+            return "Đã gửi tối đa " + maxSendDaily + " mã OTP trong ngày. Vui lòng thử lại vào ngày mai.";
+        }
+        return null; // OK to send
+    }
+
+    /**
+     * Get remaining OTP sends for today.
+     */
+    public int getRemainingSends(String email, String purpose) {
+        int todayCount = otpTokenDAO.getTodaySendCount(email, purpose);
+        return Math.max(0, maxSendDaily - todayCount);
+    }
 
     /** Generates a 6-digit numeric code as a zero-padded String. */
     public String generateCode() {

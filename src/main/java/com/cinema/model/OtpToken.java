@@ -22,6 +22,8 @@ public class OtpToken {
     private Integer attemptCount;
     private LocalDateTime createdAt;
     private LocalDateTime lastSentAt;  // for resend cooldown
+    private Integer sendCount;         // number of times OTP was sent
+    private LocalDateTime sendCountDate; // date when sendCount was reset
 
     public OtpToken() {}
 
@@ -54,6 +56,12 @@ public class OtpToken {
 
     public LocalDateTime getLastSentAt() { return lastSentAt; }
     public void setLastSentAt(LocalDateTime lastSentAt) { this.lastSentAt = lastSentAt; }
+
+    public Integer getSendCount() { return sendCount; }
+    public void setSendCount(Integer sendCount) { this.sendCount = sendCount; }
+
+    public LocalDateTime getSendCountDate() { return sendCountDate; }
+    public void setSendCountDate(LocalDateTime sendCountDate) { this.sendCountDate = sendCountDate; }
 
     /** True when not yet consumed and not yet expired. */
     public boolean isActive(LocalDateTime now) {

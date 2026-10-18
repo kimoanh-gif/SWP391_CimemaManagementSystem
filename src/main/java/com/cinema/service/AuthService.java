@@ -84,6 +84,7 @@ public class AuthService {
         public static RegisterResult ok()                         { return new RegisterResult("OK", null); }
         public static RegisterResult emailTaken()                { return new RegisterResult("EMAIL_TAKEN", null); }
         public static RegisterResult usernameTaken()             { return new RegisterResult("USERNAME_TAKEN", null); }
+        public static RegisterResult phoneTaken()                { return new RegisterResult("PHONE_TAKEN", null); }
         public static RegisterResult invalidEmail()               { return new RegisterResult("INVALID_EMAIL", null); }
         public static RegisterResult invalidUsername()           { return new RegisterResult("INVALID_USERNAME", null); }
         public static RegisterResult invalidPhone()              { return new RegisterResult("INVALID_PHONE", null); }
@@ -91,6 +92,7 @@ public class AuthService {
         public static RegisterResult invalidFullname()           { return new RegisterResult("INVALID_FULLNAME", null); }
         public static RegisterResult otpDeliveryFailed(String o){ return new RegisterResult("OTP_DELIVERY_FAILED", o); }
         public static RegisterResult roleNotConfigured()         { return new RegisterResult("ROLE_NOT_CONFIGURED", null); }
+        public static RegisterResult otpLimitExceeded(String msg){ return new RegisterResult("OTP_LIMIT_EXCEEDED", msg); }
     }
 
     /**
@@ -114,6 +116,8 @@ public class AuthService {
 
         if (accountDAO.existsByEmail(email))     return RegisterResult.emailTaken();
         if (accountDAO.existsByUsername(username)) return RegisterResult.usernameTaken();
+        if (phone != null && !phone.isBlank() && accountDAO.existsByPhone(phone.trim()))
+            return RegisterResult.phoneTaken();
 
         Role role = roleDAO.findByName("CUSTOMER").orElse(null);
         if (role == null) return RegisterResult.roleNotConfigured();
@@ -150,6 +154,12 @@ public class AuthService {
 
     /** Returns raw OTP code so caller can display it when email delivery fails. */
     private RegisterResult dispatchOtp(Integer accountId, String email, String purpose) {
+        // Check daily send limit
+        String limitMsg = otpService.canSendOtp(email, purpose);
+        if (limitMsg != null) {
+            return RegisterResult.otpLimitExceeded(limitMsg);
+        }
+
         // Drop any prior unconsumed tokens for this (email, purpose).
         otpTokenDAO.deleteAllByEmailAndPurpose(email, purpose);
 
@@ -161,7 +171,14 @@ public class AuthService {
         t.setPurpose(purpose);
         t.setExpiresAt(LocalDateTime.now().plusSeconds(otpService.getOtpTtlSeconds()));
         t.setLastSentAt(LocalDateTime.now());
-        otpTokenDAO.insert(t);
+        t.setSendCount(1);
+        t.setSendCountDate(LocalDateTime.now());
+        Long tokenId = otpTokenDAO.insert(t);
+
+        // Track send count
+        if (tokenId != null) {
+            otpTokenDAO.incrementSendCount(tokenId);
+        }
 
         if (!otpService.sendByEmail(email, code, purpose)) {
             // Email failed — return the raw code so caller can show it on-screen.
@@ -379,8 +396,18 @@ public class AuthService {
             return OtpResult.INVALID_OR_EXPIRED;
         }
         otpTokenDAO.markConsumed(t.getOtpTokenId());
-        if (t.getAccountId() != null) {
-            sideEffect.apply(t.getAccountId());
+        
+        // If AccountID is NULL in OtpToken, try to find account by email as backup
+        Integer accountId = t.getAccountId();
+        if (accountId == null) {
+            Optional<Account> account = accountDAO.findByEmail(email.trim());
+            if (account.isPresent()) {
+                accountId = account.get().getAccountId();
+            }
+        }
+        
+        if (accountId != null) {
+            sideEffect.apply(accountId);
         }
         return OtpResult.SUCCESS;
     }
