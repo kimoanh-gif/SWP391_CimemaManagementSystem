@@ -149,4 +149,26 @@ public class FBItemController {
 
         return "redirect:/manager/fb";
     }
+
+    @PostMapping("/{id}/delete")
+    public String deleteFBItem(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            FBItem item = fbItemService.getItemById(id);
+            fbItemService.deleteItem(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Xóa món '" + item.getItemName() + "' thành công!");
+        } catch (InvalidFBItemException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xóa món: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/fb";
+    }
 }

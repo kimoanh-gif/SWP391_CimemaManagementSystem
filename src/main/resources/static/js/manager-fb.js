@@ -15,8 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
         catSelect.addEventListener("change", toggleComboSection);
     }
 
+    const modalDeleteBtn = document.getElementById("btnModalDeleteFB");
+
     if (openCreateBtn) {
         openCreateBtn.addEventListener("click", () => {
+            if (modalDeleteBtn) modalDeleteBtn.style.display = "none";
             document.getElementById("formItemId").value = "";
             document.getElementById("formItemCode").value = "";
             document.getElementById("formItemName").value = "";
@@ -31,6 +34,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    if (modalDeleteBtn) {
+        modalDeleteBtn.addEventListener("click", () => {
+            const id = document.getElementById("formItemId").value;
+            const name = document.getElementById("formItemName").value;
+            if (!id) return;
+            if (confirm("Bạn có chắc chắn muốn xóa món '" + (name || id) + "' khỏi hệ thống?")) {
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = "/manager/fb/" + encodeURIComponent(id) + "/delete";
+
+                const csrfInput = document.querySelector('input[name="_csrf"]');
+                if (csrfInput) {
+                    const token = document.createElement("input");
+                    token.type = "hidden";
+                    token.name = "_csrf";
+                    token.value = csrfInput.value;
+                    form.appendChild(token);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
     document.querySelectorAll(".modal-close, .btn-cancel").forEach(btn => {
         btn.addEventListener("click", () => {
             if (modal) modal.classList.remove("open");
@@ -40,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Quick edit product
     document.querySelectorAll(".btn-edit-fb").forEach(btn => {
         btn.addEventListener("click", () => {
+            if (modalDeleteBtn) modalDeleteBtn.style.display = "inline-flex";
             const id = btn.getAttribute("data-id");
             const code = btn.getAttribute("data-code");
             const name = btn.getAttribute("data-name");

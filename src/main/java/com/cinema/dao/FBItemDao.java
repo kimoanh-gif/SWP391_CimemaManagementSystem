@@ -168,10 +168,29 @@ public class FBItemDao {
     public boolean isReferencedInOrders(int itemId) {
         try {
             Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM dbo.BookingFoodBeverage WHERE FoodBeverageItemID = ?", Integer.class, itemId);
+            if (count != null && count > 0) return true;
+        } catch (Exception ignored) {}
+        try {
+            Integer count = jdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM BookingFB WHERE ItemID = ?", Integer.class, itemId);
+            if (count != null && count > 0) return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean isComponentOfAnyCombo(int itemId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM ComboItem WHERE ComponentItemID = ?", Integer.class, itemId);
             return count != null && count > 0;
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    public int delete(int id) {
+        jdbcTemplate.update("DELETE FROM ComboItem WHERE ComboID = ?", id);
+        return jdbcTemplate.update("DELETE FROM FBItem WHERE ItemID = ?", id);
     }
 }
