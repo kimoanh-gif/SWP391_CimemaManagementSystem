@@ -32,6 +32,7 @@ public class NewsDAO {
         if (!rs.wasNull()) article.setReviewedByAccountId(revAccId);
 
         article.setTitle(rs.getString("Title"));
+        article.setSummary(rs.getString("Summary"));
         article.setContent(rs.getString("Content"));
         article.setThumbnailUrl(rs.getString("ThumbnailURL"));
         article.setStatus(rs.getString("Status"));
@@ -53,7 +54,7 @@ public class NewsDAO {
 
     private static final String BASE_NEWS_SQL = """
             SELECT n.NewsID, n.CreatedByStaffID, n.ReviewedByAccountID,
-                   n.Title, n.Content, n.ThumbnailURL, n.[Status],
+                   n.Title, n.Summary, n.Content, n.ThumbnailURL, n.[Status],
                    n.CreatedAt, n.PublishedAt,
                    COALESCE(acc.FullName, N'Ban Biên Tập CineVerse') AS AuthorName
             FROM dbo.News n

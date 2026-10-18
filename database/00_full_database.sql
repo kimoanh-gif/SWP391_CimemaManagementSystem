@@ -569,6 +569,7 @@ BEGIN
         CreatedByStaffID INT NOT NULL,
         ReviewedByAccountID INT NULL,
         Title NVARCHAR(255) NOT NULL,
+        Summary NVARCHAR(500) NOT NULL CONSTRAINT DF_News_Summary DEFAULT N'',
         Content NVARCHAR(MAX) NOT NULL,
         ThumbnailURL NVARCHAR(500) NULL,
         [Status] VARCHAR(30) NOT NULL CONSTRAINT DF_News_Status DEFAULT 'DRAFT',
