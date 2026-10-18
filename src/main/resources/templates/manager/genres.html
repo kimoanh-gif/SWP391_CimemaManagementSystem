@@ -177,20 +177,31 @@
                         <div class="genre-desc-cell" th:text="${genre.description ?: 'Chưa có mô tả'}" th:title="${genre.description}">
                             Mô tả chi tiết thể loại...
                         </div>
-                    </td>
                     <td style="text-align: center;">
-                        <a th:href="@{/manager/movies(genreId=${genre.genreId})}"
-                           class="badge-movies"
-                           style="text-decoration:none;cursor:pointer;display:inline-block;"
-                           title="Xem danh sách phim thuộc thể loại này">
+                        <button type="button"
+                                th:if="${genre.movieCount > 0}"
+                                class="badge-movies"
+                                th:data-id="${genre.genreId}"
+                                th:data-name="${genre.name}"
+                                onclick="viewAssociatedMovies(this.getAttribute('data-id'), this.getAttribute('data-name'))"
+                                style="border:none;background:none;cursor:pointer;display:inline-block;"
+                                title="Bấm để xem danh sách phim thuộc thể loại này">
                             🎬 <span th:text="${genre.movieCount}">0</span> phim
-                        </a>
+                        </button>
+                        <span th:if="${genre.movieCount == 0}" class="badge-movies" style="opacity:0.4;cursor:default;">
+                            🎬 0 phim
+                        </span>
                     </td>
                     <td style="text-align: center;">
                         <span th:if="${genre.active}" class="badge badge-green">Hoạt động</span>
                         <span th:unless="${genre.active}" class="badge badge-gray">Ngưng hoạt động</span>
                     </td>
                     <td class="col-actions">
+                        <a th:href="@{/manager/movies(genreId=${genre.genreId})}"
+                           class="action-btn"
+                           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                           title="Lọc các phim thuộc thể loại này trên Màn Hình Quản Lý Phim">🎬</a>
+
                         <button type="button" class="action-btn action-btn-edit" title="Sửa"
                                 th:data-id="${genre.genreId}"
                                 th:data-name="${genre.name}"

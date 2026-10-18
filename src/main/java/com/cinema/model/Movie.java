@@ -318,11 +318,50 @@ public class Movie {
         return "Upcoming".equalsIgnoreCase(status) || "COMING_SOON".equalsIgnoreCase(status);
     }
 
+    public boolean isComingSoon() {
+        return isUpcoming();
+    }
+
     public boolean isEnded() {
         return "Ended".equalsIgnoreCase(status) || "ENDED".equalsIgnoreCase(status);
     }
 
     public boolean isArchived() {
         return "Archived".equalsIgnoreCase(status) || "ARCHIVED".equalsIgnoreCase(status);
+    }
+
+    public String getAgeRatingBadgeClass() {
+        if (ageRating == null) return "badge-p";
+        return switch (ageRating.toUpperCase().trim()) {
+            case "P" -> "badge-p";
+            case "K" -> "badge-k";
+            case "T13", "C13", "13+" -> "badge-t13";
+            case "T16", "C16", "16+" -> "badge-t16";
+            case "T18", "C18", "18+" -> "badge-t18";
+            default -> "badge-p";
+        };
+    }
+
+    public String getAgeRatingDescription() {
+        if (ageRating == null) return "Phù hợp cho mọi lứa tuổi";
+        return switch (ageRating.toUpperCase().trim()) {
+            case "P" -> "P - Phim dành cho mọi đối tượng khán giả";
+            case "K" -> "K - Phim dành cho khán giả dưới 13 tuổi có người bảo hộ";
+            case "T13", "C13", "13+" -> "T13 - Phim cấm phổ biến tới khán giả dưới 13 tuổi";
+            case "T16", "C16", "16+" -> "T16 - Phim cấm phổ biến tới khán giả dưới 16 tuổi";
+            case "T18", "C18", "18+" -> "T18 - Phim cấm phổ biến tới khán giả dưới 18 tuổi";
+            default -> "Phim phổ biến cho khán giả";
+        };
+    }
+
+    public String getEmbedTrailerUrl() {
+        String t = (trailer != null && !trailer.isBlank()) ? trailer : "";
+        if (t.isBlank()) return "";
+        if (t.contains("watch?v=")) {
+            return t.replace("watch?v=", "embed/");
+        } else if (t.contains("youtu.be/")) {
+            return t.replace("youtu.be/", "www.youtube.com/embed/");
+        }
+        return t;
     }
 }

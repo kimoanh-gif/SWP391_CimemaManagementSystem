@@ -8,6 +8,7 @@ import com.cinema.service.TicketPricingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SeatController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class SeatControllerTest {
 
     @Autowired
@@ -46,6 +48,7 @@ class SeatControllerTest {
         r.setRoomCode("ROOM-01");
         r.setRoomName("Phòng 01");
         r.setCapacity(96);
+        r.setSeatsPerRow(8);
 
         Seat s = new Seat(1, 1, "Standard", "A", 1, 1, 1, "Active");
 

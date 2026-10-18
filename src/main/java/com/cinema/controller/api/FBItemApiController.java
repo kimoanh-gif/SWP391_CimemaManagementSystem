@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -111,6 +112,16 @@ public class FBItemApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem updated = fbItemService.deactivateItem(id);
         return ResponseEntity.ok(ApiResponse.ok("Đã ngừng kinh doanh sản phẩm thành công", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteItem(
+            @PathVariable int id,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        fbItemService.deleteItem(id);
+        return ResponseEntity.ok(ApiResponse.ok("Xóa món F&B thành công", null));
     }
 
     @ExceptionHandler(FBItemNotFoundException.class)
