@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ticket Check-In | CinemaSystem</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}"></head>
+<body><div class="dash-shell">
+  <header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a>
+    <div class="dash-user"><span th:text="${user.fullName}">Staff Member</span><form th:action="@{/logout}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="dash-logout">Sign Out</button></form></div>
+  </header>
+  <main class="dash-body staff-content">
+    <a class="staff-text-link" th:href="@{/staff/dashboard}">← Dashboard</a>
+    <section class="dash-card staff-checkin-card"><p class="staff-eyebrow">TICKET VALIDATION</p><h1>Customer Check-In</h1>
+      <p class="subtitle">Enter a booking code. Only confirmed bookings with valid tickets can be checked in during the eligible time window.</p>
+      <p class="staff-alert success" th:if="${successMessage}" th:text="${successMessage}" role="status"></p>
+      <p class="staff-alert error" th:if="${errorMessage}" th:text="${errorMessage}" role="alert"></p>
+      <form th:action="@{/staff/check-in}" method="post" class="staff-checkin-form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label class="staff-label" for="bookingCode">Booking Code</label>
+        <input class="staff-control" id="bookingCode" name="bookingCode" autocomplete="off" placeholder="Enter the booking code shown on the ticket" required>
+        <button class="staff-button staff-button-primary" type="submit">Confirm Check-In</button>
+      </form>
+    </section>
+  </main>
+</div></body></html>

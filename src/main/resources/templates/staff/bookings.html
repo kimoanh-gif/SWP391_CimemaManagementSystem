@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bookings | CinemaSystem</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}"></head>
+<body><div class="dash-shell">
+  <header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a>
+    <div class="dash-user"><span th:text="${user.fullName}">Staff Member</span><form th:action="@{/logout}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="dash-logout">Sign Out</button></form></div>
+  </header>
+  <main class="dash-body staff-content"><a class="staff-text-link" th:href="@{/staff/dashboard}">← Dashboard</a>
+    <h1>Bookings</h1><p class="subtitle">Search by booking code or phone number, or filter by status.</p>
+    <section class="dash-card">
+      <form th:action="@{/staff/bookings}" method="get" class="staff-filter-form">
+        <label class="staff-label" for="q">Booking Code / Phone</label><input class="staff-control" id="q" name="q" th:value="${bookingPage.query}" placeholder="e.g. BK... or phone number">
+        <label class="staff-label" for="status">Status</label>
+        <select class="staff-control" id="status" name="status">
+          <option value="">All Statuses</option>
+          <option value="PENDING" th:selected="${bookingPage.status == 'PENDING'}">Pending</option>
+          <option value="CONFIRMED" th:selected="${bookingPage.status == 'CONFIRMED'}">Confirmed</option>
+          <option value="CANCELLED" th:selected="${bookingPage.status == 'CANCELLED'}">Cancelled</option>
+        </select>
+        <button class="staff-button staff-button-primary" type="submit">Search</button>
+      </form>
+      <div class="staff-table-wrap">
+        <table class="staff-table">
+          <thead><tr><th>Booking Code</th><th>Customer</th><th>Movie / Showtime</th><th>Type</th><th>Status</th><th>Total</th><th></th></tr></thead>
+          <tbody>
+          <tr th:each="booking : ${bookingPage.bookings}">
+            <td><strong th:text="${booking.bookingCode}"></strong></td>
+            <td><span th:text="${booking.customerName != null ? booking.customerName : 'Walk-in Customer'}"></span><small class="staff-table-sub" th:text="${booking.phone}"></small></td>
+            <td><span th:text="${booking.movieTitle}"></span><small class="staff-table-sub" th:text="${#temporals.format(booking.showtime, 'dd/MM HH:mm')}"></small></td>
+            <td th:text="${booking.bookingType}"></td>
+            <td><span class="staff-status" th:classappend="${' status-' + #strings.toLowerCase(booking.status)}" th:text="${booking.status}"></span></td>
+            <td th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td>
+            <td><a class="staff-text-link" th:href="@{/staff/bookings/{id}(id=${booking.bookingId})}">Details</a></td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(bookingPage.bookings)}"><td class="staff-empty-cell" colspan="7">No bookings found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <nav class="staff-pagination" th:if="${bookingPage.totalPages > 1}" aria-label="Booking pagination">
+        <a th:if="${bookingPage.page > 0}" th:href="@{/staff/bookings(page=${bookingPage.page - 1},q=${bookingPage.query},status=${bookingPage.status})}">← Previous</a>
+        <span th:text="${'Page ' + (bookingPage.page + 1) + ' of ' + bookingPage.totalPages + ' · ' + bookingPage.totalItems + ' bookings'}"></span>
+        <a th:if="${bookingPage.page + 1 < bookingPage.totalPages}" th:href="@{/staff/bookings(page=${bookingPage.page + 1},q=${bookingPage.query},status=${bookingPage.status})}">Next →</a>
+      </nav>
+    </section>
+  </main>
+</div></body></html>
