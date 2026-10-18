@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Select Seats | CinemaSystem</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}">
+  <script th:src="@{/js/staff-sales.js}" defer></script><script th:src="@{/js/staff-member-lookup.js}" defer></script></head>
+<body data-page="seats" th:attr="data-max-seats=${maxSeats}">
+<div class="dash-shell"><header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a><span th:text="${user.fullName}">Staff Member</span></header>
+<main class="dash-body staff-content"><a class="staff-text-link" th:href="@{/staff/sales}">← Choose Another Showtime</a>
+  <h1>Select Seats</h1><p class="subtitle"><strong th:text="${showtime.movieTitle}">Movie</strong> · <span th:text="${#temporals.format(showtime.startTime, 'HH:mm dd/MM/yyyy')}"></span> · <span th:text="${showtime.roomName}"></span></p>
+  <p class="staff-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+  <form th:action="@{/staff/sales/seats}" method="post" id="staffSeatForm" class="staff-seat-layout">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <section class="dash-card staff-auditorium"><div class="staff-screen">SCREEN</div>
+      <div class="staff-seat-grid" th:if="${!#lists.isEmpty(seats)}">
+        <label class="staff-seat" th:each="seat : ${seats}" th:classappend="${!seat.available ? ' unavailable' : ' ' + #strings.toLowerCase(seat.typeName)}" th:style="|grid-row:${seat.gridRow};grid-column:${seat.gridColumn};|">
+          <input type="checkbox" name="seatIds" th:value="${seat.seatId}" th:disabled="${!seat.available}" th:attr="data-price=${seat.price}">
+          <span th:text="${seat.label}" th:title="${seat.label + ' · ' + seat.typeName}">A1</span>
+        </label>
+      </div>
+      <div class="staff-seat-legend"><span>● Standard</span><span>● VIP</span><span>● Couple</span><span>● Selected</span><span>● Unavailable</span></div>
+    </section>
+    <aside class="dash-card staff-order-panel"><h2>Order Summary</h2>
+      <p>Seats: <strong id="selectedSeatLabels">None selected</strong></p>
+      <p>Seat Count: <strong id="selectedSeatCount">0</strong>/<span th:text="${maxSeats}">10</span></p>
+      <p>Subtotal: <strong id="selectedSeatTotal">0 VND</strong></p>
+      <p id="seatLimitMessage" class="staff-alert error" hidden>Select no more than 10 seats.</p>
+      <label class="staff-label" for="memberIdentifier">Attach Member (Optional)</label>
+      <div class="staff-member-input">
+        <input class="staff-control" id="memberIdentifier" name="memberIdentifier" placeholder="Phone number or email">
+        <button class="staff-button" id="openMemberLookup" type="button">Look Up</button>
+      </div>
+      <p class="staff-muted">If provided, the phone number or email must match an active member account.</p>
+      <button class="staff-button staff-button-primary staff-full" id="holdSeatsButton" type="submit" disabled>Hold Seats &amp; Continue</button>
+      <p class="staff-muted">Seats are held for 10 minutes. The order will be created with Pending status.</p>
+    </aside>
+  </form>
+</main></div>
+<dialog class="staff-dialog" id="memberLookupDialog" aria-labelledby="memberLookupTitle">
+  <div class="staff-dialog-inner">
+    <div class="staff-dialog-header"><h2 id="memberLookupTitle">Member Lookup</h2><button class="staff-dialog-close" id="closeMemberLookup" type="button" aria-label="Close">×</button></div>
+    <p class="staff-muted">Enter the customer's phone number or email address.</p>
+    <form class="staff-search-form" id="memberLookupForm"><input class="staff-control" id="memberLookupValue" type="text" autocomplete="off" placeholder="Phone number or email" aria-label="Phone number or email" required><button class="staff-button staff-button-primary" type="submit">Search</button></form>
+    <p id="memberLookupMessage" class="staff-muted" role="status" aria-live="polite"></p><div id="memberLookupResult"></div>
+  </div>
+</dialog>
+</body></html>
