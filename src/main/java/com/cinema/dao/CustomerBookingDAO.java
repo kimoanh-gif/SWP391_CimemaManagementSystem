@@ -88,7 +88,7 @@ public class CustomerBookingDAO {
                   AND CAST(st.StartTime AS DATE) = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 ORDER BY st.StartTime
                 """;
         return jdbcTemplate.query(sql, this::mapShowtime, movieId, Date.valueOf(date));
@@ -105,7 +105,7 @@ public class CustomerBookingDAO {
                 WHERE st.ShowtimeID = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 """;
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapShowtime, showtimeId));

@@ -53,8 +53,8 @@ public class ShowtimeDao {
 
     public List<Showtime> findAll(LocalDate date, Integer roomId, Integer movieId, String status) {
         StringBuilder sql = new StringBuilder(
-                "SELECT s.*, " +
-                "m.Title AS MovieTitle, m.Poster AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
+                "SELECT s.*, s.BasePrice AS BaseTicketPrice, " +
+                "m.Title AS MovieTitle, m.PosterURL AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
                 "r.RoomName, r.RoomCode, r.RoomType, r.Capacity AS RoomCapacity " +
                 "FROM Showtime s " +
                 "JOIN Movie m ON s.MovieID = m.MovieID " +
@@ -87,8 +87,8 @@ public class ShowtimeDao {
     }
 
     public Optional<Showtime> findById(int id) {
-        String sql = "SELECT s.*, " +
-                "m.Title AS MovieTitle, m.Poster AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
+        String sql = "SELECT s.*, s.BasePrice AS BaseTicketPrice, " +
+                "m.Title AS MovieTitle, m.PosterURL AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
                 "r.RoomName, r.RoomCode, r.RoomType, r.Capacity AS RoomCapacity " +
                 "FROM Showtime s " +
                 "JOIN Movie m ON s.MovieID = m.MovieID " +
@@ -107,8 +107,8 @@ public class ShowtimeDao {
      * Exclude cancelled or stopped showtimes.
      */
     public List<Showtime> findOverlappingShowtimes(int roomId, LocalDateTime start, LocalDateTime end, Integer excludeShowtimeId) {
-        String sql = "SELECT s.*, " +
-                "m.Title AS MovieTitle, m.Poster AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
+        String sql = "SELECT s.*, s.BasePrice AS BaseTicketPrice, " +
+                "m.Title AS MovieTitle, m.PosterURL AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
                 "r.RoomName, r.RoomCode, r.RoomType, r.Capacity AS RoomCapacity " +
                 "FROM Showtime s " +
                 "JOIN Movie m ON s.MovieID = m.MovieID " +
@@ -131,7 +131,7 @@ public class ShowtimeDao {
 
 
     public int insert(ShowtimeForm form) {
-        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +
+        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
@@ -145,7 +145,7 @@ public class ShowtimeDao {
 
     public int update(int id, ShowtimeForm form) {
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                "BaseTicketPrice = ?, Status = ? WHERE ShowtimeID = ?";
+                "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
                 form.getRoomId(),
