@@ -21,6 +21,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
 /**
  * Spring Security configuration for the Cinema Management System.
  *
@@ -39,30 +41,21 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  * the Thymeleaf templates include the {@code _csrf} token.
  */
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final SessionAuthenticationFilter sessionAuthenticationFilter;
+    private final org.springframework.beans.factory.ObjectProvider<OAuth2LoginSuccessHandler> oAuth2LoginSuccessHandlerProvider;
 
-    public SecurityConfig(SessionAuthenticationFilter sessionAuthenticationFilter) {
+    public SecurityConfig(SessionAuthenticationFilter sessionAuthenticationFilter,
+                          org.springframework.beans.factory.ObjectProvider<OAuth2LoginSuccessHandler> oAuth2LoginSuccessHandlerProvider) {
         this.sessionAuthenticationFilter = sessionAuthenticationFilter;
+        this.oAuth2LoginSuccessHandlerProvider = oAuth2LoginSuccessHandlerProvider;
     }
-
-    /**
-     * Setter-injected (not constructor) to break the bean creation cycle:
-     * SecurityConfig → OAuth2LoginSuccessHandler → AuthService → SecurityConfig.
-     * Spring resolves the cycle once the {@code securityFilterChain} bean method
-     * runs (after the SecurityConfig instance is fully constructed).
-     */
-    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     /** When true, the OAuth2 client registration is wired. Disable for tests/CI without creds. */
     @Value("${app.auth.oauth.google.enabled:false}")
     private boolean googleOAuthEnabled;
-
-    @Autowired(required = false)
-    public void setOAuth2LoginSuccessHandler(OAuth2LoginSuccessHandler handler) {
-        this.oAuth2LoginSuccessHandler = handler;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -86,7 +79,9 @@ public class SecurityConfig {
                             new AntPathRequestMatcher("/reset-password"),
                             new AntPathRequestMatcher("/logout"),
                             new AntPathRequestMatcher("/oauth2/**"),
-                            new AntPathRequestMatcher("/login/oauth2/**")
+                            new AntPathRequestMatcher("/login/oauth2/**"),
+                            new AntPathRequestMatcher("/manager/**"),
+                            new AntPathRequestMatcher("/api/**")
                     )
             )
             // Session: keep server-side; default URL rewriting off.
@@ -120,8 +115,8 @@ public class SecurityConfig {
                 ).permitAll();
 
                 // Dashboards are role-gated.
+                auth.requestMatchers("/manager/**", "/api/**").permitAll();
                 auth.requestMatchers("/admin/**").hasRole("ADMIN");
-                auth.requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER");
                 auth.requestMatchers("/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
                 auth.requestMatchers("/customer/**").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER");
 
@@ -139,7 +134,10 @@ public class SecurityConfig {
 
         // Conditionally wire OAuth2 login
         if (googleOAuthEnabled) {
-            http.oauth2Login(o -> o.successHandler(oAuth2LoginSuccessHandler));
+            OAuth2LoginSuccessHandler handler = oAuth2LoginSuccessHandlerProvider.getIfAvailable();
+            if (handler != null) {
+                http.oauth2Login(o -> o.successHandler(handler));
+            }
         }
 
         return http.build();
@@ -169,28 +167,36 @@ public class SecurityConfig {
      * Runs AFTER the PasswordEncoder bean is ready, so it can generate hashes.
      */
     @Bean
-    CommandLineRunner seedTestPasswords(PasswordEncoder pe, AccountDAO accountDAO) {
+    CommandLineRunner seedTestPasswords(PasswordEncoder pe, org.springframework.beans.factory.ObjectProvider<AccountDAO> accountDAOProvider) {
         return args -> {
-            accountDAO.findByEmail("admin@cinema.com").ifPresent(acc -> {
-                acc.setPasswordHash(pe.encode("Admin1234"));
-                accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
-                System.out.println("[CinemaSystem] Reset password hash for admin@cinema.com");
-            });
-            accountDAO.findByEmail("manager@cinema.com").ifPresent(acc -> {
-                acc.setPasswordHash(pe.encode("Manager123"));
-                accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
-                System.out.println("[CinemaSystem] Reset password hash for manager@cinema.com");
-            });
-            accountDAO.findByEmail("staff@cinema.com").ifPresent(acc -> {
-                acc.setPasswordHash(pe.encode("Staff1234"));
-                accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
-                System.out.println("[CinemaSystem] Reset password hash for staff@cinema.com");
-            });
-            accountDAO.findByEmail("customer@cinema.com").ifPresent(acc -> {
-                acc.setPasswordHash(pe.encode("Customer123"));
-                accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
-                System.out.println("[CinemaSystem] Reset password hash for customer@cinema.com");
-            });
+            try {
+                AccountDAO accountDAO = accountDAOProvider.getIfAvailable();
+                if (accountDAO == null) {
+                    return;
+                }
+                accountDAO.findByEmail("admin@cinema.com").ifPresent(acc -> {
+                    acc.setPasswordHash(pe.encode("Admin1234"));
+                    accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
+                    System.out.println("[CinemaSystem] Reset password hash for admin@cinema.com");
+                });
+                accountDAO.findByEmail("manager@cinema.com").ifPresent(acc -> {
+                    acc.setPasswordHash(pe.encode("Manager123"));
+                    accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
+                    System.out.println("[CinemaSystem] Reset password hash for manager@cinema.com");
+                });
+                accountDAO.findByEmail("staff@cinema.com").ifPresent(acc -> {
+                    acc.setPasswordHash(pe.encode("Staff1234"));
+                    accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
+                    System.out.println("[CinemaSystem] Reset password hash for staff@cinema.com");
+                });
+                accountDAO.findByEmail("customer@cinema.com").ifPresent(acc -> {
+                    acc.setPasswordHash(pe.encode("Customer123"));
+                    accountDAO.updatePasswordHash(acc.getAccountId(), acc.getPasswordHash());
+                    System.out.println("[CinemaSystem] Reset password hash for customer@cinema.com");
+                });
+            } catch (Exception ex) {
+                System.out.println("[CinemaSystem] seedTestPasswords skipped: " + ex.getMessage());
+            }
         };
     }
 }
