@@ -4,6 +4,7 @@ import com.cinema.model.AuthenticatedUser;
 import com.cinema.service.SessionService;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.mock;
 
 class SessionAuthenticationFilterTest {
 
+    @BeforeEach
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();

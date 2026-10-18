@@ -53,6 +53,21 @@ public class Movie {
         this.trailer = trailerUrl;
     }
 
+    public Movie(int movieId, String title, int duration, String status) {
+        this.movieId = movieId;
+        this.title = title;
+        this.duration = duration;
+        this.status = status;
+    }
+
+    public Integer getId() {
+        return movieId;
+    }
+
+    public void setId(Integer id) {
+        this.movieId = id;
+    }
+
     public Integer getMovieId() {
         return movieId;
     }
@@ -224,6 +239,24 @@ public class Movie {
         return getGenresFormatted();
     }
 
+    public String getGenreNamesString() {
+        if (genres == null || genres.isEmpty()) {
+            return "Chưa phân loại";
+        }
+        return genres.stream()
+                .map(Genre::getName)
+                .collect(Collectors.joining(", "));
+    }
+
+    public String getGenreIdsString() {
+        if (genres == null || genres.isEmpty()) {
+            return "";
+        }
+        return genres.stream()
+                .map(g -> String.valueOf(g.getGenreId()))
+                .collect(Collectors.joining(","));
+    }
+
     public int getShowtimeCount() {
         return showtimeCount;
     }
@@ -265,6 +298,16 @@ public class Movie {
         int h = duration / 60;
         int m = duration % 60;
         return h > 0 ? (h + "h " + m + "m") : (m + "m");
+    }
+
+    public List<Integer> getGenreIds() {
+        if (genres == null) return new ArrayList<>();
+        return genres.stream().map(Genre::getGenreId).collect(Collectors.toList());
+    }
+
+    public boolean isActiveForShowtimes() {
+        return "Upcoming".equalsIgnoreCase(status) || "Now Showing".equalsIgnoreCase(status)
+                || "NOW_SHOWING".equalsIgnoreCase(status) || "COMING_SOON".equalsIgnoreCase(status);
     }
 
     public boolean isNowShowing() {
