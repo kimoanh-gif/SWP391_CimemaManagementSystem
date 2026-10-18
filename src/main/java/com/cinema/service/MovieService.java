@@ -128,6 +128,18 @@ public class MovieService {
     }
 
     /**
+     * Reactivates an Archived or Ended movie back to active status (Now Showing or Upcoming).
+     */
+    public Movie reactivateMovie(int movieId) {
+        Movie movie = getMovieById(movieId);
+        String targetStatus = (movie.getReleaseDate() != null && movie.getReleaseDate().isAfter(java.time.LocalDate.now()))
+                ? "Upcoming"
+                : "Now Showing";
+        movieDao.updateStatus(movieId, targetStatus);
+        return getMovieById(movieId);
+    }
+
+    /**
      * Updates only the movie status with validation.
      */
     public Movie updateStatus(int movieId, String newStatus) {
