@@ -115,6 +115,7 @@ public class SecurityConfig {
                 ).permitAll();
 
                 // Dashboards are role-gated.
+                auth.requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
                 auth.requestMatchers("/manager/**", "/api/**").permitAll();
                 auth.requestMatchers("/admin/**").hasRole("ADMIN");
                 auth.requestMatchers("/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");

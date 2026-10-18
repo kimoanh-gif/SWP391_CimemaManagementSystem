@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.model.AuthenticatedUser;
 import com.cinema.service.SessionService;
+import com.cinema.service.StaffOperationsService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,9 +16,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class RoleDashboardController {
 
     private final SessionService sessionService;
+    private final StaffOperationsService staffOperationsService;
 
-    public RoleDashboardController(SessionService sessionService) {
+    public RoleDashboardController(SessionService sessionService, StaffOperationsService staffOperationsService) {
         this.sessionService = sessionService;
+        this.staffOperationsService = staffOperationsService;
     }
 
     @GetMapping("/customer/dashboard")
@@ -33,6 +36,8 @@ public class RoleDashboardController {
         if (!sessionService.hasRole(session, "STAFF", "MANAGER", "ADMIN"))
             return "redirect:/login";
         model.addAttribute("user", sessionService.getCurrentUser(session));
+        model.addAttribute("staffDashboard", staffOperationsService.dashboard(
+                sessionService.currentAccountId(session), sessionService.currentRole(session)));
         return "staff/dashboard";
     }
 
