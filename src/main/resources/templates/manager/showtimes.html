@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch &amp; Suất Chiếu – Royally Cinema Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <style>
+        .time-slot {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-900);
+            font-family: monospace;
+        }
+        .buffer-indicator {
+            font-size: 11px;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 3px;
+            font-weight: 600;
+        }
+        .date-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .date-pill {
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-700);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .date-pill:hover { border-color: var(--primary); color: var(--primary); }
+        .date-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* Modal classes for manager-showtimes.js */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-content {
+            background: #fff; border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%; max-width: 580px; max-height: 90vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-header {
+            padding: 18px 24px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 16px; font-weight: 700; margin: 0; }
+        .modal-close {
+            font-size: 22px; cursor: pointer; color: var(--text-400);
+            background: none; border: none; line-height: 1; padding: 0;
+        }
+        .modal-close:hover { color: var(--text-900); }
+        .modal-content form { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+        .form-actions {
+            padding-top: 14px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='showtimes')}"></div>
+<!-- Topbar -->
+<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Lịch & Suất chiếu')}"></div>
+
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+<div class="page-shell">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="breadcrumb">
+                <a th:href="@{/manager/dashboard}">Vận hành</a>
+                <span>›</span>
+                <span>Lịch &amp; Suất chiếu</span>
+            </div>
+            <h1 class="page-title">Lịch &amp; Suất Chiếu</h1>
+            <p class="page-subtitle">Điều phối lịch chiếu phim theo phòng, kiểm soát thời gian dọn phòng (buffer 15 phút) và xử lý xung đột theo chuẩn vận hành Royally Cinema.</p>
+        </div>
+        <div class="page-header-actions">
+            <button id="btnCreateShowtime" class="btn btn-primary">+ Tạo suất chiếu mới</button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
+        <span class="alert-icon">✅</span>
+        <div class="alert-body" th:text="${successMessage}">Thao tác thành công.</div>
+        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+    </div>
+    <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+    </div>
+
+    <!-- 3 Stats Cards (Image 5) -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="stat-label">Suất Chiếu Ngày Chọn</div>
+            <div class="stat-value" th:text="${totalShowtimes}">0</div>
+            <div class="stat-sub">Ngày: <b th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}">14/10/2026</b></div>
+            <span class="stat-icon">🕐</span>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-label">Đã lên lịch (Scheduled)</div>
+            <div class="stat-value" th:text="${scheduledCount}">0</div>
+            <div class="stat-sub">Chờ đến giờ chiếu</div>
+            <span class="stat-icon">✓</span>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-label">Buffer dọn dẹp phòng</div>
+            <div class="stat-value" th:text="${cleaningBuffer} + ' phút'">15 phút</div>
+            <div class="stat-sub">Tự động cộng sau mỗi suất (BR-09)</div>
+            <span class="stat-icon">🧹</span>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-label">Đang chiếu (Showing)</div>
+            <div class="stat-value" th:text="${showingCount}">0</div>
+            <div class="stat-sub">Suất chiếu đang diễn ra</div>
+            <span class="stat-icon">▶</span>
+        </div>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="toolbar">
+        <form th:action="@{/manager/showtimes}" method="get" class="toolbar-form">
+            <div class="toolbar-field">
+                <label>📅 Ngày chiếu:</label>
+                <input type="date" name="date" th:value="${selectedDate}">
+            </div>
+            <select name="roomId" onchange="this.form.submit()">
+                <option value="0">Tất cả phòng chiếu</option>
+                <option th:each="r : ${allRooms}"
+                        th:value="${r.roomId}"
+                        th:text="${r.roomName} + ' (' + ${r.roomType} + ')'"
+                        th:selected="${selectedRoomId == r.roomId}">Phòng 1</option>
+            </select>
+            <select name="movieId" onchange="this.form.submit()">
+                <option value="0">Tất cả phim</option>
+                <option th:each="m : ${allMovies}"
+                        th:value="${m.movieId}"
+                        th:text="${m.title}"
+                        th:selected="${selectedMovieId == m.movieId}">Phim</option>
+            </select>
+            <select name="status" onchange="this.form.submit()">
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="Scheduled" th:selected="${selectedStatus == 'Scheduled'}">Scheduled</option>
+                <option value="Showing" th:selected="${selectedStatus == 'Showing'}">Showing</option>
+                <option value="Stopped" th:selected="${selectedStatus == 'Stopped'}">Stopped</option>
+                <option value="Cancelled" th:selected="${selectedStatus == 'Cancelled'}">Cancelled</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
+            <a th:href="@{/manager/showtimes}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+        </form>
+    </div>
+
+    <!-- Showtimes Table (Image 5) -->
+    <div class="table-wrapper">
+        <div class="table-header">
+            <span class="table-header-title">
+                Danh Sách Suất Chiếu Chi Tiết
+                <span class="badge badge-blue" style="margin-left:6px;" th:text="${#lists.size(showtimes)} + ' suất'">0 suất</span>
+            </span>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:170px">Khung Giờ Chiếu</th>
+                    <th>Phim Chiếu</th>
+                    <th style="width:160px">Phòng Chiếu</th>
+                    <th style="width:100px">Thời Lượng</th>
+                    <th style="width:130px">Giá Vé Cơ Bản</th>
+                    <th style="width:120px;text-align:center">Trạng Thái</th>
+                    <th class="col-actions">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(showtimes)}">
+                    <td colspan="7" style="text-align:center;padding:36px;color:var(--text-400)">
+                        Chưa có suất chiếu nào cho ngày hoặc bộ lọc đã chọn. Bấm <b>+ Tạo suất chiếu mới</b> để xếp lịch.
+                    </td>
+                </tr>
+                <tr th:each="st : ${showtimes}">
+                    <td>
+                        <div class="time-slot" th:text="${#temporals.format(st.startTime, 'HH:mm')} + ' – ' + ${#temporals.format(st.endTime, 'HH:mm')}">
+                            14:15 – 17:01
+                        </div>
+                        <div class="buffer-indicator">+ 15p dọn dẹp đến <span th:text="${#temporals.format(st.endTime.plusMinutes(15), 'HH:mm')}">17:16</span></div>
+                    </td>
+                    <td>
+                        <strong style="font-size:14px;color:var(--text-900)" th:text="${st.movieTitle}">Tên Phim</strong>
+                        <div style="font-size:12px;color:var(--text-400);margin-top:2px;" th:text="'Độ tuổi: ' + ${st.movieAgeRating}">T16</div>
+                    </td>
+                    <td>
+                        <strong style="color:var(--text-900)" th:text="${st.roomName}">Phòng 01</strong>
+                        <div style="font-size:12px;color:var(--text-500)" th:text="${st.roomType} + ' • ' + ${st.roomCapacity} + ' ghế'">IMAX Laser</div>
+                    </td>
+                    <td th:text="${st.movieDuration} + ' phút'">120 phút</td>
+                    <td style="font-weight:700;color:var(--text-900)" th:text="${#numbers.formatDecimal(st.baseTicketPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">85.000 đ</td>
+                    <td style="text-align:center">
+                        <span class="badge"
+                              th:classappend="${st.status == 'Scheduled' ? 'badge-blue' : (st.status == 'Showing' ? 'badge-green' : 'badge-gray')}"
+                              th:text="${st.status}">Scheduled</span>
+                    </td>
+                    <td class="col-actions">
+                        <button type="button" class="action-btn action-btn-edit btn-edit-showtime"
+                                th:data-id="${st.showtimeId}"
+                                th:data-movieid="${st.movieId}"
+                                th:data-roomid="${st.roomId}"
+                                th:data-starttime="${#temporals.format(st.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                th:data-price="${st.baseTicketPrice}"
+                                title="Sửa lịch">✎</button>
+                        <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/stop'}" method="post" style="display:inline;">
+                            <button type="submit" class="action-btn action-btn-del"
+                                    onclick="return confirm('Bạn có chắc chắn muốn dừng/hủy suất chiếu này?');"
+                                    title="Dừng suất chiếu">⏹</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-row" th:if="${not #lists.isEmpty(showtimes)}">
+            <span style="font-size: 13px; color: var(--text-500);">
+                Hiển thị 1 – <span th:text="${#lists.size(showtimes)}">1</span> trên tổng số <span th:text="${totalShowtimes}">1</span> suất chiếu
+            </span>
+            <div class="pagination">
+                <button type="button" class="page-btn" disabled>&lsaquo;</button>
+                <button type="button" class="page-btn active">1</button>
+                <button type="button" class="page-btn">&rsaquo;</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- Modal: Tạo / Sửa Suất Chiếu (IDs for manager-showtimes.js) -->
+<div id="showtimeModal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Lập Lịch Chiếu Phim Mới</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form th:action="@{/manager/showtimes/save}" th:object="${showtimeForm}" method="post">
+            <input type="hidden" id="formShowtimeId" th:field="*{showtimeId}">
+            <div class="form-group">
+                <label class="form-label">Chọn Phim (Chỉ hiển thị phim Đang chiếu &amp; Sắp chiếu) <span class="req">*</span></label>
+                <select id="formMovieId" th:field="*{movieId}" class="form-control" required>
+                    <option value="">-- Chọn phim --</option>
+                    <option th:each="m : ${eligibleMovies}"
+                            th:value="${m.movieId}"
+                            th:data-duration="${m.duration}"
+                            th:text="${m.title} + ' (' + ${m.duration} + 'p, ' + ${m.status} + ')'">Phim</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chọn Phòng Chiếu (Chỉ hiển thị phòng Sẵn sàng) <span class="req">*</span></label>
+                <select id="formRoomId" th:field="*{roomId}" class="form-control" required>
+                    <option value="">-- Chọn phòng chiếu --</option>
+                    <option th:each="r : ${eligibleRooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.roomName} + ' [' + ${r.roomType} + ' - ' + ${r.capacity} + ' ghế]' ">Phòng</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời Gian Bắt Đầu Chiếu <span class="req">*</span></label>
+                <input type="datetime-local" id="formStartTime" th:field="*{startTime}" class="form-control" required>
+            </div>
+            <div class="form-group" style="background-color: var(--primary-light); padding: 12px; border-radius: 8px;">
+                <label class="form-label" style="margin: 0; color: var(--primary);">Thời Gian Kết Thúc Dự Kiến (+ 15p buffer dọn phòng):</label>
+                <div id="endTimeDisplay" style="color: var(--primary-hover); font-weight: 700; margin-top: 4px; font-size: 14px;">--:--</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Giá Vé Cơ Sở (Base Price - VND) <span class="req">*</span></label>
+                <input type="number" id="formBaseTicketPrice" th:field="*{baseTicketPrice}" class="form-control" step="1000" min="0" required>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
+                <button type="submit" class="btn btn-primary">Xác Nhận Lưu Lịch Chiếu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/manager-showtimes.js}"></script>
+</body>
+</html>
