@@ -122,18 +122,7 @@
 <!-- Shared Topbar Fragment -->
 <header th:fragment="topbar(pageTitle)" class="topbar">
 
-    <div class="topbar-search">
-        <span class="topbar-search-icon">🔍</span>
-        <input type="text" th:placeholder="'Tìm phim, suất chiếu, phòng vé, đơn hàng...'"/>
-    </div>
-
     <div class="topbar-spacer"></div>
-
-    <div class="topbar-location">
-        <span class="loc-icon">📍</span>
-        <span>Vincom Landmark 81</span>
-        <span>▾</span>
-    </div>
 
     <div class="topbar-date">
         📅 <span th:text="${currentDateStr != null} ? ${currentDateStr} : 'Hôm nay'">Hôm nay</span>
