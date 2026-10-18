@@ -1,8 +1,8 @@
 package com.cinema.service;
 
 import com.cinema.dao.CustomerDAO;
-import com.cinema.dao.GenreDAO;
-import com.cinema.dao.MovieDAO;
+import com.cinema.dao.GenreDao;
+import com.cinema.dao.MovieDao;
 import com.cinema.dao.MovieReviewDAO;
 import com.cinema.model.Customer;
 import com.cinema.model.Genre;
@@ -16,12 +16,12 @@ import java.util.Optional;
 @Service
 public class MovieCatalogService {
 
-    private final MovieDAO movieDAO;
-    private final GenreDAO genreDAO;
+    private final MovieDao movieDAO;
+    private final GenreDao genreDAO;
     private final MovieReviewDAO movieReviewDAO;
     private final CustomerDAO customerDAO;
 
-    public MovieCatalogService(MovieDAO movieDAO, GenreDAO genreDAO,
+    public MovieCatalogService(MovieDao movieDAO, GenreDao genreDAO,
                                MovieReviewDAO movieReviewDAO, CustomerDAO customerDAO) {
         this.movieDAO = movieDAO;
         this.genreDAO = genreDAO;
