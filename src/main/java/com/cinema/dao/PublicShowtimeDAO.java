@@ -90,7 +90,7 @@ public class PublicShowtimeDAO {
                 WHERE CAST(st.StartTime AS DATE) = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                   AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
                 """);
 
@@ -127,7 +127,7 @@ public class PublicShowtimeDAO {
                   AND CAST(st.StartTime AS DATE) = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 ORDER BY st.StartTime ASC
                 """;
         return jdbcTemplate.query(sql, rowMapper, movieId, Date.valueOf(date));
@@ -153,7 +153,7 @@ public class PublicShowtimeDAO {
                 WHERE CAST(st.StartTime AS DATE) = CAST(GETDATE() AS DATE)
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 ORDER BY st.StartTime ASC
                 """;
         if (limit > 0) {

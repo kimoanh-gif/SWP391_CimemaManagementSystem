@@ -17,6 +17,14 @@ import java.util.Optional;
 @Repository
 public class FBItemDao {
 
+    private static final String ITEM_SELECT = """
+            SELECT FoodBeverageItemID AS ItemID, ItemCode,
+                   [Name] AS ItemName, ItemType AS Category, [Description],
+                   Price AS SellingPrice, CostPrice, ImageURL AS Image,
+                   [Status], CreatedAt, UpdatedAt
+            FROM dbo.FoodBeverageItem
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public FBItemDao(JdbcTemplate jdbcTemplate) {
@@ -40,11 +48,11 @@ public class FBItemDao {
     };
 
     public List<FBItem> findAll(String keyword, String category, String status) {
-        StringBuilder sql = new StringBuilder("SELECT * FROM FBItem WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder(ITEM_SELECT + " WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append("AND (ItemName LIKE ? OR ItemCode LIKE ? OR Description LIKE ?) ");
+            sql.append("AND ([Name] LIKE ? OR ItemCode LIKE ? OR [Description] LIKE ?) ");
             String kw = "%" + keyword.trim() + "%";
             params.add(kw);
             params.add(kw);
@@ -52,7 +60,7 @@ public class FBItemDao {
         }
 
         if (category != null && !category.isBlank() && !"ALL".equalsIgnoreCase(category)) {
-            sql.append("AND Category = ? ");
+            sql.append("AND ItemType = ? ");
             params.add(category.trim());
         }
 
@@ -61,7 +69,7 @@ public class FBItemDao {
             params.add(status.trim());
         }
 
-        sql.append("ORDER BY ItemID DESC");
+        sql.append("ORDER BY FoodBeverageItemID DESC");
 
         List<FBItem> items = jdbcTemplate.query(sql.toString(), params.toArray(), rowMapper);
         for (FBItem item : items) {
@@ -73,7 +81,7 @@ public class FBItemDao {
     }
 
     public Optional<FBItem> findById(int id) {
-        String sql = "SELECT * FROM FBItem WHERE ItemID = ?";
+        String sql = ITEM_SELECT + " WHERE FoodBeverageItemID = ?";
         List<FBItem> list = jdbcTemplate.query(sql, ps -> ps.setInt(1, id), rowMapper);
         if (list.isEmpty()) {
             return Optional.empty();
@@ -86,7 +94,7 @@ public class FBItemDao {
     }
 
     public Optional<FBItem> findByCode(String code) {
-        String sql = "SELECT * FROM FBItem WHERE ItemCode = ?";
+        String sql = ITEM_SELECT + " WHERE ItemCode = ?";
         List<FBItem> list = jdbcTemplate.query(sql, ps -> ps.setString(1, code), rowMapper);
         if (list.isEmpty()) {
             return Optional.empty();
@@ -99,7 +107,7 @@ public class FBItemDao {
     }
 
     public int insert(FBItemForm form) {
-        String sql = "INSERT INTO FBItem (ItemCode, ItemName, Category, Description, SellingPrice, CostPrice, Image, Status, CreatedAt) " +
+        String sql = "INSERT INTO dbo.FoodBeverageItem (ItemCode, [Name], ItemType, [Description], Price, CostPrice, ImageURL, [Status], CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 form.getItemCode().trim(),
@@ -114,9 +122,9 @@ public class FBItemDao {
     }
 
     public int update(int id, FBItemForm form) {
-        String sql = "UPDATE FBItem SET ItemCode = ?, ItemName = ?, Category = ?, Description = ?, " +
-                "SellingPrice = ?, CostPrice = ?, Image = ?, Status = ?, UpdatedAt = SYSUTCDATETIME() " +
-                "WHERE ItemID = ?";
+        String sql = "UPDATE dbo.FoodBeverageItem SET ItemCode = ?, [Name] = ?, ItemType = ?, [Description] = ?, " +
+                "Price = ?, CostPrice = ?, ImageURL = ?, [Status] = ?, UpdatedAt = SYSUTCDATETIME() " +
+                "WHERE FoodBeverageItemID = ?";
         return jdbcTemplate.update(sql,
                 form.getItemCode().trim(),
                 form.getItemName().trim(),
@@ -131,19 +139,19 @@ public class FBItemDao {
     }
 
     public int updatePrice(int id, BigDecimal sellingPrice) {
-        String sql = "UPDATE FBItem SET SellingPrice = ?, UpdatedAt = SYSUTCDATETIME() WHERE ItemID = ?";
+        String sql = "UPDATE dbo.FoodBeverageItem SET Price = ?, UpdatedAt = SYSUTCDATETIME() WHERE FoodBeverageItemID = ?";
         return jdbcTemplate.update(sql, sellingPrice, id);
     }
 
     public int updateStatus(int id, String status) {
-        String sql = "UPDATE FBItem SET Status = ?, UpdatedAt = SYSUTCDATETIME() WHERE ItemID = ?";
+        String sql = "UPDATE dbo.FoodBeverageItem SET [Status] = ?, UpdatedAt = SYSUTCDATETIME() WHERE FoodBeverageItemID = ?";
         return jdbcTemplate.update(sql, status, id);
     }
 
     public List<FBItem.ComboComponent> findComboComponents(int comboId) {
-        String sql = "SELECT ci.ComponentItemID, f.ItemName, ci.Quantity, f.Status " +
-                "FROM ComboItem ci " +
-                "JOIN FBItem f ON ci.ComponentItemID = f.ItemID " +
+        String sql = "SELECT ci.ComponentItemID, f.[Name] AS ItemName, ci.Quantity, f.[Status] " +
+                "FROM dbo.ComboItem ci " +
+                "JOIN dbo.FoodBeverageItem f ON ci.ComponentItemID = f.FoodBeverageItemID " +
                 "WHERE ci.ComboID = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new FBItem.ComboComponent(
                 rs.getInt("ComponentItemID"),
@@ -154,9 +162,9 @@ public class FBItemDao {
     }
 
     public void replaceComboComponents(int comboId, List<Integer> componentIds, List<Integer> quantities) {
-        jdbcTemplate.update("DELETE FROM ComboItem WHERE ComboID = ?", comboId);
+        jdbcTemplate.update("DELETE FROM dbo.ComboItem WHERE ComboID = ?", comboId);
         if (componentIds != null && quantities != null) {
-            String insertSql = "INSERT INTO ComboItem (ComboID, ComponentItemID, Quantity, CreatedAt) VALUES (?, ?, ?, SYSUTCDATETIME())";
+            String insertSql = "INSERT INTO dbo.ComboItem (ComboID, ComponentItemID, Quantity, CreatedAt) VALUES (?, ?, ?, SYSUTCDATETIME())";
             for (int i = 0; i < componentIds.size(); i++) {
                 if (i < quantities.size() && componentIds.get(i) != null && quantities.get(i) != null && quantities.get(i) > 0) {
                     jdbcTemplate.update(insertSql, comboId, componentIds.get(i), quantities.get(i));
@@ -182,7 +190,7 @@ public class FBItemDao {
     public boolean isComponentOfAnyCombo(int itemId) {
         try {
             Integer count = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM ComboItem WHERE ComponentItemID = ?", Integer.class, itemId);
+                    "SELECT COUNT(*) FROM dbo.ComboItem WHERE ComponentItemID = ?", Integer.class, itemId);
             return count != null && count > 0;
         } catch (Exception ex) {
             return false;
@@ -190,7 +198,7 @@ public class FBItemDao {
     }
 
     public int delete(int id) {
-        jdbcTemplate.update("DELETE FROM ComboItem WHERE ComboID = ?", id);
-        return jdbcTemplate.update("DELETE FROM FBItem WHERE ItemID = ?", id);
+        jdbcTemplate.update("DELETE FROM dbo.ComboItem WHERE ComboID = ?", id);
+        return jdbcTemplate.update("DELETE FROM dbo.FoodBeverageItem WHERE FoodBeverageItemID = ?", id);
     }
 }

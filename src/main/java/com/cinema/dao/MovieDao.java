@@ -104,8 +104,8 @@ public class MovieDao {
                     m.Actors,
                     m.AgeRating,
                     m.[Description],
-                    m.Poster,
-                    m.Trailer,
+                    m.PosterURL AS Poster,
+                    m.TrailerURL AS Trailer,
                     m.[Status],
                     m.CreatedAt,
                     m.UpdatedAt
@@ -176,8 +176,8 @@ public class MovieDao {
                     m.Actors,
                     m.AgeRating,
                     m.[Description],
-                    m.Poster,
-                    m.Trailer,
+                    m.PosterURL AS Poster,
+                    m.TrailerURL AS Trailer,
                     m.[Status],
                     m.CreatedAt,
                     m.UpdatedAt
@@ -204,7 +204,7 @@ public class MovieDao {
                 INSERT INTO Movie (
                     Title, OriginalTitle, Duration, ReleaseDate, EndDate,
                     [Language], Director, Actors, AgeRating, [Description],
-                    Poster, Trailer, [Status], CreatedAt
+                    PosterURL, TrailerURL, [Status], CreatedAt
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())
                 """;
 
@@ -254,8 +254,8 @@ public class MovieDao {
                     Actors = ?,
                     AgeRating = ?,
                     [Description] = ?,
-                    Poster = ?,
-                    Trailer = ?,
+                    PosterURL = ?,
+                    TrailerURL = ?,
                     [Status] = ?,
                     UpdatedAt = SYSUTCDATETIME()
                 WHERE MovieID = ?
@@ -361,7 +361,8 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.Poster, m.Trailer, m.[Status], m.CreatedAt, m.UpdatedAt
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM Movie m
                 WHERE m.[Status] IN ('Upcoming', 'Now Showing')
                 ORDER BY m.Title ASC
@@ -410,7 +411,8 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.Poster, m.Trailer, m.[Status], m.CreatedAt, m.UpdatedAt
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE (UPPER(m.[Status]) IN ('NOW_SHOWING', 'NOW SHOWING', 'ACTIVE')
                        OR EXISTS (
@@ -436,7 +438,8 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.Poster, m.Trailer, m.[Status], m.CreatedAt, m.UpdatedAt
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE UPPER(m.[Status]) IN ('COMING_SOON', 'COMING SOON', 'UPCOMING')
                   AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
@@ -460,7 +463,8 @@ public class MovieDao {
         StringBuilder sql = new StringBuilder("""
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.Poster, m.Trailer, m.[Status], m.CreatedAt, m.UpdatedAt
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
                 """);
@@ -507,7 +511,8 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.Poster, m.Trailer, m.[Status], m.CreatedAt, m.UpdatedAt
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE m.MovieID <> ?
                   AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
