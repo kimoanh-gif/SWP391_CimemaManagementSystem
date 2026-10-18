@@ -95,6 +95,26 @@ public class FBItemService {
         return getItemById(id);
     }
 
+    @Transactional
+    public void deleteItem(int id) {
+        FBItem item = getItemById(id);
+
+        // 1. Check if item has been ordered previously
+        if (fbItemDao.isReferencedInOrders(id)) {
+            // Preserve historical transaction records (BR-51) by soft-deactivating instead of hard delete
+            fbItemDao.updateStatus(id, "Inactive");
+            throw new InvalidFBItemException("Món '" + item.getItemName() + "' đã phát sinh trong đơn hàng của khách, không thể xóa hoàn toàn khỏi cơ sở dữ liệu. Hệ thống đã chuyển món sang trạng thái 'Ngừng Bán' (Inactive).");
+        }
+
+        // 2. Check if item is currently part of any other combo
+        if (fbItemDao.isComponentOfAnyCombo(id)) {
+            throw new InvalidFBItemException("Món '" + item.getItemName() + "' đang là thành phần của một gói Combo khác. Vui lòng gỡ món khỏi Combo trước khi xóa.");
+        }
+
+        // 3. Delete item
+        fbItemDao.delete(id);
+    }
+
     public boolean isItemAvailableForSale(int id) {
         FBItem item = getItemById(id);
         return item.isAvailableForSale();

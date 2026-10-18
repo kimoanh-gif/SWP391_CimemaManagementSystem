@@ -29,18 +29,75 @@
             letter-spacing: 2px;
         }
 
-        .seat-grid-container {
+        .seat-plan-container {
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
             overflow-x: auto;
-            padding: 20px 10px;
-        }
-        .seat-grid {
-            display: grid;
-            gap: 6px;
-            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-            max-width: 900px;
+            padding: 24px 10px;
             width: 100%;
+        }
+        .cinema-seating-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            width: fit-content;
+        }
+        .cinema-seat-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .seat-block {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .row-indicator {
+            width: 30px;
+            height: 36px;
+            border-radius: 6px;
+            background: #F1F5F9;
+            color: #64748B;
+            font-weight: 800;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            border: 1px solid #E2E8F0;
+        }
+        .aisle-walkway {
+            width: 48px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+            pointer-events: none;
+            margin: 0 4px;
+        }
+        .aisle-lane {
+            width: 0;
+            height: 100%;
+            border-left: 2px dashed #CBD5E1;
+            opacity: 0.85;
+        }
+        .aisle-floor-label {
+            display: flex;
+            justify-content: center;
+            margin-top: 14px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #94A3B8;
+            text-transform: uppercase;
         }
         .seat-item {
             width: 36px;
@@ -62,31 +119,38 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
-        /* Seat status colors matching Image 4 */
+        /* Seat status colors matching cinema tiers */
         .seat-item.seat-standard,
-        .seat-item.seat-tiêu-chuẩn,
-        .seat-item.seat-std {
+        .seat-item.seat-front,
+        .seat-item[class*="front"],
+        .seat-item[class*="tiêu-chuẩn"],
+        .seat-item[class*="standard"],
+        .seat-item[class*="std"] {
             background: #F3F4F6;
             border-color: #D1D5DB;
             color: #374151;
         }
         .seat-item.seat-vip,
-        .seat-item.seat-vip-royal,
-        .seat-item.seat-vip-amber {
+        .seat-item[class*="vip"],
+        .seat-item[class*="amber"],
+        .seat-item[class*="royal"] {
             background: #FEF3C7;
             border-color: #F59E0B;
             color: #92400E;
         }
         .seat-item.seat-couple,
-        .seat-item.seat-sweetbox {
+        .seat-item.seat-sweetbox,
+        .seat-item[class*="sweetbox"],
+        .seat-item[class*="couple"],
+        .seat-item[class*="đôi"] {
             background: #EDE9FE;
             border-color: #8B5CF6;
             color: #5B21B6;
         }
         .seat-item.seat-maintenance {
-            background: #FEE2E2;
-            border-color: #EF4444;
-            color: #991B1B;
+            background: #FEE2E2 !important;
+            border-color: #EF4444 !important;
+            color: #991B1B !important;
             position: relative;
         }
         .seat-item.seat-maintenance::after {
@@ -96,8 +160,8 @@
             top: 1px; right: 2px;
         }
         .seat-item.seat-unavailable {
-            background: #E5E7EB;
-            color: #9CA3AF;
+            background: #E5E7EB !important;
+            color: #9CA3AF !important;
             opacity: 0.4;
             cursor: not-allowed;
         }
@@ -281,21 +345,61 @@
                 </form>
             </div>
 
-            <!-- Visual Seat Grid -->
-            <div class="seat-grid-container" th:if="${not #lists.isEmpty(seats)}">
-                <div class="seat-grid" th:style="'grid-template-columns: repeat(' + (${selectedRoom.seatsPerRow} ?: 12) + ', 36px);'">
-                    <div th:each="seat : ${seats}"
-                         class="seat-item"
-                         th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.seatTypeName, ' ', '-'))))}"
-                         th:data-id="${seat.seatId}"
-                         th:data-roomid="${seat.roomId}"
-                         th:data-row="${seat.rowLabel}"
-                         th:data-num="${seat.seatNumber}"
-                         th:data-type="${seat.seatTypeName}"
-                         th:data-status="${seat.status}"
-                         onclick="openSeatModal(this)"
-                         th:title="${seat.rowLabel + seat.seatNumber + ' • ' + seat.seatTypeName + ' (' + seat.status + ')'}">
-                        <span th:text="${seat.rowLabel + seat.seatNumber}">A1</span>
+            <!-- Visual Seat Plan with Central Walkway & Perfect Alignment -->
+            <div class="seat-plan-container" th:if="${not #lists.isEmpty(seats)}">
+                <div class="cinema-seating-chart">
+                    <div th:each="entry : ${seatsByRow}" class="cinema-seat-row">
+                        <!-- Left Row Indicator -->
+                        <div class="row-indicator" th:text="${entry.key}">A</div>
+
+                        <!-- Left Block of Seats -->
+                        <div class="seat-block left-block">
+                            <th:block th:each="seat : ${entry.value}" th:if="${seat.seatNumber <= (midPoint != null ? midPoint : 4)}">
+                                <div class="seat-item"
+                                     th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.seatTypeName, ' ', '-'))))}"
+                                     th:data-id="${seat.seatId}"
+                                     th:data-roomid="${seat.roomId}"
+                                     th:data-row="${seat.rowLabel}"
+                                     th:data-num="${seat.seatNumber}"
+                                     th:data-type="${seat.seatTypeName}"
+                                     th:data-status="${seat.status}"
+                                     onclick="openSeatModal(this)"
+                                     th:title="${seat.rowLabel + seat.seatNumber + ' • ' + seat.seatTypeName + ' (' + seat.status + ')'}">
+                                    <span th:text="${seat.rowLabel + seat.seatNumber}">A1</span>
+                                </div>
+                            </th:block>
+                        </div>
+
+                        <!-- Central Aisle / Lối đi chính giữa -->
+                        <div class="aisle-walkway" title="Lối đi trong rạp chiếu">
+                            <span class="aisle-lane"></span>
+                        </div>
+
+                        <!-- Right Block of Seats -->
+                        <div class="seat-block right-block">
+                            <th:block th:each="seat : ${entry.value}" th:if="${seat.seatNumber > (midPoint != null ? midPoint : 4)}">
+                                <div class="seat-item"
+                                     th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.seatTypeName, ' ', '-'))))}"
+                                     th:data-id="${seat.seatId}"
+                                     th:data-roomid="${seat.roomId}"
+                                     th:data-row="${seat.rowLabel}"
+                                     th:data-num="${seat.seatNumber}"
+                                     th:data-type="${seat.seatTypeName}"
+                                     th:data-status="${seat.status}"
+                                     onclick="openSeatModal(this)"
+                                     th:title="${seat.rowLabel + seat.seatNumber + ' • ' + seat.seatTypeName + ' (' + seat.status + ')'}">
+                                    <span th:text="${seat.rowLabel + seat.seatNumber}">A5</span>
+                                </div>
+                            </th:block>
+                        </div>
+
+                        <!-- Right Row Indicator -->
+                        <div class="row-indicator" th:text="${entry.key}">A</div>
+                    </div>
+
+                    <!-- Bottom Aisle Indicator Label -->
+                    <div class="aisle-floor-label">
+                        <span>▼ LỐI ĐI CHÍNH GIỮA (AISLE) ▼</span>
                     </div>
                 </div>
             </div>
@@ -304,7 +408,7 @@
             <div class="legend-bar">
                 <div class="legend-item">
                     <span class="legend-box seat-standard"></span>
-                    <span>Tiêu Chuẩn (Standard)</span>
+                    <span>Tiêu Chuẩn / Hàng Đầu (Standard)</span>
                 </div>
                 <div class="legend-item">
                     <span class="legend-box seat-vip"></span>
@@ -317,6 +421,10 @@
                 <div class="legend-item">
                     <span class="legend-box seat-maintenance"></span>
                     <span>Đang Bảo Trì (Khóa)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-box" style="width:28px;border:1px dashed #94A3B8;background:#F8FAFC;"></span>
+                    <span>Lối Đi (Aisle)</span>
                 </div>
             </div>
 

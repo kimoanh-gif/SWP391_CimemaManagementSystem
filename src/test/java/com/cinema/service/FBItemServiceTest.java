@@ -107,4 +107,37 @@ public class FBItemServiceTest {
         assertNotNull(deactivated);
         verify(fbItemDao).updateStatus(1, "Inactive");
     }
+
+    @Test
+    void testDeleteItem_Success() {
+        when(fbItemDao.findById(1)).thenReturn(Optional.of(sampleItem));
+        when(fbItemDao.isReferencedInOrders(1)).thenReturn(false);
+        when(fbItemDao.isComponentOfAnyCombo(1)).thenReturn(false);
+        when(fbItemDao.delete(1)).thenReturn(1);
+
+        assertDoesNotThrow(() -> fbItemService.deleteItem(1));
+        verify(fbItemDao).delete(1);
+    }
+
+    @Test
+    void testDeleteItem_ReferencedInOrders_ThrowsExceptionAndDeactivates() {
+        when(fbItemDao.findById(1)).thenReturn(Optional.of(sampleItem));
+        when(fbItemDao.isReferencedInOrders(1)).thenReturn(true);
+
+        InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.deleteItem(1));
+        assertTrue(ex.getMessage().contains("đã phát sinh trong đơn hàng"));
+        verify(fbItemDao).updateStatus(1, "Inactive");
+        verify(fbItemDao, never()).delete(1);
+    }
+
+    @Test
+    void testDeleteItem_ComponentOfCombo_ThrowsException() {
+        when(fbItemDao.findById(1)).thenReturn(Optional.of(sampleItem));
+        when(fbItemDao.isReferencedInOrders(1)).thenReturn(false);
+        when(fbItemDao.isComponentOfAnyCombo(1)).thenReturn(true);
+
+        InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.deleteItem(1));
+        assertTrue(ex.getMessage().contains("đang là thành phần của một gói Combo"));
+        verify(fbItemDao, never()).delete(1);
+    }
 }
