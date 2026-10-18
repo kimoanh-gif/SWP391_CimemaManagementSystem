@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xác minh OTP | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<div class="auth-page">
+  <aside class="auth-hero" aria-label="Không gian rạp chiếu phim">
+    <div class="auth-hero-caption">
+      <div class="eyebrow">Account activation</div>
+      <h1>Một bước nữa<br>để hoàn tất.</h1>
+      <div class="line"></div>
+      <p>Chúng tôi đã gửi mã xác minh 6 chữ số đến email của bạn. Vui lòng kiểm tra hộp thư đến (hoặc thư mục spam).</p>
+    </div>
+  </aside>
+
+  <main class="auth-panel-wrap">
+    <section class="auth-panel" aria-labelledby="otp-title">
+      <div class="auth-brand-mobile">
+        <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
+      </div>
+      <h2 id="otp-title">Kích hoạt tài khoản</h2>
+      <p class="auth-intro">Nhập mã OTP gồm 6 chữ số đã gửi đến email của bạn.</p>
+
+      <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
+      <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
+
+      <!-- Fallback OTP display when email delivery fails -->
+      <div class="auth-notice warning" role="alert" th:if="${fallbackOtp}">
+        ⚠️ Gửi email thất bại — mã OTP của bạn: <strong th:text="${fallbackOtp}"></strong>
+      </div>
+
+      <form th:action="@{/verify-activation-otp}" th:object="${activationForm}" method="post" novalidate>
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <div class="auth-field" th:classappend="${otpError != null} ? 'has-error' : ''">
+          <label for="otp">MÃ OTP</label>
+          <div class="auth-input-wrap" th:classappend="${otpError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <input id="otp" class="otp-input" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6"
+                   th:field="*{otp}" autocomplete="one-time-code" placeholder="••••••" required>
+          </div>
+          <p class="auth-error" th:if="${otpError}" th:text="${otpError}"></p>
+        </div>
+
+        <button class="auth-btn" type="submit" id="submitBtn">
+          <span class="label">XÁC MINH</span><span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="otp-resend" id="otpResend">
+        <span class="cooldown">Không nhận được mã?
+          <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Gửi lại</a>
+        </span>
+      </div>
+
+      <div class="auth-bottom"><a th:href="@{/login}">← Quay lại đăng nhập</a></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  // Auto-submit when 6 digits entered
+  const otp = document.getElementById('otp');
+  const form = document.querySelector('form');
+  if (otp && form) {
+    otp.addEventListener('input', () => {
+      otp.value = otp.value.replace(/\D/g, '').slice(0, 6);
+      if (otp.value.length === 6) {
+        form.submit();
+      }
+    });
+  }
+  // Paste support
+  if (otp) {
+    otp.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const data = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const digits = data.replace(/\D/g, '').slice(0, 6);
+      otp.value = digits;
+      otp.dispatchEvent(new Event('input'));
+    });
+  }
+
+  // Cooldown for resend link
+  const resend = document.getElementById('resendLink');
+  if (resend) {
+    const cooldown = parseInt(resend.getAttribute('data-cooldown') || '60', 10);
+    let remaining = cooldown;
+    const update = () => {
+      if (remaining <= 0) {
+        resend.textContent = 'Gửi lại';
+        resend.style.pointerEvents = 'auto';
+        resend.style.opacity = '1';
+        resend.removeAttribute('aria-disabled');
+        return;
+      }
+      resend.innerHTML = 'Gửi lại sau <span class="otp-countdown">' + remaining + 's</span>';
+      resend.style.pointerEvents = 'none';
+      resend.style.opacity = '.6';
+      resend.setAttribute('aria-disabled', 'true');
+      remaining -= 1;
+      setTimeout(update, 1000);
+    };
+    update();
+    resend.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (resend.style.pointerEvents === 'none') return;
+      // Submit to resend endpoint
+      const f = document.createElement('form');
+      f.method = 'POST';
+      f.action = '/verify-activation-otp/resend';
+      document.body.appendChild(f); f.submit();
+    });
+  }
+
+  // Loading
+  const btn = document.getElementById('submitBtn');
+  if (btn && form) {
+    form.addEventListener('submit', () => {
+      btn.classList.add('loading');
+      btn.disabled = true;
+      setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 8000);
+    });
+  }
+})();
+</script>
+</body>
+</html>

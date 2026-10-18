@@ -1,0 +1,68 @@
+###############################################################################
+# Cinema Management System – application configuration (TEMPLATE)
+# Copy file này thành application.properties và điền giá trị thật
+# KHÔNG commit file application.properties thật lên git
+###############################################################################
+
+spring.application.name=cinema-management-system
+
+# ----- Server (port) -------------------------------------------------------
+server.port=${SERVER_PORT:8081}
+
+# ----- View (Thymeleaf) -----------------------------------------------------
+spring.thymeleaf.cache=false
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+spring.thymeleaf.encoding=UTF-8
+
+# ----- Database (SQL Server) ------------------------------------------------
+spring.datasource.url=${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=CinemaManagementDB;trustServerCertificate=true;encrypt=true}
+spring.datasource.username=${DB_USERNAME:sa}
+spring.datasource.password=${DB_PASSWORD:your_password_here}
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring.datasource.hikari.connection-timeout=10000
+spring.datasource.hikari.maximum-pool-size=10
+
+# ----- Mail (SMTP) ---------------------------------------------------------
+spring.mail.host=${MAIL_HOST:smtp.gmail.com}
+spring.mail.port=${MAIL_PORT:587}
+spring.mail.username=${MAIL_USERNAME:}
+spring.mail.password=${MAIL_PASSWORD:}
+
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+spring.mail.properties.mail.smtp.connectiontimeout=8000
+spring.mail.properties.mail.smtp.timeout=8000
+spring.mail.properties.mail.smtp.writetimeout=8000
+
+# ----- Auth module tunables ------------------------------------------------
+app.auth.otp.ttl-seconds=900
+app.auth.otp.max-attempts=5
+app.auth.otp.resend-cooldown-seconds=60
+app.auth.session.timeout-seconds=1800
+
+app.auth.brand=CinemaSystem
+app.auth.mail.from=
+
+# ----- Login rate-limit / lockout ------------------------------------------
+app.auth.login.max-failures=5
+app.auth.login.max-failures-per-ip=20
+app.auth.login.lockout-minutes=5
+
+# ----- Google OAuth2 -------------------------------------------------------
+# Lấy từ https://console.cloud.google.com/apis/credentials
+# Enable only after GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET have been provided.
+app.auth.oauth.google.enabled=${GOOGLE_OAUTH_ENABLED:false}
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:}
+spring.security.oauth2.client.registration.google.scope=openid,email,profile
+spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
+
+# ----- Logging -------------------------------------------------------------
+logging.level.com.cinema=DEBUG
+logging.level.org.springframework.security=INFO
+logging.level.org.springframework.web=INFO
+server.error.include-stacktrace=never
+server.error.include-message=always
+server.error.whitelabel.enabled=false

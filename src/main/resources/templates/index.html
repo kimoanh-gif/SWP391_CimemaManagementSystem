@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Trang Chủ - Rạp Chiếu Phim Đỉnh Cao')}">
+    <title>CineVerse - Trang Chủ</title>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/cinema-header-footer :: header('home')}"></div>
+
+<main>
+    <!-- =====================================================================
+         1. HERO FEATURED MOVIE SLIDER
+         ===================================================================== -->
+    <section class="hero-slider-section" th:if="${featuredMovies != null && !featuredMovies.isEmpty()}">
+        <!-- Render first featured movie prominently with banner -->
+        <div class="hero-slider-container" th:with="hero=${featuredMovies[0]}">
+            <div class="hero-content">
+                <div class="hero-tag">
+                    <span>🔥 Phim Nổi Bật Trong Tuần</span>
+                </div>
+                <h1 class="hero-title" th:text="${hero.title}">Light Speedway</h1>
+                <div class="hero-meta">
+                    <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
+                    <div class="hero-meta-item">
+                        <span>⏱️</span>
+                        <span th:text="${hero.duration + ' phút'}">118 phút</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>🎭</span>
+                        <span th:text="${hero.genres}">Hành Động, Phiêu Lưu</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>⭐</span>
+                        <span th:text="${hero.averageRating + ' / 5.0'}">4.8 / 5.0</span>
+                    </div>
+                </div>
+                <p class="hero-description" th:text="${hero.description}">
+                    Một bộ phim hành động bom tấn đỉnh cao với kỹ xảo choáng ngợp và câu chuyện đầy cảm xúc, đưa người xem vào những cuộc rượt đuổi nghẹt thở.
+                </p>
+                <div class="hero-actions">
+                    <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-primary">
+                        <span>🎟️ Mua Vé Ngay</span>
+                    </a>
+                    <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}"
+                            type="button"
+                            class="btn-secondary"
+                            th:attr="onclick=|openTrailer('${hero.trailerUrl}')|">
+                        <span>▶ Xem Trailer</span>
+                    </button>
+                    <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-secondary">
+                        <span>Chi Tiết Phim</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-poster-wrap">
+                <div class="hero-poster-card">
+                    <img th:src="${hero.posterUrl}" th:alt="${hero.title}" class="hero-poster-img"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <div class="hero-poster-overlay">
+                        <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fallback Hero when no movie is in DB yet -->
+    <section class="hero-slider-section" th:if="${featuredMovies == null || featuredMovies.isEmpty()}">
+        <div class="hero-slider-container">
+            <div class="hero-content">
+                <div class="hero-tag">Chào mừng đến với CineVerse</div>
+                <h1 class="hero-title">Trải Nghiệm Điện Ảnh Thượng Hạng</h1>
+                <p class="hero-description">Thưởng thức những bom tấn điện ảnh thế giới với màn hình siêu lớn, âm thanh Dolby Atmos và ghế bọc da cao cấp tại CineVerse.</p>
+                <div class="hero-actions">
+                    <a th:href="@{/movies}" class="btn-primary">Khám Phá Phim Chiếu</a>
+                    <a th:href="@{/showtimes}" class="btn-secondary">Xem Lịch Chiếu</a>
+                </div>
+            </div>
+            <div class="hero-poster-wrap">
+                <div class="hero-poster-card">
+                    <img th:src="@{/images/cinema-login-hero.png}" alt="Cinema Hero" class="hero-poster-img" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         2. QUICK BOOKING BAR
+         ===================================================================== -->
+    <div class="quick-booking-bar">
+        <div class="quick-booking-inner">
+            <div class="quick-booking-field">
+                <label for="quickMovieSelect">
+                    <span>🎬</span> 1. Chọn Phim
+                </label>
+                <select id="quickMovieSelect">
+                    <option value="">-- Chọn phim muốn xem --</option>
+                    <option th:each="m : ${allMovies}"
+                            th:value="${m.movieId}"
+                            th:text="${m.title + ' (' + m.ageRating + ')'}">
+                        Light Speedway (T13)
+                    </option>
+                </select>
+            </div>
+
+            <div class="quick-booking-field">
+                <label for="quickDateSelect">
+                    <span>📅</span> 2. Chọn Ngày Chiếu
+                </label>
+                <select id="quickDateSelect">
+                    <option th:each="d, stat : ${upcomingDates}"
+                            th:value="${d}"
+                            th:text="${stat.index == 0 ? 'Hôm nay (' + #temporals.format(d, 'dd/MM') + ')' : (stat.index == 1 ? 'Ngày mai (' + #temporals.format(d, 'dd/MM') + ')' : #temporals.format(d, 'EEEE, dd/MM'))}">
+                        Hôm nay (18/10)
+                    </option>
+                </select>
+            </div>
+
+            <div class="quick-booking-field">
+                <label>
+                    <span>⚡</span> 3. Suất Chiếu
+                </label>
+                <div style="font-size:0.85rem;color:var(--text-muted);padding-top:8px;">
+                    Chọn ghế trực tiếp sau khi ấn đặt vé
+                </div>
+            </div>
+
+            <button type="button" id="quickBookBtn" class="btn-quick-book">
+                <span>Đặt Vé Nhanh ➔</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         3. PHIM ĐANG CHIẾU (NOW SHOWING)
+         ===================================================================== -->
+    <section class="section-shell" id="now-showing">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Đang Khởi Chiếu</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">🎬</span> Phim Đang Chiếu
+                </h2>
+            </div>
+            <a th:href="@{/movies?type=now-showing}" class="section-link">
+                <span>Xem tất cả phim đang chiếu</span>
+                <span>➔</span>
+            </a>
+        </div>
+
+        <div class="movie-grid" th:if="${nowShowingMovies != null && !nowShowingMovies.isEmpty()}">
+            <article class="movie-card" th:each="movie : ${nowShowingMovies}">
+                <div class="movie-poster-wrap">
+                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
+                    <span class="badge-duration" th:text="${movie.duration + ' phút'}">118 phút</span>
+                    
+                    <div class="movie-card-overlay">
+                        <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
+                                type="button"
+                                class="btn-play-trailer"
+                                th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
+                                title="Xem Trailer">
+                            ▶
+                        </button>
+                        <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
+                           th:href="@{/movies/{id}(id=${movie.movieId})}"
+                           class="btn-play-trailer" title="Xem chi tiết">
+                            ℹ️
+                        </a>
+                    </div>
+                </div>
+
+                <div class="movie-card-body">
+                    <h3 class="movie-card-title">
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Tên Bộ Phim</a>
+                    </h3>
+                    <div class="movie-card-genres" th:text="${movie.genres}">Hành Động, Phiêu Lưu</div>
+                    <div class="movie-card-meta">
+                        <span class="movie-rating-stars">
+                            ⭐ <span th:text="${movie.averageRating}">4.8</span>
+                        </span>
+                        <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
+                    </div>
+                    <div class="movie-card-actions">
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Chi Tiết</a>
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Mua Vé</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div th:if="${nowShowingMovies == null || nowShowingMovies.isEmpty()}" style="text-align:center;padding:3rem;background:var(--bg-surface);border-radius:var(--radius-md);">
+            <p style="color:var(--text-muted);">Hiện chưa có lịch chiếu phim hôm nay. Vui lòng quay lại sau!</p>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         4. PHIM SẮP CHIẾU (COMING SOON)
+         ===================================================================== -->
+    <section class="section-shell" id="coming-soon" th:if="${comingSoonMovies != null && !comingSoonMovies.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Sắp Ra Mắt</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">✨</span> Phim Sắp Chiếu
+                </h2>
+            </div>
+            <a th:href="@{/movies?type=coming-soon}" class="section-link">
+                <span>Xem danh sách phim sắp chiếu</span>
+                <span>➔</span>
+            </a>
+        </div>
+
+        <div class="movie-grid">
+            <article class="movie-card" th:each="movie : ${comingSoonMovies}">
+                <div class="movie-poster-wrap">
+                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
+                    <span class="badge-duration" th:text="${movie.duration + ' phút'}">105 phút</span>
+
+                    <div class="movie-card-overlay">
+                        <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
+                                type="button"
+                                class="btn-play-trailer"
+                                th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
+                                title="Xem Trailer">
+                            ▶
+                        </button>
+                    </div>
+                </div>
+
+                <div class="movie-card-body">
+                    <h3 class="movie-card-title">
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Tên Bộ Phim</a>
+                    </h3>
+                    <div class="movie-card-genres" th:text="${movie.genres}">Hoạt Hình, Gia Đình</div>
+                    <div class="movie-card-meta">
+                        <span>Khởi chiếu:</span>
+                        <strong style="color:var(--gold);" th:text="${movie.formattedReleaseDate}">25/10/2026</strong>
+                    </div>
+                    <div class="movie-card-actions" style="grid-template-columns: 1fr;">
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Xem Thông Tin Phim</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         5. SUẤT CHIẾU HÔM NAY (TODAY'S SHOWTIMES PREVIEW)
+         ===================================================================== -->
+    <section class="section-shell" th:if="${todayShowtimes != null && !todayShowtimes.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Lịch Chiếu Trực Tiếp</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">🎟️</span> Suất Chiếu Hôm Nay
+                </h2>
+            </div>
+            <a th:href="@{/showtimes}" class="section-link">
+                <span>Xem toàn bộ lịch chiếu</span>
+                <span>➔</span>
+            </a>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:1.25rem;">
+            <div th:each="st : ${todayShowtimes}"
+                 style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.25rem;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <img th:src="${st.moviePosterUrl}" th:alt="${st.movieTitle}"
+                         style="width:48px;height:70px;border-radius:var(--radius-sm);object-fit:cover;"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <div>
+                        <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;" th:text="${st.movieTitle}">Tên Phim</h4>
+                        <div style="font-size:0.8rem;color:var(--text-muted);" th:text="${st.roomName + ' · ' + st.roomType}">Cinema 01 · 2D</div>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border-subtle);">
+                    <div>
+                        <div style="font-size:1.15rem;font-weight:800;color:#fff;" th:text="${st.formattedStartTime}">19:30</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);" th:text="${'Đến ' + st.formattedEndTime}">Đến 21:30</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.9rem;font-weight:700;color:var(--primary-light);" th:text="${st.formattedPrice}">85.000 đ</div>
+                        <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">Còn 36 ghế</span>
+                    </div>
+                </div>
+                <a th:href="@{/customer/booking/select(showtimeId=${st.showtimeId})}" class="btn-card-book" style="margin-top:4px;">
+                    Đặt Vé Suất Này
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         6. ƯU ĐÃI & KHUYẾN MÃI NỔI BẬT (PROMOTIONS)
+         ===================================================================== -->
+    <section class="section-shell" th:if="${promotions != null && !promotions.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Ưu Đãi Đặc Biệt</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">🎁</span> Khuyến Mãi Nổi Bật
+                </h2>
+            </div>
+            <a th:href="@{/promotions-news?tab=promotions}" class="section-link">
+                <span>Xem tất cả ưu đãi</span>
+                <span>➔</span>
+            </a>
+        </div>
+
+        <div class="promo-grid">
+            <article class="promo-card" th:each="promo : ${promotions}">
+                <div class="promo-banner-wrap">
+                    <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">Giảm 20%</span>
+                </div>
+                <div class="promo-body">
+                    <h3 class="promo-title">
+                        <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" th:text="${promo.name}">Tên Khuyến Mãi</a>
+                    </h3>
+                    <p class="promo-desc" th:text="${promo.description}">Nội dung tóm tắt chương trình khuyến mãi và điều kiện áp dụng.</p>
+                    <div class="promo-voucher-box">
+                        <div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Mã Khuyến Mãi:</div>
+                            <span class="voucher-code-pill" th:text="${promo.primaryVoucherCode}">WELCOME20</span>
+                        </div>
+                        <button type="button" class="btn-copy-code"
+                                th:attr="onclick=|copyVoucherCode('${promo.primaryVoucherCode}')|">
+                            Sao Chép
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         7. TIN TỨC ĐIỆN ẢNH & SỰ KIỆN (NEWS)
+         ===================================================================== -->
+    <section class="section-shell" th:if="${newsList != null && !newsList.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Cập Nhật Mới Nhất</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">📰</span> Tin Tức Điện Ảnh &amp; Sự Kiện
+                </h2>
+            </div>
+            <a th:href="@{/promotions-news?tab=news}" class="section-link">
+                <span>Xem tất cả tin tức</span>
+                <span>➔</span>
+            </a>
+        </div>
+
+        <div class="news-grid">
+            <article class="news-card" th:each="news : ${newsList}">
+                <div class="news-thumbnail-wrap">
+                    <img th:src="${news.thumbnailUrl}" th:alt="${news.title}" class="news-thumbnail"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                </div>
+                <div class="news-body">
+                    <div class="news-meta">
+                        <span class="news-category-tag" th:text="${news.category}">Tin Điện Ảnh</span>
+                        <span>·</span>
+                        <span th:text="${news.formattedPublishedDate}">18/10/2026</span>
+                    </div>
+                    <h3 class="news-title">
+                        <a th:href="@{/news/{id}(id=${news.newsId})}" th:text="${news.title}">Tiêu đề bài viết</a>
+                    </h3>
+                    <p class="news-excerpt" th:text="${news.summary}">Tóm tắt nội dung bài viết tin tức hoặc sự kiện đang diễn ra tại cụm rạp...</p>
+                    <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
+                        <span>Đọc tiếp</span>
+                        <span>➔</span>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         8. TẠI SAO CHỌN CINEVERSE (CINEMA HIGHLIGHTS)
+         ===================================================================== -->
+    <section class="section-shell">
+        <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:3rem 2.5rem;text-align:center;">
+            <span class="section-eyebrow">Công Nghệ &amp; Trải Nghiệm</span>
+            <h2 style="font-size:2rem;margin:8px 0 16px;">Đẳng Cấp Rạp Chiếu Quốc Tế</h2>
+            <p style="color:var(--text-secondary);max-width:700px;margin:0 auto 3rem;">
+                CineVerse tự hào đem tới trải nghiệm điện ảnh chuẩn quốc tế với những công nghệ tiên tiến nhất thế giới.
+            </p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:2rem;text-align:left;">
+                <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🔊</div>
+                    <h4 style="font-size:1.1rem;margin-bottom:6px;">Âm Thanh Dolby Atmos</h4>
+                    <p style="font-size:0.88rem;color:var(--text-muted);">Âm thanh vòm đa chiều 360 độ chân thực, đưa bạn đắm chìm vào từng khung hình.</p>
+                </div>
+                <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🖥️</div>
+                    <h4 style="font-size:1.1rem;margin-bottom:6px;">Màn Chiếu Laser Siêu Nét</h4>
+                    <p style="font-size:0.88rem;color:var(--text-muted);">Độ sáng và độ tương phản vượt trội, màu sắc sống động đạt tiêu chuẩn DCI-P3.</p>
+                </div>
+                <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🛋️</div>
+                    <h4 style="font-size:1.1rem;margin-bottom:6px;">Ghế VIP Bọc Da Cao Cấp</h4>
+                    <p style="font-size:0.88rem;color:var(--text-muted);">Tựa lưng êm ái, khoảng cách giữa các hàng ghế rộng rãi tạo sự thoải mái tối đa.</p>
+                </div>
+                <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div style="font-size:2rem;margin-bottom:12px;">🍿</div>
+                    <h4 style="font-size:1.1rem;margin-bottom:6px;">Bắp Nước Hảo Hạng</h4>
+                    <p style="font-size:0.88rem;color:var(--text-muted);">Bắp rang bơ nóng giòn cùng đa dạng nước giải khát thơm ngon phục vụ tận tay.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Trailer Modal & Toast -->
+<div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
+
+<!-- Footer -->
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+
+</body>
+</html>

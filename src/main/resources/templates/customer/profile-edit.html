@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Profile | Cinema Management System</title>
+    <link rel="stylesheet" th:href="@{/css/customer-profile.css}">
+</head>
+<body>
+<aside class="sidebar">
+    <a class="brand" th:href="@{/customer/dashboard}">
+        <span class="brand-icon">C</span>
+        CineVerse
+    </a>
+
+    <nav class="nav-menu">
+        <a th:href="@{/customer/dashboard}">⌂ Home</a>
+        <a th:href="@{/customer/booking}">▣ Movies &amp; Showtimes</a>
+        <a class="active"
+           th:href="@{/customer/profile}">
+            ● Profile
+        </a>
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="avatar"
+             th:text="${#strings.substring(profile.fullName, 0, 1)}">A</div>
+        <div>
+            <strong th:text="${profile.fullName}">Customer</strong>
+            <small>Account settings</small>
+        </div>
+    </div>
+</aside>
+
+<div class="main">
+    <header class="topbar">
+        <span>Account › Profile › <b>Edit Profile</b></span>
+        <span>Update your information</span>
+    </header>
+
+    <main class="content">
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow">Account Settings</p>
+                <h1>Edit Profile</h1>
+                <p class="subtitle">
+                    Update the personal information used for booking notifications.
+                </p>
+            </div>
+        </div>
+
+        <section class="card form-card">
+            <h2>Personal and Contact Details</h2>
+            <p>Information is validated before it is saved to your account.</p>
+
+            <form th:action="@{/customer/profile/edit}"
+                  th:object="${form}"
+                  method="post">
+                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="fullName">Full Name</label>
+                        <input id="fullName"
+                               type="text"
+                               th:field="*{fullName}"
+                               minlength="2"
+                               maxlength="100"
+                               required
+                               autocomplete="name">
+
+                        <p class="field-error"
+                           th:if="${#fields.hasErrors('fullName')}"
+                           th:errors="*{fullName}"></p>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="email">Email Address</label>
+                        <input id="email"
+                               type="email"
+                               th:value="${profile.email}"
+                               readonly>
+
+                        <p class="hint">
+                            Email changes require account verification.
+                        </p>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="phone">Phone Number</label>
+                        <input id="phone"
+                               type="tel"
+                               th:field="*{phone}"
+                               maxlength="15"
+                               pattern="(0[0-9]{9}|\+84[0-9]{9})"
+                               autocomplete="tel">
+
+                        <p class="hint">Use a 10-digit number beginning with 0 or +84.</p>
+
+                        <p class="field-error"
+                           th:if="${#fields.hasErrors('phone')}"
+                           th:errors="*{phone}"></p>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="dateOfBirth">Date of Birth</label>
+                        <input id="dateOfBirth"
+                               type="date"
+                               th:field="*{dateOfBirth}"
+                               th:max="${latestDateOfBirth}"
+                               autocomplete="bday">
+
+                        <p class="hint">
+                            Used for age-restricted movie eligibility.
+                        </p>
+
+                        <p class="field-error"
+                           th:if="${#fields.hasErrors('dateOfBirth')}"
+                           th:errors="*{dateOfBirth}"></p>
+                    </div>
+
+                    <div class="form-field full">
+                        <label for="address">Residential Address</label>
+                        <textarea id="address"
+                                  th:field="*{address}"
+                                  maxlength="255"
+                                  autocomplete="street-address"></textarea>
+
+                        <p class="field-error"
+                           th:if="${#fields.hasErrors('address')}"
+                           th:errors="*{address}"></p>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a class="button"
+                       th:href="@{/customer/profile}">
+                        Cancel
+                    </a>
+
+                    <button class="button button-primary" type="submit">
+                        ✓ Save Changes
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

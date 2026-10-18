@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Configuration | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 8px; }
+.config-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); }
+.config-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.config-card-header .ci { width: 36px; height: 36px; border-radius: var(--radius-sm); display: grid; place-items: center; font-size: 18px; }
+.config-card-header h3 { font-size: 14px; margin: 0; }
+.config-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--surface-muted); font-size: 14px; }
+.config-item:last-child { border-bottom: none; }
+.config-item .lbl { color: var(--text-secondary); }
+.config-item .val { font-weight: 600; color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">▶</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+        <span class="badge-count"></span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link">
+        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link active">
+        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">⚙️ System Configuration</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary">💾 Save Changes</button>
+      </div>
+    </div>
+    <div class="admin-content">
+      <div class="config-grid">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:var(--purple-100);">🏢</div>
+            <h3>Cinema Information</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Cinema Name</span><span class="val">Cinema System</span></div>
+          <div class="config-item"><span class="lbl">Address</span><span class="val">Ho Chi Minh City</span></div>
+          <div class="config-item"><span class="lbl">Screening Rooms</span><span class="val">5</span></div>
+          <div class="config-item"><span class="lbl">Total Seats</span><span class="val">500</span></div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:#D1FAE5;">🕐</div>
+            <h3>Operating Hours</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Opening Time</span><span class="val">08:00</span></div>
+          <div class="config-item"><span class="lbl">Closing Time</span><span class="val">23:00</span></div>
+          <div class="config-item"><span class="lbl">Lunch Break</span><span class="val">13:00 – 14:00</span></div>
+          <div class="config-item"><span class="lbl">Days Open</span><span class="val">Mon – Sun</span></div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:#DBEAFE;">🎟️</div>
+            <h3>Booking Settings</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Seat Hold Time</span><span class="val">15 minutes</span></div>
+          <div class="config-item"><span class="lbl">Max Tickets/Order</span><span class="val">10 tickets</span></div>
+          <div class="config-item"><span class="lbl">Booking Fee</span><span class="val">0 VND</span></div>
+          <div class="config-item"><span class="lbl">Cancellation Window</span><span class="val">24 hours</span></div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:#FEF3C7;">🔐</div>
+            <h3>Security</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Password Min Length</span><span class="val">8 characters</span></div>
+          <div class="config-item"><span class="lbl">Login Attempts Limit</span><span class="val">5 / session</span></div>
+          <div class="config-item"><span class="lbl">OTP Expiry</span><span class="val">5 minutes</span></div>
+          <div class="config-item"><span class="lbl">Session Timeout</span><span class="val">30 minutes</span></div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:#EDE9FE;">💳</div>
+            <h3>Payment</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Payment Methods</span><span class="val">Cash, Card, QR</span></div>
+          <div class="config-item"><span class="lbl">Currency</span><span class="val">VND (₫)</span></div>
+          <div class="config-item"><span class="lbl">Tax Rate</span><span class="val">10%</span></div>
+          <div class="config-item"><span class="lbl">Auto-refund</span><span class="val">Enabled</span></div>
+        </div>
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="ci" style="background:#FEE2E2;">⭐</div>
+            <h3>Loyalty Program</h3>
+          </div>
+          <div class="config-item"><span class="lbl">Points per 1,000 VND</span><span class="val">1 point</span></div>
+          <div class="config-item"><span class="lbl">Points to 1 VND</span><span class="val">100 points</span></div>
+          <div class="config-item"><span class="lbl">Birthday Bonus</span><span class="val">2× points</span></div>
+          <div class="config-item"><span class="lbl">Rank Levels</span><span class="val">5 levels</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roles &amp; Permissions | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+.roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 8px; }
+.role-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s; }
+.role-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.role-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.role-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+.role-card h3 { font-size: 15px; margin: 0 0 2px; }
+.role-card .role-sub { font-size: 12px; color: var(--text-secondary); }
+.role-perms { list-style: none; padding: 0; margin: 0; }
+.role-perms li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--surface-muted); font-size: 13px; color: var(--text-secondary); }
+.role-perms li:last-child { border-bottom: none; }
+.role-perms li::before { content: "✓"; color: var(--success-icon); font-weight: 700; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">▶</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+    
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link active">
+        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link">
+        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">🔑 Roles &amp; Permissions</div>
+    </div>
+    <div class="admin-content">
+      <div class="roles-grid">
+        <div class="role-card">
+          <div class="role-card-header">
+            <div class="role-icon" style="background:var(--purple-100);">👑</div>
+            <div>
+              <h3>Administrator</h3>
+              <div class="role-sub">ADMIN · Full System Access</div>
+            </div>
+          </div>
+          <ul class="role-perms">
+            <li>Full system access</li>
+            <li>Manage all accounts</li>
+            <li>System configuration</li>
+            <li>Manage movies &amp; showtimes</li>
+            <li>View all reports</li>
+          </ul>
+        </div>
+        <div class="role-card">
+          <div class="role-card-header">
+            <div class="role-icon" style="background:#D1FAE5;">🛡️</div>
+            <div>
+              <h3>Manager</h3>
+              <div class="role-sub">MANAGER · Operational Control</div>
+            </div>
+          </div>
+          <ul class="role-perms">
+            <li>Manage screening rooms &amp; showtimes</li>
+            <li>View revenue reports</li>
+            <li>Manage staff accounts</li>
+            <li>Manage promotions</li>
+            <li>View booking reports</li>
+          </ul>
+        </div>
+        <div class="role-card">
+          <div class="role-card-header">
+            <div class="role-icon" style="background:#DBEAFE;">🎟️</div>
+            <div>
+              <h3>Staff</h3>
+              <div class="role-sub">STAFF · Frontline Operations</div>
+            </div>
+          </div>
+          <ul class="role-perms">
+            <li>Sell tickets</li>
+            <li>Manage orders</li>
+            <li>Customer support</li>
+            <li>View assigned schedule</li>
+          </ul>
+        </div>
+        <div class="role-card">
+          <div class="role-card-header">
+            <div class="role-icon" style="background:#FEF3C7;">🎬</div>
+            <div>
+              <h3>Customer</h3>
+              <div class="role-sub">CUSTOMER · Member Access</div>
+            </div>
+          </div>
+          <ul class="role-perms">
+            <li>Book tickets online</li>
+            <li>View booking history</li>
+            <li>Earn loyalty points</li>
+            <li>Receive promotions</li>
+            <li>Manage profile</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+</script>
+</body>
+</html>

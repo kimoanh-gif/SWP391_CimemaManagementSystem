@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign In | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<div class="auth-page">
+
+  <!-- ── LEFT: Hero Panel ── -->
+  <aside class="auth-hero" aria-label="Cinema hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="auth-hero-content">
+      <div class="auth-hero-logo">
+        <div class="logo-icon">▶</div>
+        <div class="logo-text">
+          CINEMA
+          <span>SYSTEM</span>
+        </div>
+      </div>
+
+      <div class="auth-hero-tagline">Welcome back</div>
+      <h1 class="auth-hero-headline">Your cinema experience starts here</h1>
+      <p class="auth-hero-desc">
+        Sign in to book tickets, manage your account, and enjoy exclusive rewards.
+      </p>
+
+      <div class="hero-features">
+        <div class="hero-feature">
+          <div class="hero-feature-icon">🎬</div>
+          <span>Book tickets for any showtime, instantly</span>
+        </div>
+        <div class="hero-feature">
+          <div class="hero-feature-icon">⭐</div>
+          <span>Earn loyalty points on every purchase</span>
+        </div>
+        <div class="hero-feature">
+          <div class="hero-feature-icon">🎁</div>
+          <span>Unlock exclusive member-only deals</span>
+        </div>
+        <div class="hero-feature">
+          <div class="hero-feature-icon">📱</div>
+          <span>Manage bookings &amp; tickets on the go</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT: Login Form ── -->
+  <main class="auth-panel-wrap">
+    <section class="auth-panel" aria-labelledby="login-title">
+
+      <!-- Mobile brand -->
+      <div class="auth-brand-mobile">
+        <div class="brand-icon">▶</div>
+        <span>CINEMA SYSTEM</span>
+      </div>
+
+      <div class="auth-panel-heading">
+        <h2 id="login-title">Welcome back</h2>
+      </div>
+      <p class="auth-intro">Sign in to your account to continue.</p>
+
+      <!-- Alerts -->
+      <div class="auth-notice error" role="alert" th:if="${formError}" th:text="${formError}" th:attr="data-locked-seconds=${lockedSeconds}"></div>
+      <div class="auth-notice success" role="status" th:if="${logoutSuccess}" th:text="${logoutSuccess}"></div>
+      <div class="auth-notice success" role="status" th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
+      <div class="auth-notice success" role="status" th:if="${resetSuccess}" th:text="${resetSuccess}"></div>
+      <div class="auth-notice error" role="alert" th:if="${oauthError}" th:text="${oauthError}"></div>
+      <div class="auth-notice error" role="alert" th:if="${oauthRejected}" th:text="${oauthRejected}"></div>
+
+      <!-- Google OAuth -->
+      <a class="auth-btn-google" th:if="${googleOAuthEnabled}" th:href="@{/oauth2/authorization/google}">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.2 3.6l6.9-6.9C35.9 2.4 30.3 0 24 0 14.6 0 6.45 5.4 2.55 13.3l8.06 6.26C12.6 13.3 17.85 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.1 24.5c0-1.6-.14-3.1-.4-4.5H24v9h12.5c-.55 2.9-2.2 5.4-4.7 7.1l7.3 5.7c4.3-4 6.8-9.8 6.8-17.3z"/>
+          <path fill="#FBBC05" d="M10.6 28.6c-.5-1.5-.8-3.1-.8-4.6s.3-3.1.8-4.6l-8.06-6.26C.96 16.6 0 20.2 0 24s.96 7.4 2.54 10.86L10.6 28.6z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.9-2.13 15.9-5.8l-7.3-5.7c-2 1.4-4.6 2.2-8.6 2.2-6.15 0-11.4-3.8-13.4-9.1l-8.06 6.26C6.45 42.6 14.6 48 24 48z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </a>
+
+      <div class="auth-divider"><span>OR SIGN IN WITH EMAIL</span></div>
+
+      <form th:action="@{/login(redirect=${redirect})}" th:object="${loginForm}" method="post" novalidate>
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+
+        <!-- Email / Username -->
+        <div class="auth-field">
+          <label for="identifier">EMAIL OR USERNAME</label>
+          <div class="auth-input-wrap" th:classappend="${identifierError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>
+            </svg>
+            <input id="identifier" type="text" th:field="*{identifier}"
+                   autocomplete="username" maxlength="255"
+                   placeholder="name@example.com or username" required>
+          </div>
+          <p class="auth-error" th:if="${identifierError}" th:text="${identifierError}"></p>
+        </div>
+
+        <!-- Password -->
+        <div class="auth-field">
+          <label for="password">PASSWORD</label>
+          <div class="auth-input-wrap" th:classappend="${passwordError != null} ? 'invalid' : ''">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
+            </svg>
+            <input id="password" type="password" th:field="*{password}"
+                   autocomplete="current-password" maxlength="128"
+                   placeholder="Enter your password" required>
+            <button class="auth-show-pw" type="button" id="togglePassword"
+                    aria-label="Show password" title="Show / Hide password">
+              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <p class="auth-error" th:if="${passwordError}" th:text="${passwordError}"></p>
+        </div>
+
+        <!-- Options -->
+        <div class="auth-options">
+          <label class="auth-remember">
+            <input type="checkbox" id="rememberIdentifier"><span>Remember me</span>
+          </label>
+          <a th:href="@{/forgot-password}">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button class="auth-btn" type="submit" id="submitBtn">
+          <span class="btn-label">SIGN IN</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="auth-bottom">
+        Don't have an account? <a th:href="@{/register}">Create one</a>
+      </div>
+      <div class="auth-fineprint">CINEMA SYSTEM · YOUR CINEMA EXPERIENCE</div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  // Show / hide password
+  const pw = document.getElementById('password');
+  const toggle = document.getElementById('togglePassword');
+  if (toggle && pw) {
+    toggle.addEventListener('click', () => {
+      const visible = pw.type === 'password';
+      pw.type = visible ? 'text' : 'password';
+      toggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+      document.getElementById('eyeIcon').innerHTML = visible
+        ? '<path d="M3 3l18 18"/><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6.5 0 10 6 10 6a16 16 0 0 1-3.2 3.8M6.2 6.2C3.5 8 2 12 2 12s3.5 6 10 6c1.3 0 2.5-.3 3.5-.7"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'
+        : '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>';
+    });
+  }
+
+  // Remember identifier
+  const idField = document.getElementById('identifier');
+  const rememberChk = document.getElementById('rememberIdentifier');
+  if (idField && rememberChk) {
+    try {
+      const saved = localStorage.getItem('cinema-login-identifier');
+      if (saved) { idField.value = saved; rememberChk.checked = true; }
+    } catch (_) {}
+    document.querySelector('form').addEventListener('submit', () => {
+      try {
+        if (rememberChk.checked) localStorage.setItem('cinema-login-identifier', idField.value.trim());
+        else localStorage.removeItem('cinema-login-identifier');
+      } catch (_) {}
+    });
+  }
+
+  // Loading state
+  const btn = document.getElementById('submitBtn');
+  if (btn) {
+    document.querySelector('form').addEventListener('submit', () => {
+      btn.classList.add('loading');
+      btn.disabled = true;
+      setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 8000);
+    });
+  }
+
+  // Lockout countdown
+  const errBox = document.querySelector('.auth-notice.error[data-locked-seconds]');
+  if (errBox) {
+    let remaining = parseInt(errBox.getAttribute('data-locked-seconds') || '0', 10);
+    if (remaining > 0) {
+      const tick = () => {
+        if (remaining <= 0) { location.reload(); return; }
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        errBox.textContent = m > 0
+          ? `Too many failed attempts. Please try again in ${m}m ${s}s.`
+          : `Too many failed attempts. Please try again in ${s}s.`;
+        remaining -= 1;
+      };
+      tick();
+      setInterval(tick, 1000);
+      [btn, idField, pw].forEach(el => { if (el) el.disabled = true; });
+    }
+  }
+})();
+</script>
+</body>
+</html>

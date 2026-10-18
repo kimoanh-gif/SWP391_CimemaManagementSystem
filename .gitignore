@@ -1,0 +1,56 @@
+# Tài liệu nội bộ / tài liệu gốc (KHÔNG commit)
+*.docx
+*.pdf
+*.doc
+*.xlsx
+*.xls
+*.pptx
+
+# Thư mục doc, tracking, report - KHÔNG push
+doc/
+tracking/
+report/
+reports/
+Documentation/
+docs/*.md
+!docs/README.md
+
+# Cho phép file .txt trong src/ và database/
+*.txt
+!src/**/*.txt
+!database/**/*.txt
+!SWP391_CimemaManagementSystem-main/src/**/*.txt
+!SWP391_CimemaManagementSystem-main/database/**/*.txt
+!*.md
+!README.md
+
+# Build
+target/
+*.class
+*.jar
+!src/main/resources/**/*.jar
+!SWP391_CimemaManagementSystem-main/src/main/resources/**/*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+.vs/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+src/main/resources/application-local.properties
+
+# AI / Assistant tools
+.claude/
+CLAUDE.md
