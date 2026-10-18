@@ -1,29 +1,35 @@
 package com.cinema.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Model representing a Movie for customer & public catalog.
- * Screens 21 (Home), 22 (Movie List), 23 (Movie Details).
+ * Unified Movie entity supporting Customer Catalog and Manager Module operations.
  */
 public class Movie {
 
     private Integer movieId;
     private String title;
+    private String originalTitle;
     private Integer duration; // in minutes
     private LocalDate releaseDate;
+    private LocalDate endDate;
     private String language;
     private String director;
-    private String ageRating; // P, T13, T16, T18
+    private String actors;
+    private String ageRating; // 'P', 'K', 'T13', 'T16', 'T18'
     private String description;
-    private String status; // NOW_SHOWING, COMING_SOON, ACTIVE, ENDED, ARCHIVED
-    private String posterUrl;
-    private String trailerUrl;
-    private String genres; // comma separated string e.g. "Hành Động, Phiêu Lưu"
-    private List<Genre> genreList = new ArrayList<>();
+    private String poster;
+    private String trailer;
+    private String status; // 'Upcoming', 'Now Showing', 'Ended', 'Archived'
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<Genre> genres = new ArrayList<>();
+    private int showtimeCount;
     private Double averageRating = 5.0;
     private Integer reviewCount = 0;
     private Integer activeShowtimesCount = 0;
@@ -33,7 +39,7 @@ public class Movie {
 
     public Movie(Integer movieId, String title, Integer duration, LocalDate releaseDate,
                  String language, String director, String ageRating, String description,
-                 String status, String posterUrl, String trailerUrl, String genres) {
+                 String status, String posterUrl, String trailerUrl, String genresStr) {
         this.movieId = movieId;
         this.title = title;
         this.duration = duration;
@@ -43,9 +49,23 @@ public class Movie {
         this.ageRating = ageRating;
         this.description = description;
         this.status = status;
-        this.posterUrl = posterUrl;
-        this.trailerUrl = trailerUrl;
-        this.genres = genres;
+        this.poster = posterUrl;
+        this.trailer = trailerUrl;
+    }
+
+    public Movie(int movieId, String title, int duration, String status) {
+        this.movieId = movieId;
+        this.title = title;
+        this.duration = duration;
+        this.status = status;
+    }
+
+    public Integer getId() {
+        return movieId;
+    }
+
+    public void setId(Integer id) {
+        this.movieId = id;
     }
 
     public Integer getMovieId() {
@@ -64,8 +84,16 @@ public class Movie {
         this.title = title;
     }
 
+    public String getOriginalTitle() {
+        return originalTitle;
+    }
+
+    public void setOriginalTitle(String originalTitle) {
+        this.originalTitle = originalTitle;
+    }
+
     public Integer getDuration() {
-        return duration != null ? duration : 0;
+        return duration;
     }
 
     public void setDuration(Integer duration) {
@@ -78,6 +106,14 @@ public class Movie {
 
     public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public String getLanguage() {
@@ -96,8 +132,16 @@ public class Movie {
         this.director = director;
     }
 
+    public String getActors() {
+        return actors;
+    }
+
+    public void setActors(String actors) {
+        this.actors = actors;
+    }
+
     public String getAgeRating() {
-        return ageRating != null ? ageRating : "P";
+        return ageRating;
     }
 
     public void setAgeRating(String ageRating) {
@@ -112,51 +156,117 @@ public class Movie {
         this.description = description;
     }
 
+    public String getPoster() {
+        return poster;
+    }
+
+    public void setPoster(String poster) {
+        this.poster = poster;
+    }
+
+    public String getPosterUrl() {
+        return poster != null ? poster : "";
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.poster = posterUrl;
+    }
+
+    public String getTrailer() {
+        return trailer;
+    }
+
+    public void setTrailer(String trailer) {
+        this.trailer = trailer;
+    }
+
+    public String getTrailerUrl() {
+        return trailer != null ? trailer : "";
+    }
+
+    public void setTrailerUrl(String trailerUrl) {
+        this.trailer = trailerUrl;
+    }
+
     public String getStatus() {
-        return status != null ? status : "NOW_SHOWING";
+        return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
     }
 
-    public String getPosterUrl() {
-        if (posterUrl != null && !posterUrl.isBlank()) {
-            return posterUrl;
-        }
-        return "/images/cinema-login-hero.png";
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setPosterUrl(String posterUrl) {
-        this.posterUrl = posterUrl;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getTrailerUrl() {
-        return trailerUrl;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setTrailerUrl(String trailerUrl) {
-        this.trailerUrl = trailerUrl;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
-    public String getGenres() {
-        return (genres != null && !genres.isBlank()) ? genres : "Phim truyện";
+    public List<Genre> getGenres() {
+        return genres;
     }
 
-    public void setGenres(String genres) {
-        this.genres = genres;
+    public void setGenres(List<Genre> genres) {
+        this.genres = genres != null ? genres : new ArrayList<>();
     }
 
     public List<Genre> getGenreList() {
-        return genreList;
+        return genres;
     }
 
     public void setGenreList(List<Genre> genreList) {
-        this.genreList = genreList;
+        this.genres = genreList != null ? genreList : new ArrayList<>();
+    }
+
+    public String getGenresFormatted() {
+        if (genres == null || genres.isEmpty()) {
+            return "";
+        }
+        return genres.stream().map(Genre::getName).collect(Collectors.joining(", "));
+    }
+
+    public String getGenreNames() {
+        return getGenresFormatted();
+    }
+
+    public String getGenreNamesString() {
+        if (genres == null || genres.isEmpty()) {
+            return "Chưa phân loại";
+        }
+        return genres.stream()
+                .map(Genre::getName)
+                .collect(Collectors.joining(", "));
+    }
+
+    public String getGenreIdsString() {
+        if (genres == null || genres.isEmpty()) {
+            return "";
+        }
+        return genres.stream()
+                .map(g -> String.valueOf(g.getGenreId()))
+                .collect(Collectors.joining(","));
+    }
+
+    public int getShowtimeCount() {
+        return showtimeCount;
+    }
+
+    public void setShowtimeCount(int showtimeCount) {
+        this.showtimeCount = showtimeCount;
     }
 
     public Double getAverageRating() {
-        return averageRating != null ? Math.round(averageRating * 10.0) / 10.0 : 5.0;
+        return averageRating;
     }
 
     public void setAverageRating(Double averageRating) {
@@ -164,7 +274,7 @@ public class Movie {
     }
 
     public Integer getReviewCount() {
-        return reviewCount != null ? reviewCount : 0;
+        return reviewCount;
     }
 
     public void setReviewCount(Integer reviewCount) {
@@ -172,56 +282,47 @@ public class Movie {
     }
 
     public Integer getActiveShowtimesCount() {
-        return activeShowtimesCount != null ? activeShowtimesCount : 0;
+        return activeShowtimesCount;
     }
 
     public void setActiveShowtimesCount(Integer activeShowtimesCount) {
         this.activeShowtimesCount = activeShowtimesCount;
     }
 
-    // Helper methods for Thymeleaf UI
-    public boolean isNowShowing() {
-        return "NOW_SHOWING".equalsIgnoreCase(status) || "Now Showing".equalsIgnoreCase(status);
-    }
-
-    public boolean isComingSoon() {
-        return "COMING_SOON".equalsIgnoreCase(status) || "Upcoming".equalsIgnoreCase(status);
-    }
-
     public String getFormattedReleaseDate() {
-        if (releaseDate == null) return "Đang cập nhật";
-        return releaseDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        return releaseDate != null ? releaseDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
     }
 
-    public String getAgeRatingBadgeClass() {
-        if (ageRating == null) return "badge-p";
-        return switch (ageRating.toUpperCase()) {
-            case "P" -> "badge-p";
-            case "T13", "C13", "13+" -> "badge-t13";
-            case "T16", "C16", "16+" -> "badge-t16";
-            case "T18", "C18", "18+" -> "badge-t18";
-            default -> "badge-p";
-        };
+    public String getFormattedDuration() {
+        if (duration == null || duration <= 0) return "";
+        int h = duration / 60;
+        int m = duration % 60;
+        return h > 0 ? (h + "h " + m + "m") : (m + "m");
     }
 
-    public String getAgeRatingDescription() {
-        if (ageRating == null) return "Phù hợp cho mọi lứa tuổi";
-        return switch (ageRating.toUpperCase()) {
-            case "P" -> "P - Phim dành cho mọi đối tượng khán giả";
-            case "T13", "C13", "13+" -> "T13 - Phim cấm phổ biến tới khán giả dưới 13 tuổi";
-            case "T16", "C16", "16+" -> "T16 - Phim cấm phổ biến tới khán giả dưới 16 tuổi";
-            case "T18", "C18", "18+" -> "T18 - Phim cấm phổ biến tới khán giả dưới 18 tuổi";
-            default -> "Phim phổ biến cho khán giả";
-        };
+    public List<Integer> getGenreIds() {
+        if (genres == null) return new ArrayList<>();
+        return genres.stream().map(Genre::getGenreId).collect(Collectors.toList());
     }
 
-    public String getEmbedTrailerUrl() {
-        if (trailerUrl == null || trailerUrl.isBlank()) return "";
-        if (trailerUrl.contains("watch?v=")) {
-            return trailerUrl.replace("watch?v=", "embed/");
-        } else if (trailerUrl.contains("youtu.be/")) {
-            return trailerUrl.replace("youtu.be/", "www.youtube.com/embed/");
-        }
-        return trailerUrl;
+    public boolean isActiveForShowtimes() {
+        return "Upcoming".equalsIgnoreCase(status) || "Now Showing".equalsIgnoreCase(status)
+                || "NOW_SHOWING".equalsIgnoreCase(status) || "COMING_SOON".equalsIgnoreCase(status);
+    }
+
+    public boolean isNowShowing() {
+        return "Now Showing".equalsIgnoreCase(status) || "NOW_SHOWING".equalsIgnoreCase(status);
+    }
+
+    public boolean isUpcoming() {
+        return "Upcoming".equalsIgnoreCase(status) || "COMING_SOON".equalsIgnoreCase(status);
+    }
+
+    public boolean isEnded() {
+        return "Ended".equalsIgnoreCase(status) || "ENDED".equalsIgnoreCase(status);
+    }
+
+    public boolean isArchived() {
+        return "Archived".equalsIgnoreCase(status) || "ARCHIVED".equalsIgnoreCase(status);
     }
 }
