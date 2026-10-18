@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -47,5 +48,11 @@ public class RoleDAO {
         } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();
         }
+    }
+
+    public List<Role> findAll() {
+        return jdbcTemplate.query("""
+                SELECT RoleID, Name, Description FROM dbo.[Role] ORDER BY RoleID
+                """, roleRowMapper);
     }
 }

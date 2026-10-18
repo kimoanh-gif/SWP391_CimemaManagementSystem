@@ -1,37 +1,211 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Quản trị | CinemaSystem</title>
+<title>Admin Dashboard | CinemaSystem</title>
 <link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+/* Dashboard stats */
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.dash-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 16px; transition: box-shadow .2s; }
+.dash-stat-card:hover { box-shadow: var(--shadow-md); }
+.dash-stat-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+.dash-stat-info { flex: 1; }
+.dash-stat-num { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.dash-stat-lbl { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.dash-stat-card.blue   .dash-stat-num { color: #2563EB; }
+.dash-stat-card.green  .dash-stat-num { color: #059669; }
+.dash-stat-card.red    .dash-stat-num { color: #DC2626; }
+.dash-stat-card.purple .dash-stat-num { color: var(--purple-600); }
+.dash-stat-card.blue   .dash-stat-icon { background: #DBEAFE; }
+.dash-stat-card.green  .dash-stat-icon { background: #D1FAE5; }
+.dash-stat-card.red    .dash-stat-icon { background: #FEE2E2; }
+.dash-stat-card.purple .dash-stat-icon { background: var(--purple-100); }
+
+/* System modules grid */
+.dash-modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.dash-module { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-decoration: none; color: inherit; display: block; box-shadow: var(--shadow-sm); transition: all .25s; position: relative; overflow: hidden; }
+.dash-module::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--purple-400), var(--purple-600)); opacity: 0; transition: opacity .25s; }
+.dash-module:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--purple-200); text-decoration: none; }
+.dash-module:hover::before { opacity: 1; }
+.dash-module-icon { font-size: 28px; margin-bottom: 12px; }
+.dash-module h3 { font-size: 15px; margin-bottom: 6px; color: var(--text-primary); }
+.dash-module p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.dash-module-tags { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.dash-module-tag { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.tag-blue   { background: #DBEAFE; color: #1E40AF; }
+.tag-green  { background: #D1FAE5; color: #065F46; }
+.tag-purple { background: var(--purple-100); color: var(--purple-700); }
+.tag-amber  { background: #FEF3C7; color: #92400E; }
+
+/* Quick actions */
+.dash-quick { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+.dash-quick h3 { font-size: 15px; margin-bottom: 16px; }
+.dash-quick-links { display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 </head>
 <body>
-<div class="dash-shell">
-  <header class="dash-header">
-    <div class="dash-brand">
-      <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
-    </div>
-    <div class="dash-user" th:if="${user != null}">
-      <span class="role-badge" th:text="${user.role}">ADMIN</span>
-      <span th:text="${user.fullName}">Quản trị</span>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">▶</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link active">
+        <span class="link-icon">🏠</span>
+        <span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-icon">👥</span>
+        <span class="link-label">Customers</span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-icon">🛡️</span>
+        <span class="link-label">Staffs & Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link">
+        <span class="link-icon">🔑</span>
+        <span class="link-label">Roles & Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link">
+        <span class="link-icon">⚙️</span>
+        <span class="link-label">System Config</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
       <form th:action="@{/logout}" method="post">
         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-        <button class="dash-logout" type="submit">Đăng xuất</button>
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
       </form>
     </div>
-    <!-- DEBUG: remove after testing -->
-    <div th:if="${user == null}" style="color:#f00;font-size:12px;background:#300;">
-      user==null | sessionId=<span th:text="${#session.id}">?</span>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">🏠 Admin Dashboard</div>
+      <div class="topbar-actions">
+        <span style="font-size:13px;color:var(--text-secondary);">
+          Welcome, <strong th:text="${user != null ? user.fullName : 'Admin'}">Admin</strong>
+        </span>
+      </div>
     </div>
-  </header>
-  <main class="dash-body">
-    <h1>Khu vực quản trị</h1>
-    <p class="subtitle">Quản lý người dùng, phân quyền, cấu hình hệ thống.</p>
-    <div class="dash-card">
-      <p>Xin chào <strong th:text="${user != null ? user.fullName : 'quản trị viên'}">quản trị viên</strong>.</p>
-      <p style="color: var(--cinema-text-muted);">Các nghiệp vụ quản trị sẽ được bổ sung trong các sprint tiếp theo.</p>
+
+    <div class="admin-content">
+      <!-- Stats Row -->
+      <div class="dash-stats">
+        <div class="dash-stat-card blue">
+          <div class="dash-stat-icon">👥</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num" th:text="${stats != null ? stats.customerCount : '—'}">—</div>
+            <div class="dash-stat-lbl">Customers</div>
+          </div>
+        </div>
+        <div class="dash-stat-card green">
+          <div class="dash-stat-icon">🛡️</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num" th:text="${stats != null ? (stats.staffCount + stats.managerCount) : '—'}">—</div>
+            <div class="dash-stat-lbl">Staffs & Managers</div>
+          </div>
+        </div>
+        <div class="dash-stat-card purple">
+          <div class="dash-stat-icon">🔑</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num">4</div>
+            <div class="dash-stat-lbl">System Roles</div>
+          </div>
+        </div>
+        <div class="dash-stat-card red">
+          <div class="dash-stat-icon">⚠️</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num" th:text="${stats != null ? stats.lockedAccounts : '—'}">—</div>
+            <div class="dash-stat-lbl">Locked Accounts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Management Modules -->
+      <div class="dash-modules">
+        <a th:href="@{/admin/customers}" class="dash-module">
+          <div class="dash-module-icon">👥</div>
+          <h3>Customer Accounts</h3>
+          <p>View, create, edit, suspend/reactivate, and reset passwords for customer accounts.</p>
+          <div class="dash-module-tags">
+            <span class="dash-module-tag tag-blue">Management</span>
+            <span class="dash-module-tag tag-purple">UC-36</span>
+          </div>
+        </a>
+        <a th:href="@{/admin/staffs}" class="dash-module">
+          <div class="dash-module-icon">🛡️</div>
+          <h3>Staff & Manager Accounts</h3>
+          <p>Manage staff and manager accounts, assign roles.</p>
+          <div class="dash-module-tags">
+            <span class="dash-module-tag tag-green">Management</span>
+          </div>
+        </a>
+        <a th:href="@{/admin/roles}" class="dash-module">
+          <div class="dash-module-icon">🔑</div>
+          <h3>Roles & Permissions</h3>
+          <p>Configure roles (ADMIN, MANAGER, STAFF, CUSTOMER) and their permissions.</p>
+          <div class="dash-module-tags">
+            <span class="dash-module-tag tag-amber">Config</span>
+          </div>
+        </a>
+        <a th:href="@{/admin/config}" class="dash-module">
+          <div class="dash-module-icon">⚙️</div>
+          <h3>System Configuration</h3>
+          <p>Configure theaters, screening rooms, operating hours and pricing.</p>
+          <div class="dash-module-tags">
+            <span class="dash-module-tag tag-purple">Settings</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dash-quick">
+        <h3>🔗 Quick Actions</h3>
+        <div class="dash-quick-links">
+          <a th:href="@{/admin/config}" class="btn btn-secondary">⚙️ Configuration</a>
+          <a th:href="@{/admin/roles}" class="btn btn-secondary">🔑 Roles</a>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
+
+<script>
+function openSidebar() {
+  document.getElementById('adminSidebar').classList.add('mobile-open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('adminSidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+</script>
 </body>
 </html>

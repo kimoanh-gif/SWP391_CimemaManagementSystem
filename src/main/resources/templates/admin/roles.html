@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roles & Permissions | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+/* Page Layout */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.page-header h1 { font-size: 22px; font-weight: 700; margin: 0; }
+
+/* Roles Grid */
+.roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.role-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: all .2s; box-shadow: var(--shadow-sm); }
+.role-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.role-card.active { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(167,139,250,.3); }
+.role-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.role-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+.role-card h3 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+.role-sub { font-size: 12px; color: var(--text-secondary); }
+.role-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.role-badge.admin { background: var(--purple-100); color: var(--purple-700); }
+.role-badge.manager { background: #D1FAE5; color: #065F46; }
+.role-badge.staff { background: #DBEAFE; color: #1E40AF; }
+.role-badge.customer { background: #FEF3C7; color: #92400E; }
+.role-perm-count { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Permission Panel */
+.permission-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 24px; }
+.panel-header { background: var(--surface-raised); padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.panel-header h2 { font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px; }
+.panel-body { padding: 20px; }
+
+/* Permission Layout */
+.permission-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.permission-section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); margin: 0 0 12px; font-weight: 600; }
+.permission-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+.permission-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: var(--radius-md); margin-bottom: 6px; background: var(--surface-raised); border: 1px solid var(--border); transition: all .15s; }
+.permission-item:hover { border-color: var(--purple-300); }
+.permission-item.assigned { background: #ECFDF5; border-color: #A7F3D0; }
+.permission-item .perm-info { display: flex; flex-direction: column; gap: 2px; }
+.permission-item .perm-name { font-weight: 600; font-size: 14px; }
+.permission-item .perm-desc { font-size: 12px; color: var(--text-secondary); }
+.permission-item .mandatory-badge { font-size: 10px; padding: 2px 6px; background: #FEE2E2; color: #DC2626; border-radius: 4px; font-weight: 600; }
+
+/* Permission Actions */
+.perm-actions { display: flex; gap: 6px; }
+.btn-add, .btn-remove { padding: 6px 12px; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.btn-add { background: var(--success-bg); color: var(--success-text); }
+.btn-add:hover { background: var(--success-border); }
+.btn-remove { background: var(--error-bg); color: var(--error-text); }
+.btn-remove:hover { background: var(--error-border); }
+.btn-add:disabled, .btn-remove:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Empty State */
+.empty-perms { text-align: center; padding: 40px; color: var(--text-muted); }
+.empty-perms svg { margin-bottom: 12px; opacity: 0.5; }
+
+/* Mandatory Warning */
+.mandatory-warning { background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: #991B1B; font-size: 13px; }
+.mandatory-warning strong { color: #DC2626; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; z-index: 2000; display: none; min-width: 280px; }
+.toast.show { display: block; animation: slideUp .3s ease; }
+.toast-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.toast-error { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--purple-100); border-top-color: var(--purple-600); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .permission-layout { grid-template-columns: 1fr; }
+  .roles-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .roles-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">▶</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link active">
+        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link">
+        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">🔑 Roles & Permissions</div>
+    </div>
+    <div class="admin-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>Role & Permission Management</h1>
+        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Select a role to manage its permissions</p>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div>Loading roles and permissions...</div>
+      </div>
+
+      <!-- Roles Grid -->
+      <div class="roles-grid" id="rolesGrid"></div>
+
+      <!-- Permission Panel (shown when role selected) -->
+      <div class="permission-panel" id="permissionPanel" style="display: none;">
+        <div class="panel-header">
+          <h2 id="panelTitle">📋 Role Permissions</h2>
+          <div style="font-size: 13px; color: var(--text-secondary);">
+            Changes are saved automatically
+          </div>
+        </div>
+        <div class="panel-body" id="panelBody"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// CSRF Helper
+function getCsrfHeaders() {
+  const token = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+  return token ? { 'X-XSRF-TOKEN': token } : {};
+}
+
+// State
+let roles = [];
+let allPermissions = [];
+let selectedRoleId = null;
+
+// Mandatory permissions (from service)
+const MANDATORY_PERMISSIONS = {
+  'ADMIN': ['account:manage'],
+  'MANAGER': ['report:view'],
+  'STAFF': ['ticket:checkin']
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+});
+
+async function loadData() {
+  document.getElementById('loadingIndicator').classList.add('show');
+  try {
+    // Load roles and permissions in parallel
+    const [rolesResp, permsResp] = await Promise.all([
+      fetch('/api/admin/roles', { headers: getCsrfHeaders() }),
+      fetch('/api/admin/roles/permissions', { headers: getCsrfHeaders() })
+    ]);
+    
+    const rolesJson = await rolesResp.json();
+    const permsJson = await permsResp.json();
+    
+    roles = rolesJson.data || [];
+    allPermissions = permsJson.data || [];
+    
+    renderRolesGrid();
+  } catch (e) {
+    showToast('Failed to load roles and permissions.', 'error');
+    console.error(e);
+  } finally {
+    document.getElementById('loadingIndicator').classList.remove('show');
+  }
+}
+
+function renderRolesGrid() {
+  const grid = document.getElementById('rolesGrid');
+  
+  const roleIcons = {
+    'ADMIN': { icon: '👑', bg: 'var(--purple-100)' },
+    'MANAGER': { icon: '🛡️', bg: '#D1FAE5' },
+    'STAFF': { icon: '🎟️', bg: '#DBEAFE' },
+    'CUSTOMER': { icon: '🎬', bg: '#FEF3C7' }
+  };
+  
+  const roleClass = {
+    'ADMIN': 'admin',
+    'MANAGER': 'manager',
+    'STAFF': 'staff',
+    'CUSTOMER': 'customer'
+  };
+
+  grid.innerHTML = roles.map(role => {
+    const info = roleIcons[role.roleName.toUpperCase()] || { icon: '📋', bg: '#E5E7EB' };
+    const cls = roleClass[role.roleName.toUpperCase()] || '';
+    const permCount = role.permissions ? role.permissions.length : 0;
+    
+    return `
+      <div class="role-card ${selectedRoleId === role.roleId ? 'active' : ''}" onclick="selectRole(${role.roleId})">
+        <div class="role-card-header">
+          <div class="role-icon" style="background: ${info.bg};">${info.icon}</div>
+          <div>
+            <h3>${escHtml(role.roleName)}</h3>
+            <div class="role-sub">${escHtml(role.description || 'No description')}</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="role-badge ${cls}">${role.roleName}</span>
+          <span class="role-perm-count">${permCount} permission${permCount !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // If a role was selected, re-render its permission panel
+  if (selectedRoleId) {
+    const selectedRole = roles.find(r => r.roleId === selectedRoleId);
+    if (selectedRole) {
+      renderPermissionPanel(selectedRole);
+    }
+  }
+}
+
+function selectRole(roleId) {
+  selectedRoleId = roleId;
+  
+  // Update grid UI
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.classList.remove('active');
+  });
+  event.currentTarget.classList.add('active');
+  
+  // Find role and render panel
+  const role = roles.find(r => r.roleId === roleId);
+  if (role) {
+    renderPermissionPanel(role);
+  }
+}
+
+function renderPermissionPanel(role) {
+  const panel = document.getElementById('permissionPanel');
+  const panelTitle = document.getElementById('panelTitle');
+  const panelBody = document.getElementById('panelBody');
+  
+  panel.style.display = 'block';
+  panelTitle.innerHTML = `📋 Permissions for <strong>${escHtml(role.roleName)}</strong>`;
+  
+  const rolePerms = new Set(role.permissions || []);
+  const mandatory = MANDATORY_PERMISSIONS[role.roleName.toUpperCase()] || [];
+  
+  // Get assigned and available permissions
+  const assigned = allPermissions.filter(p => rolePerms.has(p.name));
+  const available = allPermissions.filter(p => !rolePerms.has(p.name));
+  
+  // Mandatory warning
+  const mandatoryWarning = mandatory.length > 0 ? `
+    <div class="mandatory-warning">
+      <span>⚠️</span>
+      <div>
+        <strong>Mandatory Permissions:</strong> ${mandatory.map(m => `<code>${m}</code>`).join(', ')} 
+        cannot be removed from this role.
+      </div>
+    </div>
+  ` : '';
+  
+  panelBody.innerHTML = `
+    ${mandatoryWarning}
+    <div class="permission-layout">
+      <!-- Assigned Permissions -->
+      <div class="permission-section">
+        <h3>✓ Assigned Permissions (${assigned.length})</h3>
+        <ul class="permission-list">
+          ${assigned.length === 0 ? `
+            <li class="empty-perms">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div>No permissions assigned</div>
+            </li>
+          ` : assigned.map(p => renderPermissionItem(p, true, mandatory.includes(p.name))).join('')}
+        </ul>
+      </div>
+      
+      <!-- Available Permissions -->
+      <div class="permission-section">
+        <h3>+ Available Permissions (${available.length})</h3>
+        <ul class="permission-list">
+          ${available.length === 0 ? `
+            <li class="empty-perms">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+              <div>All permissions assigned</div>
+            </li>
+          ` : available.map(p => renderPermissionItem(p, false, false)).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function renderPermissionItem(permission, isAssigned, isMandatory) {
+  const permName = escHtml(permission.name);
+  const permDesc = escHtml(permission.description || 'No description');
+  
+  if (isAssigned) {
+    return `
+      <li class="permission-item assigned">
+        <div class="perm-info">
+          <span class="perm-name">${permName}</span>
+          <span class="perm-desc">${permDesc}</span>
+        </div>
+        <div class="perm-actions">
+          ${isMandatory ? `<span class="mandatory-badge">Required</span>` : ''}
+          <button class="btn-remove" onclick="removePermission(${selectedRoleId}, '${permName}')">Remove</button>
+        </div>
+      </li>
+    `;
+  } else {
+    return `
+      <li class="permission-item">
+        <div class="perm-info">
+          <span class="perm-name">${permName}</span>
+          <span class="perm-desc">${permDesc}</span>
+        </div>
+        <div class="perm-actions">
+          <button class="btn-add" onclick="addPermission(${selectedRoleId}, '${permName}')">Add</button>
+        </div>
+      </li>
+    `;
+  }
+}
+
+/**
+ * A1: Add Permission
+ * Add a single permission to the selected role.
+ */
+async function addPermission(roleId, permissionName) {
+  try {
+    const resp = await fetch(`/api/admin/roles/${roleId}/permissions/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
+      body: JSON.stringify({ permissionName })
+    });
+    
+    const json = await resp.json();
+    
+    if (json.success) {
+      showToast(`Permission '${permissionName}' added successfully.`, 'success');
+      // Refresh data
+      await refreshRoleData(roleId);
+    } else {
+      showToast(json.message || 'Failed to add permission.', 'error');
+    }
+  } catch (e) {
+    showToast('An error occurred.', 'error');
+  }
+}
+
+/**
+ * A2: Remove Permission
+ * Remove a permission from the selected role.
+ * Exception E2: Mandatory permission cannot be removed.
+ */
+async function removePermission(roleId, permissionName) {
+  // Check if it's a mandatory permission
+  const role = roles.find(r => r.roleId === roleId);
+  const mandatory = MANDATORY_PERMISSIONS[role?.roleName?.toUpperCase()] || [];
+  
+  if (mandatory.includes(permissionName)) {
+    showToast(`Cannot remove mandatory permission '${permissionName}' from this role.`, 'error');
+    return;
+  }
+  
+  if (!confirm(`Remove permission '${permissionName}' from this role?\n\nThis may affect accounts with this role.`)) {
+    return;
+  }
+  
+  try {
+    const resp = await fetch(`/api/admin/roles/${roleId}/permissions/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
+      body: JSON.stringify({ permissionName })
+    });
+    
+    const json = await resp.json();
+    
+    if (json.success) {
+      showToast(`Permission '${permissionName}' removed successfully.`, 'success');
+      // Refresh data
+      await refreshRoleData(roleId);
+    } else {
+      showToast(json.message || 'Failed to remove permission.', 'error');
+    }
+  } catch (e) {
+    showToast('An error occurred.', 'error');
+  }
+}
+
+/**
+ * Refresh role data after an update.
+ * Normal Flow Step 8-9: System saves and displays success message.
+ */
+async function refreshRoleData(roleId) {
+  try {
+    // Reload all data
+    const [rolesResp, permsResp] = await Promise.all([
+      fetch('/api/admin/roles', { headers: getCsrfHeaders() }),
+      fetch('/api/admin/roles/permissions', { headers: getCsrfHeaders() })
+    ]);
+    
+    const rolesJson = await rolesResp.json();
+    const permsJson = await permsResp.json();
+    
+    roles = rolesJson.data || [];
+    allPermissions = permsJson.data || [];
+    
+    renderRolesGrid();
+    
+    // Update panel if still on this role
+    if (selectedRoleId === roleId) {
+      const updatedRole = roles.find(r => r.roleId === roleId);
+      if (updatedRole) {
+        renderPermissionPanel(updatedRole);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to refresh data:', e);
+  }
+}
+
+function showToast(message, type) {
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = `toast show toast-${type}`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+</script>
+</body>
+</html>

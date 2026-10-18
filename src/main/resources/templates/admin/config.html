@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Configuration | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+/* Page Layout */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.page-header h1 { font-size: 22px; font-weight: 700; margin: 0; }
+.page-desc { color: var(--text-secondary); font-size: 14px; margin: 0; }
+
+/* Category Tabs */
+.category-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn { padding: 10px 20px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: var(--surface); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.tab-btn:hover { border-color: var(--purple-300); color: var(--purple-600); }
+.tab-btn.active { background: var(--purple-600); color: white; border-color: var(--purple-600); }
+
+/* Config Sections */
+.config-section { display: none; }
+.config-section.active { display: block; }
+
+/* Settings Grid */
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; }
+.setting-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); }
+.setting-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.setting-card-header h3 { font-size: 14px; margin: 0 0 4px; }
+.setting-desc { font-size: 12px; color: var(--text-secondary); margin: 0; }
+.setting-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
+.setting-badge.voucher { background: #FEF3C7; color: #92400E; }
+.setting-badge.membership { background: #DBEAFE; color: #1E40AF; }
+.setting-badge.booking { background: #D1FAE5; color: #065F46; }
+.setting-badge.system { background: #EDE9FE; color: #6D28D9; }
+
+/* Setting Item */
+.setting-item { margin-bottom: 16px; }
+.setting-item:last-child { margin-bottom: 0; }
+.setting-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.setting-input-wrap { display: flex; gap: 8px; align-items: center; }
+.setting-input { flex: 1; padding: 10px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: var(--surface-raised); font-size: 14px; font-family: inherit; transition: border-color .15s; }
+.setting-input:focus { outline: none; border-color: var(--purple-400); box-shadow: 0 0 0 3px rgba(167,139,250,.2); }
+.setting-input.error { border-color: var(--error-icon); }
+.setting-input:disabled { background: var(--surface-muted); opacity: 0.7; }
+.setting-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.setting-error { font-size: 11px; color: var(--error-icon); margin-top: 4px; display: none; }
+.setting-error.show { display: block; }
+
+/* Buttons */
+.btn { padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.btn-primary { background: var(--purple-600); color: white; }
+.btn-primary:hover { background: var(--purple-700); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: var(--surface-raised); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--purple-50); border-color: var(--purple-300); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-save { padding: 8px 16px; }
+
+/* Membership Ranks Section */
+.ranks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.rank-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+.rank-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.rank-icon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; }
+.rank-icon.silver { background: linear-gradient(135deg, #C0C0C0, #E8E8E8); }
+.rank-icon.gold { background: linear-gradient(135deg, #FFD700, #FFA500); }
+.rank-icon.platinum { background: linear-gradient(135deg, #E5E4E2, #B4B4B4); }
+.rank-icon.diamond { background: linear-gradient(135deg, #B9F2FF, #87CEEB); }
+.rank-card h3 { font-size: 16px; margin: 0 0 4px; }
+.rank-points { font-size: 13px; color: var(--text-secondary); }
+.rank-points strong { color: var(--text-primary); }
+.rank-threshold { margin-top: 12px; }
+.rank-benefits { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.rank-benefits h4 { font-size: 12px; text-transform: uppercase; color: var(--text-secondary); margin: 0 0 8px; }
+.benefit-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-primary); margin-bottom: 4px; }
+.benefit-item::before { content: "✓"; color: var(--success-icon); font-weight: 700; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; z-index: 2000; display: none; min-width: 280px; }
+.toast.show { display: block; animation: slideUp .3s ease; }
+.toast-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.toast-error { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+.toast-info { background: var(--purple-100); color: var(--purple-700); border: 1px solid var(--purple-200); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--purple-100); border-top-color: var(--purple-600); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .category-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">▶</div>
+      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+    </a>
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link">
+        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link">
+        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link active">
+        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="page-title">⚙️ System Configuration</div>
+    </div>
+    <div class="admin-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>System Rules & Configuration</h1>
+          <p class="page-desc">Configure voucher rules, membership settings, booking rules, and system parameters</p>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="category-tabs">
+        <button class="tab-btn active" onclick="switchTab('voucher')">🎟️ Voucher Settings</button>
+        <button class="tab-btn" onclick="switchTab('membership')">⭐ Membership Ranks</button>
+        <button class="tab-btn" onclick="switchTab('booking')">🎫 Booking Rules</button>
+        <button class="tab-btn" onclick="switchTab('system')">🔐 System Settings</button>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div>Loading configuration...</div>
+      </div>
+
+      <!-- VOUCHER SETTINGS -->
+      <div class="config-section active" id="section-voucher">
+        <div class="settings-grid" id="voucher-settings"></div>
+      </div>
+
+      <!-- MEMBERSHIP RANKS -->
+      <div class="config-section" id="section-membership">
+        <h3 style="margin: 0 0 16px; font-size: 16px;">Membership Rank Thresholds</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; margin: 0 0 20px;">
+          Configure the minimum loyalty points required for each membership rank.
+          Thresholds must be in ascending order.
+        </p>
+        <div class="ranks-grid" id="membership-ranks"></div>
+      </div>
+
+      <!-- BOOKING RULES -->
+      <div class="config-section" id="section-booking">
+        <div class="settings-grid" id="booking-settings"></div>
+      </div>
+
+      <!-- SYSTEM SETTINGS -->
+      <div class="config-section" id="section-system">
+        <div class="settings-grid" id="system-settings"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// CSRF Helper
+function getCsrfHeaders() {
+  const token = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+  return token ? { 'X-XSRF-TOKEN': token } : {};
+}
+
+// State
+let settings = {}; // { CATEGORY: [setting1, setting2, ...] }
+let membershipRanks = [];
+let currentValues = {}; // { settingId: currentValue }
+
+// Document Ready
+document.addEventListener('DOMContentLoaded', () => {
+  loadAllData();
+});
+
+// Load all data
+async function loadAllData() {
+  document.getElementById('loadingIndicator').classList.add('show');
+  
+  try {
+    const [settingsResp, ranksResp] = await Promise.all([
+      fetch('/api/admin/config/settings', { headers: getCsrfHeaders() }),
+      fetch('/api/admin/config/membership/ranks', { headers: getCsrfHeaders() })
+    ]);
+    
+    const settingsJson = await settingsResp.json();
+    const ranksJson = await ranksResp.json();
+    
+    settings = settingsJson.data || {};
+    membershipRanks = ranksJson.data || [];
+    
+    // Initialize current values
+    for (const category in settings) {
+      settings[category].forEach(s => {
+        currentValues[s.settingId] = s.value;
+      });
+    }
+    
+    renderAllSections();
+  } catch (e) {
+    showToast('Failed to load configuration.', 'error');
+    console.error(e);
+  } finally {
+    document.getElementById('loadingIndicator').classList.remove('show');
+  }
+}
+
+// Render all sections
+function renderAllSections() {
+  renderVoucherSettings();
+  renderMembershipRanks();
+  renderBookingSettings();
+  renderSystemSettings();
+}
+
+// Tab switching
+function switchTab(tab) {
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  
+  // Update sections
+  document.querySelectorAll('.config-section').forEach(sec => sec.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+}
+
+// Render Voucher Settings
+function renderVoucherSettings() {
+  const container = document.getElementById('voucher-settings');
+  const voucherSettings = settings['VOUCHER'] || [];
+  
+  if (voucherSettings.length === 0) {
+    container.innerHTML = '<div class="loading">No voucher settings found.</div>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="setting-card">
+      <div class="setting-card-header">
+        <div>
+          <h3>🎟️ Voucher Configuration</h3>
+          <p class="setting-desc">Configure voucher validity, limits, and conditions</p>
+        </div>
+        <span class="setting-badge voucher">VOUCHER</span>
+      </div>
+      ${voucherSettings.map(s => renderSettingItem(s)).join('')}
+    </div>
+  `;
+}
+
+// Render Booking Settings
+function renderBookingSettings() {
+  const container = document.getElementById('booking-settings');
+  const bookingSettings = settings['BOOKING'] || [];
+  
+  if (bookingSettings.length === 0) {
+    container.innerHTML = '<div class="loading">No booking settings found.</div>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="setting-card">
+      <div class="setting-card-header">
+        <div>
+          <h3>🎫 Booking Rules</h3>
+          <p class="setting-desc">Configure booking limits and cancellation rules</p>
+        </div>
+        <span class="setting-badge booking">BOOKING</span>
+      </div>
+      ${bookingSettings.map(s => renderSettingItem(s)).join('')}
+    </div>
+  `;
+}
+
+// Render System Settings
+function renderSystemSettings() {
+  const container = document.getElementById('system-settings');
+  const systemSettings = settings['SYSTEM'] || [];
+  
+  if (systemSettings.length === 0) {
+    container.innerHTML = '<div class="loading">No system settings found.</div>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="setting-card">
+      <div class="setting-card-header">
+        <div>
+          <h3>🔐 System Settings</h3>
+          <p class="setting-desc">Configure security and authentication rules</p>
+        </div>
+        <span class="setting-badge system">SYSTEM</span>
+      </div>
+      ${systemSettings.map(s => renderSettingItem(s)).join('')}
+    </div>
+  `;
+}
+
+// Render single setting item
+function renderSettingItem(setting) {
+  const inputType = getInputType(setting);
+  const hint = getValidationHint(setting);
+  const isReadonly = setting.validationRules && setting.validationRules.includes('readonly');
+  
+  return `
+    <div class="setting-item" data-id="${setting.settingId}">
+      <label class="setting-label">
+        ${setting.settingName}
+        ${isReadonly ? '<span style="color: var(--text-muted); font-weight: normal;"> (Read-only)</span>' : ''}
+      </label>
+      <div class="setting-input-wrap">
+        ${inputType === 'checkbox' ? `
+          <input type="checkbox" class="setting-checkbox" 
+                 ${setting.value === 'true' || setting.value === '1' ? 'checked' : ''}
+                 ${isReadonly ? 'disabled' : ''}
+                 onchange="handleSettingChange(${setting.settingId}, this.checked ? 'true' : 'false')">
+        ` : `
+          <input type="${inputType}" class="setting-input" 
+                 id="input-${setting.settingId}"
+                 value="${escHtml(setting.value || '')}"
+                 placeholder="Enter value"
+                 ${isReadonly ? 'disabled' : ''}
+                 oninput="handleInputChange(${setting.settingId}, this.value)"
+                 onblur="handleInputBlur(${setting.settingId})">
+        `}
+        ${!isReadonly ? `
+          <button class="btn btn-sm btn-secondary" onclick="resetToDefault(${setting.settingId})">Reset</button>
+        ` : ''}
+      </div>
+      ${hint ? `<div class="setting-hint">${hint}</div>` : ''}
+      <div class="setting-error" id="error-${setting.settingId}"></div>
+    </div>
+  `;
+}
+
+// Get input type based on value type
+function getInputType(setting) {
+  if (setting.valueType === 'BOOLEAN') return 'checkbox';
+  if (setting.valueType === 'NUMBER') return 'number';
+  if (setting.valueType === 'DATE') return 'datetime-local';
+  return 'text';
+}
+
+// Get validation hint from rules
+function getValidationHint(setting) {
+  const rules = setting.validationRules;
+  if (!rules) return '';
+  
+  const hints = [];
+  if (rules.includes('min:')) {
+    const match = rules.match(/min:(\d+)/);
+    if (match) hints.push(`Min: ${match[1]}`);
+  }
+  if (rules.includes('max:')) {
+    const match = rules.match(/max:(\d+)/);
+    if (match) hints.push(`Max: ${match[1]}`);
+  }
+  return hints.join(' | ');
+}
+
+// Handle input change (update current value)
+function handleInputChange(settingId, value) {
+  currentValues[settingId] = value;
+  // Clear error
+  const errorEl = document.getElementById('error-' + settingId);
+  if (errorEl) {
+    errorEl.classList.remove('show');
+    errorEl.textContent = '';
+  }
+  const inputEl = document.getElementById('input-' + settingId);
+  if (inputEl) inputEl.classList.remove('error');
+}
+
+// Handle input blur (validate before save)
+function handleInputBlur(settingId) {
+  validateAndSave(settingId);
+}
+
+// Validate and save
+async function validateAndSave(settingId) {
+  const newValue = currentValues[settingId];
+  if (newValue === undefined) return;
+  
+  try {
+    const resp = await fetch('/api/admin/config/settings/' + settingId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
+      body: JSON.stringify({ value: newValue })
+    });
+    
+    const json = await resp.json();
+    
+    if (json.success) {
+      showToast(json.message, 'success');
+      // Update current value
+      currentValues[settingId] = newValue;
+    } else {
+      // Show error
+      const errorEl = document.getElementById('error-' + settingId);
+      const inputEl = document.getElementById('input-' + settingId);
+      if (errorEl) {
+        errorEl.textContent = json.message;
+        errorEl.classList.add('show');
+      }
+      if (inputEl) inputEl.classList.add('error');
+    }
+  } catch (e) {
+    showToast('An error occurred.', 'error');
+  }
+}
+
+// Reset to default
+async function resetToDefault(settingId) {
+  if (!confirm('Reset this setting to default value?')) return;
+  
+  try {
+    const resp = await fetch('/api/admin/config/settings/' + settingId + '/reset', {
+      method: 'POST',
+      headers: getCsrfHeaders() }
+    );
+    
+    const json = await resp.json();
+    
+    if (json.success) {
+      showToast('Reset to default: ' + json.newValue, 'info');
+      // Update input value
+      const inputEl = document.getElementById('input-' + settingId);
+      if (inputEl) inputEl.value = json.newValue;
+      currentValues[settingId] = json.newValue;
+    } else {
+      showToast(json.message, 'error');
+    }
+  } catch (e) {
+    showToast('An error occurred.', 'error');
+  }
+}
+
+// ========== MEMBERSHIP RANKS ==========
+
+function renderMembershipRanks() {
+  const container = document.getElementById('membership-ranks');
+  
+  if (membershipRanks.length === 0) {
+    container.innerHTML = '<div class="loading">No membership ranks found.</div>';
+    return;
+  }
+  
+  const rankIcons = {
+    'SILVER': { icon: '🥈', class: 'silver' },
+    'GOLD': { icon: '🥇', class: 'gold' },
+    'PLATINUM': { icon: '💎', class: 'platinum' },
+    'DIAMOND': { icon: '💠', class: 'diamond' }
+  };
+  
+  container.innerHTML = membershipRanks.map(rank => {
+    const info = rankIcons[rank.name.toUpperCase()] || { icon: '⭐', class: '' };
+    const benefits = parseBenefits(rank.benefits);
+    
+    return `
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-icon ${info.class}">${info.icon}</div>
+          <div>
+            <h3>${escHtml(rank.displayName || rank.name)}</h3>
+            <div class="rank-points">
+              <strong>${rank.minPoints}</strong> - ${rank.maxPoints || '∞'} points
+            </div>
+          </div>
+        </div>
+        
+        <div class="rank-threshold">
+          <label class="setting-label">Minimum Points Threshold</label>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" 
+                   id="rank-${rank.rankId}" 
+                   value="${rank.minPoints}"
+                   min="0"
+                   oninput="handleRankInput(${rank.rankId}, this.value)">
+            <span style="color: var(--text-secondary); font-size: 14px;">points</span>
+          </div>
+          <div class="setting-error" id="rank-error-${rank.rankId}"></div>
+          <button class="btn btn-sm btn-primary" style="margin-top: 8px;" onclick="updateRankThreshold(${rank.rankId})">
+            Save Threshold
+          </button>
+        </div>
+        
+        <div class="rank-benefits">
+          <h4>Benefits</h4>
+          <div class="benefit-item">Points Rate: ${benefits.pointsRate || 1}x</div>
+          <div class="benefit-item">Birthday Bonus: ${benefits.birthdayBonus ? '✓ Yes' : '✗ No'}</div>
+          <div class="benefit-item">Priority Booking: ${benefits.priorityBooking ? '✓ Yes' : '✗ No'}</div>
+          ${benefits.freeSnacks ? '<div class="benefit-item">Free Snacks: ✓ Yes</div>' : ''}
+          <div class="benefit-item" style="margin-top: 8px;">
+            Discount: ${rank.discountPercent || 0}%
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function parseBenefits(benefitsJson) {
+  try {
+    return JSON.parse(benefitsJson || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+let rankInputs = {};
+
+function handleRankInput(rankId, value) {
+  rankInputs[rankId] = value;
+}
+
+async function updateRankThreshold(rankId) {
+  const newValue = rankInputs[rankId];
+  if (newValue === undefined) return;
+  
+  try {
+    const resp = await fetch('/api/admin/config/membership/ranks/' + rankId + '/threshold', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
+      body: JSON.stringify({ minPoints: parseInt(newValue) })
+    });
+    
+    const json = await resp.json();
+    
+    if (json.success) {
+      showToast(json.message, 'success');
+      // Clear error
+      document.getElementById('rank-error-' + rankId).textContent = '';
+      document.getElementById('rank-error-' + rankId).classList.remove('show');
+      // Reload ranks
+      await loadMembershipRanks();
+    } else {
+      // Show error
+      const errorEl = document.getElementById('rank-error-' + rankId);
+      if (errorEl) {
+        errorEl.textContent = json.message;
+        errorEl.classList.add('show');
+      }
+      showToast(json.message, 'error');
+    }
+  } catch (e) {
+    showToast('An error occurred.', 'error');
+  }
+}
+
+async function loadMembershipRanks() {
+  try {
+    const resp = await fetch('/api/admin/config/membership/ranks', { headers: getCsrfHeaders() });
+    const json = await resp.json();
+    membershipRanks = json.data || [];
+    renderMembershipRanks();
+  } catch (e) {
+    console.error('Failed to reload ranks:', e);
+  }
+}
+
+// Utility
+function showToast(message, type) {
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = `toast show toast-${type}`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+</script>
+</body>
+</html>

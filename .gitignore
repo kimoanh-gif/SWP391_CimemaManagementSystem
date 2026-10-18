@@ -4,17 +4,27 @@
 *.doc
 *.xlsx
 *.xls
+*.pptx
 
 # Tài liệu thiết kế / kiến trúc / AI prompt
 docs/Architecture.md
 docs/PROMPT_AUTH_FEATURES.md
 docs/design.md
 docs/SRS_*.md
+docs/*.md
+!docs/README.md
 ProjectTracking_*.xlsx
 PROMPT_*.md
 DESIGN_*.md
 TRACKING_*.xlsx
 response.html
+
+# Thư mục doc, tracking, report - KHÔNG push
+doc/
+tracking/
+report/
+reports/
+Documentation/
 
 # Cho phép file .txt trong src/ và database/
 *.txt

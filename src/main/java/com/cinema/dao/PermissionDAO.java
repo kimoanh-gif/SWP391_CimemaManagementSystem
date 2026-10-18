@@ -37,4 +37,34 @@ public class PermissionDAO {
                 ORDER BY p.Name
                 """, permissionRowMapper, roleId);
     }
+
+    public List<Permission> findAll() {
+        return jdbcTemplate.query("""
+                SELECT PermissionID, Name, Description
+                FROM dbo.Permission
+                ORDER BY Name
+                """, permissionRowMapper);
+    }
+
+    public List<Permission> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        String placeholders = String.join(",", ids.stream().map(id -> "?").toList());
+        String sql = "SELECT PermissionID, Name, Description FROM dbo.Permission WHERE PermissionID IN (" + placeholders + ")";
+        return jdbcTemplate.query(sql, permissionRowMapper, ids.toArray());
+    }
+
+    public int updateRolePermissions(int roleId, List<Integer> permissionIds) {
+        // Delete all existing permissions for this role
+        jdbcTemplate.update("DELETE FROM dbo.RolePermission WHERE RoleID = ?", roleId);
+        
+        // Insert new permissions
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            for (Integer permId : permissionIds) {
+                jdbcTemplate.update(
+                    "INSERT INTO dbo.RolePermission (RoleID, PermissionID) VALUES (?, ?)",
+                    roleId, permId);
+            }
+        }
+        return 1;
+    }
 }

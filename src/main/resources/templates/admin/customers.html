@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Account Management | CinemaSystem</title>
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<style>
+/* UC-36: Customer Account Management */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow .2s; }
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-num { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+.stat-card.blue   .stat-num { color: #2563EB; }
+.stat-card.green  .stat-num { color: #059669; }
+.stat-card.red    .stat-num { color: #DC2626; }
+.stat-card.orange .stat-num { color: #D97706; }
+
+/* Toolbar */
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.search-box { display: flex; gap: 8px; }
+.search-box input { height: 38px; padding: 0 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: var(--surface-raised); color: var(--text-primary); font-size: 13px; width: 300px; transition: border-color .15s; }
+.search-box input:focus { outline: none; border-color: var(--purple-400); box-shadow: 0 0 0 3px rgba(167,139,250,.15); background: #fff; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { background: var(--surface-raised); color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--purple-50); }
+td .name { font-weight: 600; color: var(--text-primary); }
+td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.empty-row td { text-align: center; color: var(--text-muted); padding: 48px; font-size: 15px; }
+
+/* Badges */
+.badge { padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: 700; display: inline-block; letter-spacing: .03em; }
+.badge-active     { background: var(--success-bg); color: var(--success-text); }
+.badge-suspended  { background: var(--error-bg); color: var(--error-text); }
+.badge-pending    { background: #DBEAFE; color: #1E40AF; }
+.badge-disabled   { background: var(--surface-muted); color: var(--text-secondary); }
+
+/* Points */
+.points { font-size: 13px; color: var(--amber-600); font-weight: 700; }
+
+/* Actions */
+.actions { display: flex; gap: 6px; align-items: center; }
+
+/* Loading */
+.loading { display: none; text-align: center; padding: 40px; color: var(--text-muted); }
+.loading.show { display: block; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--purple-100); border-top-color: var(--purple-600); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; z-index: 2000; display: none; min-width: 280px; }
+.toast.show { display: block; animation: slideUp .3s ease; }
+.toast-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.toast-error   { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Confirm */
+.confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(30,27,75,.45); backdrop-filter: blur(4px); z-index: 1100; align-items: center; justify-content: center; }
+.confirm-overlay.show { display: flex; }
+.confirm-box { background: var(--surface); border-radius: var(--radius-xl); padding: var(--sp-7); max-width: 400px; text-align: center; box-shadow: var(--shadow-xl); }
+.confirm-box h3 { font-size: 18px; margin-bottom: var(--sp-3); }
+.confirm-box p { color: var(--text-secondary); font-size: 14px; margin-bottom: var(--sp-6); }
+.confirm-actions { display: flex; gap: var(--sp-3); justify-content: center; }
+
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search-box input { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar Toggle (mobile) -->
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a th:href="@{/admin/dashboard}" class="sidebar-brand">
+      <div class="brand-icon">&#9654;</div>
+      <div class="brand-text">
+        CINEMA
+        <span>SYSTEM</span>
+      </div>
+    </a>
+
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar-link">
+        <span class="link-label">Dashboard</span>
+      </a>
+      <a th:href="@{/admin/customers}" class="sidebar-link active">
+        <span class="link-label">Customers</span>
+      </a>
+      <a th:href="@{/admin/staffs}" class="sidebar-link">
+        <span class="link-label">Staff & Managers</span>
+      </a>
+      <a th:href="@{/admin/roles}" class="sidebar-link">
+        <span class="link-label">Roles & Permissions</span>
+      </a>
+      <a th:href="@{/admin/config}" class="sidebar-link">
+        <span class="link-label">System Configuration</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+        <button class="sidebar-logout-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+
+    <!-- Top Bar -->
+    <div class="admin-topbar">
+      <div class="page-title">Customer Account Management</div>
+      <div class="topbar-actions">
+        <!-- Admin cannot create customer accounts -->
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="admin-content">
+
+      <!-- Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num blue" id="stat-total" th:text="${customerStats.total}">0</div>
+          <div class="stat-label">Total Customers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num green" id="stat-active" th:text="${customerStats.active}">0</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num red" id="stat-suspended" th:text="${customerStats.suspended}">0</div>
+          <div class="stat-label">Suspended</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num orange" id="stat-pending" th:text="${customerStats.pending}">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by name, email, username, or phone..." onkeydown="if(event.key==='Enter')loadCustomers(1)">
+          <button class="btn btn-secondary" onclick="loadCustomers(1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </button>
+          <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+        </div>
+        <div style="color:var(--text-secondary);font-size:13px;">
+          <span id="rowCountStart">0</span>-<span id="rowCountEnd">0</span> of <span id="rowCountTotal">0</span> customer(s)
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div>Loading customers...</div>
+      </div>
+
+      <!-- Table -->
+      <table id="customerTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Account Info</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th>Loyalty Points</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customerTableBody">
+          <tr class="empty-row">
+            <td colspan="7">Loading customer accounts...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-wrap" id="paginationWrap">
+        <div class="pagination-info">
+          Page <strong id="pgCurrent">1</strong> of <strong id="pgTotal">1</strong>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">New Customer Account</h2>
+      <button class="modal-close" onclick="closeFormModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="customerForm" onsubmit="submitForm(event)">
+        <input type="hidden" id="formAccountId">
+        <div class="form-group">
+          <label for="fUsername">Username *</label>
+          <input type="text" id="fUsername" required minlength="3" placeholder="e.g. johndoe123" autocomplete="off">
+          <div class="field-error" id="errUsername">Username already exists.</div>
+        </div>
+        <div class="form-group">
+          <label for="fFullName">Full Name *</label>
+          <input type="text" id="fFullName" required placeholder="e.g. John Doe" autocomplete="name">
+          <div class="field-error" id="errFullName">Full name is required.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fEmail">Email *</label>
+            <input type="email" id="fEmail" required placeholder="john@example.com">
+            <div class="field-error" id="errEmail">Email already exists or invalid.</div>
+          </div>
+          <div class="form-group" id="pwGroup">
+            <label for="fPassword">Password *</label>
+            <input type="password" id="fPassword" placeholder="Min. 6 characters">
+            <div class="field-error" id="errPassword">Password must be at least 6 characters.</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="fPhone">Phone Number *</label>
+          <input type="tel" id="fPhone" required pattern="0[0-9]{9,10}" placeholder="0912345678">
+          <div class="field-error" id="errPhone">Phone already exists or invalid (10-11 digits starting with 0).</div>
+        </div>
+        <div id="editMeta" style="display:none; background:var(--surface-muted); border-radius:var(--radius-md); padding:14px 16px; margin-bottom:18px; font-size:13px; color:var(--text-secondary);">
+          <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Account ID:</strong> <span id="metaAccountId">-</span></div>
+          <div><strong style="color:var(--text-primary);">Created:</strong> <span id="metaCreated">-</span></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
+      <button class="btn btn-primary" type="submit" id="formSubmitBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <h2>Account Details</h2>
+    <button class="modal-close" onclick="closeDetail()">&times;</button>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMessage">Are you sure?</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmBtn" onclick="executeConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET PASSWORD MODAL (send OTP to customer) -->
+<div class="modal-overlay" id="resetPwdModal">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <h2>Reset Password</h2>
+      <button class="modal-close" onclick="closeResetPwd()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px;">
+        An OTP code will be sent to <strong id="resetPwdEmail" style="color:var(--text-primary);">-</strong> for password reset.
+      </p>
+      <p style="color:var(--text-secondary);font-size:13px;">
+        The customer will receive an email with the OTP code to set a new password.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeResetPwd()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitResetPassword()">Send OTP</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// CSRF Helper
+function getCsrfHeaders() {
+  const token = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+  return token ? { 'X-XSRF-TOKEN': token } : {};
+}
+
+// UC-36 State
+let customers = [];
+let pagination = { currentPage: 1, pageSize: 15, totalItems: 0, totalPages: 1 };
+let currentCustomerId = null;
+let confirmCallback = null;
+let editMode = false;
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  loadCustomers(1);
+});
+
+// Load Customers
+async function loadCustomers(page) {
+  const search = document.getElementById('searchInput').value.trim();
+  const pageNum = page || pagination.currentPage;
+
+  document.getElementById('loadingIndicator').classList.add('show');
+  document.getElementById('customerTableBody').innerHTML =
+    '<tr class="empty-row"><td colspan="7">Loading...</td></tr>';
+
+  try {
+    let url = `/api/admin/customers?page=${pageNum}&size=${pagination.pageSize}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const resp = await fetch(url);
+    const json = await resp.json();
+    customers = json.data || [];
+    pagination = json.pagination || pagination;
+    pagination.currentPage = pageNum;
+
+    renderTable();
+    renderPagination();
+    updateRowCount();
+  } catch (e) {
+    showToast('Failed to load customers.', 'error');
+    document.getElementById('customerTableBody').innerHTML =
+      '<tr class="empty-row"><td colspan="7">Error loading data. Please refresh.</td></tr>';
+  } finally {
+    document.getElementById('loadingIndicator').classList.remove('show');
+  }
+}
+
+function updateRowCount() {
+  const total = pagination.totalItems;
+  const size = pagination.pageSize;
+  const cur = pagination.currentPage;
+  const start = total === 0 ? 0 : (cur - 1) * size + 1;
+  const end = Math.min(cur * size, total);
+  document.getElementById('rowCountStart').textContent = start;
+  document.getElementById('rowCountEnd').textContent = end;
+  document.getElementById('rowCountTotal').textContent = total;
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  loadCustomers(1);
+}
+
+// Render Table
+function renderTable() {
+  const tbody = document.getElementById('customerTableBody');
+  if (!customers.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No customers found.</td></tr>';
+    return;
+  }
+  const start = (pagination.currentPage - 1) * pagination.pageSize;
+  tbody.innerHTML = customers.map((c, i) => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:13px;">${start + i + 1}</td>
+      <td>
+        <div class="name">${escHtml(c.fullName || '-')}</div>
+        <div class="sub">@${escHtml(c.username || '-')}</div>
+      </td>
+      <td>
+        <div style="font-size:14px;">${escHtml(c.email || '-')}</div>
+        <div class="sub">${escHtml(c.phone || '-')}</div>
+      </td>
+      <td><span class="badge ${badgeClass(c.status)}">${c.status || '-'}</span></td>
+      <td>
+        <div class="points">${c.availablePoints ?? 0} pts</div>
+        <div class="sub">Tier: ${c.tierPoints ?? 0} pts</div>
+      </td>
+      <td style="font-size:13px;color:var(--text-secondary);">${fmtDate(c.createdAt)}</td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-sm btn-secondary" onclick="openDetail(${c.accountId})">View</button>
+          <button class="btn btn-sm btn-secondary" onclick="openEditModal(${c.accountId})">Edit</button>
+          ${c.status === 'ACTIVE' || c.status === 'PENDING_VERIFICATION'
+            ? `<button class="btn btn-sm btn-danger" onclick="confirmSuspend(${c.accountId}, '${escHtml(c.fullName)}')">Suspend</button>`
+            : `<button class="btn btn-sm btn-success" onclick="confirmReactivate(${c.accountId}, '${escHtml(c.fullName)}')">Activate</button>`
+          }
+          <button class="btn btn-sm btn-warning" onclick="openResetPwd(${c.accountId}, '${escHtml(c.fullName)}', '${escHtml(c.email)}')">Reset</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function badgeClass(status) {
+  return { ACTIVE:'badge-active', SUSPENDED:'badge-suspended',
+           PENDING_VERIFICATION:'badge-pending', DISABLED:'badge-disabled' }[status] || '';
+}
+
+function fmtDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Render Pagination
+function renderPagination() {
+  const { currentPage: cur, totalPages: total } = pagination;
+  document.getElementById('pgCurrent').textContent = cur;
+  document.getElementById('pgTotal').textContent = total;
+
+  const wrap = document.getElementById('paginationControls');
+  if (total <= 1) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const pages = getPageNumbers(cur, total);
+  let html = '';
+
+  html += `<button class="pg-btn" ${cur === 1 ? 'disabled' : ''} onclick="loadCustomers(${cur - 1})">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>`;
+
+  if (pages[0] > 1) {
+    html += `<button class="pg-btn" onclick="loadCustomers(1)">1</button>`;
+    if (pages[0] > 2) html += `<span class="pg-ellipsis">...</span>`;
+  }
+
+  pages.forEach(p => {
+    html += `<button class="pg-btn ${p === cur ? 'active' : ''}" onclick="loadCustomers(${p})">${p}</button>`;
+  });
+
+  if (pages[pages.length - 1] < total) {
+    if (pages[pages.length - 1] < total - 1) html += `<span class="pg-ellipsis">...</span>`;
+    html += `<button class="pg-btn" onclick="loadCustomers(${total})">${total}</button>`;
+  }
+
+  html += `<button class="pg-btn" ${cur === total ? 'disabled' : ''} onclick="loadCustomers(${cur + 1})">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>`;
+
+  wrap.innerHTML = html;
+}
+
+function getPageNumbers(current, total) {
+  const pages = [];
+  const delta = 2;
+  const left = Math.max(1, current - delta);
+  const right = Math.min(total, current + delta);
+  for (let i = left; i <= right; i++) pages.push(i);
+  return pages;
+}
+
+// Sidebar Mobile
+function openSidebar() {
+  document.getElementById('adminSidebar').classList.add('mobile-open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('adminSidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// CREATE MODAL
+function openCreateModal() {
+  editMode = false;
+  document.getElementById('modalTitle').textContent = 'New Customer Account';
+  document.getElementById('formSubmitBtn').textContent = 'Create Account';
+  document.getElementById('pwGroup').style.display = 'block';
+  document.getElementById('editMeta').style.display = 'none';
+  document.getElementById('customerForm').reset();
+  document.getElementById('fPassword').required = true;
+  clearErrors();
+  document.getElementById('formAccountId').value = '';
+  document.getElementById('formModal').classList.add('show');
+}
+
+function closeFormModal() {
+  document.getElementById('formModal').classList.remove('show');
+  clearErrors();
+}
+
+// EDIT MODAL
+async function openEditModal(accountId) {
+  editMode = true;
+  clearErrors();
+  document.getElementById('fPassword').required = false;
+  const c = customers.find(x => x.accountId === accountId);
+  if (!c) { showToast('Customer not found.', 'error'); return; }
+
+  document.getElementById('modalTitle').textContent = 'Edit Customer Account';
+  document.getElementById('formSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('pwGroup').style.display = 'none';
+  document.getElementById('editMeta').style.display = 'block';
+
+  document.getElementById('formAccountId').value = accountId;
+  document.getElementById('fUsername').value = c.username || '';
+  document.getElementById('fFullName').value = c.fullName || '';
+  document.getElementById('fEmail').value = c.email || '';
+  document.getElementById('fPhone').value = c.phone || '';
+  document.getElementById('metaAccountId').textContent = accountId;
+  document.getElementById('metaCreated').textContent = fmtDate(c.createdAt);
+
+  document.getElementById('formModal').classList.add('show');
+}
+
+// SUBMIT FORM
+async function submitForm(e) {
+  if (e) e.preventDefault();
+  console.log('submitForm called');
+  clearErrors();
+
+  const accountId = document.getElementById('formAccountId').value;
+  console.log('accountId:', accountId);
+  const payload = {
+    username: document.getElementById('fUsername').value.trim(),
+    fullName:  document.getElementById('fFullName').value.trim(),
+    email:     document.getElementById('fEmail').value.trim(),
+    phone:     document.getElementById('fPhone').value.trim(),
+  };
+  console.log('payload:', payload);
+
+  if (!payload.username) { markError('fUsername','errUsername'); showToast('Username is required.','error'); return; }
+  if (payload.username.length < 3) { markError('fUsername','errUsername'); showToast('Username must be at least 3 characters.','error'); return; }
+  if (!payload.fullName) { markError('fFullName','errFullName'); showToast('Full name is required.','error'); return; }
+  if (!payload.email || !/^[^\s@]+@[^\s@]+\.\w+/.test(payload.email)) { markError('fEmail','errEmail'); showToast('Invalid email format.','error'); return; }
+  if (!payload.phone || !/^0[0-9]{9,10}$/.test(payload.phone)) { markError('fPhone','errPhone'); showToast('Phone must be 10-11 digits starting with 0.','error'); return; }
+
+  if (!editMode) {
+    payload.password = document.getElementById('fPassword').value;
+    if (!payload.password || payload.password.length < 6) { markError('fPassword','errPassword'); showToast('Password must be at least 6 characters.','error'); return; }
+  }
+
+  const url = editMode ? `/api/admin/customers/${accountId}` : '/api/admin/customers';
+  const method = editMode ? 'PUT' : 'POST';
+  console.log('url:', url, 'method:', method);
+
+  try {
+    console.log('sending request...');
+    const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() }, body: JSON.stringify(payload) });
+    console.log('resp status:', resp.status);
+    if (!resp.ok) { showToast('Action failed. Please login again.', 'error'); return; }
+    const json = await resp.json();
+    console.log('resp json:', json);
+    if (json.success) {
+      showToast(json.message, 'success');
+      closeFormModal();
+      await loadCustomers(pagination.currentPage);
+      await refreshStats();
+    } else {
+      handleApiError(json);
+    }
+  } catch (e) { showToast('An error occurred. Please try again.', 'error'); }
+}
+
+function handleApiError(json) {
+  const code = json.code;
+  if (code === 'EMPTY_USERNAME')          { markError('fUsername','errUsername'); document.getElementById('errUsername').textContent = 'Username is required.'; showToast('Username is required.','error'); }
+  else if (code === 'INVALID_USERNAME_LENGTH') { markError('fUsername','errUsername'); document.getElementById('errUsername').textContent = 'Username must be at least 3 characters.'; showToast('Username must be at least 3 characters.','error'); }
+  else if (code === 'DUPLICATE_USERNAME') { markError('fUsername','errUsername'); document.getElementById('errUsername').textContent = 'Username already exists.'; showToast(json.message,'error'); }
+  else if (code === 'EMPTY_EMAIL')              { markError('fEmail','errEmail'); document.getElementById('errEmail').textContent = 'Email is required.'; showToast('Email is required.','error'); }
+  else if (code === 'INVALID_EMAIL')            { markError('fEmail','errEmail'); document.getElementById('errEmail').textContent = 'Invalid email format.'; showToast('Invalid email format.','error'); }
+  else if (code === 'DUPLICATE_EMAIL')    { markError('fEmail','errEmail'); document.getElementById('errEmail').textContent = 'Email already exists.'; showToast(json.message,'error'); }
+  else if (code === 'EMPTY_PHONE')               { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone number is required.'; showToast('Phone number is required.','error'); }
+  else if (code === 'INVALID_PHONE_FORMAT')      { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone must be 10-11 digits starting with 0.'; showToast('Phone must be 10-11 digits starting with 0.','error'); }
+  else if (code === 'DUPLICATE_PHONE')    { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone number already exists.'; showToast(json.message,'error'); }
+  else { showToast(json.message || 'Operation failed.', 'error'); }
+}
+
+function markError(inputId, errId) {
+  document.getElementById(inputId).classList.add('error');
+  document.getElementById(errId).style.display = 'block';
+}
+function clearErrors() {
+  document.querySelectorAll('.form-group input').forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('.field-error').forEach(el => el.style.display = 'none');
+}
+
+// DETAIL PANEL
+async function openDetail(accountId) {
+  try {
+    const resp = await fetch(`/api/admin/customers/${accountId}`);
+    const json = await resp.json();
+    if (!json.success) { showToast('Customer not found.', 'error'); return; }
+    const c = json.data;
+    document.getElementById('detailBody').innerHTML = `
+      <div class="detail-section">
+        <h3>Account Information</h3>
+        <div class="detail-row"><span class="lbl">Account ID</span><span class="val">${c.accountId}</span></div>
+        <div class="detail-row"><span class="lbl">Username</span><span class="val">@${escHtml(c.username)}</span></div>
+        <div class="detail-row"><span class="lbl">Full Name</span><span class="val">${escHtml(c.fullName)}</span></div>
+        <div class="detail-row"><span class="lbl">Status</span><span class="val"><span class="badge ${badgeClass(c.status)}">${c.status}</span></span></div>
+        <div class="detail-row"><span class="lbl">Email Verified</span><span class="val">${c.emailVerified ? 'Yes' : 'No'}</span></div>
+        <div class="detail-row"><span class="lbl">Joined</span><span class="val">${fmtDate(c.createdAt)}</span></div>
+        <div class="detail-row"><span class="lbl">Last Login</span><span class="val">${fmtDate(c.lastLoginAt)}</span></div>
+      </div>
+      <div class="detail-section">
+        <h3>Contact</h3>
+        <div class="detail-row"><span class="lbl">Email</span><span class="val">${escHtml(c.email)}</span></div>
+        <div class="detail-row"><span class="lbl">Phone</span><span class="val">${escHtml(c.phone)}</span></div>
+      </div>
+      <div class="detail-section">
+        <h3>Loyalty Program</h3>
+        <div class="detail-row"><span class="lbl">Available Points</span><span class="val" style="color:var(--amber-600);font-weight:700;">${c.availablePoints ?? 0}</span></div>
+        <div class="detail-row"><span class="lbl">Tier Points</span><span class="val">${c.tierPoints ?? 0}</span></div>
+        <div class="detail-row"><span class="lbl">Rank ID</span><span class="val">${c.rankId ?? '-'}</span></div>
+        <div class="detail-row"><span class="lbl">Promo Emails</span><span class="val">${c.receivePromotionEmail ? 'Enabled' : 'Disabled'}</span></div>
+      </div>
+      <div style="padding-top:16px;border-top:1px solid var(--border);">
+        <button class="btn btn-secondary" onclick="openEditModal(${c.accountId});closeDetail();" style="width:100%;margin-bottom:8px;">
+          Edit Account
+        </button>
+        ${c.status === 'ACTIVE'
+          ? `<button class="btn btn-danger" onclick="closeDetail();confirmSuspend(${c.accountId},'${escHtml(c.fullName)}')" style="width:100%;">
+              Suspend Account
+            </button>`
+          : `<button class="btn btn-success" onclick="closeDetail();confirmReactivate(${c.accountId},'${escHtml(c.fullName)}')" style="width:100%;">
+              Activate Account
+            </button>`
+        }
+      </div>
+    `;
+    document.getElementById('detailPanel').classList.add('show');
+  } catch (e) { showToast('Error loading details.', 'error'); }
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('show');
+}
+
+// CONFIRM DIALOG
+function confirmSuspend(accountId, name) {
+  document.getElementById('confirmTitle').textContent = 'Suspend Account';
+  document.getElementById('confirmMessage').textContent =
+    `Suspend "${name}"? They will lose access immediately.`;
+  document.getElementById('confirmBtn').className = 'btn btn-danger';
+  document.getElementById('confirmBtn').textContent = 'Suspend';
+  confirmCallback = () => doSuspend(accountId);
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function confirmReactivate(accountId, name) {
+  document.getElementById('confirmTitle').textContent = 'Activate Account';
+  document.getElementById('confirmMessage').textContent =
+    `Activate "${name}"? They will regain access.`;
+  document.getElementById('confirmBtn').className = 'btn btn-success';
+  document.getElementById('confirmBtn').textContent = 'Activate';
+  confirmCallback = () => doReactivate(accountId);
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  confirmCallback = null;
+}
+
+async function executeConfirm() {
+  closeConfirm();
+  if (confirmCallback) await confirmCallback();
+}
+
+async function doSuspend(accountId) {
+  try {
+    const resp = await fetch(`/api/admin/customers/${accountId}/suspend`, { method: 'POST', headers: { ...getCsrfHeaders() } });
+    if (!resp.ok) { showToast('Action failed. Please login again.', 'error'); return; }
+    const json = await resp.json();
+    showToast(json.message, json.success ? 'success' : 'error');
+    if (json.success) { await loadCustomers(pagination.currentPage); await refreshStats(); }
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+async function doReactivate(accountId) {
+  try {
+    const resp = await fetch(`/api/admin/customers/${accountId}/reactivate`, { method: 'POST', headers: { ...getCsrfHeaders() } });
+    if (!resp.ok) { showToast('Action failed. Please login again.', 'error'); return; }
+    const json = await resp.json();
+    showToast(json.message, json.success ? 'success' : 'error');
+    if (json.success) { await loadCustomers(pagination.currentPage); await refreshStats(); }
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+// RESET PASSWORD
+function openResetPwd(accountId, name, email) {
+  currentCustomerId = accountId;
+  document.getElementById('resetPwdEmail').textContent = email || 'this email address';
+  document.getElementById('resetPwdModal').classList.add('show');
+}
+
+function closeResetPwd() {
+  document.getElementById('resetPwdModal').classList.remove('show');
+}
+
+async function submitResetPassword() {
+  try {
+    const resp = await fetch(`/api/admin/customers/${currentCustomerId}/reset-password`, {
+      method: 'POST', headers: { ...getCsrfHeaders() }
+    });
+    const json = await resp.json();
+    showToast(json.message, json.success ? 'success' : 'error');
+    if (json.success) closeResetPwd();
+  } catch (e) { showToast('An error occurred.', 'error'); }
+}
+
+// STATS REFRESH
+async function refreshStats() {
+  try {
+    const resp = await fetch('/api/admin/customers/stats');
+    const json = await resp.json();
+    if (json.success) {
+      document.getElementById('stat-total').textContent = json.data.total;
+      document.getElementById('stat-active').textContent = json.data.active;
+      document.getElementById('stat-suspended').textContent = json.data.suspended;
+      document.getElementById('stat-pending').textContent = json.data.pending;
+    }
+  } catch (e) {}
+}
+
+// TOAST
+function showToast(message, type) {
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = `toast show toast-${type}`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay, .confirm-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+document.getElementById('detailPanel').addEventListener('click', e => {
+  if (e.target === document.getElementById('detailPanel')) closeDetail();
+});
+</script>
+</body>
+</html>

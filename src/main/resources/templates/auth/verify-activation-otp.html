@@ -5,7 +5,7 @@
 <title>Xác minh OTP | CinemaSystem</title>
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
-<body>
+<body th:attr="data-redirect-delay=${redirectDelay}">
 <div class="auth-page">
   <aside class="auth-hero" aria-label="Không gian rạp chiếu phim">
     <div class="auth-hero-caption">
@@ -26,6 +26,7 @@
 
       <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
       <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
+      <div class="auth-notice success" role="status" th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
 
       <!-- Fallback OTP display when email delivery fails -->
       <div class="auth-notice warning" role="alert" th:if="${fallbackOtp}">
@@ -63,10 +64,15 @@
 
 <script>
 (() => {
-  // Auto-submit when 6 digits entered
+  // Check if an error was just shown (prevent auto-submit race condition)
+  const hasError = document.querySelector('.auth-notice.error') !== null;
+  const hasSuccess = document.querySelector('.auth-notice.success') !== null;
+  const shouldPreventAutoSubmit = hasError || hasSuccess;
+
+  // Auto-submit when 6 digits entered (only if no error/success message shown)
   const otp = document.getElementById('otp');
   const form = document.querySelector('form');
-  if (otp && form) {
+  if (otp && form && !shouldPreventAutoSubmit) {
     otp.addEventListener('input', () => {
       otp.value = otp.value.replace(/\D/g, '').slice(0, 6);
       if (otp.value.length === 6) {
@@ -77,12 +83,20 @@
   // Paste support
   if (otp) {
     otp.addEventListener('paste', (e) => {
-      e.preventDefault();
+    e.preventDefault();
       const data = (e.clipboardData || window.clipboardData).getData('text') || '';
       const digits = data.replace(/\D/g, '').slice(0, 6);
       otp.value = digits;
       otp.dispatchEvent(new Event('input'));
     });
+  }
+
+  // If success message shown, auto-redirect after delay
+  if (hasSuccess) {
+    const redirectDelay = parseInt(document.body.getAttribute('data-redirect-delay') || '5000', 10);
+    setTimeout(() => {
+      window.location.href = '/login?activated';
+    }, redirectDelay);
   }
 
   // Cooldown for resend link
