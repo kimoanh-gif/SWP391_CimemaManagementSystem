@@ -8,6 +8,7 @@ import com.cinema.service.MovieService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MovieController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class MovieControllerTest {
 
     @Autowired
@@ -111,5 +113,23 @@ class MovieControllerTest {
                 .andExpect(flash().attributeExists("successMessage"));
 
         verify(movieService).deactivateMovie(5);
+    }
+
+    @Test
+    @DisplayName("POST /manager/movies/{id}/reactivate: Should reactivate and redirect with success")
+    void testReactivateMovie_Success() throws Exception {
+        Movie movie = new Movie();
+        movie.setId(5);
+        movie.setTitle("Test Movie");
+        movie.setStatus("Now Showing");
+
+        when(movieService.reactivateMovie(5)).thenReturn(movie);
+
+        mockMvc.perform(post("/manager/movies/5/reactivate"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/manager/movies"))
+                .andExpect(flash().attributeExists("successMessage"));
+
+        verify(movieService).reactivateMovie(5);
     }
 }
