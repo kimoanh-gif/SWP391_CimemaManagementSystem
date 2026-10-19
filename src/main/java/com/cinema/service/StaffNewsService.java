@@ -22,7 +22,7 @@ public class StaffNewsService {
     public StaffNewsArticle create(int accountId, NewsRequest request) {
         int staffId = requireStaffId(accountId);
         String status = normalizeStatus(request.status());
-        int newsId = staffNewsDAO.insert(staffId, request.title().trim(), request.summary().trim(),
+        int newsId = staffNewsDAO.insert(staffId, request.title().trim(),
                 cleanOptional(request.thumbnailUrl()), request.content().trim(), status);
         return getById(newsId);
     }
@@ -46,7 +46,7 @@ public class StaffNewsService {
         }
         String status = normalizeStatus(request.status());
         int updated = staffNewsDAO.update(newsId, staffId, allowOtherOwners, request.title().trim(),
-                request.summary().trim(), cleanOptional(request.thumbnailUrl()), request.content().trim(), status);
+                cleanOptional(request.thumbnailUrl()), request.content().trim(), status);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "The news was changed and is no longer editable.");
         }

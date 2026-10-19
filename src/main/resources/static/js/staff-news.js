@@ -9,7 +9,6 @@
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   const fields = {
     title: document.getElementById("newsTitle"),
-    summary: document.getElementById("newsSummary"),
     thumbnailUrl: document.getElementById("newsThumbnail"),
     content: document.getElementById("newsContent")
   };
@@ -18,13 +17,12 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitter = event.submitter;
-    if (!submitter || !fields.title.value.trim() || !fields.summary.value.trim() || !fields.content.value.trim()) {
-      feedback.textContent = "Enter a title, summary, and article content.";
+    if (!submitter || !fields.title.value.trim() || !fields.content.value.trim()) {
+      feedback.textContent = "Enter a title and article content.";
       return;
     }
     const payload = {
       title: fields.title.value.trim(),
-      summary: fields.summary.value.trim(),
       thumbnailUrl: fields.thumbnailUrl.value.trim() || null,
       content: fields.content.value.trim(),
       status: submitter.value
@@ -80,12 +78,13 @@
     card.className = "staff-news-item";
     const title = document.createElement("h3");
     title.textContent = article.title || "Article";
-    const summary = document.createElement("p");
-    summary.textContent = article.summary || "";
+    const excerpt = document.createElement("p");
+    const content = article.content || "";
+    excerpt.textContent = content.length > 140 ? `${content.slice(0, 140)}...` : content;
     const status = document.createElement("span");
     status.className = `staff-status status-${String(article.status || "").toLowerCase()}`;
     status.textContent = article.status || "";
-    card.append(title, summary, status);
+    card.append(title, excerpt, status);
     if (["DRAFT", "REJECTED"].includes(String(article.status).toUpperCase())) {
       const button = document.createElement("button");
       button.type = "button";
@@ -100,7 +99,6 @@
   function beginEdit(article) {
     editingId = article.newsId;
     fields.title.value = article.title || "";
-    fields.summary.value = article.summary || "";
     fields.thumbnailUrl.value = article.thumbnailUrl || "";
     fields.content.value = article.content || "";
     document.getElementById("editorTitle").textContent = "Edit Article";

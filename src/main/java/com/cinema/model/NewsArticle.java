@@ -13,7 +13,6 @@ public class NewsArticle {
     private Integer reviewedByAccountId;
     private String title;
     private String content;
-    private String summary;
     private String thumbnailUrl;
     private String status; // PUBLISHED, DRAFT, PENDING, REJECTED
     private LocalDateTime createdAt;
@@ -62,17 +61,6 @@ public class NewsArticle {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public String getSummary() {
-        if (summary != null && !summary.isBlank()) {
-            return summary;
-        }
-        return getExcerpt(140);
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
     }
 
     public String getThumbnailUrl() {

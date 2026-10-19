@@ -17,7 +17,6 @@ public class StaffNewsDAO {
             rs.getInt("NewsID"),
             rs.getInt("CreatedByStaffID"),
             rs.getString("Title"),
-            rs.getString("Summary"),
             rs.getString("Content"),
             rs.getString("ThumbnailURL"),
             rs.getString("Status"),
@@ -37,19 +36,19 @@ public class StaffNewsDAO {
                 """, (rs, rowNum) -> rs.getInt("StaffID"), accountId).stream().findFirst();
     }
 
-    public Integer insert(int staffId, String title, String summary, String thumbnailUrl,
+    public Integer insert(int staffId, String title, String thumbnailUrl,
                           String content, String status) {
         return jdbcTemplate.queryForObject("""
                 INSERT INTO dbo.News
-                    (CreatedByStaffID, Title, Summary, ThumbnailURL, Content, [Status], SubmittedAt)
+                    (CreatedByStaffID, Title, ThumbnailURL, Content, [Status], SubmittedAt)
                 OUTPUT inserted.NewsID
-                VALUES (?, ?, ?, ?, ?, ?, CASE WHEN ? = 'PENDING' THEN SYSDATETIME() ELSE NULL END)
-                """, Integer.class, staffId, title, summary, thumbnailUrl, content, status, status);
+                VALUES (?, ?, ?, ?, ?, CASE WHEN ? = 'PENDING' THEN SYSDATETIME() ELSE NULL END)
+                """, Integer.class, staffId, title, thumbnailUrl, content, status, status);
     }
 
     public List<StaffNewsArticle> findAllByStaffId(int staffId) {
         return jdbcTemplate.query("""
-                SELECT NewsID, CreatedByStaffID, Title, Summary, Content, ThumbnailURL,
+                SELECT NewsID, CreatedByStaffID, Title, Content, ThumbnailURL,
                        [Status], CreatedAt, UpdatedAt, SubmittedAt
                 FROM dbo.News WHERE CreatedByStaffID = ?
                 ORDER BY COALESCE(UpdatedAt, CreatedAt) DESC
@@ -58,7 +57,7 @@ public class StaffNewsDAO {
 
     public List<StaffNewsArticle> findAll() {
         return jdbcTemplate.query("""
-                SELECT NewsID, CreatedByStaffID, Title, Summary, Content, ThumbnailURL,
+                SELECT NewsID, CreatedByStaffID, Title, Content, ThumbnailURL,
                        [Status], CreatedAt, UpdatedAt, SubmittedAt
                 FROM dbo.News ORDER BY COALESCE(UpdatedAt, CreatedAt) DESC
                 """, rowMapper);
@@ -66,23 +65,23 @@ public class StaffNewsDAO {
 
     public Optional<StaffNewsArticle> findById(int newsId) {
         return jdbcTemplate.query("""
-                SELECT NewsID, CreatedByStaffID, Title, Summary, Content, ThumbnailURL,
+                SELECT NewsID, CreatedByStaffID, Title, Content, ThumbnailURL,
                        [Status], CreatedAt, UpdatedAt, SubmittedAt
                 FROM dbo.News WHERE NewsID = ?
                 """, rowMapper, newsId).stream().findFirst();
     }
 
     public int update(int newsId, Integer ownerStaffId, boolean allowOtherOwners,
-                      String title, String summary, String thumbnailUrl, String content, String status) {
+                      String title, String thumbnailUrl, String content, String status) {
         return jdbcTemplate.update("""
                 UPDATE dbo.News
-                SET Title = ?, Summary = ?, ThumbnailURL = ?, Content = ?, [Status] = ?,
+                SET Title = ?, ThumbnailURL = ?, Content = ?, [Status] = ?,
                     UpdatedAt = SYSDATETIME(),
                     SubmittedAt = CASE WHEN ? = 'PENDING' THEN SYSDATETIME() ELSE NULL END,
                     ReviewedByAccountID = NULL, ReviewedAt = NULL, RejectionReason = NULL
                 WHERE NewsID = ? AND UPPER([Status]) IN ('DRAFT', 'REJECTED')
                   AND (? = 1 OR CreatedByStaffID = ?)
-                """, title, summary, thumbnailUrl, content, status, status, newsId,
+                """, title, thumbnailUrl, content, status, status, newsId,
                 allowOtherOwners ? 1 : 0, ownerStaffId);
     }
 }

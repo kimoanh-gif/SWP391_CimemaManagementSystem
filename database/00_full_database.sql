@@ -2,9 +2,13 @@
     Cinema Management System - complete local database
     DBMS: Microsoft SQL Server 2019+
 
-    Run this file once on a clean SQL Server instance. It creates
-    CinemaManagementDB, all tables used by the application, constraints,
-    indexes, and a small set of demo data for local development.
+    This is the single database setup file shared by the team.
+
+    - On a clean SQL Server instance it creates CinemaManagementDB,
+      the complete schema, constraints, indexes, and demo data.
+    - On an existing team database it adds compatible missing columns
+      and inserts only seed records that do not already exist.
+    - The script is safe to run more than once.
 */
 
 USE master;
@@ -569,7 +573,6 @@ BEGIN
         CreatedByStaffID INT NOT NULL,
         ReviewedByAccountID INT NULL,
         Title NVARCHAR(255) NOT NULL,
-        Summary NVARCHAR(500) NOT NULL CONSTRAINT DF_News_Summary DEFAULT N'',
         Content NVARCHAR(MAX) NOT NULL,
         ThumbnailURL NVARCHAR(500) NULL,
         [Status] VARCHAR(30) NOT NULL CONSTRAINT DF_News_Status DEFAULT 'DRAFT',
@@ -582,6 +585,28 @@ BEGIN
         CONSTRAINT FK_News_Staff FOREIGN KEY (CreatedByStaffID) REFERENCES dbo.Staff(StaffID),
         CONSTRAINT FK_News_Reviewer FOREIGN KEY (ReviewedByAccountID) REFERENCES dbo.Account(AccountID)
     );
+END;
+
+/* Remove the non-SRS Summary field from databases created by an earlier script. */
+IF COL_LENGTH(N'dbo.News', N'Summary') IS NOT NULL
+BEGIN
+    DECLARE @NewsSummaryDefault SYSNAME;
+    SELECT @NewsSummaryDefault = dc.[name]
+    FROM sys.default_constraints dc
+    JOIN sys.columns c
+      ON c.object_id = dc.parent_object_id
+     AND c.column_id = dc.parent_column_id
+    WHERE dc.parent_object_id = OBJECT_ID(N'dbo.News')
+      AND c.[name] = N'Summary';
+
+    IF @NewsSummaryDefault IS NOT NULL
+    BEGIN
+        DECLARE @DropNewsSummaryDefault NVARCHAR(1000) =
+            N'ALTER TABLE dbo.News DROP CONSTRAINT ' + QUOTENAME(@NewsSummaryDefault);
+        EXEC sys.sp_executesql @DropNewsSummaryDefault;
+    END;
+
+    ALTER TABLE dbo.News DROP COLUMN Summary;
 END;
 
 IF OBJECT_ID(N'dbo.SystemSetting', N'U') IS NULL
@@ -887,6 +912,31 @@ IF @CustomerAccountID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Customer WHE
 DECLARE @StaffAccountID INT = (SELECT AccountID FROM dbo.Account WHERE Email = 'staff@cinema.com');
 IF @StaffAccountID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Staff WHERE AccountID = @StaffAccountID)
     INSERT dbo.Staff (AccountID, Position, [Status]) VALUES (@StaffAccountID, N'Nhân viên bán vé', 'ACTIVE');
+GO
+
+DECLARE @DemoNewsStaffID INT = (
+    SELECT s.StaffID
+    FROM dbo.Staff s
+    JOIN dbo.Account a ON a.AccountID = s.AccountID
+    WHERE a.Email = 'staff@cinema.com'
+);
+
+IF @DemoNewsStaffID IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title = N'Lịch chiếu và ưu đãi tuần này')
+BEGIN
+    INSERT dbo.News (
+        CreatedByStaffID, ReviewedByAccountID, Title, Content,
+        ThumbnailURL, [Status], SubmittedAt, ReviewedAt, PublishedAt
+    )
+    VALUES (
+        @DemoNewsStaffID,
+        (SELECT AccountID FROM dbo.Account WHERE Email = 'manager@cinema.com'),
+        N'Lịch chiếu và ưu đãi tuần này',
+        N'CineVerse cập nhật các suất chiếu mới trong tuần. Thành viên có thể đăng nhập, chọn phim, suất chiếu, ghế ngồi và sử dụng voucher hợp lệ khi đặt vé.',
+        N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=900',
+        'PUBLISHED', SYSDATETIME(), SYSDATETIME(), SYSDATETIME()
+    );
+END;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'BOOKING_HOLD_MINUTES')
