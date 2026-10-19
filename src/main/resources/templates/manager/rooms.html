@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Phòng Chiếu &amp; Thiết Bị – Royally Cinema Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <style>
+        /* Room Cards Grid matching Image 2 */
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+        }
+        .room-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .room-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .room-card-hero {
+            height: 120px;
+            background: linear-gradient(135deg, #1E293B, #0F172A);
+            position: relative;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+        }
+        .room-card-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(37,99,235,0.2), transparent 70%);
+            pointer-events: none;
+        }
+        .room-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        .status-pill {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pill.ready       { background: rgba(16,185,129,0.2); color: #34D399; border: 1px solid rgba(16,185,129,0.4); }
+        .status-pill.screening   { background: rgba(37,99,235,0.25); color: #60A5FA; border: 1px solid rgba(37,99,235,0.4); }
+        .status-pill.cleaning    { background: rgba(245,158,11,0.2); color: #FBBF24; border: 1px solid rgba(245,158,11,0.4); }
+        .status-pill.maintenance { background: rgba(239,68,68,0.2);  color: #F87171; border: 1px solid rgba(239,68,68,0.4); }
+
+        .tech-pill {
+            background: rgba(255,255,255,0.12);
+            color: #E2E8F0;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .room-hero-title {
+            position: relative;
+            z-index: 1;
+        }
+        .room-hero-name {
+            font-size: 17px;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+        }
+        .room-hero-sub {
+            font-size: 12px;
+            color: #94A3B8;
+            margin: 2px 0 0;
+        }
+
+        .room-card-body {
+            padding: 16px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .room-specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: var(--bg-body);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+        }
+        .room-spec-item {
+            font-size: 12px;
+            color: var(--text-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .room-spec-item b {
+            color: var(--text-700);
+            font-weight: 600;
+        }
+
+        .room-card-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal.open { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 620px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
+        .close-btn {
+            font-size: 22px; cursor: pointer; color: var(--text-400); line-height: 1;
+        }
+        .close-btn:hover { color: var(--text-900); }
+        #room-form {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #room-form label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-700);
+            margin-bottom: -6px;
+        }
+        #room-form input, #room-form select, #room-form textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            outline: none;
+            font-family: inherit;
+        }
+        #room-form input:focus, #room-form select:focus, #room-form textarea:focus {
+            border-color: var(--primary);
+        }
+        .success-msg { color: var(--success); font-size: 13px; font-weight: 600; padding: 0 24px; }
+        .error-msg { color: var(--danger); font-size: 13px; font-weight: 600; padding: 0 24px; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='rooms')}"></div>
+<!-- Topbar -->
+<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Phòng & Sơ đồ ghế')}"></div>
+
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+<div class="page-shell">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="breadcrumb">
+                <a th:href="@{/manager/dashboard}">Quản trị hệ thống</a>
+                <span>›</span>
+                <span>Phòng chiếu &amp; Thiết bị</span>
+                <span>›</span>
+                <span>Quản lý phòng chiếu</span>
+            </div>
+            <h1 class="page-title">Quản Lý Phòng Chiếu &amp; Trang Thiết Bị</h1>
+            <p class="page-subtitle">Theo dõi tình trạng hoạt động, cấu hình máy chiếu laser, hệ thống âm thanh vòm và kiểm soát sức chứa tại cụm rạp.</p>
+        </div>
+        <div class="page-header-actions">
+            <span class="badge badge-dot badge-green">Trực tiếp: Vincom Landmark 81</span>
+            <button type="button" id="add-room-btn" class="btn btn-primary">+ Thêm phòng chiếu mới</button>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="stat-label">Tổng số phòng chiếu</div>
+            <div class="stat-value" th:text="${rooms.size()}">0</div>
+            <div class="stat-sub">Phòng chiếu tiêu chuẩn rạp</div>
+            <span class="stat-icon">🏢</span>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-label">Tổng sức chứa cụm rạp</div>
+            <div class="stat-value" th:text="${rooms != null ? #lists.size(rooms) * 160 : 0}">0</div>
+            <div class="stat-sub">Ghế khả dụng phục vụ khách</div>
+            <span class="stat-icon">💺</span>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-label">Công nghệ trình chiếu</div>
+            <div class="stat-value">100%</div>
+            <div class="stat-sub">Laser 4K / Dolby Atmos</div>
+            <span class="stat-icon">📽</span>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-label">Hiệu suất vận hành ngày</div>
+            <div class="stat-value">94.2%</div>
+            <div class="stat-sub"><span class="up">↑ Tải lịch tối ưu</span></div>
+            <span class="stat-icon">⚡</span>
+        </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="toolbar">
+        <form method="get" th:action="@{/manager/rooms}" class="toolbar-form">
+            <div class="toolbar-search">
+                <span class="toolbar-search-icon">🔍</span>
+                <input type="text" placeholder="Tìm theo tên phòng, mã phòng..." th:value="${keyword}" name="keyword" id="keyword" />
+            </div>
+            <select name="status" id="status-select" onchange="this.form.submit()">
+                <option th:value="''" th:selected="${status == null or status == ''}">Tất cả trạng thái</option>
+                <option th:value="Ready" th:selected="${status == 'Ready'}">Ready (Sẵn sàng)</option>
+                <option th:value="Screening" th:selected="${status == 'Screening'}">Screening (Đang chiếu)</option>
+                <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning (Đang dọn)</option>
+                <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance (Bảo trì)</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
+            <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+        </form>
+    </div>
+
+    <!-- Rooms Cards Grid (matching Image 2) -->
+    <div class="room-grid" th:if="${not #lists.isEmpty(rooms)}">
+        <div th:each="room : ${rooms}" class="room-card">
+            <!-- Hero Top -->
+            <div class="room-card-hero">
+                <div class="room-badge-row">
+                    <span class="status-pill"
+                          th:classappend="${room.status == 'Ready' ? 'ready' : (room.status == 'Screening' ? 'screening' : (room.status == 'Cleaning' ? 'cleaning' : 'maintenance'))}">
+                        ● <span th:text="${room.status == 'Ready' ? 'SẴN SÀNG ĐÓN KHÁCH' : (room.status == 'Screening' ? 'ĐANG CHIẾU' : (room.status == 'Cleaning' ? 'ĐANG DỌN VỆ SINH' : 'BẢO TRÌ KỸ THUẬT'))}">READY</span>
+                    </span>
+                    <span class="tech-pill" th:text="${room.roomType}">IMAX LASER</span>
+                </div>
+                <div class="room-hero-title">
+                    <h3 class="room-hero-name" th:text="${room.roomName}">Phòng 01</h3>
+                    <div class="room-hero-sub" th:text="${room.roomCode} + ' • ' + ${room.capacity} + ' Ghế'">ROOM-01 • 320 Ghế</div>
+                </div>
+            </div>
+
+            <!-- Body specs -->
+            <div class="room-card-body">
+                <div class="room-specs-grid">
+                    <div class="room-spec-item">
+                        <span>📽</span>
+                        <div>Máy chiếu: <b th:text="${room.projector ?: 'Laser 4K'}">Laser 4K</b></div>
+                    </div>
+                    <div class="room-spec-item">
+                        <span>🔊</span>
+                        <div>Âm thanh: <b th:text="${room.soundSystem ?: 'Dolby Atmos'}">Dolby 7.1</b></div>
+                    </div>
+                    <div class="room-spec-item">
+                        <span>📐</span>
+                        <div>Màn chiếu: <b th:text="${room.screenSize ?: 'Standard'}">24m x 14m</b></div>
+                    </div>
+                    <div class="room-spec-item">
+                        <span>💺</span>
+                        <div>Sức chứa: <b th:text="${room.capacity} + ' ghế'">200 ghế</b></div>
+                    </div>
+                </div>
+                <div style="font-size:12.5px;color:var(--text-500);line-height:1.4;" th:if="${room.description != null and !room.description.isEmpty()}" th:text="${room.description}">
+                    Mô tả phòng chiếu...
+                </div>
+            </div>
+
+            <!-- Footer actions -->
+            <div class="room-card-footer">
+                <a th:href="@{'/manager/seats?roomId=' + ${room.roomId}}" class="btn btn-secondary btn-sm">
+                    ▦ Sơ đồ <span th:text="${room.capacity}">0</span> ghế
+                </a>
+                <div style="display:flex;gap:6px;">
+                    <button type="button" class="action-btn action-btn-edit edit-room-btn" th:data-id="${room.roomId}" title="Sửa thông tin">✎</button>
+                    <button type="button" class="action-btn action-btn-del deactivate-room-btn" th:data-id="${room.roomId}" title="Bảo trì">⏹</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);" th:if="${not #lists.isEmpty(rooms)}">
+        <span style="font-size: 13px; color: var(--text-500);">
+            Hiển thị 1 – <span th:text="${#lists.size(rooms)}">5</span> trên tổng số <span th:text="${rooms.size()}">5</span> phòng chiếu
+        </span>
+        <div class="pagination">
+            <button type="button" class="page-btn" disabled>&lsaquo;</button>
+            <button type="button" class="page-btn active">1</button>
+            <button type="button" class="page-btn">&rsaquo;</button>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" th:if="${#lists.isEmpty(rooms)}">
+        <div class="empty-state-icon">🏢</div>
+        <h3>Chưa có phòng chiếu nào</h3>
+        <p>Thêm phòng chiếu đầu tiên để bắt đầu thiết lập sơ đồ ghế và lịch chiếu.</p>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('add-room-btn').click()" style="margin-top:12px;">+ Thêm Phòng Chiếu</button>
+    </div>
+
+</div>
+</div>
+
+<!-- Modal for Add / Edit (IDs preserved for manager-rooms.js) -->
+<div class="modal" id="room-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Cấu Hình Phòng Chiếu &amp; Trang Thiết Bị</h2>
+            <span class="close-btn">&times;</span>
+        </div>
+        <div id="form-success" class="success-msg"></div>
+        <div id="form-error" class="error-msg"></div>
+        <form id="room-form">
+            <input type="hidden" name="roomId" />
+            <div class="form-row">
+                <div>
+                    <label>Mã phòng <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="roomCode" required placeholder="VD: ROOM-01" />
+                </div>
+                <div>
+                    <label>Tên phòng <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="roomName" required placeholder="VD: Phòng 01: IMAX Laser" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Loại phòng <span style="color:var(--danger)">*</span></label>
+                    <select name="roomType" required>
+                        <option value="IMAX Laser">IMAX Laser</option>
+                        <option value="Gold Class">Gold Class VIP</option>
+                        <option value="Dolby Atmos">Dolby Atmos</option>
+                        <option value="Standard Laser">Standard Laser</option>
+                        <option value="Tech Lab">Tech Lab &amp; Hall</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Sức chứa (ghế) <span style="color:var(--danger)">*</span></label>
+                    <input type="number" name="capacity" min="1" max="5000" required placeholder="VD: 320" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Số hàng ghế (tùy chọn)</label>
+                    <input type="number" name="totalRows" min="0" placeholder="VD: 14" />
+                </div>
+                <div>
+                    <label>Số ghế mỗi hàng (tùy chọn)</label>
+                    <input type="number" name="seatsPerRow" min="0" placeholder="VD: 24" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Máy chiếu</label>
+                    <input type="text" name="projector" placeholder="VD: Christie 4K Dual Laser" />
+                </div>
+                <div>
+                    <label>Hệ thống âm thanh</label>
+                    <input type="text" name="soundSystem" placeholder="VD: IMAX 12 Ch Audio" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Kích thước màn hình</label>
+                    <input type="text" name="screenSize" placeholder="VD: 26.5m x 15.2m" />
+                </div>
+                <div>
+                    <label>Trạng thái</label>
+                    <select name="status" required>
+                        <option value="Ready">Ready (Sẵn sàng)</option>
+                        <option value="Screening">Screening (Đang chiếu)</option>
+                        <option value="Cleaning">Cleaning (Đang dọn vệ sinh)</option>
+                        <option value="Maintenance">Maintenance (Bảo trì)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label>Mô tả chi tiết</label>
+                <textarea name="description" rows="2" placeholder="Ghi chú về thiết bị hoặc vị trí tầng..."></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+                <button type="button" class="btn btn-secondary close-btn" onclick="document.getElementById('room-modal').classList.remove('open')">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/manager-rooms.js}"></script>
+</body>
+</html>

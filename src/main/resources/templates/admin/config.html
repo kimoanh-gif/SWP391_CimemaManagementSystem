@@ -211,16 +211,14 @@ function getCsrfHeaders() {
 }
 
 // State
-let settings = {}; // { CATEGORY: [setting1, setting2, ...] }
+let settings = {};
 let membershipRanks = [];
-let currentValues = {}; // { settingId: currentValue }
+let currentValues = {};
 
-// Document Ready
 document.addEventListener('DOMContentLoaded', () => {
   loadAllData();
 });
 
-// Load all data
 async function loadAllData() {
   document.getElementById('loadingIndicator').classList.add('show');
   
@@ -236,7 +234,6 @@ async function loadAllData() {
     settings = settingsJson.data || {};
     membershipRanks = ranksJson.data || [];
     
-    // Initialize current values
     for (const category in settings) {
       settings[category].forEach(s => {
         currentValues[s.settingId] = s.value;
@@ -252,7 +249,6 @@ async function loadAllData() {
   }
 }
 
-// Render all sections
 function renderAllSections() {
   renderVoucherSettings();
   renderMembershipRanks();
@@ -260,18 +256,14 @@ function renderAllSections() {
   renderSystemSettings();
 }
 
-// Tab switching
 function switchTab(tab) {
-  // Update tab buttons
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   event.currentTarget.classList.add('active');
   
-  // Update sections
   document.querySelectorAll('.config-section').forEach(sec => sec.classList.remove('active'));
   document.getElementById('section-' + tab).classList.add('active');
 }
 
-// Render Voucher Settings
 function renderVoucherSettings() {
   const container = document.getElementById('voucher-settings');
   const voucherSettings = settings['VOUCHER'] || [];
@@ -295,7 +287,6 @@ function renderVoucherSettings() {
   `;
 }
 
-// Render Booking Settings
 function renderBookingSettings() {
   const container = document.getElementById('booking-settings');
   const bookingSettings = settings['BOOKING'] || [];
@@ -319,7 +310,6 @@ function renderBookingSettings() {
   `;
 }
 
-// Render System Settings
 function renderSystemSettings() {
   const container = document.getElementById('system-settings');
   const systemSettings = settings['SYSTEM'] || [];
@@ -343,7 +333,6 @@ function renderSystemSettings() {
   `;
 }
 
-// Render single setting item
 function renderSettingItem(setting) {
   const inputType = getInputType(setting);
   const hint = getValidationHint(setting);
@@ -380,7 +369,6 @@ function renderSettingItem(setting) {
   `;
 }
 
-// Get input type based on value type
 function getInputType(setting) {
   if (setting.valueType === 'BOOLEAN') return 'checkbox';
   if (setting.valueType === 'NUMBER') return 'number';
@@ -388,7 +376,6 @@ function getInputType(setting) {
   return 'text';
 }
 
-// Get validation hint from rules
 function getValidationHint(setting) {
   const rules = setting.validationRules;
   if (!rules) return '';
@@ -405,10 +392,8 @@ function getValidationHint(setting) {
   return hints.join(' | ');
 }
 
-// Handle input change (update current value)
 function handleInputChange(settingId, value) {
   currentValues[settingId] = value;
-  // Clear error
   const errorEl = document.getElementById('error-' + settingId);
   if (errorEl) {
     errorEl.classList.remove('show');
@@ -418,12 +403,10 @@ function handleInputChange(settingId, value) {
   if (inputEl) inputEl.classList.remove('error');
 }
 
-// Handle input blur (validate before save)
 function handleInputBlur(settingId) {
   validateAndSave(settingId);
 }
 
-// Validate and save
 async function validateAndSave(settingId) {
   const newValue = currentValues[settingId];
   if (newValue === undefined) return;
@@ -439,10 +422,8 @@ async function validateAndSave(settingId) {
     
     if (json.success) {
       showToast(json.message, 'success');
-      // Update current value
       currentValues[settingId] = newValue;
     } else {
-      // Show error
       const errorEl = document.getElementById('error-' + settingId);
       const inputEl = document.getElementById('input-' + settingId);
       if (errorEl) {
@@ -456,7 +437,6 @@ async function validateAndSave(settingId) {
   }
 }
 
-// Reset to default
 async function resetToDefault(settingId) {
   if (!confirm('Reset this setting to default value?')) return;
   
@@ -470,7 +450,6 @@ async function resetToDefault(settingId) {
     
     if (json.success) {
       showToast('Reset to default: ' + json.newValue, 'info');
-      // Update input value
       const inputEl = document.getElementById('input-' + settingId);
       if (inputEl) inputEl.value = json.newValue;
       currentValues[settingId] = json.newValue;
@@ -481,8 +460,6 @@ async function resetToDefault(settingId) {
     showToast('An error occurred.', 'error');
   }
 }
-
-// ========== MEMBERSHIP RANKS ==========
 
 function renderMembershipRanks() {
   const container = document.getElementById('membership-ranks');
@@ -575,13 +552,10 @@ async function updateRankThreshold(rankId) {
     
     if (json.success) {
       showToast(json.message, 'success');
-      // Clear error
       document.getElementById('rank-error-' + rankId).textContent = '';
       document.getElementById('rank-error-' + rankId).classList.remove('show');
-      // Reload ranks
       await loadMembershipRanks();
     } else {
-      // Show error
       const errorEl = document.getElementById('rank-error-' + rankId);
       if (errorEl) {
         errorEl.textContent = json.message;
@@ -605,7 +579,6 @@ async function loadMembershipRanks() {
   }
 }
 
-// Utility
 function showToast(message, type) {
   const t = document.getElementById('toast');
   t.textContent = message;

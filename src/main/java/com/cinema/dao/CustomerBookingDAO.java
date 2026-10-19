@@ -88,7 +88,7 @@ public class CustomerBookingDAO {
                   AND CAST(st.StartTime AS DATE) = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 ORDER BY st.StartTime
                 """;
         return jdbcTemplate.query(sql, this::mapShowtime, movieId, Date.valueOf(date));
@@ -105,7 +105,7 @@ public class CustomerBookingDAO {
                 WHERE st.ShowtimeID = ?
                   AND st.StartTime > SYSDATETIME()
                   AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
-                  AND UPPER(r.[Status]) = 'ACTIVE'
+                  AND UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
                 """;
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapShowtime, showtimeId));
@@ -174,6 +174,19 @@ public class CustomerBookingDAO {
                 VALUES (?, ?, ?, 'ONLINE', 0, 0, 0, 'PENDING')
                 """, Integer.class, customerId, showtimeId, bookingCode);
         if (id == null) throw new IllegalStateException("Could not create booking.");
+        return id;
+    }
+
+    public int createPendingCounterBooking(Integer customerId, int staffId, int showtimeId,
+                                           String bookingCode) {
+        Integer id = jdbcTemplate.queryForObject("""
+                INSERT INTO dbo.Booking
+                    (CustomerID, StaffID, ShowtimeID, BookingCode, BookingType, Subtotal,
+                     DiscountAmount, TotalAmount, [Status])
+                OUTPUT inserted.BookingID
+                VALUES (?, ?, ?, ?, 'COUNTER', 0, 0, 0, 'PENDING')
+                """, Integer.class, customerId, staffId, showtimeId, bookingCode);
+        if (id == null) throw new IllegalStateException("Could not create counter booking.");
         return id;
     }
 
@@ -254,6 +267,50 @@ public class CustomerBookingDAO {
         }
     }
 
+    public Optional<BookingSummary> findCounterBookingSummary(int bookingId, int staffId) {
+        String sql = """
+                SELECT b.BookingID, b.BookingCode, b.TotalAmount, b.[Status],
+                       m.Title, r.RoomName, st.StartTime,
+                       seats.SeatLabels, seats.SeatCount, seats.SeatTotal,
+                       COALESCE(food.FoodTotal, 0) AS FoodTotal,
+                       seats.HeldUntil
+                FROM dbo.Booking b
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID = st.MovieID
+                JOIN dbo.Room r ON r.RoomID = st.RoomID
+                CROSS APPLY (
+                    SELECT STRING_AGG(CONCAT(s.RowLabel, s.SeatNumber), ', ') AS SeatLabels,
+                           COUNT(*) AS SeatCount, COALESCE(SUM(bs.UnitPrice), 0) AS SeatTotal,
+                           MIN(bs.HeldUntil) AS HeldUntil
+                    FROM dbo.BookingSeat bs
+                    JOIN dbo.Seat s ON s.SeatID = bs.SeatID
+                    WHERE bs.BookingID = b.BookingID
+                ) seats
+                OUTER APPLY (
+                    SELECT SUM(bfb.Quantity * bfb.UnitPrice) AS FoodTotal
+                    FROM dbo.BookingFoodBeverage bfb
+                    WHERE bfb.BookingID = b.BookingID
+                ) food
+                WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
+                """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            BookingSummary summary = new BookingSummary();
+            summary.setBookingId(rs.getInt("BookingID"));
+            summary.setBookingCode(rs.getString("BookingCode"));
+            summary.setMovieTitle(rs.getString("Title"));
+            summary.setRoomName(rs.getString("RoomName"));
+            summary.setStartTime(rs.getObject("StartTime", LocalDateTime.class));
+            summary.setSeatLabels(rs.getString("SeatLabels"));
+            summary.setSeatCount(rs.getInt("SeatCount"));
+            summary.setSeatTotal(rs.getBigDecimal("SeatTotal"));
+            summary.setFoodTotal(rs.getBigDecimal("FoodTotal"));
+            summary.setTotalAmount(rs.getBigDecimal("TotalAmount"));
+            summary.setHeldUntil(rs.getObject("HeldUntil", LocalDateTime.class));
+            summary.setStatus(rs.getString("Status"));
+            return summary;
+        }, bookingId, staffId).stream().findFirst();
+    }
+
     public List<FoodBeverageOption> findFoodItems(int bookingId) {
         String sql = """
                 SELECT item.FoodBeverageItemID, item.[Name], item.[Description],
@@ -312,6 +369,29 @@ public class CustomerBookingDAO {
                 JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
                 WHERE b.BookingID = ? AND c.AccountID = ? AND b.[Status] = 'PENDING'
                 """, bookingId, accountId);
+    }
+
+    public void releaseCounterBooking(int bookingId, int staffId) {
+        jdbcTemplate.update("""
+                DELETE food
+                FROM dbo.BookingFoodBeverage food
+                JOIN dbo.Booking b ON b.BookingID = food.BookingID
+                WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
+                  AND UPPER(b.[Status]) = 'PENDING'
+                """, bookingId, staffId);
+        jdbcTemplate.update("""
+                DELETE seat
+                FROM dbo.BookingSeat seat
+                JOIN dbo.Booking b ON b.BookingID = seat.BookingID
+                WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
+                  AND UPPER(b.[Status]) = 'PENDING'
+                """, bookingId, staffId);
+        jdbcTemplate.update("""
+                UPDATE dbo.Booking
+                SET [Status] = 'CANCELLED'
+                WHERE BookingID = ? AND StaffID = ? AND UPPER(BookingType) = 'COUNTER'
+                  AND UPPER([Status]) = 'PENDING'
+                """, bookingId, staffId);
     }
 
     public void expireOldHolds() {

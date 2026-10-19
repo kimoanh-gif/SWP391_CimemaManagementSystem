@@ -9,6 +9,7 @@
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow .2s; }
 .stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-icon { font-size: 28px; margin-bottom: 8px; }
 .stat-num { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
 .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
 .stat-card.blue   .stat-num { color: #2563EB; }
@@ -79,14 +80,14 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Sidebar Toggle (mobile) -->
-<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
 
 <div class="admin-layout">
 
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
     <a th:href="@{/admin/dashboard}" class="sidebar-brand">
-      <div class="brand-icon">&#9654;</div>
+      <div class="brand-icon">▶</div>
       <div class="brand-text">
         CINEMA
         <span>SYSTEM</span>
@@ -539,18 +540,15 @@ async function openEditModal(accountId) {
 // SUBMIT FORM
 async function submitForm(e) {
   if (e) e.preventDefault();
-  console.log('submitForm called');
   clearErrors();
 
   const accountId = document.getElementById('formAccountId').value;
-  console.log('accountId:', accountId);
   const payload = {
     username: document.getElementById('fUsername').value.trim(),
     fullName:  document.getElementById('fFullName').value.trim(),
     email:     document.getElementById('fEmail').value.trim(),
     phone:     document.getElementById('fPhone').value.trim(),
   };
-  console.log('payload:', payload);
 
   if (!payload.username) { markError('fUsername','errUsername'); showToast('Username is required.','error'); return; }
   if (payload.username.length < 3) { markError('fUsername','errUsername'); showToast('Username must be at least 3 characters.','error'); return; }
@@ -565,15 +563,10 @@ async function submitForm(e) {
 
   const url = editMode ? `/api/admin/customers/${accountId}` : '/api/admin/customers';
   const method = editMode ? 'PUT' : 'POST';
-  console.log('url:', url, 'method:', method);
 
   try {
-    console.log('sending request...');
     const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() }, body: JSON.stringify(payload) });
-    console.log('resp status:', resp.status);
-    if (!resp.ok) { showToast('Action failed. Please login again.', 'error'); return; }
     const json = await resp.json();
-    console.log('resp json:', json);
     if (json.success) {
       showToast(json.message, 'success');
       closeFormModal();

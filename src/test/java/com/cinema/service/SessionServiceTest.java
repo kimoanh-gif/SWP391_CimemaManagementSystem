@@ -64,7 +64,7 @@ class SessionServiceTest {
         assertEquals("redirect:/admin/dashboard",    svc.dashboardForRole("ADMIN"));
         assertEquals("redirect:/manager/dashboard",  svc.dashboardForRole("MANAGER"));
         assertEquals("redirect:/staff/dashboard",    svc.dashboardForRole("STAFF"));
-        assertEquals("redirect:/customer/dashboard", svc.dashboardForRole("CUSTOMER"));
+        assertEquals("redirect:/",                   svc.dashboardForRole("CUSTOMER"));
         assertEquals("redirect:/login",              svc.dashboardForRole("GUEST"));
         assertEquals("redirect:/login",              svc.dashboardForRole(null));
     }

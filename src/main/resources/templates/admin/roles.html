@@ -134,13 +134,13 @@
   <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div class="page-title">🔑 Roles & Permissions</div>
+      <div class="page-title">🔑 Roles &amp; Permissions</div>
     </div>
     <div class="admin-content">
 
       <!-- Page Header -->
       <div class="page-header">
-        <h1>Role & Permission Management</h1>
+        <h1>Role &amp; Permission Management</h1>
         <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Select a role to manage its permissions</p>
       </div>
 
@@ -197,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadData() {
   document.getElementById('loadingIndicator').classList.add('show');
   try {
-    // Load roles and permissions in parallel
     const [rolesResp, permsResp] = await Promise.all([
       fetch('/api/admin/roles', { headers: getCsrfHeaders() }),
       fetch('/api/admin/roles/permissions', { headers: getCsrfHeaders() })
@@ -234,7 +233,7 @@ function renderRolesGrid() {
     'STAFF': 'staff',
     'CUSTOMER': 'customer'
   };
-
+  
   grid.innerHTML = roles.map(role => {
     const info = roleIcons[role.roleName.toUpperCase()] || { icon: '📋', bg: '#E5E7EB' };
     const cls = roleClass[role.roleName.toUpperCase()] || '';
@@ -257,7 +256,6 @@ function renderRolesGrid() {
     `;
   }).join('');
   
-  // If a role was selected, re-render its permission panel
   if (selectedRoleId) {
     const selectedRole = roles.find(r => r.roleId === selectedRoleId);
     if (selectedRole) {
@@ -269,13 +267,11 @@ function renderRolesGrid() {
 function selectRole(roleId) {
   selectedRoleId = roleId;
   
-  // Update grid UI
   document.querySelectorAll('.role-card').forEach(card => {
     card.classList.remove('active');
   });
   event.currentTarget.classList.add('active');
   
-  // Find role and render panel
   const role = roles.find(r => r.roleId === roleId);
   if (role) {
     renderPermissionPanel(role);
@@ -293,11 +289,9 @@ function renderPermissionPanel(role) {
   const rolePerms = new Set(role.permissions || []);
   const mandatory = MANDATORY_PERMISSIONS[role.roleName.toUpperCase()] || [];
   
-  // Get assigned and available permissions
   const assigned = allPermissions.filter(p => rolePerms.has(p.name));
   const available = allPermissions.filter(p => !rolePerms.has(p.name));
   
-  // Mandatory warning
   const mandatoryWarning = mandatory.length > 0 ? `
     <div class="mandatory-warning">
       <span>⚠️</span>
@@ -311,7 +305,6 @@ function renderPermissionPanel(role) {
   panelBody.innerHTML = `
     ${mandatoryWarning}
     <div class="permission-layout">
-      <!-- Assigned Permissions -->
       <div class="permission-section">
         <h3>✓ Assigned Permissions (${assigned.length})</h3>
         <ul class="permission-list">
@@ -324,7 +317,6 @@ function renderPermissionPanel(role) {
         </ul>
       </div>
       
-      <!-- Available Permissions -->
       <div class="permission-section">
         <h3>+ Available Permissions (${available.length})</h3>
         <ul class="permission-list">
@@ -372,10 +364,6 @@ function renderPermissionItem(permission, isAssigned, isMandatory) {
   }
 }
 
-/**
- * A1: Add Permission
- * Add a single permission to the selected role.
- */
 async function addPermission(roleId, permissionName) {
   try {
     const resp = await fetch(`/api/admin/roles/${roleId}/permissions/add`, {
@@ -388,7 +376,6 @@ async function addPermission(roleId, permissionName) {
     
     if (json.success) {
       showToast(`Permission '${permissionName}' added successfully.`, 'success');
-      // Refresh data
       await refreshRoleData(roleId);
     } else {
       showToast(json.message || 'Failed to add permission.', 'error');
@@ -398,13 +385,7 @@ async function addPermission(roleId, permissionName) {
   }
 }
 
-/**
- * A2: Remove Permission
- * Remove a permission from the selected role.
- * Exception E2: Mandatory permission cannot be removed.
- */
 async function removePermission(roleId, permissionName) {
-  // Check if it's a mandatory permission
   const role = roles.find(r => r.roleId === roleId);
   const mandatory = MANDATORY_PERMISSIONS[role?.roleName?.toUpperCase()] || [];
   
@@ -428,7 +409,6 @@ async function removePermission(roleId, permissionName) {
     
     if (json.success) {
       showToast(`Permission '${permissionName}' removed successfully.`, 'success');
-      // Refresh data
       await refreshRoleData(roleId);
     } else {
       showToast(json.message || 'Failed to remove permission.', 'error');
@@ -438,13 +418,8 @@ async function removePermission(roleId, permissionName) {
   }
 }
 
-/**
- * Refresh role data after an update.
- * Normal Flow Step 8-9: System saves and displays success message.
- */
 async function refreshRoleData(roleId) {
   try {
-    // Reload all data
     const [rolesResp, permsResp] = await Promise.all([
       fetch('/api/admin/roles', { headers: getCsrfHeaders() }),
       fetch('/api/admin/roles/permissions', { headers: getCsrfHeaders() })
@@ -458,7 +433,6 @@ async function refreshRoleData(roleId) {
     
     renderRolesGrid();
     
-    // Update panel if still on this role
     if (selectedRoleId === roleId) {
       const updatedRole = roles.find(r => r.roleId === roleId);
       if (updatedRole) {

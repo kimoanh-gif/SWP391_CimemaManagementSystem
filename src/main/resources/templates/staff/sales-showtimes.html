@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Counter Ticket Sales | CinemaSystem</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}">
+</head>
+<body>
+<div class="dash-shell">
+  <header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a>
+    <div class="dash-user"><span th:text="${user.fullName}">Staff Member</span><form th:action="@{/logout}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="dash-logout">Sign Out</button></form></div>
+  </header>
+  <main class="dash-body staff-content">
+    <a class="staff-text-link" th:href="@{/staff/dashboard}">← Dashboard</a>
+    <h1>Counter Ticket Sales</h1><p class="subtitle">Choose a date, movie, and showtime to start an order.</p>
+    <p class="staff-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+    <section class="dash-card staff-date-card">
+      <form th:action="@{/staff/sales}" method="get" class="staff-inline-form">
+        <label class="staff-label" for="date">Show Date</label>
+        <input class="staff-control" id="date" name="date" type="date" th:value="${selectedDate}" th:min="${today}" th:max="${maxDate}" required>
+        <button class="staff-button staff-button-primary">Find Showtimes</button>
+      </form>
+    </section>
+    <div class="staff-movie-list" th:if="${!#lists.isEmpty(movies)}">
+      <article class="dash-card staff-movie" th:each="movie : ${movies}">
+        <img class="staff-movie-poster" th:if="${movie.posterUrl}" th:src="${movie.posterUrl}" th:alt="${movie.title}">
+        <div class="staff-movie-info">
+          <p class="staff-eyebrow" th:text="${movie.genres != null and !movie.genres.isBlank() ? movie.genres : 'MOVIE'}">MOVIE</p>
+          <h2 th:text="${movie.title}">Movie Title</h2>
+          <p class="staff-muted" th:text="${movie.duration + ' min · ' + (movie.ageRating != null ? movie.ageRating : 'P')}"></p>
+          <div class="staff-showtime-grid">
+            <form th:each="showtime : ${movie.showtimes}" th:action="@{/staff/sales/showtime}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <input type="hidden" name="showtimeId" th:value="${showtime.showtimeId}">
+              <button class="staff-showtime" type="submit" th:disabled="${showtime.availableSeats < 1}">
+                <strong th:text="${#temporals.format(showtime.startTime, 'HH:mm')}">19:30</strong>
+                <span th:text="${showtime.roomName}">Screen 1</span>
+                <small th:text="${showtime.availableSeats + ' seats available'}">0 seats available</small>
+              </button>
+            </form>
+          </div>
+        </div>
+      </article>
+    </div>
+    <section class="dash-card staff-empty" th:if="${#lists.isEmpty(movies)}">
+      No movies or available showtimes were found for this date.
+    </section>
+  </main>
+</div>
+</body>
+</html>
