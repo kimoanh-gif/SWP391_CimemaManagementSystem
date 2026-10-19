@@ -129,7 +129,7 @@ public class SessionService {
             case "ADMIN"    -> "redirect:/admin/dashboard";
             case "MANAGER"  -> "redirect:/manager/dashboard";
             case "STAFF"    -> "redirect:/staff/dashboard";
-            case "CUSTOMER" -> "redirect:/customer/dashboard";
+            case "CUSTOMER" -> "redirect:/";
             default         -> "redirect:/login";
         };
     }

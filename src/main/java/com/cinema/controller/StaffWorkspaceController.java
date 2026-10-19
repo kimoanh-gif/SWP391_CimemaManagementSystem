@@ -53,7 +53,7 @@ public class StaffWorkspaceController {
         if (accountId == null) return "redirect:/login";
         model.addAttribute("user", sessionService.getCurrentUser(session));
         model.addAttribute("articles", staffNewsService.list(accountId, sessionService.currentRole(session)));
-        model.addAttribute("newsForm", new StaffNewsArticle(null, null, "", "", "", "",
+        model.addAttribute("newsForm", new StaffNewsArticle(null, null, "", "", "",
                 "DRAFT", null, null, null));
         return "staff/news";
     }

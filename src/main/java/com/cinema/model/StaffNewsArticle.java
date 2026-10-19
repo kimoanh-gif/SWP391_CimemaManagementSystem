@@ -6,7 +6,6 @@ public record StaffNewsArticle(
         Integer newsId,
         Integer createdByStaffId,
         String title,
-        String summary,
         String content,
         String thumbnailUrl,
         String status,

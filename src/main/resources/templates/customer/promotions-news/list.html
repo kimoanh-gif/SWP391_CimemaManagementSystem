@@ -126,7 +126,7 @@
                     <h3 class="news-title">
                         <a th:href="@{/news/{id}(id=${news.newsId})}" th:text="${news.title}">Tiêu đề bài viết</a>
                     </h3>
-                    <p class="news-excerpt" th:text="${news.summary}">Tóm tắt nội dung bài viết tin tức hoặc sự kiện đang diễn ra tại cụm rạp...</p>
+                    <p class="news-excerpt" th:text="${news.getExcerpt(140)}">Tóm tắt nội dung bài viết tin tức hoặc sự kiện đang diễn ra tại cụm rạp...</p>
                     <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
                         <span>Đọc tiếp</span>
                         <span>➔</span>
