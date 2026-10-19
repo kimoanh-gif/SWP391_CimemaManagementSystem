@@ -394,30 +394,54 @@ public class CustomerBookingDAO {
                 """, bookingId, staffId);
     }
 
-    public void expireOldHolds() {
+    /**
+     * JOB-01: Releases expired seat holds and updates booking status to EXPIRED.
+     * Strictly protects confirmed, paid, or ticketed reservations.
+     * Returns the count of released seat holds.
+     */
+    public int releaseExpiredSeatReservations() {
+        // 1. Mark eligible expired bookings as EXPIRED
         jdbcTemplate.update("""
                 UPDATE b SET b.[Status] = 'EXPIRED'
                 FROM dbo.Booking b
-                WHERE b.[Status] = 'PENDING'
+                WHERE UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                   AND EXISTS (
                       SELECT 1 FROM dbo.BookingSeat bs
                       WHERE bs.BookingID = b.BookingID
-                        AND bs.[Status] = 'HELD'
+                        AND UPPER(bs.[Status]) = 'HELD'
                         AND bs.HeldUntil <= SYSDATETIME()
                   )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM dbo.Payment p
+                      WHERE p.BookingID = b.BookingID
+                        AND UPPER(p.[Status]) = 'PAID'
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM dbo.Ticket t
+                      JOIN dbo.BookingSeat bs0 ON bs0.BookingSeatID = t.BookingSeatID
+                      WHERE bs0.BookingID = b.BookingID
+                  )
                 """);
+
+        // 2. Remove associated F&B selections for expired bookings
         jdbcTemplate.update("""
                 DELETE food
                 FROM dbo.BookingFoodBeverage food
                 JOIN dbo.Booking b ON b.BookingID = food.BookingID
                 WHERE b.[Status] = 'EXPIRED'
                 """);
-        jdbcTemplate.update("""
+
+        // 3. Release/delete expired BookingSeat records so seats become available again
+        return jdbcTemplate.update("""
                 DELETE seat
                 FROM dbo.BookingSeat seat
                 JOIN dbo.Booking b ON b.BookingID = seat.BookingID
                 WHERE b.[Status] = 'EXPIRED'
                 """);
+    }
+
+    public void expireOldHolds() {
+        releaseExpiredSeatReservations();
     }
 
     private ShowtimeOption mapShowtime(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
