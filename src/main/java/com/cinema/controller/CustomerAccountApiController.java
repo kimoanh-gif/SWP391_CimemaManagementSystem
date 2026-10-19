@@ -27,6 +27,7 @@ public class CustomerAccountApiController {
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "15") int size) {
+
         // Validate page/size
         if (page < 1) page = 1;
         if (size < 1) size = 10;

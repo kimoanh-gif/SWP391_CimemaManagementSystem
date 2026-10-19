@@ -35,7 +35,8 @@ public class CustomerProfileController {
     public String viewProfile(HttpSession session, Model model) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
-        model.addAttribute("profile", getProfile(accountId));
+        CustomerProfile profile = getProfile(accountId);
+        addPageContext(session, model, profile);
         return "customer/profile";
     }
 
@@ -45,7 +46,7 @@ public class CustomerProfileController {
         if (accountId == null) return "redirect:/login";
         CustomerProfile profile = getProfile(accountId);
 
-        model.addAttribute("profile", profile);
+        addPageContext(session, model, profile);
         model.addAttribute("form", ProfileUpdateForm.from(profile));
         model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
 
@@ -65,7 +66,7 @@ public class CustomerProfileController {
         CustomerProfile profile = getProfile(accountId);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("profile", profile);
+            addPageContext(session, model, profile);
             model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
             return "customer/profile-edit";
         }
@@ -74,7 +75,7 @@ public class CustomerProfileController {
             customerProfileService.updateProfile(accountId, form);
         } catch (IllegalArgumentException exception) {
             bindingResult.rejectValue("phone", "phone.duplicate", exception.getMessage());
-            model.addAttribute("profile", profile);
+            addPageContext(session, model, profile);
             model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
             return "customer/profile-edit";
         }
@@ -100,6 +101,12 @@ public class CustomerProfileController {
         } catch (IllegalArgumentException exception) {
             throw new ProfileNotFoundException();
         }
+    }
+
+    private void addPageContext(HttpSession session, Model model, CustomerProfile profile) {
+        model.addAttribute("profile", profile);
+        model.addAttribute("currentUser", sessionService.getCurrentUser(session));
+        model.addAttribute("availablePoints", profile.getAvailablePoints());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)

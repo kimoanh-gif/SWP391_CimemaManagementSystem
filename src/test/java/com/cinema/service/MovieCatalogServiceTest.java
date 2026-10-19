@@ -1,8 +1,8 @@
 package com.cinema.service;
 
 import com.cinema.dao.CustomerDAO;
-import com.cinema.dao.GenreDAO;
-import com.cinema.dao.MovieDAO;
+import com.cinema.dao.GenreDao;
+import com.cinema.dao.MovieDao;
 import com.cinema.dao.MovieReviewDAO;
 import com.cinema.model.Customer;
 import com.cinema.model.Movie;
@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 class MovieCatalogServiceTest {
 
     @Mock
-    private MovieDAO movieDAO;
+    private MovieDao movieDAO;
 
     @Mock
-    private GenreDAO genreDAO;
+    private GenreDao genreDAO;
 
     @Mock
     private MovieReviewDAO movieReviewDAO;

@@ -93,8 +93,11 @@
     </div>
   </aside>
 
+  <!-- Right: Login Form -->
   <main class="auth-panel-wrap">
     <section class="auth-panel" aria-labelledby="login-title">
+
+      <!-- Mobile brand -->
       <div class="auth-brand-mobile">
         <div class="brand-icon">▶</div>
         <span>CINEMA SYSTEM</span>
@@ -103,12 +106,13 @@
       <h2 id="login-title">Welcome back</h2>
       <p class="auth-intro">Log in to your account.</p>
 
+      <!-- Alerts -->
       <div class="auth-notice error" role="alert" th:if="${formError}" th:text="${formError}" th:attr="data-locked-seconds=${lockedSeconds}"></div>
       <div class="auth-notice success" role="status" th:if="${logoutSuccess}" th:text="${logoutSuccess}"></div>
       <div class="auth-notice success" role="status" th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
       <div class="auth-notice success" role="status" th:if="${resetSuccess}" th:text="${resetSuccess}"></div>
-      <div class="auth-notice error"   role="alert"  th:if="${oauthError}" th:text="${oauthError}"></div>
-      <div class="auth-notice error"   role="alert"  th:if="${oauthRejected}" th:text="${oauthRejected}"></div>
+      <div class="auth-notice error" role="alert" th:if="${oauthError}" th:text="${oauthError}"></div>
+      <div class="auth-notice error" role="alert" th:if="${oauthRejected}" th:text="${oauthRejected}"></div>
 
       <!-- Google OAuth2 button -->
       <a class="auth-btn-google" th:if="${googleOAuthEnabled}" th:href="@{/oauth2/authorization/google}" aria-label="Continue with Google">
@@ -145,12 +149,15 @@
                    placeholder="Enter your password" required>
             <button class="auth-show-pw" type="button" id="togglePassword" aria-label="Show password" title="Show/hide password">
               <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
             </button>
           </div>
           <p class="auth-error" th:if="${passwordError}" th:text="${passwordError}"></p>
         </div>
 
+        <!-- Options -->
         <div class="auth-options">
           <label class="auth-remember">
             <input type="checkbox" id="rememberIdentifier"><span>Remember email/username</span>
@@ -158,6 +165,7 @@
           <a th:href="@{/forgot-password}">Forgot password?</a>
         </div>
 
+        <!-- Submit -->
         <button class="auth-btn" type="submit" id="submitBtn">
           <span class="label">LOGIN</span>
           <span class="spinner" aria-hidden="true"></span>
@@ -172,39 +180,6 @@
 
 <script>
 (() => {
-  // 3D Tilt effect for auth panel
-  const panel = document.querySelector('.auth-panel');
-  if (panel) {
-    panel.addEventListener('mousemove', (e) => {
-      const rect = panel.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = (y - centerY) / 20;
-      const rotateY = (centerX - x) / 20;
-      panel.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
-    });
-    
-    panel.addEventListener('mouseleave', () => {
-      panel.style.transform = '';
-    });
-  }
-
-  // Ripple effect for buttons
-  const buttons = document.querySelectorAll('.auth-btn');
-  buttons.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      const rect = this.getBoundingClientRect();
-      const ripple = document.createElement('span');
-      ripple.className = 'ripple';
-      ripple.style.left = (e.clientX - rect.left) + 'px';
-      ripple.style.top = (e.clientY - rect.top) + 'px';
-      this.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    });
-  });
-
   // Show / hide password
   const pw = document.getElementById('password');
   const toggle = document.getElementById('togglePassword');
@@ -235,7 +210,7 @@
     });
   }
 
-  // Loading state + double-submit prevention
+  // Loading state
   const btn = document.getElementById('submitBtn');
   if (btn) {
     document.querySelector('form').addEventListener('submit', () => {

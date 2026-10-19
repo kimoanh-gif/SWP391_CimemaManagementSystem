@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" th:content="${_csrf.token}">
+  <title>News Management | CinemaSystem</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff-workspace.css}">
+  <script th:src="@{/js/staff-news.js}" defer></script>
+</head>
+<body>
+<div class="dash-shell">
+  <header class="dash-header">
+    <a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a>
+    <div class="dash-user"><span class="role-badge" th:text="${user.role}">STAFF</span><span th:text="${user.fullName}">Staff Member</span>
+      <form th:action="@{/logout}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="dash-logout">Sign Out</button></form>
+    </div>
+  </header>
+  <main class="dash-body staff-content">
+    <a class="staff-text-link" th:href="@{/staff/dashboard}">← Dashboard</a>
+    <h1>News Management</h1>
+    <p class="subtitle">Save an article as a draft or submit it for review.</p>
+    <div class="staff-two-column">
+      <section class="dash-card">
+        <h2 id="editorTitle">New Article</h2>
+        <p id="newsFeedback" class="staff-feedback" role="status" aria-live="polite"></p>
+        <form id="newsForm">
+          <label class="staff-label" for="newsTitle">Title</label>
+          <input class="staff-control" id="newsTitle" maxlength="255" required>
+          <label class="staff-label" for="newsThumbnail">Thumbnail Image URL</label>
+          <input class="staff-control" id="newsThumbnail" type="url" maxlength="500" placeholder="https://...">
+          <label class="staff-label" for="newsContent">Content</label>
+          <textarea class="staff-control" id="newsContent" rows="9" required></textarea>
+          <div class="staff-form-actions">
+            <button class="staff-button" type="submit" value="DRAFT">Save Draft</button>
+            <button class="staff-button staff-button-primary" type="submit" value="PENDING">Submit for Review</button>
+            <button class="staff-button" id="cancelEdit" type="button" hidden>Cancel Edit</button>
+          </div>
+        </form>
+      </section>
+      <section class="dash-card">
+        <h2>Articles</h2>
+        <p id="newsListMessage" class="staff-muted">Loading articles...</p>
+        <div id="newsList" class="staff-news-list"></div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

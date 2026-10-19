@@ -67,41 +67,41 @@ tbody tr:hover td { background: var(--purple-50); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .toolbar { flex-direction: column; align-items: stretch; }
-  .search-box input { width: 100%; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .search-box input { width: 100%; }
 }
 </style>
 </head>
 <body>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
 
 <div class="admin-layout">
 
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
     <a th:href="@{/admin/dashboard}" class="sidebar-brand">
-      <div class="brand-icon">&#9654;</div>
+      <div class="brand-icon">▶</div>
       <div class="brand-text">CINEMA<span>SYSTEM</span></div>
     </a>
     <div class="sidebar-section">Management</div>
     <nav class="sidebar-nav">
       <a th:href="@{/admin/dashboard}" class="sidebar-link">
-        <span class="link-label">Dashboard</span>
+        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
       </a>
       <a th:href="@{/admin/customers}" class="sidebar-link">
-        <span class="link-label">Customers</span>
+        <span class="link-icon">👥</span><span class="link-label">Customers</span>
       </a>
       <a th:href="@{/admin/staffs}" class="sidebar-link active">
-        <span class="link-label">Staff & Managers</span>
+        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
       </a>
       <a th:href="@{/admin/roles}" class="sidebar-link">
-        <span class="link-label">Roles & Permissions</span>
+        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
       </a>
       <a th:href="@{/admin/config}" class="sidebar-link">
-        <span class="link-label">System Configuration</span>
+        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -125,7 +125,7 @@ tbody tr:hover td { background: var(--purple-50); }
   <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div class="page-title">Staff & Manager Accounts</div>
+      <div class="page-title">🛡️ Staff &amp; Manager Accounts</div>
       <div class="topbar-actions">
         <button class="btn btn-primary" onclick="openCreateModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -489,13 +489,6 @@ async function confirmAction(accountId, name, action) {
   } catch (e) { showToast('An error occurred.', 'error'); }
 }
 
-/**
- * A5 - Reset Password
- * 1. Confirm with Admin
- * 2. Call API to reset password
- * 3. Show temporary password in result modal
- * 4. Copy to clipboard option
- */
 async function resetPassword(accountId, name) {
   if (!confirm(`Reset password for "${name}"?\n\nA new temporary password will be generated and displayed to you.`)) return;
   
@@ -511,9 +504,6 @@ async function resetPassword(accountId, name) {
   } catch (e) { showToast('An error occurred.', 'error'); }
 }
 
-/**
- * Show modal with temporary password and copy option
- */
 function showResetResultModal(name, tempPassword, message) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay show';
@@ -551,7 +541,6 @@ function copyPassword(password) {
   navigator.clipboard.writeText(password).then(() => {
     showToast('Password copied to clipboard!', 'success');
   }).catch(() => {
-    // Fallback for older browsers
     const textarea = document.createElement('textarea');
     textarea.value = password;
     document.body.appendChild(textarea);
