@@ -178,15 +178,64 @@ public class CustomerBookingController {
         try {
             bookingService.saveFoodSelections(
                     bookingId, accountId, parseIntegerList(itemIds), parseIntegerList(quantities));
-            redirectAttributes.addFlashAttribute(
-                    "successMessage",
-                    "Your selection has been saved. Payment will be available in Iteration 3."
-            );
-            return "redirect:/customer/booking/foods";
+            return "redirect:/customer/booking/promotions";
         } catch (BookingException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
             return "redirect:/customer/booking/foods";
         }
+    }
+
+    @GetMapping("/promotions")
+    public String showPromotionSelection(HttpSession session, Model model,
+                                         RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+        if (bookingId == null) return "redirect:/customer/booking/seats";
+        try {
+            model.addAttribute("summary", bookingService.getActiveBooking(bookingId, accountId));
+            model.addAttribute("activeStep", 4);
+            return "customer/booking/promotions";
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/seats";
+        }
+    }
+
+    @PostMapping("/promotions")
+    public String continueFromPromotions(@RequestParam(required = false) String voucherCode,
+                                         HttpSession session) {
+        if (customerAccountId(session) == null) return "redirect:/login";
+        if (session.getAttribute(SESSION_BOOKING_ID) == null) return "redirect:/customer/booking/seats";
+        session.setAttribute("customerBookingVoucherCode",
+                voucherCode == null ? "" : voucherCode.trim().toUpperCase());
+        return "redirect:/customer/booking/checkout";
+    }
+
+    @GetMapping("/checkout")
+    public String showCheckout(HttpSession session, Model model,
+                               RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+        if (bookingId == null) return "redirect:/customer/booking/seats";
+        try {
+            model.addAttribute("summary", bookingService.getActiveBooking(bookingId, accountId));
+            model.addAttribute("voucherCode", session.getAttribute("customerBookingVoucherCode"));
+            model.addAttribute("activeStep", 5);
+            return "customer/booking/checkout";
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/seats";
+        }
+    }
+
+    @PostMapping("/checkout")
+    public String submitCheckout(HttpSession session, RedirectAttributes redirectAttributes) {
+        if (customerAccountId(session) == null) return "redirect:/login";
+        redirectAttributes.addFlashAttribute("errorMessage",
+                "Online payment is not connected yet. Your seats remain held until the timer expires.");
+        return "redirect:/customer/booking/checkout";
     }
 
     @PostMapping("/cancel")
@@ -230,5 +279,6 @@ public class CustomerBookingController {
     private void clearBookingSession(HttpSession session) {
         session.removeAttribute(SESSION_SHOWTIME_ID);
         session.removeAttribute(SESSION_BOOKING_ID);
+        session.removeAttribute("customerBookingVoucherCode");
     }
 }

@@ -84,5 +84,22 @@
     };
 
     if (document.body.dataset.page === "seats") setupSeats();
-    if (document.body.dataset.page === "foods") setupFoods();
+    if (["foods", "promotions", "checkout"].includes(document.body.dataset.page)) setupFoods();
+
+    const vatToggle = document.querySelector("#vat-toggle");
+    const vatFields = document.querySelector("#vat-fields");
+    if (vatToggle && vatFields) {
+        vatToggle.addEventListener("change", () => {
+            vatFields.hidden = !vatToggle.checked;
+            vatFields.querySelectorAll("input").forEach(input => input.required = vatToggle.checked);
+        });
+    }
+
+    const voucherButton = document.querySelector("#preview-voucher");
+    const voucherMessage = document.querySelector("#voucher-message");
+    if (voucherButton && voucherMessage) {
+        voucherButton.addEventListener("click", () => {
+            voucherMessage.textContent = "The code will be verified when the promotion service is connected.";
+        });
+    }
 })();
