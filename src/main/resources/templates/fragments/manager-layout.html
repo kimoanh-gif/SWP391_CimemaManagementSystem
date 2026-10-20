@@ -101,10 +101,12 @@
             <span class="nav-icon">🎁</span> Khuyến mãi &amp; Voucher
         </a>
 
-        <a href="#" class="sidebar-link nav-disabled" title="Phân hệ giai đoạn mở rộng">
+        <!-- 10. Revenue Reports & Export (Screens 47 & 49) -->
+        <a th:href="@{/manager/reports}"
+           th:classappend="${activeMenu == 'reports'} ? ' active' : ''"
+           class="sidebar-link">
             <span class="nav-icon">📈</span> Báo cáo doanh thu
         </a>
-
     </nav>
 
     <!-- Footer user -->
