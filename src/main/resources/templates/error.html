@@ -1,55 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lỗi | CinemaSystem</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .error-box { background: #16213e; border: 1px solid #e94560; border-radius: 12px; padding: 32px; max-width: 900px; width: 100%; }
-  .error-box h1 { color: #e94560; font-size: 1.8rem; margin-bottom: 8px; }
-  .error-box .status { color: #e94560; font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 16px; }
-  .error-box .message { color: #ccc; font-size: 1.1rem; margin-bottom: 24px; }
-  .error-section { margin-bottom: 20px; }
-  .error-section h3 { color: #0f3460; background: #0f3460; color: #fff; padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 0.9rem; }
-  .error-section pre { background: #0a0a0a; border: 1px solid #333; border-top: none; border-radius: 0 0 6px 6px; padding: 14px; font-size: 0.75rem; color: #f8f8f2; overflow-x: auto; max-height: 300px; white-space: pre-wrap; word-break: break-all; }
-  .error-section table { background: #0a0a0a; border: 1px solid #333; border-top: none; border-radius: 0 0 6px 6px; padding: 14px; font-size: 0.8rem; width: 100%; }
-  .error-section td { padding: 4px 10px; }
-  .error-section td:first-child { color: #e94560; white-space: nowrap; }
-  .back { display: inline-block; margin-top: 24px; padding: 10px 24px; background: #e94560; color: #fff; text-decoration: none; border-radius: 8px; font-size: 0.95rem; }
-  .back:hover { background: #c73e54; }
-</style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Lỗi ' + ${status} + ' | CinemaSystem'">Có lỗi xảy ra | CinemaSystem</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Inter,"Segoe UI",sans-serif;color:#f8fafc;background:radial-gradient(circle at 20% 10%,#3b1b62 0,transparent 32%),radial-gradient(circle at 90% 85%,#7f1d1d 0,transparent 28%),#09090f}.card{position:relative;width:min(720px,100%);overflow:hidden;padding:56px;border:1px solid rgba(255,255,255,.13);border-radius:28px;background:rgba(20,18,30,.86);box-shadow:0 30px 90px rgba(0,0,0,.5);backdrop-filter:blur(18px)}.reel{position:absolute;width:220px;height:220px;right:-55px;top:-60px;border:22px solid rgba(168,85,247,.13);border-radius:50%}.reel:before,.reel:after{content:"";position:absolute;inset:45px;border:20px dotted rgba(248,113,113,.16);border-radius:50%}.reel:after{inset:78px;border:10px solid rgba(255,255,255,.08)}.eyebrow{margin:0 0 22px;color:#c4b5fd;font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.code{margin:0;font-size:clamp(86px,20vw,156px);font-weight:900;line-height:.82;letter-spacing:-.08em;background:linear-gradient(135deg,#f8fafc 20%,#c084fc 60%,#fb7185);-webkit-background-clip:text;color:transparent}h1{margin:30px 0 12px;font-size:clamp(28px,5vw,42px);letter-spacing:-.03em}.message{max-width:530px;margin:0;color:#b8b5c5;font-size:17px;line-height:1.7}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 21px;border:1px solid rgba(255,255,255,.16);border-radius:12px;color:#fff;text-decoration:none;font-weight:750;background:rgba(255,255,255,.06)}.button.primary{border-color:transparent;background:linear-gradient(135deg,#7c3aed,#db2777)}.meta{margin-top:32px;color:#716d80;font-size:12px}@media(max-width:560px){.card{padding:38px 26px;border-radius:22px}.reel{opacity:.55}}
+  </style>
 </head>
-<body>
-<div class="error-box">
-  <div class="status" th:text="${status}">500</div>
-  <h1>Đã xảy ra lỗi!</h1>
-  <p class="message" th:text="${message}">Internal Server Error</p>
-
-  <div class="error-section">
-    <h3>📋 Chi tiết lỗi</h3>
-    <table>
-      <tr><td>Status:</td><td th:text="${status}">500</td></tr>
-      <tr><td>Error:</td><td th:text="${error}">Internal Server Error</td></tr>
-      <tr><td>Message:</td><td th:text="${message}">—</td></tr>
-      <tr><td>Path:</td><td th:text="${path}">—</td></tr>
-      <tr><td>Timestamp:</td><td th:text="${timestamp}">—</td></tr>
-    </table>
-  </div>
-
-  <div class="error-section" th:if="${trace != null and trace != ''}">
-    <h3>🔍 Stacktrace</h3>
-    <pre th:text="${trace}"></pre>
-  </div>
-
-  <div class="error-section" th:if="${exception != null}">
-    <h3>⚠️ Exception</h3>
-    <pre th:text="${exception}"></pre>
-  </div>
-
-  <a href="/" class="back">← Quay về trang chủ</a>
-  <a href="/login" class="back" style="background:#0f3460;margin-left:12px;">Đăng nhập</a>
-</div>
-</body>
+<body><main class="card"><div class="reel" aria-hidden="true"></div><p class="eyebrow">CinemaSystem · Lost scene</p><p class="code" th:text="${status}">404</p><h1 th:text="${headline}">Không tìm thấy trang</h1><p class="message" th:text="${message}">Nội dung bạn tìm kiếm không tồn tại.</p><div class="actions"><a class="button primary" href="/">Về trang chủ</a><a class="button" href="javascript:history.back()">Quay lại</a></div><p class="meta"><span th:text="${timestamp}">2026-01-01 00:00:00 UTC</span><span th:if="${path}"> · </span><span th:if="${path}" th:text="${path}">/unknown</span></p></main></body>
 </html>
