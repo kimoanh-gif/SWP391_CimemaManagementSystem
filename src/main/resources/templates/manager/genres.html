@@ -1,313 +1,467 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Thể loại Phim – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="web_dashboard" name="shell-type">
+    <title>Film Genres – CINEORA Cinema Suites</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <style>
-        .badge-movies {
-            background: var(--primary-soft); color: var(--primary);
-            padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
-            cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+        @layer base {
+            html, body { margin:0; padding:0; }
+            body { overscroll-behavior: none; }
+            main > :first-child { margin-top: 0 !important; }
+            main > :last-child { margin-bottom: 0 !important; }
         }
-        .badge-movies:hover { background: var(--primary); color: #fff; }
-        .genre-desc-cell {
-            max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            color: var(--text-500); font-size: 13px;
-        }
+        ::-webkit-scrollbar { display: none; }
         .modal-backdrop {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.45); z-index: 1000;
+            background: rgba(40, 32, 42, 0.45); z-index: 1000;
             align-items: center; justify-content: center; padding: 20px;
+            backdrop-filter: blur(4px);
         }
         .modal-backdrop.open { display: flex; }
-        .modal {
-            background: #fff; border-radius: var(--radius-lg);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            width: 100%; max-width: 540px; max-height: 90vh;
-            display: flex; flex-direction: column;
-        }
-        .modal-header {
-            padding: 20px 24px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-        }
-        .modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
-        .modal-close {
-            width: 30px; height: 30px; border-radius: 6px;
-            background: var(--bg-body); border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; color: var(--text-500);
-        }
-        .modal-close:hover { background: var(--border); }
-        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-        .modal-footer {
-            padding: 16px 24px; border-top: 1px solid var(--border);
-            display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
-        }
-        .movie-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .movie-chip {
-            background: var(--bg-body); border: 1px solid var(--border);
-            padding: 6px 12px; border-radius: 20px; font-size: 12.5px;
-            color: var(--text-700); font-weight: 500;
-        }
+        .char-counter { font-size: 11.5px; color: #6d5a51; }
+        .form-error { font-size: 11.5px; color: #ba1a1a; margin-top: 2px; }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#ffdad7", "on-tertiary": "#ffffff", "on-primary": "#ffffff",
+                        "inverse-primary": "#ffb3af", "on-tertiary-container": "#fff3e6", "surface-container-low": "#feeffd",
+                        "surface-container-lowest": "#ffffff", "surface-tint": "#bf0423", "primary-container": "#d92332",
+                        "on-tertiary-fixed-variant": "#5f4100", "on-primary-fixed": "#410005", "inverse-on-surface": "#fbecfb",
+                        "text-charcoal": "#28202A", "tertiary-fixed": "#ffdeaa", "on-tertiary-fixed": "#271900",
+                        "background-warm": "#FFF8F0", "on-secondary-container": "#736057", "on-primary-fixed-variant": "#930017",
+                        "on-error-container": "#93000a", "on-surface-variant": "#5c403e", "surface": "#fff7fb",
+                        "on-surface": "#211923", "primary": "#b3001f", "tertiary": "#745100",
+                        "secondary-container": "#f7ddd1", "secondary-fixed-dim": "#dac2b6", "cinema-gold": "#F2B84B",
+                        "surface-dim": "#e4d6e4", "error": "#ba1a1a", "on-primary-container": "#fff2f1",
+                        "on-background": "#211923", "tertiary-container": "#946800", "outline": "#906f6d",
+                        "on-error": "#ffffff", "on-secondary": "#ffffff", "surface-bright": "#fff7fb",
+                        "surface-container-high": "#f2e4f2", "surface-variant": "#eddeec", "surface-container-highest": "#eddeec",
+                        "surface-container": "#f8e9f8", "secondary-fixed": "#f7ddd1", "background": "#fff7fb",
+                        "tertiary-fixed-dim": "#f7bd4f", "surface-peach": "#FFE5D9", "primary-fixed-dim": "#ffb3af",
+                        "on-secondary-fixed": "#261912", "error-container": "#ffdad6", "cinema-red": "#D92332",
+                        "secondary": "#6d5a51", "inverse-surface": "#362e38", "outline-variant": "#e5bdba",
+                        "on-secondary-fixed-variant": "#54433b"
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                    spacing: { "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "space-md": "1rem", "space-lg": "1.5rem" },
+                    fontFamily: {
+                        "label-sm": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"],
+                        "label-md": ["Be Vietnam Pro"], "headline-md": ["Be Vietnam Pro"],
+                        "headline-sm": ["Be Vietnam Pro"], "caption": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"]
+                    },
+                    fontSize: {
+                        "label-sm": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-lg": ["16px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        };
+    </script>
 </head>
-<body>
+<body class="bg-background-warm font-body-md text-text-charcoal min-h-screen">
+    <!-- Unified Sidebar Fragment -->
+    <div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='genres')}"></div>
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='movies')}"></div>
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Quản lý Thể loại')}"></div>
+    <!-- Topbar & Main -->
+    <div class="pl-[248px]">
+        <div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Film Genres')}"></div>
 
-<!-- Main Wrapper -->
-<div class="main-wrapper">
-<div class="page-shell">
+        <main class="relative pt-[68px] min-h-screen bg-background-warm p-[28px]">
+            <div class="flex flex-col w-full">
+                <!-- QA State Switcher Toolbar -->
+                <div class="flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest p-space-sm px-space-md rounded-xl shadow-sm mb-space-lg">
+                    <div class="flex items-center gap-space-sm">
+                        <span class="material-symbols-outlined text-cinema-red text-[20px]">tune</span>
+                        <span class="font-label-sm text-label-sm text-text-charcoal font-semibold uppercase tracking-wider">QA Demo States:</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5" id="qaStateContainer">
+                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-cinema-red text-on-primary shadow-sm" id="btn-state-standard" onclick="switchState('standard')" type="button">
+                            1. Standard Catalog (<span th:text="${totalCount}">8</span>)
+                        </button>
+                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-empty" onclick="switchState('empty')" type="button">
+                            2. Empty State
+                        </button>
+                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-loading" onclick="switchState('loading')" type="button">
+                            3. Loading Skeleton
+                        </button>
+                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-error" onclick="switchState('error')" type="button">
+                            4. Connection Error
+                        </button>
+                    </div>
+                </div>
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Vận hành</a>
-                <span>›</span>
-                <a th:href="@{/manager/movies}">Phim &amp; Thể loại</a>
-                <span>›</span>
-                <span>Quản lý Thể loại</span>
-            </div>
-            <h1 class="page-title">Quản lý Thể Loại Phim</h1>
-            <p class="page-subtitle">Thiết lập danh mục phân loại phim, mô tả và kích hoạt trạng thái sử dụng trong hệ thống.</p>
-        </div>
-        <div class="page-header-actions">
-            <a th:href="@{/manager/movies}" class="btn btn-secondary">🎬 Danh sách phim</a>
-            <button type="button" class="btn btn-primary" onclick="openAddGenreModal()">+ Thêm thể loại mới</button>
-        </div>
-    </div>
-
-    <!-- Alerts -->
-    <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
-        <span class="alert-icon">✅</span>
-        <div class="alert-body" th:text="${successMessage}">Thao tác thành công.</div>
-        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
-    </div>
-    <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
-        <span class="alert-icon">⚠️</span>
-        <div class="alert-body" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
-        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-        <div class="stat-card blue">
-            <div class="stat-label">Tổng số thể loại</div>
-            <div class="stat-value" th:text="${totalCount}">0</div>
-            <span class="stat-icon">📚</span>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-label">Đang hoạt động</div>
-            <div class="stat-value" th:text="${activeCount}">0</div>
-            <span class="stat-icon">✓</span>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-label">Ngưng hoạt động</div>
-            <div class="stat-value" th:text="${inactiveCount}">0</div>
-            <span class="stat-icon">✕</span>
-        </div>
-        <div class="stat-card purple">
-            <div class="stat-label">Thể loại có phim</div>
-            <div class="stat-value" th:text="${genresWithMovies}">0</div>
-            <span class="stat-icon">🎬</span>
-        </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <form class="toolbar-form" method="get" th:action="@{/manager/genres}">
-            <div class="toolbar-search">
-                <span class="toolbar-search-icon">🔍</span>
-                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên thể loại hoặc mô tả...">
-            </div>
-            <select name="status" onchange="this.form.submit()">
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
-                <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Đang hoạt động (ACTIVE)</option>
-                <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">Ngưng hoạt động (INACTIVE)</option>
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
-            <a th:href="@{/manager/genres}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
-        </form>
-    </div>
-
-    <!-- Table -->
-    <div class="table-wrapper">
-        <div class="table-header">
-            <span class="table-header-title">
-                Danh sách thể loại phim
-                <span class="badge badge-blue" style="margin-left:6px;" th:text="${#lists.size(genres)} + ' mục'">0 mục</span>
-            </span>
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-state" th:if="${#lists.isEmpty(genres)}">
-            <div class="empty-state-icon">📂</div>
-            <h3>Không tìm thấy thể loại nào</h3>
-            <p>Hiện tại chưa có dữ liệu thể loại phù hợp với tiêu chí tìm kiếm.</p>
-            <button type="button" class="btn btn-primary" onclick="openAddGenreModal()" style="margin-top:12px;">+ Thêm thể loại mới</button>
-        </div>
-
-        <table class="data-table" th:if="${not #lists.isEmpty(genres)}">
-            <thead>
-                <tr>
-                    <th style="width: 70px;">#ID</th>
-                    <th style="width: 220px;">Tên Thể Loại</th>
-                    <th>Mô Tả Chi Tiết</th>
-                    <th style="width: 140px; text-align: center;">Phim Liên Kết</th>
-                    <th style="width: 140px; text-align: center;">Trạng Thái</th>
-                    <th class="col-actions">Thao Tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="genre : ${genres}">
-                    <td style="color: var(--text-400); font-weight: 600;" th:text="${genre.genreId}">1</td>
-                    <td>
-                        <strong style="color: var(--text-900); font-size: 14px;" th:text="${genre.name}">Hành động</strong>
-                    </td>
-                    <td>
-                        <div class="genre-desc-cell" th:text="${genre.description ?: 'Chưa có mô tả'}" th:title="${genre.description}">
-                            Mô tả chi tiết thể loại...
+                <!-- Header & Page Title Row -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md mb-space-lg min-h-[64px]">
+                    <div class="flex flex-col min-w-0">
+                        <div class="flex items-center gap-space-sm">
+                            <h1 class="font-display-lg text-[26px] leading-[34px] font-semibold text-text-charcoal tracking-tight">
+                                Film Genres Management
+                            </h1>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-peach text-cinema-red font-caption text-[11px] font-semibold tracking-wide uppercase">
+                                M03.1
+                            </span>
                         </div>
-                    <td style="text-align: center;">
-                        <button type="button"
-                                th:if="${genre.movieCount > 0}"
-                                class="badge-movies"
-                                th:data-id="${genre.genreId}"
-                                th:data-name="${genre.name}"
-                                onclick="viewAssociatedMovies(this.getAttribute('data-id'), this.getAttribute('data-name'))"
-                                style="border:none;background:none;cursor:pointer;display:inline-block;"
-                                title="Bấm để xem danh sách phim thuộc thể loại này">
-                            🎬 <span th:text="${genre.movieCount}">0</span> phim
+                        <p class="font-body-md text-secondary text-[13px] leading-[20px] mt-0.5">
+                            Manage cinematic classification categories used for movie cataloging across CINEORA Cinema Suites.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-space-sm self-start sm:self-center shrink-0">
+                        <a th:href="@{/manager/movies}" class="h-[42px] px-space-md bg-surface-container hover:bg-surface-peach text-secondary hover:text-cinema-red rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 transition-all">
+                            <span class="material-symbols-outlined text-[19px]">movie</span>
+                            <span>Movie Catalog</span>
+                        </a>
+                        <button class="h-[42px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 shadow-sm hover:shadow-md transition-all active:scale-[0.98]" onclick="openAddGenreModal()" type="button">
+                            <span class="material-symbols-outlined text-[20px]">add</span>
+                            <span>Add New Genre</span>
                         </button>
-                        <span th:if="${genre.movieCount == 0}" class="badge-movies" style="opacity:0.4;cursor:default;">
-                            🎬 0 phim
-                        </span>
-                    </td>
-                    <td style="text-align: center;">
-                        <span th:if="${genre.active}" class="badge badge-green">Hoạt động</span>
-                        <span th:unless="${genre.active}" class="badge badge-gray">Ngưng hoạt động</span>
-                    </td>
-                    <td class="col-actions">
-                        <a th:href="@{/manager/movies(genreId=${genre.genreId})}"
-                           class="action-btn"
-                           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
-                           title="Lọc các phim thuộc thể loại này trên Màn Hình Quản Lý Phim">🎬</a>
+                    </div>
+                </div>
 
-                        <button type="button" class="action-btn action-btn-edit" title="Sửa"
-                                th:data-id="${genre.genreId}"
-                                th:data-name="${genre.name}"
-                                th:data-description="${genre.description}"
-                                th:data-status="${genre.status}"
-                                onclick="openEditGenreModal(this)">✎</button>
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="mb-4 p-4 rounded-xl bg-[#E8F5E9] border border-[#C8E6C9] text-[#2E7D32] flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-[20px] text-[#2E7D32]">check_circle</span>
+                        <span class="font-medium text-sm" th:text="${successMessage}">Action completed successfully</span>
+                    </div>
+                    <button type="button" onclick="this.closest('div').remove()" class="text-[#2E7D32] hover:opacity-75 font-bold">&times;</button>
+                </div>
+                <div th:if="${errorMessage}" class="mb-4 p-4 rounded-xl bg-error-container border border-[#FFCDD2] text-[#B71C1C] flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-[20px] text-[#B71C1C]">error</span>
+                        <span class="font-medium text-sm" th:text="${errorMessage}">An error occurred</span>
+                    </div>
+                    <button type="button" onclick="this.closest('div').remove()" class="text-[#B71C1C] hover:opacity-75 font-bold">&times;</button>
+                </div>
 
-                        <button type="button" class="action-btn action-btn-view"
-                                th:data-id="${genre.genreId}"
-                                th:data-name="${genre.name}"
-                                th:data-status="${genre.status}"
-                                th:data-movies="${genre.movieCount}"
-                                onclick="toggleGenreStatus(this)"
-                                th:title="${genre.active ? 'Hủy kích hoạt thể loại' : 'Kích hoạt lại thể loại'}">
-                            <span th:if="${genre.active}">⏹</span>
-                            <span th:unless="${genre.active}">▶</span>
-                        </button>
+                <!-- Main Card Container -->
+                <div class="w-full bg-surface-container-lowest rounded-xl p-[20px] shadow-sm flex flex-col min-w-0">
+                    <!-- Card Toolbar Section -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-md pb-space-sm">
+                        <!-- Search Form -->
+                        <form method="get" th:action="@{/manager/genres}" class="flex flex-wrap items-center gap-3 flex-1">
+                            <div class="relative w-full md:w-[320px]">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
+                                    search
+                                </span>
+                                <input class="w-full h-[40px] pl-10 pr-9 rounded-lg bg-[#FFFDFB] text-text-charcoal font-body-md text-body-md placeholder:text-secondary/70 focus:outline-none focus:bg-white border border-[#EFE0D5] focus:border-cinema-red transition-all"
+                                       id="genreSearchInput" name="keyword" th:value="${keyword}" placeholder="Search genre by name...">
+                            </div>
 
-                        <form th:action="@{/manager/genres/{id}/delete(id=${genre.genreId})}"
-                              method="post" style="display: inline;" class="delete-genre-form"
-                              th:data-name="${genre.name}">
-                            <button type="submit" class="action-btn action-btn-del"
-                                    th:disabled="${genre.movieCount > 0}"
-                                    th:title="${genre.movieCount > 0 ? 'Không thể xóa thể loại đã có phim liên kết' : 'Xóa thể loại'}">
-                                🗑
+                            <div class="relative w-full md:w-[200px]">
+                                <select name="status" onchange="this.form.submit()"
+                                        class="w-full h-[40px] px-3 pr-8 rounded-lg bg-[#FFFDFB] text-text-charcoal font-body-md text-sm border border-[#EFE0D5] focus:border-cinema-red focus:outline-none appearance-none cursor-pointer">
+                                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All Statuses</option>
+                                    <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
+                                    <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">Inactive</option>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-secondary pointer-events-none">expand_more</span>
+                            </div>
+
+                            <button type="submit" class="h-[40px] px-4 bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[18px]">filter_list</span>
+                                <span>Filter</span>
                             </button>
+                            <a th:href="@{/manager/genres}" class="h-[40px] px-3.5 bg-surface-container hover:bg-surface-peach text-secondary hover:text-cinema-red rounded-lg font-medium text-sm transition-colors flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                                <span>Reset</span>
+                            </a>
                         </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
 
-        <!-- Pagination -->
-        <div class="pagination-row" th:if="${not #lists.isEmpty(genres)}">
-            <span style="font-size: 13px; color: var(--text-500);">
-                Hiển thị 1 – <span th:text="${#lists.size(genres)}">5</span> trên tổng số <span th:text="${totalCount}">5</span> thể loại
-            </span>
-            <div class="pagination">
-                <button type="button" class="page-btn" disabled>&lsaquo;</button>
-                <button type="button" class="page-btn active">1</button>
-                <button type="button" class="page-btn">2</button>
-                <button type="button" class="page-btn">&rsaquo;</button>
+                        <!-- Right Summary Counter -->
+                        <div class="flex items-center gap-space-sm shrink-0 self-end md:self-auto">
+                            <span class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-surface-container font-label-sm text-label-sm text-secondary" id="summaryBadge">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-text-charcoal font-semibold" id="counterText" th:text="${activeCount}">0</span> active genres / <span th:text="${totalCount}">0</span> total
+                            </span>
+                            <a th:href="@{/manager/genres}" class="h-[40px] w-[40px] rounded-lg bg-surface-container hover:bg-surface-peach text-secondary hover:text-cinema-red flex items-center justify-center transition-colors" title="Refresh genre list">
+                                <span class="material-symbols-outlined text-[20px]">refresh</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- STATE 1: STANDARD TABLE VIEW -->
+                    <div class="w-full min-w-0 flex flex-col" id="state-standard">
+                        <div th:if="${genres != null and !genres.isEmpty()}" class="w-full overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="h-[44px] bg-[#FEF4ED] text-secondary font-label-sm text-[13px] uppercase tracking-wider">
+                                        <th class="w-[26%] px-space-md font-semibold text-text-charcoal rounded-l-lg" scope="col">Genre Name</th>
+                                        <th class="w-[40%] px-space-md font-semibold text-text-charcoal" scope="col">Description</th>
+                                        <th class="w-[16%] px-space-md font-semibold text-text-charcoal text-center" scope="col">Linked Movies</th>
+                                        <th class="w-[18%] px-space-md font-semibold text-text-charcoal text-right rounded-r-lg" scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#F5EAE1]" id="genreTableBody">
+                                    <tr th:each="g : ${genres}" class="h-[60px] hover:bg-[#FFE5D9]/30 transition-colors group">
+                                        <td class="px-space-md py-2 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span th:class="${g.isActive() ? 'w-2 h-2 rounded-full bg-emerald-500' : 'w-2 h-2 rounded-full bg-secondary/50'}"></span>
+                                                <div class="flex flex-col min-w-0">
+                                                    <span th:text="${g.name}" class="font-label-md text-label-md font-semibold text-text-charcoal group-hover:text-cinema-red transition-colors truncate">
+                                                        Genre Name
+                                                    </span>
+                                                    <span th:text="'#GEN-' + ${g.genreId} + ' • ' + (${g.isActive() ? 'Active' : 'Inactive'})" class="font-caption text-[11px] text-secondary">
+                                                        #GEN-01
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-space-md py-2 min-w-0">
+                                            <p th:text="${g.description != null and !g.description.isEmpty() ? g.description : 'No detailed description provided.'}" class="font-body-md text-secondary line-clamp-2 text-[13px] leading-[19px]">
+                                                Genre description
+                                            </p>
+                                        </td>
+                                        <td class="px-space-md py-2 text-center">
+                                            <button type="button" onclick="showAssociatedMovies(this)"
+                                                    th:data-id="${g.genreId}" th:data-name="${g.name}"
+                                                    class="inline-flex items-center justify-center min-w-[72px] px-2.5 py-1 rounded-full bg-surface-peach text-cinema-red font-label-sm text-[12px] font-semibold hover:bg-cinema-red hover:text-white transition-colors cursor-pointer"
+                                                    title="View movies assigned to this genre">
+                                                <span th:text="${g.movieCount} + ' movies'">0 movies</span>
+                                            </button>
+                                        </td>
+                                        <td class="px-space-md py-2 text-right">
+                                            <div class="inline-flex items-center gap-1">
+                                                <!-- View movies button -->
+                                                <button class="w-9 h-9 rounded-lg hover:bg-surface-peach text-secondary hover:text-cinema-red flex items-center justify-center transition-colors"
+                                                        onclick="showAssociatedMovies(this)"
+                                                        th:data-id="${g.genreId}" th:data-name="${g.name}"
+                                                        title="View Associated Movies" type="button">
+                                                    <span class="material-symbols-outlined text-[19px]">visibility</span>
+                                                </button>
+
+                                                <!-- Edit button -->
+                                                <button class="w-9 h-9 rounded-lg hover:bg-surface-peach text-secondary hover:text-cinema-red flex items-center justify-center transition-colors"
+                                                        onclick="openEditGenreModal(this)"
+                                                        th:data-id="${g.genreId}" th:data-name="${g.name}"
+                                                        th:data-description="${g.description}" th:data-status="${g.status}"
+                                                        title="Edit Genre" type="button">
+                                                    <span class="material-symbols-outlined text-[19px]">edit</span>
+                                                </button>
+
+                                                <!-- Toggle status button -->
+                                                <button class="w-9 h-9 rounded-lg hover:bg-surface-peach text-secondary hover:text-cinema-red flex items-center justify-center transition-colors"
+                                                        onclick="toggleGenreStatus(this)"
+                                                        th:data-id="${g.genreId}" th:data-name="${g.name}" th:data-status="${g.status}"
+                                                        th:title="${g.isActive() ? 'Deactivate Genre' : 'Activate Genre'}" type="button">
+                                                    <span class="material-symbols-outlined text-[19px]" th:text="${g.isActive() ? 'toggle_on' : 'toggle_off'}">toggle_on</span>
+                                                </button>
+
+                                                <!-- Delete button -->
+                                                <button class="w-9 h-9 rounded-lg hover:bg-red-50 text-secondary hover:text-red-600 flex items-center justify-center transition-colors"
+                                                        onclick="deleteGenre(this)"
+                                                        th:data-id="${g.genreId}" th:data-name="${g.name}" th:data-count="${g.movieCount}"
+                                                        title="Delete Genre" type="button">
+                                                    <span class="material-symbols-outlined text-[19px]">delete</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination Controls -->
+                        <div id="genrePagination" class="w-full"></div>
+
+                        <!-- Empty state if search finds nothing -->
+                        <div th:if="${genres == null or genres.isEmpty()}" class="flex w-full flex-col items-center justify-center py-16 text-center" id="state-noresults">
+                            <div class="w-16 h-16 rounded-full bg-surface-peach flex items-center justify-center text-cinema-red mb-space-md">
+                                <span class="material-symbols-outlined text-[32px]">search_off</span>
+                            </div>
+                            <h3 class="font-headline-sm text-headline-sm text-text-charcoal mb-1">
+                                No Matching Genres Found
+                            </h3>
+                            <p class="font-body-md text-secondary max-w-[420px] mb-space-lg text-[13px]">
+                                No film genres matched your search keyword or filters. Please adjust your search criteria.
+                            </p>
+                            <a th:href="@{/manager/genres}" class="h-[38px] px-space-md bg-surface-peach hover:bg-[#fad5c5] text-text-charcoal rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                                <span>Reset Filter &amp; Retry</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- STATE 2: EMPTY STATE (Hidden by default) -->
+                    <div class="hidden w-full flex-col items-center justify-center py-16 text-center" id="state-empty">
+                        <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-secondary mb-space-md">
+                            <span class="material-symbols-outlined text-[32px]">category</span>
+                        </div>
+                        <h3 class="font-headline-sm text-headline-sm text-text-charcoal mb-1">
+                            No Film Genres Yet
+                        </h3>
+                        <p class="font-body-md text-secondary max-w-[440px] mb-space-lg text-[13px]">
+                            The CINEORA Suites system has no active genre records. Get started by adding your first genre.
+                        </p>
+                        <button class="h-[42px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 shadow-sm transition-all" onclick="openAddGenreModal()" type="button">
+                            <span class="material-symbols-outlined text-[20px]">add</span>
+                            <span>Create First Genre</span>
+                        </button>
+                    </div>
+
+                    <!-- STATE 3: LOADING SKELETON (Hidden by default) -->
+                    <div class="hidden w-full flex-col gap-3 py-4 animate-pulse" id="state-loading">
+                        <div class="h-10 bg-background-warm rounded-lg w-full"></div>
+                        <div class="h-14 bg-background-warm/60 rounded-lg w-full"></div>
+                        <div class="h-14 bg-background-warm/60 rounded-lg w-full"></div>
+                    </div>
+
+                    <!-- STATE 4: ERROR STATE (Hidden by default) -->
+                    <div class="hidden w-full flex-col items-center justify-center py-16 text-center" id="state-error">
+                        <div class="w-16 h-16 rounded-full bg-error-container/40 flex items-center justify-center text-error mb-space-md">
+                            <span class="material-symbols-outlined text-[32px]">wifi_off</span>
+                        </div>
+                        <h3 class="font-headline-sm text-headline-sm text-text-charcoal mb-1">
+                            Cannot Connect to CINEORA Suites Server
+                        </h3>
+                        <p class="font-body-md text-secondary max-w-[440px] mb-space-lg text-[13px]">
+                            A temporary network communication error occurred while fetching genre records.
+                        </p>
+                        <button class="h-[40px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 shadow-sm transition-all" onclick="switchState('standard')" type="button">
+                            <span class="material-symbols-outlined text-[18px]">replay</span>
+                            <span>Retry Loading</span>
+                        </button>
+                    </div>
+                </div>
+
             </div>
-        </div>
+        </main>
     </div>
 
-</div>
-</div>
+    <!-- Modal Add/Edit Genre -->
+    <div class="modal-backdrop" id="genreModalBackdrop">
+        <div class="bg-surface-container-lowest w-full max-w-[500px] rounded-2xl shadow-xl flex flex-col overflow-hidden border border-[#EFE0D5]">
+            <div class="p-space-lg bg-[#FEF4ED] flex items-center justify-between border-b border-[#EFE0D5]">
+                <div class="flex items-center gap-space-sm">
+                    <div class="w-8 h-8 rounded-lg bg-surface-peach flex items-center justify-center text-cinema-red">
+                        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                    </div>
+                    <span class="font-headline-sm text-headline-sm text-text-charcoal font-bold" id="genreModalTitle">Add New Film Genre</span>
+                </div>
+                <button class="w-8 h-8 rounded-lg hover:bg-surface-peach text-secondary hover:text-text-charcoal flex items-center justify-center transition-colors text-xl" onclick="closeGenreModal()" type="button">&times;</button>
+            </div>
 
-<!-- Modal: Create & Edit Genre -->
-<div id="genreModalBackdrop" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="genreModalTitle">Thêm Thể Loại Mới</h2>
-            <button type="button" class="modal-close" onclick="closeGenreModal()">×</button>
-        </div>
-        <form id="genreModalForm" th:action="@{/manager/genres/save}" th:object="${genreForm}" method="post">
-            <input type="hidden" id="genreId" th:field="*{id}">
-            <div class="modal-body">
-                <div id="modalErrorAlert" class="alert alert-error" style="display: none; margin-bottom: 12px;"></div>
-                <div class="form-group">
-                    <label class="form-label" for="genreName">Tên Thể Loại <span class="req">*</span></label>
-                    <input type="text" id="genreName" th:field="*{name}" class="form-control" placeholder="Ví dụ: Hành động, Kinh dị, Hài kịch..." maxlength="100" required>
-                    <div id="nameFeedback" class="form-error"></div>
-                    <div class="form-hint">Tên thể loại phải là duy nhất theo quy định BR-Identity.</div>
+            <form id="genreModalForm" method="post" th:action="@{/manager/genres/save}" class="p-space-lg flex flex-col gap-space-md">
+                <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm" id="modalErrorAlert" style="display:none;"></div>
+                <input type="hidden" id="genreId" name="id" value="">
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-sm text-label-sm text-text-charcoal font-medium" for="genreName">Genre Name <span class="text-cinema-red">*</span></label>
+                    <input class="h-[40px] px-3 rounded-lg bg-[#FFFDFB] text-text-charcoal font-body-md text-body-md focus:outline-none border border-[#EFE0D5] focus:border-cinema-red shadow-sm"
+                           id="genreName" name="name" placeholder="e.g. Science Fiction, Action, Drama" required maxlength="100" type="text">
+                    <div class="form-error" id="nameFeedback"></div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="genreDescription">Mô Tả Thể Loại</label>
-                    <textarea id="genreDescription" th:field="*{description}" class="form-control" rows="3" placeholder="Mô tả tóm tắt đặc trưng thể loại..." maxlength="500"></textarea>
-                    <div id="descFeedback" class="form-error"></div>
-                    <div id="descCharCounter" class="form-hint">0/500</div>
+
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="font-label-sm text-label-sm text-text-charcoal font-medium" for="genreDescription">Description</label>
+                        <span class="char-counter" id="descCharCounter">0/500</span>
+                    </div>
+                    <textarea class="p-3 rounded-lg bg-[#FFFDFB] text-text-charcoal font-body-md text-body-md focus:outline-none border border-[#EFE0D5] focus:border-cinema-red shadow-sm resize-none"
+                              id="genreDescription" name="description" placeholder="Brief description of the film genre..." rows="3" maxlength="500"></textarea>
+                    <div class="form-error" id="descFeedback"></div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="genreStatus">Trạng Thái Hoạt Động <span class="req">*</span></label>
-                    <select id="genreStatus" th:field="*{status}" class="form-control">
-                        <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
-                        <option value="INACTIVE">Ngưng hoạt động (INACTIVE)</option>
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-sm text-label-sm text-text-charcoal font-medium" for="genreStatus">Status <span class="text-cinema-red">*</span></label>
+                    <select id="genreStatus" name="status" class="h-[40px] px-3 rounded-lg bg-[#FFFDFB] text-text-charcoal font-body-md text-sm border border-[#EFE0D5] focus:border-cinema-red focus:outline-none cursor-pointer">
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
                     </select>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeGenreModal()">Hủy bỏ</button>
-                <button type="submit" id="modalSubmitBtn" class="btn btn-primary">Lưu Thay Đổi</button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<!-- Modal: Associated Movies Viewer -->
-<div id="moviesModalBackdrop" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>Phim Thuộc Thể Loại: <span id="moviesModalGenreName" style="color: var(--primary);"></span></h2>
-            <button type="button" class="modal-close" onclick="closeMoviesModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <div id="moviesListContainer" class="movie-chip-list">
-                <!-- Populated dynamically via JS -->
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeMoviesModal()">Đóng</button>
+                <div class="flex items-center justify-end gap-space-sm pt-2 border-t border-[#EFE0D5]">
+                    <button class="h-[40px] px-space-md bg-surface-container hover:bg-surface-peach text-text-charcoal rounded-lg font-label-md text-label-md font-medium transition-colors" onclick="closeGenreModal()" type="button">
+                        Cancel
+                    </button>
+                    <button class="h-[40px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium transition-all shadow-sm" type="submit" id="genreModalSubmitBtn">
+                        Save Genre
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<script th:src="@{/js/manager-genres.js}"></script>
+    <!-- Modal Associated Movies -->
+    <div class="modal-backdrop" id="moviesModalBackdrop">
+        <div class="bg-surface-container-lowest w-full max-w-[500px] rounded-2xl shadow-xl flex flex-col overflow-hidden border border-[#EFE0D5]">
+            <div class="p-space-lg bg-[#FEF4ED] flex items-center justify-between border-b border-[#EFE0D5]">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-cinema-red text-[20px]">movie</span>
+                    <h2 class="font-headline-sm text-base text-text-charcoal font-bold" id="moviesModalTitle">Linked Movies</h2>
+                </div>
+                <button class="w-8 h-8 rounded-lg hover:bg-surface-peach text-secondary hover:text-text-charcoal flex items-center justify-center text-xl transition-colors" onclick="closeMoviesModal()" type="button">&times;</button>
+            </div>
+            <div class="p-space-lg max-h-[60vh] overflow-y-auto">
+                <div class="flex flex-wrap gap-2" id="moviesModalList">
+                    <p class="text-sm text-secondary">Loading linked movies...</p>
+                </div>
+            </div>
+            <div class="p-space-md bg-background-warm/30 border-t border-[#EFE0D5] flex justify-end">
+                <button type="button" class="px-4 h-9 rounded-lg bg-surface-container hover:bg-surface-peach text-secondary font-medium text-sm transition-colors" onclick="closeMoviesModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/pagination-helper.js}"></script>
+    <script th:src="@{/js/manager-genres.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.initCineoraPagination) {
+                initCineoraPagination({
+                    container: '#genreTableBody',
+                    itemSelector: 'tr',
+                    controlsContainer: '#genrePagination',
+                    pageSize: 8,
+                    itemName: 'film genres'
+                });
+            }
+        });
+    </script>
+    <script>
+        const allStates = ['standard', 'empty', 'loading', 'error'];
+
+        function switchState(targetState) {
+            allStates.forEach(st => {
+                const el = document.getElementById('state-' + st);
+                const btn = document.getElementById('btn-state-' + st);
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.className = "qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red";
+                }
+            });
+
+            const targetEl = document.getElementById('state-' + targetState);
+            const targetBtn = document.getElementById('btn-state-' + targetState);
+            if (targetEl) {
+                targetEl.classList.remove('hidden');
+                if (targetState === 'empty' || targetState === 'error') {
+                    targetEl.classList.add('flex');
+                }
+            }
+            if (targetBtn) {
+                targetBtn.className = "qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-cinema-red text-on-primary shadow-sm";
+            }
+        }
+    </script>
 </body>
 </html>

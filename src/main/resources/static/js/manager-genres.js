@@ -10,7 +10,7 @@
 function openAddGenreModal() {
     resetGenreModalForm();
     var title = document.getElementById("genreModalTitle");
-    if (title) title.textContent = "Thêm Thể Loại Mới";
+    if (title) title.textContent = "Add New Film Genre";
 
     var status = document.getElementById("genreStatus");
     if (status) status.value = "ACTIVE";
@@ -30,7 +30,7 @@ function openEditGenreModal(button) {
     var status = button.getAttribute("data-status") || "ACTIVE";
 
     var title = document.getElementById("genreModalTitle");
-    if (title) title.textContent = "Chỉnh Sửa Thể Loại: " + name;
+    if (title) title.textContent = "Edit Genre: " + name;
 
     var idInput = document.getElementById("genreId");
     if (idInput) idInput.value = id;
@@ -110,8 +110,8 @@ async function toggleGenreStatus(button) {
 
     if (currentStatus === "ACTIVE" && movieCount > 0) {
         var confirmDeactivate = confirm(
-            "Thể loại '" + name + "' hiện đang được gán cho " + movieCount + " phim.\n" +
-            "Hủy kích hoạt sẽ ẩn thể loại này khỏi danh sách chọn phim mới. Bạn có chắc chắn muốn hủy kích hoạt?"
+            "Genre '" + name + "' is currently assigned to " + movieCount + " movies.\n" +
+            "Deactivating will hide this genre from new movie selection. Are you sure you want to proceed?"
         );
         if (!confirmDeactivate) return;
     }
@@ -133,12 +133,12 @@ async function toggleGenreStatus(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể thay đổi trạng thái: " + (result.message || "Lỗi không xác định"));
+            alert("Could not update genre status: " + (result.message || "Unknown error"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Lỗi kết nối: " + err.message);
+        alert("Network error: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -149,12 +149,12 @@ window.toggleGenreStatus = toggleGenreStatus;
 // View Associated Movies
 // =====================================================================
 async function viewAssociatedMovies(genreId, genreName) {
-    var nameEl = document.getElementById("moviesModalGenreName");
-    if (nameEl) nameEl.textContent = genreName;
+    var nameEl = document.getElementById("moviesModalTitle");
+    if (nameEl) nameEl.textContent = "Movies in Genre: " + genreName;
 
-    var container = document.getElementById("moviesListContainer");
+    var container = document.getElementById("moviesModalList");
     if (container) {
-        container.innerHTML = '<div style="text-align:center; padding: 2rem;"><span class="spinner"></span> Đang tải danh sách phim...</div>';
+        container.innerHTML = '<div style="text-align:center; padding: 2rem;"><span class="spinner"></span> Loading associated movies...</div>';
     }
 
     var backdrop = document.getElementById("moviesModalBackdrop");
@@ -169,31 +169,74 @@ async function viewAssociatedMovies(genreId, genreName) {
         if (response.ok && result.success) {
             var movies = result.data || [];
             if (movies.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">Chưa có phim nào liên kết với thể loại này.</p>';
+                container.innerHTML = '<p class="text-sm text-secondary text-center py-6">No movies currently linked to this genre.</p>';
             } else {
-                container.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+                container.innerHTML = '<div class="flex flex-col gap-2 w-full">' +
                     movies.map(function (m) {
-                        var statusBadge = m.status === 'Now Showing' ? '<span class="badge badge-green" style="font-size:11px;padding:3px 8px;">Đang chiếu</span>' :
-                            (m.status === 'Upcoming' ? '<span class="badge badge-orange" style="font-size:11px;padding:3px 8px;">Sắp chiếu</span>' :
-                            '<span class="badge badge-gray" style="font-size:11px;padding:3px 8px;">' + escapeHtml(m.status || 'Chưa mở') + '</span>');
-                        return '<div class="movie-chip-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">' +
-                            '<span class="movie-chip-title" style="font-weight:700;color:var(--text-900);">🎬 ' + escapeHtml(m.title) + '</span>' +
+                        var statusBadge = m.status === 'Now Showing' ? '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-green-100 text-green-800">Now Showing</span>' :
+                            (m.status === 'Upcoming' ? '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">Upcoming</span>' :
+                            '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700">' + escapeHtml(m.status || 'Ended') + '</span>');
+                        return '<div class="flex items-center justify-between p-3 bg-stone-50 border border-stone-200 rounded-lg">' +
+                            '<span class="font-semibold text-text-charcoal text-sm">' + escapeHtml(m.title) + '</span>' +
                             statusBadge +
                             '</div>';
                     }).join("") +
                     '</div>' +
-                    '<div style="margin-top:16px;text-align:center;">' +
-                    '<a href="/manager/movies?genreId=' + genreId + '" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;">🔍 Đi tới Màn Hình Quản Lý Phim (Lọc theo thể loại này) ➔</a>' +
+                    '<div class="mt-4 text-center">' +
+                    '<a href="/manager/movies?genreId=' + genreId + '" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-cinema-red text-white text-xs font-semibold rounded-lg hover:bg-[#BF1B29] transition-colors"><span>View in Movie Catalog</span> &rarr;</a>' +
                     '</div>';
             }
         } else {
-            container.innerHTML = '<p style="color: var(--danger); text-align: center;">' + escapeHtml(result.message || "Không thể tải danh sách phim.") + '</p>';
+            container.innerHTML = '<p class="text-sm text-red-600 text-center py-4">' + escapeHtml(result.message || "Failed to load movie catalog.") + '</p>';
         }
     } catch (err) {
-        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Lỗi tải dữ liệu: ' + escapeHtml(err.message) + '</p>';
+        container.innerHTML = '<p class="text-sm text-red-600 text-center py-4">Error loading data: ' + escapeHtml(err.message) + '</p>';
     }
 }
 window.viewAssociatedMovies = viewAssociatedMovies;
+window.showAssociatedMovies = function(button) {
+    var id = button.getAttribute("data-id");
+    var name = button.getAttribute("data-name");
+    viewAssociatedMovies(id, name);
+};
+
+// =====================================================================
+// Delete Genre Action
+// =====================================================================
+async function deleteGenre(button) {
+    var id = button.getAttribute("data-id");
+    var name = button.getAttribute("data-name");
+    var count = parseInt(button.getAttribute("data-count") || "0", 10);
+
+    if (count > 0) {
+        alert("Không thể xóa thể loại '" + name + "' vì đang có " + count + " phim liên kết. Vui lòng gỡ thể loại khỏi các phim trước hoặc chuyển sang trạng thái Ngưng hoạt động.");
+        return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn thể loại '" + name + "' không?")) {
+        return;
+    }
+
+    try {
+        var headers = { "Accept": "application/json" };
+        var csrf = typeof getCsrfToken === "function" ? getCsrfToken() : null;
+        if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
+        var response = await fetch("/api/manager/genres/" + id, {
+            method: "DELETE",
+            headers: headers
+        });
+        var result = await response.json();
+        if (response.ok && result.success) {
+            window.location.reload();
+        } else {
+            alert("Không thể xóa thể loại: " + (result.message || "Lỗi không xác định"));
+        }
+    } catch (err) {
+        alert("Lỗi mạng: " + err.message);
+    }
+}
+window.deleteGenre = deleteGenre;
 
 // =====================================================================
 // Event Listeners on DOM Ready
@@ -207,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var nameFeedback = document.getElementById("nameFeedback");
     var descFeedback = document.getElementById("descFeedback");
     var modalErrorAlert = document.getElementById("modalErrorAlert");
-    var modalSubmitBtn = document.getElementById("modalSubmitBtn");
+    var modalSubmitBtn = document.getElementById("genreModalSubmitBtn");
     var charCounter = document.getElementById("descCharCounter");
 
     // Live description char counter
@@ -242,17 +285,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var hasError = false;
             if (!name) {
-                showInputError(genreNameInput, nameFeedback, "Tên thể loại không được để trống.");
+                showInputError(genreNameInput, nameFeedback, "Genre name is required.");
                 hasError = true;
             } else if (name.length < 2 || name.length > 100) {
-                showInputError(genreNameInput, nameFeedback, "Tên thể loại phải có độ dài từ 2 đến 100 ký tự.");
+                showInputError(genreNameInput, nameFeedback, "Genre name must be between 2 and 100 characters.");
                 hasError = true;
             } else {
                 clearInputError(genreNameInput, nameFeedback);
             }
 
             if (desc.length > 500) {
-                showInputError(genreDescInput, descFeedback, "Mô tả không được vượt quá 500 ký tự.");
+                showInputError(genreDescInput, descFeedback, "Description cannot exceed 500 characters.");
                 hasError = true;
             } else {
                 clearInputError(genreDescInput, descFeedback);
@@ -291,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     closeGenreModal();
                     window.location.reload();
                 } else {
-                    var message = result.message || (result.errors ? result.errors.join(", ") : "Đã xảy ra lỗi");
+                    var message = result.message || (result.errors ? result.errors.join(", ") : "An error occurred");
                     showModalAlert(message);
                 }
             } catch (err) {
@@ -302,27 +345,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
-
-    // Event delegation for movie count badge clicks
-    document.addEventListener("click", function (e) {
-        var badge = e.target.closest(".btn-view-movies");
-        if (badge) {
-            var id = badge.getAttribute("data-id");
-            var name = badge.getAttribute("data-name");
-            viewAssociatedMovies(id, name);
-        }
-    });
-
-    // Event delegation for safe delete forms
-    document.addEventListener("submit", function (e) {
-        var deleteForm = e.target.closest(".delete-genre-form");
-        if (deleteForm) {
-            var name = deleteForm.getAttribute("data-name") || "thể loại này";
-            if (!confirm("Bạn có chắc chắn muốn xóa thể loại '" + name + "'?")) {
-                e.preventDefault();
-            }
-        }
-    });
 
     function showInputError(input, feedbackEl, message) {
         if (input) input.classList.add("is-invalid");
@@ -353,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
         button.disabled = isLoading;
         if (isLoading) {
             button.setAttribute("data-orig-text", button.innerHTML);
-            button.innerHTML = '<span class="spinner"></span> Đang lưu...';
+            button.innerHTML = '<span class="spinner"></span> Saving...';
         } else {
             var orig = button.getAttribute("data-orig-text");
             if (orig) button.innerHTML = orig;

@@ -65,3 +65,10 @@ src/main/resources/application-local.properties
 # AI / Assistant tools
 .claude/
 CLAUDE.md
+
+# Audit and temporary test artifacts
+audit_test_results.json
+test_suite_runner.js
+e2e/
+sql/seed_active_showtimes.sql
+sql/update_hashes.sql

@@ -8,7 +8,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +41,9 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         Object value = session == null ? null : session.getAttribute(SessionService.ATTR_USER);
+        if (value == null && session != null) {
+            value = session.getAttribute("AUTHENTICATED_USER");
+        }
         
         if (value instanceof AuthenticatedUser user) {
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
@@ -48,15 +53,18 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             }
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(user, null, authorities));
-        } else if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String role = ManagerSecurityUtils.resolveRole(request);
-            if (role != null && !role.isBlank()) {
-                List<SimpleGrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role.trim().toUpperCase())
-                );
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken(role, null, authorities)
-                );
+        } else {
+            Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken) {
+                String role = ManagerSecurityUtils.resolveRole(request);
+                if (role != null && !role.isBlank()) {
+                    List<SimpleGrantedAuthority> authorities = List.of(
+                            new SimpleGrantedAuthority("ROLE_" + role.trim().toUpperCase())
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(
+                            new UsernamePasswordAuthenticationToken(role, null, authorities)
+                    );
+                }
             }
         }
 

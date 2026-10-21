@@ -163,4 +163,24 @@ public class ShowtimeController {
 
         return "redirect:/manager/showtimes";
     }
+
+    @PostMapping("/{id}/delete")
+    public String deleteShowtime(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            showtimeService.deleteShowtime(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa suất chiếu thành công!");
+        } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/showtimes";
+    }
 }

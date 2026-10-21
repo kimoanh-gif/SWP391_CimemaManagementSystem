@@ -1,13 +1,13 @@
 /**
  * manager-reports.js
- * JavaScript for Screen 47 & 49: View Reports & Statistics & Export
+ * Consolidated JavaScript for Unified Reports & Analytics Module (M12, M13, M14 merged)
  */
 document.addEventListener('DOMContentLoaded', function () {
     const filterForm = document.getElementById('reportFilterForm');
+    const tabInput = document.getElementById('tabInput');
     const presetInput = document.getElementById('presetInput');
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
-    const reportTypeSelect = document.getElementById('reportType');
     const presetButtons = document.querySelectorAll('.preset-btn');
     const btnExportCsv = document.getElementById('btnExportCsv');
 
@@ -15,10 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
     presetButtons.forEach(btn => {
         btn.addEventListener('click', function () {
             const preset = this.getAttribute('data-preset');
-            presetInput.value = preset;
+            if (presetInput) presetInput.value = preset;
 
-            presetButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+            presetButtons.forEach(b => {
+                b.classList.remove('bg-cinema-red', 'text-white', 'border-cinema-red', 'shadow-sm');
+                b.classList.add('bg-surface-container', 'text-secondary', 'border-[#EFE0D5]');
+            });
+            this.classList.remove('bg-surface-container', 'text-secondary', 'border-[#EFE0D5]');
+            this.classList.add('bg-cinema-red', 'text-white', 'border-cinema-red', 'shadow-sm');
 
             const today = new Date();
             let start = new Date();
@@ -44,44 +48,60 @@ document.addEventListener('DOMContentLoaded', function () {
                 end = new Date(today.getFullYear() + 1, 11, 31);
             }
 
-            if (preset !== 'custom') {
+            if (preset !== 'custom' && startDateInput && endDateInput) {
                 startDateInput.value = formatDateIso(start);
                 endDateInput.value = formatDateIso(end);
             }
 
-            filterForm.submit();
+            if (filterForm) {
+                filterForm.submit();
+            }
         });
     });
 
     // If user manually changes dates, reset preset to custom
     [startDateInput, endDateInput].forEach(input => {
-        input.addEventListener('change', function () {
-            presetInput.value = 'custom';
-            presetButtons.forEach(b => b.classList.remove('active'));
-        });
-    });
-
-    // Form submission validation
-    filterForm.addEventListener('submit', function (e) {
-        if (startDateInput.value && endDateInput.value) {
-            if (startDateInput.value > endDateInput.value) {
-                e.preventDefault();
-                alert('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
-                return;
-            }
+        if (input) {
+            input.addEventListener('change', function () {
+                if (presetInput) presetInput.value = 'custom';
+                presetButtons.forEach(b => {
+                    b.classList.remove('bg-cinema-red', 'text-white', 'border-cinema-red', 'shadow-sm');
+                    b.classList.add('bg-surface-container', 'text-secondary', 'border-[#EFE0D5]');
+                });
+            });
         }
     });
 
-    // Export CSV handling
+    // Form submission validation
+    if (filterForm) {
+        filterForm.addEventListener('submit', function (e) {
+            if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+                if (startDateInput.value > endDateInput.value) {
+                    e.preventDefault();
+                    alert('Start date cannot be greater than end date.');
+                    return false;
+                }
+            }
+        });
+    }
+
+    // Export CSV handling for the active tab and current filters
     if (btnExportCsv) {
         btnExportCsv.addEventListener('click', function () {
-            const preset = presetInput.value || 'thismonth';
-            const startDate = startDateInput.value || '';
-            const endDate = endDateInput.value || '';
-            const reportType = reportTypeSelect.value || 'DAILY';
+            const preset = (presetInput && presetInput.value) ? presetInput.value : 'thismonth';
+            const startDate = (startDateInput && startDateInput.value) ? startDateInput.value : '';
+            const endDate = (endDateInput && endDateInput.value) ? endDateInput.value : '';
+            const activeTab = (tabInput && tabInput.value) ? tabInput.value.toLowerCase() : 'revenue';
+
+            let reportType = 'DAILY';
+            if (activeTab === 'movies') {
+                reportType = 'MOVIE';
+            } else if (activeTab === 'transactions') {
+                reportType = 'TRANSACTIONS';
+            }
 
             if (startDate && endDate && startDate > endDate) {
-                alert('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+                alert('Start date cannot be greater than end date.');
                 return;
             }
 

@@ -178,11 +178,18 @@ public class MovieService {
         if (upcomingShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
                     "Không thể xóa phim '" + movie.getTitle()
-                            + "' vì đang có " + upcomingShowtimes
-                            + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước."
+                            + "' vì đang có " + upcomingShowtimes + " suất chiếu sắp diễn ra."
             );
         }
-        deactivateMovie(movieId);
+        int totalShowtimes = movieDao.countAllShowtimesByMovieId(movieId);
+        if (totalShowtimes > 0) {
+            throw new MovieHasActiveShowtimesException(
+                    "Không thể xóa vĩnh viễn phim '" + movie.getTitle()
+                            + "' vì đã có " + totalShowtimes
+                            + " suất chiếu trong hệ thống. Vui lòng sử dụng tính năng Lưu trữ (Archive) phim."
+            );
+        }
+        movieDao.delete(movieId);
     }
 
     /**

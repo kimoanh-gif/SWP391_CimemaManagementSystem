@@ -23,7 +23,7 @@ public class RoleDashboardController {
         this.staffOperationsService = staffOperationsService;
     }
 
-    @GetMapping("/customer/dashboard")
+    @GetMapping({"/customer", "/customer/", "/customer/dashboard"})
     public String customer(HttpSession session, Model model) {
         if (!sessionService.hasRole(session, "CUSTOMER", "ADMIN", "MANAGER", "STAFF"))
             return "redirect:/login";
@@ -31,7 +31,7 @@ public class RoleDashboardController {
         return "customer/dashboard";
     }
 
-    @GetMapping("/staff/dashboard")
+    @GetMapping({"/staff", "/staff/", "/staff/dashboard"})
     public String staff(HttpSession session, Model model) {
         if (!sessionService.hasRole(session, "STAFF", "MANAGER", "ADMIN"))
             return "redirect:/login";
@@ -41,13 +41,7 @@ public class RoleDashboardController {
         return "staff/dashboard";
     }
 
-    @GetMapping("/manager/dashboard")
-    public String manager(HttpSession session, Model model) {
-        if (!sessionService.hasRole(session, "MANAGER", "ADMIN"))
-            return "redirect:/login";
-        model.addAttribute("user", sessionService.getCurrentUser(session));
-        return "manager/dashboard";
-    }
+    // /manager/dashboard is handled by ManagerDashboardController with full operational statistics
 
     /** Logged-in header fragment - exposes the current user. */
     @GetMapping("/me")

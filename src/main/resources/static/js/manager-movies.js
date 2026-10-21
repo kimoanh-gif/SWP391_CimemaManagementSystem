@@ -61,7 +61,7 @@ function setLoading(btn, isLoading) {
     btn.disabled = isLoading;
     if (isLoading) {
         btn.setAttribute("data-orig-text", btn.innerHTML);
-        btn.innerHTML = '<span class="spinner"></span> Đang lưu...';
+        btn.innerHTML = '<span class="spinner"></span> Saving...';
     } else {
         var orig = btn.getAttribute("data-orig-text");
         if (orig) btn.innerHTML = orig;
@@ -89,7 +89,7 @@ function getCsrfToken() {
 function openAddMovieModal() {
     resetMovieForm();
     var title = document.getElementById("movieModalTitle");
-    if (title) title.textContent = "Thêm Phim Mới";
+    if (title) title.textContent = "Add New Movie";
 
     var status = document.getElementById("movieStatus");
     if (status) status.value = "Upcoming";
@@ -120,7 +120,7 @@ function openEditMovieModal(button) {
     var genreIdsStr = button.getAttribute("data-genre-ids") || "";
 
     var modalTitle = document.getElementById("movieModalTitle");
-    if (modalTitle) modalTitle.textContent = "Chỉnh Sửa Thông Tin Phim: " + title;
+    if (modalTitle) modalTitle.textContent = "Edit Movie: " + title;
 
     setValue("movieId", id);
     setValue("movieTitle", title);
@@ -161,20 +161,20 @@ function openQuickViewModal(button) {
     var duration = button.getAttribute("data-duration") || "120";
     var ageRating = button.getAttribute("data-age-rating") || "P";
     var status = button.getAttribute("data-status") || "Upcoming";
-    var releaseDate = button.getAttribute("data-release-date") || "Chưa cập nhật";
-    var director = button.getAttribute("data-director") || "Chưa cập nhật";
-    var actors = button.getAttribute("data-actors") || "Chưa cập nhật";
-    var language = button.getAttribute("data-language") || "Tiếng Việt";
-    var description = button.getAttribute("data-description") || "Chưa có tóm tắt nội dung cho phim này.";
+    var releaseDate = button.getAttribute("data-release-date") || "Not set";
+    var director = button.getAttribute("data-director") || "Not specified";
+    var actors = button.getAttribute("data-actors") || "Not specified";
+    var language = button.getAttribute("data-language") || "English";
+    var description = button.getAttribute("data-description") || "No synopsis available for this movie.";
     var poster = button.getAttribute("data-poster") || "";
     var trailer = button.getAttribute("data-trailer") || "";
-    var genres = button.getAttribute("data-genres") || "Chưa phân loại";
+    var genres = button.getAttribute("data-genres") || "Uncategorized";
     var showtimes = button.getAttribute("data-showtimes") || "0";
 
     setText("qvTitle", title);
     setText("qvOriginalTitle", originalTitle ? "(" + originalTitle + ")" : "");
     setText("qvAgeRating", ageRating);
-    setText("qvDuration", duration + " phút");
+    setText("qvDuration", duration + " min");
     setText("qvStatus", status);
     setText("qvGenres", genres);
     setText("qvReleaseDate", releaseDate);
@@ -182,14 +182,14 @@ function openQuickViewModal(button) {
     setText("qvActors", actors);
     setText("qvLanguage", language);
     setText("qvDescription", description);
-    setText("qvShowtimes", showtimes + " suất chiếu");
+    setText("qvShowtimes", showtimes + " showtimes");
 
     var posterEl = document.getElementById("qvPoster");
     if (posterEl) {
         if (poster && poster.trim()) {
-            posterEl.innerHTML = '<img src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">';
+            posterEl.innerHTML = '<img src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
         } else {
-            posterEl.innerHTML = '🎬';
+            posterEl.innerHTML = '<span class="material-symbols-outlined text-3xl text-cinema-red">movie</span>';
         }
     }
 
@@ -254,10 +254,10 @@ async function deactivateMovie(button) {
     var title = button.getAttribute("data-title");
     var showtimes = parseInt(button.getAttribute("data-showtimes") || "0", 10);
 
-    var confirmMsg = "Bạn có chắc chắn muốn dừng hoạt động và lưu trữ phim '" + title + "'?\n" +
-        "Phim sẽ chuyển sang trạng thái Archived và không thể chọn để tạo suất chiếu mới.";
+    var confirmMsg = "Are you sure you want to stop screenings and archive movie '" + title + "'?\n" +
+        "The movie status will change to Archived and cannot be selected for new showtimes.";
     if (showtimes > 0) {
-        confirmMsg += "\n\nLưu ý: Phim hiện có " + showtimes + " suất chiếu trong hệ thống.";
+        confirmMsg += "\n\nNotice: This movie currently has " + showtimes + " scheduled showtimes in the system.";
     }
 
     if (!confirm(confirmMsg)) {
@@ -283,12 +283,12 @@ async function deactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể dừng hoạt động phim: " + (result.message || "Lỗi không xác định"));
+            alert("Could not archive movie: " + (result.message || "Unknown error"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Lỗi kết nối: " + err.message);
+        alert("Network error: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -301,8 +301,8 @@ async function reactivateMovie(button) {
     var id = button.getAttribute("data-id");
     var title = button.getAttribute("data-title");
 
-    var confirmMsg = "Bạn có chắc chắn muốn mở lại và kích hoạt phim '" + title + "'?\n" +
-        "Phim sẽ được kích hoạt để có thể xếp lịch và tạo suất chiếu mới.";
+    var confirmMsg = "Are you sure you want to reactivate movie '" + title + "'?\n" +
+        "The movie will become active for scheduling new showtimes.";
 
     if (!confirm(confirmMsg)) {
         return;
@@ -327,7 +327,54 @@ async function reactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể kích hoạt lại phim: " + (result.message || "Lỗi không xác định"));
+            alert("Could not reactivate movie: " + (result.message || "Unknown error"));
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    } catch (err) {
+        alert("Network error: " + err.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+// =====================================================================
+// Delete Movie Action
+// =====================================================================
+async function deleteMovie(button) {
+    var id = button.getAttribute("data-id");
+    var title = button.getAttribute("data-title");
+    var showtimes = parseInt(button.getAttribute("data-showtimes") || "0", 10);
+
+    if (showtimes > 0) {
+        alert("Không thể xóa vĩnh viễn phim '" + title + "' vì đã có " + showtimes + " suất chiếu trong hệ thống. Vui lòng chuyển sang trạng thái Lưu trữ (Archived).");
+        return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn phim '" + title + "' không? Hành động này không thể hoàn tác.")) {
+        return;
+    }
+
+    var originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner"></span>';
+
+    try {
+        var headers = { "Accept": "application/json" };
+        var csrf = getCsrfToken();
+        if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
+        var response = await fetch("/api/manager/movies/" + id, {
+            method: "DELETE",
+            headers: headers
+        });
+
+        var result = await response.json();
+
+        if (response.ok && result.success) {
+            window.location.reload();
+        } else {
+            alert("Không thể xóa phim: " + (result.message || "Lỗi không xác định"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
@@ -347,6 +394,7 @@ window.closeQuickViewModal = closeQuickViewModal;
 window.resetMovieForm = resetMovieForm;
 window.deactivateMovie = deactivateMovie;
 window.reactivateMovie = reactivateMovie;
+window.deleteMovie = deleteMovie;
 window.setValue = setValue;
 window.getValue = getValue;
 window.setText = setText;
@@ -392,24 +440,24 @@ document.addEventListener("DOMContentLoaded", function () {
             var hasError = false;
 
             if (!title) {
-                showError("movieTitle", "titleFeedback", "Tên phim không được để trống.");
+                showError("movieTitle", "titleFeedback", "Movie title cannot be empty.");
                 hasError = true;
             } else if (title.length > 150) {
-                showError("movieTitle", "titleFeedback", "Tên phim không vượt quá 150 ký tự.");
+                showError("movieTitle", "titleFeedback", "Movie title cannot exceed 150 characters.");
                 hasError = true;
             } else {
                 clearError("movieTitle", "titleFeedback");
             }
 
             if (!duration || isNaN(duration) || duration <= 0 || duration > 600) {
-                showError("movieDuration", "durationFeedback", "Thời lượng phim phải từ 1 đến 600 phút.");
+                showError("movieDuration", "durationFeedback", "Movie duration must be between 1 and 600 minutes.");
                 hasError = true;
             } else {
                 clearError("movieDuration", "durationFeedback");
             }
 
             if (releaseDate && endDate && endDate < releaseDate) {
-                showError("movieEndDate", "dateFeedback", "Ngày kết thúc không được trước ngày khởi chiếu.");
+                showError("movieEndDate", "dateFeedback", "End date cannot be prior to release date.");
                 hasError = true;
             } else {
                 clearError("movieEndDate", "dateFeedback");
@@ -471,7 +519,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     closeMovieModal();
                     window.location.reload();
                 } else {
-                    var message = result.message || (result.errors ? result.errors.join(", ") : "Đã xảy ra lỗi");
+                    var message = result.message || (result.errors ? result.errors.join(", ") : "An error occurred");
                     showModalAlert(message);
                 }
             } catch (err) {

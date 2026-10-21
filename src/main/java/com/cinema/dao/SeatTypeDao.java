@@ -110,4 +110,8 @@ public class SeatTypeDao {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id, id, id);
         return count != null && count > 0;
     }
+
+    public int delete(int id) {
+        return jdbcTemplate.update("DELETE FROM SeatType WHERE SeatTypeID = ?", id);
+    }
 }

@@ -29,8 +29,33 @@ public class MovieDao {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private volatile boolean columnsChecked = false;
+    private String posterColumn = "PosterURL";
+    private String trailerColumn = "TrailerURL";
+
     public MovieDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    private synchronized void checkColumns() {
+        if (columnsChecked) {
+            return;
+        }
+        try {
+            Integer isPosterUrlComputed = jdbcTemplate.queryForObject(
+                    "SELECT COLUMNPROPERTY(OBJECT_ID('dbo.Movie'), 'PosterURL', 'IsComputed')", Integer.class);
+            if (isPosterUrlComputed != null && isPosterUrlComputed == 1) {
+                posterColumn = "Poster";
+            }
+            Integer isTrailerUrlComputed = jdbcTemplate.queryForObject(
+                    "SELECT COLUMNPROPERTY(OBJECT_ID('dbo.Movie'), 'TrailerURL', 'IsComputed')", Integer.class);
+            if (isTrailerUrlComputed != null && isTrailerUrlComputed == 1) {
+                trailerColumn = "Trailer";
+            }
+        } catch (Exception ex) {
+            // Keep defaults if check fails
+        }
+        columnsChecked = true;
     }
 
     private final RowMapper<Movie> movieRowMapper = (rs, rowNum) -> {
@@ -200,13 +225,12 @@ public class MovieDao {
      * Inserts a new Movie record and returns the generated MovieID.
      */
     public int insert(MovieForm form) {
-        String sql = """
-                INSERT INTO Movie (
-                    Title, OriginalTitle, Duration, ReleaseDate, EndDate,
-                    [Language], Director, Actors, AgeRating, [Description],
-                    PosterURL, TrailerURL, [Status], CreatedAt
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())
-                """;
+        checkColumns();
+        String sql = "INSERT INTO Movie (" +
+                "Title, OriginalTitle, Duration, ReleaseDate, EndDate, " +
+                "[Language], Director, Actors, AgeRating, [Description], " +
+                posterColumn + ", " + trailerColumn + ", [Status], CreatedAt" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -242,24 +266,23 @@ public class MovieDao {
      * Updates an existing movie's information.
      */
     public void update(int movieId, MovieForm form) {
-        String sql = """
-                UPDATE Movie
-                SET Title = ?,
-                    OriginalTitle = ?,
-                    Duration = ?,
-                    ReleaseDate = ?,
-                    EndDate = ?,
-                    [Language] = ?,
-                    Director = ?,
-                    Actors = ?,
-                    AgeRating = ?,
-                    [Description] = ?,
-                    PosterURL = ?,
-                    TrailerURL = ?,
-                    [Status] = ?,
-                    UpdatedAt = SYSUTCDATETIME()
-                WHERE MovieID = ?
-                """;
+        checkColumns();
+        String sql = "UPDATE Movie SET " +
+                "Title = ?, " +
+                "OriginalTitle = ?, " +
+                "Duration = ?, " +
+                "ReleaseDate = ?, " +
+                "EndDate = ?, " +
+                "[Language] = ?, " +
+                "Director = ?, " +
+                "Actors = ?, " +
+                "AgeRating = ?, " +
+                "[Description] = ?, " +
+                posterColumn + " = ?, " +
+                trailerColumn + " = ?, " +
+                "[Status] = ?, " +
+                "UpdatedAt = SYSUTCDATETIME() " +
+                "WHERE MovieID = ?";
 
         jdbcTemplate.update(
                 sql,
@@ -526,6 +549,20 @@ public class MovieDao {
             m.setGenres(findGenresByMovieId(m.getMovieId()));
         }
         return list;
+    }
+
+    public int countAllShowtimesByMovieId(int movieId) {
+        String sql = "SELECT COUNT(*) FROM Showtime WHERE MovieID = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, movieId);
+        return count != null ? count : 0;
+    }
+
+    public void delete(int movieId) {
+        jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
+        try {
+            jdbcTemplate.update("DELETE FROM MovieReview WHERE MovieID = ?", movieId);
+        } catch (Exception ignored) {}
+        jdbcTemplate.update("DELETE FROM Movie WHERE MovieID = ?", movieId);
     }
 
     private String emptyToNull(String value) {

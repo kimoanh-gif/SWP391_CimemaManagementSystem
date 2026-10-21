@@ -134,6 +134,20 @@ public class ShowtimeService {
         return getShowtimeById(id);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteShowtime(int id) {
+        Showtime existing = getShowtimeById(id);
+        if (existing == null) {
+            throw new ShowtimeNotFoundException("Không tìm thấy suất chiếu với ID: " + id);
+        }
+
+        if (showtimeDao.hasAnyBookings(id)) {
+            throw new InvalidShowtimeException("Suất chiếu đã có vé đặt trong hệ thống, không thể xóa (BR-54). Vui lòng dừng hoặc hủy suất chiếu.");
+        }
+
+        showtimeDao.delete(id);
+    }
+
     /**
      * Comprehensive validation per SRS and business rules.
      */

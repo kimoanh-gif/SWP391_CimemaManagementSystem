@@ -46,12 +46,10 @@ public class RevenueReportDao {
         RevenueReportSummary summary = new RevenueReportSummary();
 
         try {
-            jdbcTemplate.query(sql, rs -> {
-                if (rs.next()) {
-                    summary.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
-                    summary.setDiscountAmount(rs.getBigDecimal("TotalDiscount"));
-                    summary.setTotalPaidBookings(rs.getInt("TotalPaidBookings"));
-                }
+            jdbcTemplate.query(sql, (org.springframework.jdbc.core.RowCallbackHandler) rs -> {
+                summary.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
+                summary.setDiscountAmount(rs.getBigDecimal("TotalDiscount"));
+                summary.setTotalPaidBookings(rs.getInt("TotalPaidBookings"));
             }, Date.valueOf(startDate), Date.valueOf(endDate));
 
             // Sum of F&B Revenue for paid bookings
@@ -76,12 +74,10 @@ public class RevenueReportDao {
                     WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
                       AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
                     """;
-            jdbcTemplate.query(ticketSql, rs -> {
-                if (rs.next()) {
-                    summary.setTotalTickets(rs.getInt("TotalTickets"));
-                    BigDecimal seatRev = rs.getBigDecimal("TicketRevenue");
-                    summary.setTicketRevenue(seatRev != null ? seatRev : BigDecimal.ZERO);
-                }
+            jdbcTemplate.query(ticketSql, (org.springframework.jdbc.core.RowCallbackHandler) rs -> {
+                summary.setTotalTickets(rs.getInt("TotalTickets"));
+                BigDecimal seatRev = rs.getBigDecimal("TicketRevenue");
+                summary.setTicketRevenue(seatRev != null ? seatRev : BigDecimal.ZERO);
             }, Date.valueOf(startDate), Date.valueOf(endDate));
 
             // In case bookings have tickets but no separate BookingSeat records (counter sales fallback)
@@ -158,33 +154,53 @@ public class RevenueReportDao {
 
     /**
      * Compute movie sales performance for the given date range.
+     * Uses subqueries to prevent Cartesian product join multiplicity (BR-22 reconciliation).
      */
     public List<MovieRevenueItem> getMovieRevenue(LocalDate startDate, LocalDate endDate) {
         String sql = """
                 SELECT
                     m.MovieID,
                     m.Title,
-                    COUNT(DISTINCT st.ShowtimeID) AS ShowtimesCount,
-                    COALESCE(COUNT(DISTINCT bs.BookingSeatID), 0) AS SoldTickets,
-                    COALESCE(SUM(bs.UnitPrice), 0) AS TicketRevenue,
-                    COALESCE((
-                        SELECT SUM(bfb.Quantity * bfb.UnitPrice)
-                        FROM dbo.BookingFoodBeverage bfb
-                        JOIN dbo.Booking b_fb ON b_fb.BookingID = bfb.BookingID
-                        JOIN dbo.Showtime st_fb ON st_fb.ShowtimeID = b_fb.ShowtimeID
-                        WHERE st_fb.MovieID = m.MovieID
-                          AND UPPER(b_fb.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
-                          AND CAST(b_fb.BookingTime AS DATE) BETWEEN ? AND ?
-                    ), 0) AS FbRevenue,
-                    COALESCE(SUM(b.TotalAmount), 0) AS TotalRevenue
+                    (SELECT COUNT(*) FROM dbo.Showtime st WHERE st.MovieID = m.MovieID) AS ShowtimesCount,
+                    COALESCE(bs_agg.SoldTickets, 0) AS SoldTickets,
+                    COALESCE(bs_agg.TicketRevenue, 0) AS TicketRevenue,
+                    COALESCE(fb_agg.FbRevenue, 0) AS FbRevenue,
+                    COALESCE(b_agg.TotalRevenue, 0) AS TotalRevenue
                 FROM dbo.Movie m
-                JOIN dbo.Showtime st ON st.MovieID = m.MovieID
-                LEFT JOIN dbo.Booking b ON b.ShowtimeID = st.ShowtimeID
-                     AND UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
-                     AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
-                LEFT JOIN dbo.BookingSeat bs ON bs.BookingID = b.BookingID
-                GROUP BY m.MovieID, m.Title
-                HAVING COUNT(DISTINCT bs.BookingSeatID) > 0 OR COUNT(DISTINCT st.ShowtimeID) > 0
+                LEFT JOIN (
+                    SELECT
+                        st.MovieID,
+                        COUNT(bs.BookingSeatID) AS SoldTickets,
+                        SUM(bs.UnitPrice) AS TicketRevenue
+                    FROM dbo.BookingSeat bs
+                    JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+                    JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                    WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
+                      AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
+                    GROUP BY st.MovieID
+                ) bs_agg ON bs_agg.MovieID = m.MovieID
+                LEFT JOIN (
+                    SELECT
+                        st.MovieID,
+                        SUM(bfb.Quantity * bfb.UnitPrice) AS FbRevenue
+                    FROM dbo.BookingFoodBeverage bfb
+                    JOIN dbo.Booking b ON b.BookingID = bfb.BookingID
+                    JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                    WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
+                      AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
+                    GROUP BY st.MovieID
+                ) fb_agg ON fb_agg.MovieID = m.MovieID
+                LEFT JOIN (
+                    SELECT
+                        st.MovieID,
+                        SUM(b.TotalAmount) AS TotalRevenue
+                    FROM dbo.Booking b
+                    JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                    WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
+                      AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
+                    GROUP BY st.MovieID
+                ) b_agg ON b_agg.MovieID = m.MovieID
+                WHERE EXISTS (SELECT 1 FROM dbo.Showtime st WHERE st.MovieID = m.MovieID)
                 ORDER BY TotalRevenue DESC, SoldTickets DESC
                 """;
 
@@ -200,6 +216,7 @@ public class RevenueReportDao {
                 item.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
                 return item;
             }, Date.valueOf(startDate), Date.valueOf(endDate),
+               Date.valueOf(startDate), Date.valueOf(endDate),
                Date.valueOf(startDate), Date.valueOf(endDate));
         } catch (Exception ex) {
             return Collections.emptyList();

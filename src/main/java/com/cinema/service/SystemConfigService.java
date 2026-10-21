@@ -31,9 +31,17 @@ public class SystemConfigService implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Seed default settings on startup
-        systemSettingDAO.seedDefaultSettings();
-        membershipRankDAO.seedDefaultRanks();
+        // Seed default settings on startup safely without crashing application
+        try {
+            systemSettingDAO.seedDefaultSettings();
+        } catch (Exception e) {
+            // Ignore if optional system setting columns are not present in current DB
+        }
+        try {
+            membershipRankDAO.seedDefaultRanks();
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 
     // ==================== SETTINGS ====================

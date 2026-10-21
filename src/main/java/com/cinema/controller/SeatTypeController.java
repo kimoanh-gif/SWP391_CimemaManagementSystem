@@ -146,4 +146,23 @@ public class SeatTypeController {
 
         return "redirect:/manager/seat-types";
     }
+
+    @PostMapping("/delete/{id}")
+    public String deleteSeatType(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            SeatType st = pricingService.getSeatTypeById(id);
+            pricingService.deleteSeatType(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa loại ghế '" + st.getTypeName() + "' thành công!");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/manager/seat-types";
+    }
 }

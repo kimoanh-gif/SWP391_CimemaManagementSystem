@@ -67,4 +67,48 @@ class RevenueReportControllerTest {
                 .andExpect(view().name("manager/reports"))
                 .andExpect(model().attributeExists("errorMessage"));
     }
+
+    @Test
+    @DisplayName("GET /manager/reports?tab=movies: Correctly selects Movie Performance tab")
+    void testViewReports_MoviesTab() throws Exception {
+        RevenueReportData data = new RevenueReportData();
+        data.setSummary(new RevenueReportSummary());
+        when(revenueReportService.getReportData(any())).thenReturn(data);
+
+        mockMvc.perform(get("/manager/reports").param("tab", "movies"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/reports"))
+                .andExpect(model().attribute("activeTab", "movies"))
+                .andExpect(model().attribute("pageTitle", "Reports & Analytics"));
+    }
+
+    @Test
+    @DisplayName("GET /manager/reports?tab=transactions: Correctly selects Transaction Ledger tab")
+    void testViewReports_TransactionsTab() throws Exception {
+        RevenueReportData data = new RevenueReportData();
+        data.setSummary(new RevenueReportSummary());
+        when(revenueReportService.getReportData(any())).thenReturn(data);
+
+        mockMvc.perform(get("/manager/reports").param("tab", "transactions"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/reports"))
+                .andExpect(model().attribute("activeTab", "transactions"))
+                .andExpect(model().attribute("pageTitle", "Reports & Analytics"));
+    }
+
+    @Test
+    @DisplayName("GET /manager/reports/movies: Compatibility route redirects to tab=movies")
+    void testRedirectMoviesTab() throws Exception {
+        mockMvc.perform(get("/manager/reports/movies").param("preset", "thismonth"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/manager/reports?tab=movies&preset=thismonth"));
+    }
+
+    @Test
+    @DisplayName("GET /manager/reports/transactions: Compatibility route redirects to tab=transactions")
+    void testRedirectTransactionsTab() throws Exception {
+        mockMvc.perform(get("/manager/reports/transactions").param("preset", "thismonth"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/manager/reports?tab=transactions&preset=thismonth"));
+    }
 }

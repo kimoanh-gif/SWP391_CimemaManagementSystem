@@ -21,8 +21,27 @@ public class ShowtimeDao {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private volatile boolean columnsChecked = false;
+    private String basePriceColumn = "BasePrice";
+
     public ShowtimeDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    private synchronized void checkColumns() {
+        if (columnsChecked) {
+            return;
+        }
+        try {
+            Integer isBasePriceComputed = jdbcTemplate.queryForObject(
+                    "SELECT COLUMNPROPERTY(OBJECT_ID('dbo.Showtime'), 'BasePrice', 'IsComputed')", Integer.class);
+            if (isBasePriceComputed != null && isBasePriceComputed == 1) {
+                basePriceColumn = "BaseTicketPrice";
+            }
+        } catch (Exception ex) {
+            // Keep default if check fails
+        }
+        columnsChecked = true;
     }
 
     private final RowMapper<Showtime> rowMapper = (rs, rowNum) -> {
@@ -131,7 +150,8 @@ public class ShowtimeDao {
 
 
     public int insert(ShowtimeForm form) {
-        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
+        checkColumns();
+        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, " + basePriceColumn + ", Status, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
@@ -144,8 +164,9 @@ public class ShowtimeDao {
     }
 
     public int update(int id, ShowtimeForm form) {
+        checkColumns();
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
+                basePriceColumn + " = ?, Status = ? WHERE ShowtimeID = ?";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
                 form.getRoomId(),
@@ -175,5 +196,37 @@ public class ShowtimeDao {
             // If Booking table is not created yet, return false
             return false;
         }
+    }
+
+    /**
+     * Checks if this showtime has any bookings or booked seats (BR-54 and FK protection).
+     */
+    public boolean hasAnyBookings(int showtimeId) {
+        try {
+            Integer countBooking = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM Booking WHERE ShowtimeID = ?",
+                    Integer.class, showtimeId);
+            if (countBooking != null && countBooking > 0) {
+                return true;
+            }
+
+            Integer countSeats = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM BookingSeat WHERE ShowtimeID = ? AND Status = 'BOOKED'",
+                    Integer.class, showtimeId);
+            return countSeats != null && countSeats > 0;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Safely deletes a showtime.
+     */
+    public int delete(int id) {
+        try {
+            jdbcTemplate.update("DELETE FROM BookingSeat WHERE ShowtimeID = ?", id);
+        } catch (Exception ignored) {}
+        String sql = "DELETE FROM Showtime WHERE ShowtimeID = ?";
+        return jdbcTemplate.update(sql, id);
     }
 }

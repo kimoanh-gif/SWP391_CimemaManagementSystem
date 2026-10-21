@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formSellingPrice").value = "79000";
             document.getElementById("formCostPrice").value = "25000";
             document.getElementById("formImage").value = "https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400";
-            document.getElementById("modalTitle").innerText = "Thêm Món / Combo F&B Mới";
+            document.getElementById("modalTitle").innerText = "Add New F&B Item / Combo";
             toggleComboSection();
             modal.classList.add("open");
         });
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const id = document.getElementById("formItemId").value;
             const name = document.getElementById("formItemName").value;
             if (!id) return;
-            if (confirm("Bạn có chắc chắn muốn xóa món '" + (name || id) + "' khỏi hệ thống?")) {
+            if (confirm("Are you sure you want to delete item '" + (name || id) + "' from the system?")) {
                 const form = document.createElement("form");
                 form.method = "POST";
                 form.action = "/manager/fb/" + encodeURIComponent(id) + "/delete";
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formSellingPrice").value = sellingPrice;
             document.getElementById("formCostPrice").value = costPrice;
             document.getElementById("formImage").value = image;
-            document.getElementById("modalTitle").innerText = "Chỉnh Sửa Sản Phẩm #" + code;
+            document.getElementById("modalTitle").innerText = "Edit F&B Item #" + code;
 
             toggleComboSection();
             modal.classList.add("open");

@@ -28,7 +28,7 @@ public class AdminController {
         model.addAttribute("fullName", user != null ? user.getFullName() : null);
     }
 
-    @GetMapping("/dashboard")
+    @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model, HttpSession session) {
         addUserToModel(model, session);
         return "admin/dashboard";

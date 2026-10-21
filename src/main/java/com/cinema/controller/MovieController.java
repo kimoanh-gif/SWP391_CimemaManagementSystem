@@ -152,6 +152,33 @@ public class MovieController {
     }
 
     /**
+     * Permanently deletes a movie if it has no showtimes.
+     */
+    @PostMapping("/{id}/delete")
+    public String deleteMovie(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            Movie movie = movieService.getMovieById(id);
+            movieService.deleteMovie(id);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Đã xóa phim '" + movie.getTitle() + "' thành công."
+            );
+        } catch (MovieHasActiveShowtimesException | MovieNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa phim: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/movies";
+    }
+
+    /**
      * Updates movie status quickly from the list.
      */
     @PostMapping("/{id}/status")

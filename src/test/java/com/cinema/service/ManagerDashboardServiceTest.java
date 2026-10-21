@@ -102,4 +102,61 @@ class ManagerDashboardServiceTest {
         assertEquals(1, stats.getTotalFBItems());
         assertEquals(1, stats.getActiveFBItems());
     }
+
+    @Test
+    @DisplayName("Regression BUG-DB-01: Booked tickets query joins via BookingSeatID without throwing exception")
+    void testBookedTicketsCalculation_WithCorrectJoin() {
+        when(movieService.getAllMovies(isNull(), isNull(), isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(genreService.getAllGenres(isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+        when(roomService.getAll(isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(showtimeService.getAllShowtimes(any(LocalDate.class), isNull(), isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(pricingService.getAllSeatTypes("ALL")).thenReturn(Collections.emptyList());
+        when(pricingService.getAllPricingRules(isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+        when(pricingService.getAverageTicketPrice()).thenReturn(BigDecimal.ZERO);
+        when(fbItemService.getAllItems(isNull(), isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+
+        when(jdbcTemplate.queryForObject(contains("INFORMATION_SCHEMA.TABLES"), eq(Integer.class))).thenReturn(1);
+        when(jdbcTemplate.queryForObject(contains("COUNT(*) FROM Booking WHERE Status"), eq(Integer.class))).thenReturn(10);
+        when(jdbcTemplate.queryForObject(contains("SUM(TotalAmount)"), eq(BigDecimal.class))).thenReturn(new BigDecimal("1000000"));
+
+        // When primary query with JOIN dbo.BookingSeat executes successfully
+        when(jdbcTemplate.queryForObject(
+                contains("COUNT(*) FROM Ticket t"),
+                eq(Integer.class))).thenReturn(42);
+
+        ManagerDashboardStats stats = dashboardService.getDashboardStats();
+        assertNotNull(stats);
+        assertEquals(42, stats.getTotalBookedTickets());
+    }
+
+    @Test
+    @DisplayName("Regression BUG-DB-01: Fallback executes if Ticket table query fails")
+    void testBookedTicketsCalculation_FallbackWhenTicketFails() {
+        when(movieService.getAllMovies(isNull(), isNull(), isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(genreService.getAllGenres(isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+        when(roomService.getAll(isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(showtimeService.getAllShowtimes(any(LocalDate.class), isNull(), isNull(), isNull())).thenReturn(Collections.emptyList());
+        when(pricingService.getAllSeatTypes("ALL")).thenReturn(Collections.emptyList());
+        when(pricingService.getAllPricingRules(isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+        when(pricingService.getAverageTicketPrice()).thenReturn(BigDecimal.ZERO);
+        when(fbItemService.getAllItems(isNull(), isNull(), eq("ALL"))).thenReturn(Collections.emptyList());
+
+        when(jdbcTemplate.queryForObject(contains("INFORMATION_SCHEMA.TABLES"), eq(Integer.class))).thenReturn(1);
+        when(jdbcTemplate.queryForObject(contains("COUNT(*) FROM Booking WHERE Status"), eq(Integer.class))).thenReturn(10);
+        when(jdbcTemplate.queryForObject(contains("SUM(TotalAmount)"), eq(BigDecimal.class))).thenReturn(new BigDecimal("1000000"));
+
+        // Simulate Ticket table exception
+        when(jdbcTemplate.queryForObject(
+                contains("COUNT(*) FROM Ticket t"),
+                eq(Integer.class))).thenThrow(new org.springframework.jdbc.BadSqlGrammarException("task", "sql", new java.sql.SQLException("Invalid column")));
+
+        // Fallback to BookingSeat
+        when(jdbcTemplate.queryForObject(
+                contains("SELECT COUNT(*) FROM dbo.BookingSeat bs"),
+                eq(Integer.class))).thenReturn(15);
+
+        ManagerDashboardStats stats = dashboardService.getDashboardStats();
+        assertNotNull(stats);
+        assertEquals(15, stats.getTotalBookedTickets());
+    }
 }

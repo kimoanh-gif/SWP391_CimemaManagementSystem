@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,9 +18,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
@@ -80,7 +84,6 @@ public class SecurityConfig {
                             new AntPathRequestMatcher("/logout"),
                             new AntPathRequestMatcher("/oauth2/**"),
                             new AntPathRequestMatcher("/login/oauth2/**"),
-                            new AntPathRequestMatcher("/manager/**"),
                             new AntPathRequestMatcher("/api/**")
                     )
             )
@@ -103,7 +106,7 @@ public class SecurityConfig {
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/error", "/favicon.ico",
                         "/oauth2/**", "/login/oauth2/**",
-                        "/api/auth/**"
+                        "/api/auth/**", "/api/public/**"
                 ).permitAll();
 
                 // Form POSTs are also public (we do our own validation/rate-limit).
@@ -116,12 +119,11 @@ public class SecurityConfig {
                         "/api/auth/**"
                 ).permitAll();
 
-                // Dashboards are role-gated.
-                auth.requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
-                auth.requestMatchers("/manager/**", "/api/**").permitAll();
-                auth.requestMatchers("/admin/**").hasRole("ADMIN");
-                auth.requestMatchers("/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
-                auth.requestMatchers("/customer/**").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER");
+                // Dashboards and APIs are role-gated.
+                auth.requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN");
+                auth.requestMatchers("/manager/**", "/api/manager/**").hasAnyRole("ADMIN", "MANAGER");
+                auth.requestMatchers("/staff/**", "/api/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
+                auth.requestMatchers("/customer/**", "/api/customer/**").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER");
 
                 auth.anyRequest().authenticated();
             })
@@ -129,9 +131,21 @@ public class SecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .logout(AbstractHttpConfigurer::disable)
-            // When an unauthenticated user hits a protected URL -> redirect to /login
+            // When an unauthenticated user hits a protected URL -> redirect to /login (browser) or 401 (API)
             .exceptionHandling(eh -> eh
-                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+                    .defaultAuthenticationEntryPointFor(
+                            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                            new AntPathRequestMatcher("/api/**")
+                    )
+                    .defaultAuthenticationEntryPointFor(
+                            new LoginUrlAuthenticationEntryPoint("/login"),
+                            AnyRequestMatcher.INSTANCE
+                    )
+                    .defaultAccessDeniedHandlerFor(
+                            (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN, ex.getMessage()),
+                            new AntPathRequestMatcher("/api/**")
+                    )
+            );
 
         http.addFilterBefore(sessionAuthenticationFilter, AuthorizationFilter.class);
 
@@ -139,7 +153,10 @@ public class SecurityConfig {
         if (googleOAuthEnabled) {
             OAuth2LoginSuccessHandler handler = oAuth2LoginSuccessHandlerProvider.getIfAvailable();
             if (handler != null) {
-                http.oauth2Login(o -> o.successHandler(handler));
+                http.oauth2Login(o -> o
+                        .loginPage("/login")
+                        .successHandler(handler)
+                );
             }
         }
 

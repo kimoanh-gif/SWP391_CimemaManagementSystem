@@ -1,510 +1,459 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Doanh Thu – Royally Cinema Manager</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="web_dashboard" name="shell-type">
+    <title>Reports &amp; Analytics – CINEORA Cinema Suites</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <style>
-        .filter-panel {
-            background: var(--bg-white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow-sm);
+        @layer base {
+            html, body { margin:0; padding:0; }
+            body { overscroll-behavior: none; }
+            main > :first-child { margin-top: 0 !important; }
+            main > :last-child { margin-bottom: 0 !important; }
         }
-        .filter-presets {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px dashed var(--border);
-        }
-        .preset-btn {
-            background: var(--bg-body);
-            border: 1px solid var(--border);
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-700);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .preset-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        .preset-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-        .filter-row {
-            display: flex;
-            align-items: flex-end;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .filter-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-600);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .filter-input {
-            height: 38px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0 12px;
-            font-size: 13.5px;
-            color: var(--text-900);
-            background: var(--bg-white);
-            outline: none;
-            transition: border-color 0.15s;
-        }
-        .filter-input:focus {
-            border-color: var(--primary);
-        }
-        .filter-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-        .btn-export {
-            background: #10B981;
-            color: #fff;
-            border: 1px solid #059669;
-            font-weight: 600;
-        }
-        .btn-export:hover {
-            background: #059669;
-        }
-        .btn-print {
-            background: #4B5563;
-            color: #fff;
-            border: 1px solid #374151;
-            font-weight: 600;
-        }
-        .btn-print:hover {
-            background: #374151;
-        }
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .kpi-card {
-            background: var(--bg-white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
-        }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 4px;
-        }
-        .kpi-card.blue::before { background: #2563EB; }
-        .kpi-card.green::before { background: #10B981; }
-        .kpi-card.gold::before { background: #F59E0B; }
-        .kpi-card.purple::before { background: #8B5CF6; }
-        .kpi-card.teal::before { background: #0D9488; }
-        .kpi-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-500);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .kpi-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--text-900);
-            margin: 6px 0 2px;
-        }
-        .kpi-sub {
-            font-size: 12px;
-            color: var(--text-400);
-        }
-        .table-card {
-            background: var(--bg-white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-        }
-        .table-header-row {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-            background: #F9FAFB;
-        }
-        .table-header-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-900);
-        }
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13.5px;
-        }
-        .report-table th {
-            background: #F3F4F6;
-            color: var(--text-600);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        .report-table td {
-            padding: 12px 16px;
-            color: var(--text-800);
-            border-bottom: 1px solid var(--border);
-        }
-        .report-table tr:hover td {
-            background: #FAFBFF;
-        }
-        .report-table tfoot td {
-            background: #F9FAFB;
-            font-weight: 700;
-            border-top: 2px solid var(--border);
-            border-bottom: none;
-            color: var(--text-900);
-        }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .empty-state {
-            padding: 48px 20px;
-            text-align: center;
-            color: var(--text-400);
-        }
-        .empty-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        .badge-status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11.5px;
-            font-weight: 600;
-        }
-        .badge-status.paid {
-            background: #D1FAE5;
-            color: #065F46;
-        }
+        ::-webkit-scrollbar { display: none; }
         @media print {
-            .sidebar, .topbar, .filter-panel, .btn-export, .btn-print, .breadcrumb {
-                display: none !important;
-            }
-            .main-wrapper, .page-shell {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
-            }
-            .kpi-grid {
-                grid-template-columns: repeat(5, 1fr) !important;
-            }
+            aside, header, #sidebarNav, .print-hide, .filter-panel { display: none !important; }
+            .pl-\[248px\] { padding-left: 0 !important; }
+            main { padding: 0 !important; }
+            .print-table { width: 100% !important; overflow: visible !important; }
         }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#ffdad7", "on-tertiary": "#ffffff", "on-primary": "#ffffff",
+                        "inverse-primary": "#ffb3af", "on-tertiary-container": "#fff3e6", "surface-container-low": "#feeffd",
+                        "surface-container-lowest": "#ffffff", "surface-tint": "#bf0423", "primary-container": "#d92332",
+                        "on-tertiary-fixed-variant": "#5f4100", "on-primary-fixed": "#410005", "inverse-on-surface": "#fbecfb",
+                        "text-charcoal": "#28202A", "tertiary-fixed": "#ffdeaa", "on-tertiary-fixed": "#271900",
+                        "background-warm": "#FFF8F0", "on-secondary-container": "#736057", "on-primary-fixed-variant": "#930017",
+                        "on-error-container": "#93000a", "on-surface-variant": "#5c403e", "surface": "#fff7fb",
+                        "on-surface": "#211923", "primary": "#b3001f", "tertiary": "#745100",
+                        "secondary-container": "#f7ddd1", "secondary-fixed-dim": "#dac2b6", "cinema-gold": "#F2B84B",
+                        "surface-dim": "#e4d6e4", "error": "#ba1a1a", "on-primary-container": "#fff2f1",
+                        "on-background": "#211923", "tertiary-container": "#946800", "outline": "#906f6d",
+                        "on-error": "#ffffff", "on-secondary": "#ffffff", "surface-bright": "#fff7fb",
+                        "surface-container-high": "#f2e4f2", "surface-variant": "#eddeec", "surface-container-highest": "#eddeec",
+                        "surface-container": "#f8e9f8", "secondary-fixed": "#f7ddd1", "background": "#fff7fb",
+                        "tertiary-fixed-dim": "#f7bd4f", "surface-peach": "#FFE5D9", "primary-fixed-dim": "#ffb3af",
+                        "on-secondary-fixed": "#261912", "error-container": "#ffdad6", "cinema-red": "#D92332",
+                        "secondary": "#6d5a51", "inverse-surface": "#362e38", "outline-variant": "#e5bdba",
+                        "on-secondary-fixed-variant": "#54433b"
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+                }
+            }
+        };
+    </script>
 </head>
-<body>
+<body class="bg-background-warm font-body-md text-text-charcoal min-h-screen">
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='reports')}"></div>
+    <!-- Unified CINEORA Sidebar Fragment -->
+    <div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='reports')}"></div>
 
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Báo cáo doanh thu')}"></div>
+    <!-- Unified CINEORA Topbar Fragment -->
+    <div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Reports & Analytics')}"></div>
 
-<div class="main-wrapper">
-<div class="page-shell">
+    <!-- Main View Wrap -->
+    <div class="pl-[248px]">
+        <main class="relative pt-[68px] min-h-screen bg-background-warm p-[28px]">
+            <div class="flex flex-col w-full space-y-6">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="breadcrumb">Quản lý / Báo cáo</div>
-            <h1 class="page-title">Báo Cáo &amp; Xuất Doanh Thu</h1>
-            <p class="page-subtitle">Thống kê doanh thu bán vé, dịch vụ F&amp;B, hiệu suất phim và trích xuất file Excel phục vụ kiểm toán (Screen 47 &amp; 49 / UC-34).</p>
-        </div>
-        <div class="page-header-actions">
-            <span class="badge badge-dot badge-green" th:text="${currentDateStr}">Hôm nay</span>
-            <span class="badge badge-blue">MANAGER</span>
-        </div>
-    </div>
-
-    <!-- Error Alert if any -->
-    <div th:if="${errorMessage != null}" class="alert alert-danger" style="background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:500;">
-        ⚠️ <span th:text="${errorMessage}">Đã xảy ra lỗi</span>
-    </div>
-
-    <!-- Filter & Action Panel -->
-    <div class="filter-panel">
-        <form id="reportFilterForm" th:action="@{/manager/reports}" method="get">
-            <input type="hidden" name="preset" id="presetInput" th:value="${filterRequest.preset}">
-
-            <!-- Preset Tabs -->
-            <div class="filter-presets">
-                <span style="font-size:12.5px;font-weight:600;color:var(--text-500);margin-right:6px;">Kỳ báo cáo:</span>
-                <button type="button" class="preset-btn" data-preset="today" th:classappend="${filterRequest.preset == 'today'} ? ' active' : ''">Hôm nay</button>
-                <button type="button" class="preset-btn" data-preset="last7days" th:classappend="${filterRequest.preset == 'last7days'} ? ' active' : ''">7 ngày qua</button>
-                <button type="button" class="preset-btn" data-preset="thismonth" th:classappend="${filterRequest.preset == 'thismonth'} ? ' active' : ''">Tháng này</button>
-                <button type="button" class="preset-btn" data-preset="thisquarter" th:classappend="${filterRequest.preset == 'thisquarter'} ? ' active' : ''">Quý này</button>
-                <button type="button" class="preset-btn" data-preset="all" th:classappend="${filterRequest.preset == 'all'} ? ' active' : ''">Tất cả</button>
-            </div>
-
-            <!-- Inputs and Actions -->
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="startDate">Từ ngày</label>
-                    <input type="date" id="startDate" name="startDate" class="filter-input"
-                           th:value="${filterRequest.startDate}">
-                </div>
-                <div class="filter-group">
-                    <label for="endDate">Đến ngày</label>
-                    <input type="date" id="endDate" name="endDate" class="filter-input"
-                           th:value="${filterRequest.endDate}">
-                </div>
-                <div class="filter-group">
-                    <label for="reportType">Phân loại dữ liệu</label>
-                    <select id="reportType" name="reportType" class="filter-input" style="min-width:180px;">
-                        <option value="DAILY" th:selected="${filterRequest.reportType == 'DAILY'}">Tổng quan theo ngày</option>
-                        <option value="MOVIE" th:selected="${filterRequest.reportType == 'MOVIE'}">Hiệu suất theo phim</option>
-                        <option value="TRANSACTIONS" th:selected="${filterRequest.reportType == 'TRANSACTIONS'}">Chi tiết giao dịch / Đơn hàng</option>
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-primary" style="height:38px;padding:0 16px;">
-                        🔍 Lọc Dữ Liệu
-                    </button>
+                <!-- Section A: Unified Header Block -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-bold text-text-charcoal tracking-tight">Reports &amp; Analytics</h1>
+                            <span class="px-2 py-0.5 rounded font-label-sm text-[11px] font-bold bg-surface-peach text-cinema-red uppercase tracking-wider">AUDIT SUITE</span>
+                        </div>
+                        <p class="text-sm text-secondary mt-1">Revenue monitoring, movie performance, and financial auditing.</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-semibold print-hide">
+                        <span class="px-2.5 py-1 rounded-full bg-surface-container text-secondary flex items-center gap-1.5 border border-[#EFE0D5]">
+                            <span class="material-symbols-outlined text-[15px] text-secondary">calendar_today</span>
+                            <span th:text="${currentDateStr}">Wednesday, October 21, 2026</span>
+                        </span>
+                        <span class="px-2.5 py-1 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center gap-1 border border-[#C8E6C9]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#2E7D32] animate-pulse"></span>
+                            <span>LIVE DATA</span>
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Export & Print Actions -->
-                <div class="filter-actions">
-                    <button type="button" id="btnExportCsv" class="btn btn-export" style="height:38px;padding:0 16px;">
-                        📥 Xuất Excel (CSV)
-                    </button>
-                    <button type="button" id="btnPrintReport" class="btn btn-print" style="height:38px;padding:0 16px;" onclick="window.print();">
-                        🖨 In Báo Cáo
-                    </button>
+                <!-- Error Alert if validation fails -->
+                <div th:if="${errorMessage != null}" class="p-4 rounded-xl bg-error-container border border-[#FFCDD2] text-[#B71C1C] flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-[20px] text-[#B71C1C]">error</span>
+                        <span class="font-medium text-sm" th:text="${errorMessage}">An error occurred.</span>
+                    </div>
+                    <button type="button" onclick="this.closest('div').remove()" class="text-[#B71C1C] hover:opacity-75 font-bold text-lg">&times;</button>
                 </div>
+
+                <!-- Section B: One Shared Filter Component -->
+                <div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-[#EFE0D5] print-hide">
+                    <form id="reportFilterForm" th:action="@{/manager/reports}" method="get" class="flex flex-col gap-4">
+                        <input type="hidden" name="tab" id="tabInput" th:value="${activeTab != null ? activeTab : 'revenue'}">
+                        <input type="hidden" name="preset" id="presetInput" th:value="${filterRequest.preset}">
+
+                        <!-- Period Presets Row -->
+                        <div class="flex items-center gap-2 flex-wrap pb-3 border-b border-[#EFE0D5]">
+                            <span class="text-xs font-bold text-secondary uppercase tracking-wider mr-1">Period:</span>
+                            <button type="button" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                                    data-preset="today"
+                                    th:classappend="${filterRequest.preset == 'today'} ? 'bg-cinema-red text-white border-cinema-red shadow-sm' : 'bg-surface-container text-secondary border-[#EFE0D5] hover:bg-surface-peach hover:text-cinema-red'">
+                                Today
+                            </button>
+                            <button type="button" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                                    data-preset="last7days"
+                                    th:classappend="${filterRequest.preset == 'last7days'} ? 'bg-cinema-red text-white border-cinema-red shadow-sm' : 'bg-surface-container text-secondary border-[#EFE0D5] hover:bg-surface-peach hover:text-cinema-red'">
+                                Last 7 Days
+                            </button>
+                            <button type="button" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                                    data-preset="thismonth"
+                                    th:classappend="${filterRequest.preset == 'thismonth'} ? 'bg-cinema-red text-white border-cinema-red shadow-sm' : 'bg-surface-container text-secondary border-[#EFE0D5] hover:bg-surface-peach hover:text-cinema-red'">
+                                This Month
+                            </button>
+                            <button type="button" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                                    data-preset="thisquarter"
+                                    th:classappend="${filterRequest.preset == 'thisquarter'} ? 'bg-cinema-red text-white border-cinema-red shadow-sm' : 'bg-surface-container text-secondary border-[#EFE0D5] hover:bg-surface-peach hover:text-cinema-red'">
+                                This Quarter
+                            </button>
+                            <button type="button" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                                    data-preset="all"
+                                    th:classappend="${filterRequest.preset == 'all'} ? 'bg-cinema-red text-white border-cinema-red shadow-sm' : 'bg-surface-container text-secondary border-[#EFE0D5] hover:bg-surface-peach hover:text-cinema-red'">
+                                All Time
+                            </button>
+                        </div>
+
+                        <!-- Date Inputs & Actions Row -->
+                        <div class="flex flex-wrap items-end gap-3.5">
+                            <div>
+                                <label for="startDate" class="block text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">Start Date</label>
+                                <input type="date" id="startDate" name="startDate"
+                                       th:value="${filterRequest.startDate}"
+                                       class="h-10 px-3 rounded-lg border border-[#EFE0D5] bg-background-warm/60 text-sm text-text-charcoal focus:border-cinema-red focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label for="endDate" class="block text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">End Date</label>
+                                <input type="date" id="endDate" name="endDate"
+                                       th:value="${filterRequest.endDate}"
+                                       class="h-10 px-3 rounded-lg border border-[#EFE0D5] bg-background-warm/60 text-sm text-text-charcoal focus:border-cinema-red focus:outline-none">
+                            </div>
+
+                            <button type="submit" class="h-10 px-4 bg-cinema-red hover:bg-[#BF1B29] text-on-primary rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+                                <span class="material-symbols-outlined text-[18px]">filter_list</span>
+                                <span>Apply Filter</span>
+                            </button>
+
+                            <div class="flex items-center gap-2 sm:ml-auto">
+                                <button type="button" id="btnExportCsv" class="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+                                    <span class="material-symbols-outlined text-[18px]">download</span>
+                                    <span>Export CSV</span>
+                                </button>
+                                <button type="button" id="btnPrintReport" class="h-10 px-3.5 bg-text-charcoal hover:bg-black text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="window.print();">
+                                    <span class="material-symbols-outlined text-[18px]">print</span>
+                                    <span>Print</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Section C: One Shared Financial KPI Summary (Rendered ONCE) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- 1. Total Revenue -->
+                    <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-secondary font-semibold">Total Revenue</span>
+                            <div class="text-2xl font-bold text-cinema-red mt-1">
+                                <span th:text="${summary != null and summary.totalRevenue != null ? #numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT') : '0'}">0</span> ₫
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-secondary mt-2 block border-t border-[#EFE0D5] pt-1.5">Net recognized revenue</span>
+                    </div>
+
+                    <!-- 2. Ticket Revenue -->
+                    <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-secondary font-semibold">Ticket Revenue</span>
+                            <div class="text-2xl font-bold text-text-charcoal mt-1">
+                                <span th:text="${summary != null and summary.ticketRevenue != null ? #numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT') : '0'}">0</span> ₫
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-secondary mt-2 block border-t border-[#EFE0D5] pt-1.5">
+                            <span class="font-semibold text-emerald-700" th:if="${summary != null and summary.totalRevenue > 0}" th:text="${#numbers.formatDecimal((summary.ticketRevenue / summary.totalRevenue) * 100, 1, 1)} + '%'">0%</span>
+                            <span class="font-semibold text-emerald-700" th:unless="${summary != null and summary.totalRevenue > 0}">0%</span> of total gross
+                        </span>
+                    </div>
+
+                    <!-- 3. F&B Revenue -->
+                    <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-secondary font-semibold">F&amp;B Concessions</span>
+                            <div class="text-2xl font-bold text-text-charcoal mt-1">
+                                <span th:text="${summary != null and summary.fbRevenue != null ? #numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT') : '0'}">0</span> ₫
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-secondary mt-2 block border-t border-[#EFE0D5] pt-1.5">Gourmet snacks &amp; drinks</span>
+                    </div>
+
+                    <!-- 4. Tickets Sold -->
+                    <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-secondary font-semibold">Tickets Sold</span>
+                            <div class="text-2xl font-bold text-text-charcoal mt-1">
+                                <span th:text="${summary != null and summary.totalTickets != null ? #numbers.formatDecimal(summary.totalTickets, 0, 'COMMA', 0, 'POINT') : '0'}">0</span>
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-secondary mt-2 block border-t border-[#EFE0D5] pt-1.5">Paid auditorium seats</span>
+                    </div>
+
+                    <!-- 5. Paid Bookings -->
+                    <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-secondary font-semibold">Paid Bookings</span>
+                            <div class="text-2xl font-bold text-emerald-700 mt-1" th:text="${summary != null ? summary.totalPaidBookings : 0}">0</div>
+                        </div>
+                        <span class="text-[11px] text-emerald-600 mt-2 block border-t border-[#EFE0D5] pt-1.5">Confirmed checkout orders</span>
+                    </div>
+                </div>
+
+                <!-- Section D: Three Internal Report Tabs -->
+                <div class="flex items-center gap-1 border-b border-[#EFE0D5] pb-px print-hide">
+                    <!-- Tab 1: Revenue Overview -->
+                    <a th:href="@{/manager/reports(tab='revenue', preset=${filterRequest.preset}, startDate=${filterRequest.startDate}, endDate=${filterRequest.endDate})}"
+                       class="tab-link px-4 py-2.5 font-semibold text-sm rounded-t-lg transition-all flex items-center gap-2 border-b-2"
+                       th:classappend="${activeTab == 'revenue'} ? 'bg-surface-container-lowest text-cinema-red border-cinema-red shadow-sm' : 'text-secondary hover:text-text-charcoal border-transparent hover:border-[#EFE0D5]'">
+                        <span class="material-symbols-outlined text-[18px]">query_stats</span>
+                        <span>Revenue Overview</span>
+                    </a>
+
+                    <!-- Tab 2: Movie Performance -->
+                    <a th:href="@{/manager/reports(tab='movies', preset=${filterRequest.preset}, startDate=${filterRequest.startDate}, endDate=${filterRequest.endDate})}"
+                       class="tab-link px-4 py-2.5 font-semibold text-sm rounded-t-lg transition-all flex items-center gap-2 border-b-2"
+                       th:classappend="${activeTab == 'movies'} ? 'bg-surface-container-lowest text-cinema-red border-cinema-red shadow-sm' : 'text-secondary hover:text-text-charcoal border-transparent hover:border-[#EFE0D5]'">
+                        <span class="material-symbols-outlined text-[18px]">movie</span>
+                        <span>Movie Performance</span>
+                    </a>
+
+                    <!-- Tab 3: Transaction Ledger -->
+                    <a th:href="@{/manager/reports(tab='transactions', preset=${filterRequest.preset}, startDate=${filterRequest.startDate}, endDate=${filterRequest.endDate})}"
+                       class="tab-link px-4 py-2.5 font-semibold text-sm rounded-t-lg transition-all flex items-center gap-2 border-b-2"
+                       th:classappend="${activeTab == 'transactions'} ? 'bg-surface-container-lowest text-cinema-red border-cinema-red shadow-sm' : 'text-secondary hover:text-text-charcoal border-transparent hover:border-[#EFE0D5]'">
+                        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                        <span>Transaction Ledger</span>
+                    </a>
+                </div>
+
+                <!-- Report Content Surface -->
+                <div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-[#EFE0D5] print-table">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#EFE0D5] mb-4 gap-2">
+                        <div>
+                            <h2 class="text-base font-bold text-text-charcoal"
+                                th:text="${activeTab == 'movies'} ? 'Movie Box Office & Concession Yield' : (${activeTab == 'transactions'} ? 'Audited Transaction History Ledger' : 'Daily Consolidated Revenue Ledger')">
+                                Daily Consolidated Revenue Ledger
+                            </h2>
+                            <p class="text-xs text-secondary mt-0.5"
+                               th:text="${activeTab == 'movies'} ? 'Performance breakdown per film including screenings, ticket sales, and F&B gross.' : (${activeTab == 'transactions'} ? 'Individual transaction logs with seat details, payment methods, and timestamps.' : 'Audit daily box office, concessions, discounts, and realized net earnings.')">
+                                Audit daily box office, concessions, discounts, and realized net earnings.
+                            </p>
+                        </div>
+                        <div class="text-xs text-secondary shrink-0">
+                            Period: <b class="text-text-charcoal" th:text="${#temporals.format(filterRequest.startDate, 'dd/MM/yyyy')}">01/10/2026</b>
+                            to <b class="text-text-charcoal" th:text="${#temporals.format(filterRequest.endDate, 'dd/MM/yyyy')}">31/10/2026</b>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: Revenue Overview Table -->
+                    <div th:if="${activeTab == 'revenue'}" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[750px]">
+                            <thead>
+                                <tr class="h-11 bg-background-warm/80 text-secondary text-xs uppercase tracking-wider font-semibold border-b border-[#EFE0D5]">
+                                    <th class="py-2.5 px-4 rounded-l-lg">Date</th>
+                                    <th class="py-2.5 px-4 text-right">Ticket Gross (VND)</th>
+                                    <th class="py-2.5 px-4 text-right">F&amp;B Gross (VND)</th>
+                                    <th class="py-2.5 px-4 text-right">Discounts (VND)</th>
+                                    <th class="py-2.5 px-4 text-right">Net Revenue (VND)</th>
+                                    <th class="py-2.5 px-4 text-center">Tickets</th>
+                                    <th class="py-2.5 px-4 text-center rounded-r-lg">Orders</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#F5EAE1] text-sm" id="dailyTableBody">
+                                <tr th:if="${reportData == null or #lists.isEmpty(reportData.dailyItems)}" class="empty-state-row">
+                                    <td colspan="7" class="text-center py-12 text-secondary">
+                                        No financial revenue data recorded for this timeframe.
+                                    </td>
+                                </tr>
+                                <tr th:each="row : ${reportData.dailyItems}" class="hover:bg-surface-peach/20 transition-colors">
+                                    <td class="py-3 px-4 font-semibold text-text-charcoal font-mono" th:text="${#temporals.format(row.date, 'dd/MM/yyyy')}">19/10/2026</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(row.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(row.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right text-secondary" th:text="${#numbers.formatDecimal(row.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right font-bold text-cinema-red" th:text="${#numbers.formatDecimal(row.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-center" th:text="${row.ticketCount}">0</td>
+                                    <td class="py-3 px-4 text-center font-medium" th:text="${row.bookingCount}">0</td>
+                                </tr>
+                            </tbody>
+                            <tfoot th:if="${reportData != null and !#lists.isEmpty(reportData.dailyItems)}" class="bg-surface-peach/40 font-bold text-text-charcoal border-t-2 border-[#EFE0D5] text-sm">
+                                <tr>
+                                    <td class="py-3 px-4">TOTAL SUMMARY</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(summary.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right text-cinema-red" th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-center" th:text="${summary.totalTickets}">0</td>
+                                    <td class="py-3 px-4 text-center" th:text="${summary.totalPaidBookings}">0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div id="dailyPagination" class="w-full"></div>
+                    </div>
+
+                    <!-- TAB 2: Movie Performance Table -->
+                    <div th:if="${activeTab == 'movies'}" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[750px]">
+                            <thead>
+                                <tr class="h-11 bg-background-warm/80 text-secondary text-xs uppercase tracking-wider font-semibold border-b border-[#EFE0D5]">
+                                    <th class="py-2.5 px-4 w-28 rounded-l-lg">Movie Code</th>
+                                    <th class="py-2.5 px-4">Movie Title</th>
+                                    <th class="py-2.5 px-4 w-28 text-center">Showtimes</th>
+                                    <th class="py-2.5 px-4 w-28 text-center">Tickets Sold</th>
+                                    <th class="py-2.5 px-4 text-right">Ticket Gross (VND)</th>
+                                    <th class="py-2.5 px-4 text-right">F&amp;B Gross (VND)</th>
+                                    <th class="py-2.5 px-4 text-right rounded-r-lg">Net Revenue (VND)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#F5EAE1] text-sm" id="movieTableBody">
+                                <tr th:if="${reportData == null or #lists.isEmpty(reportData.movieItems)}" class="empty-state-row">
+                                    <td colspan="7" class="text-center py-12 text-secondary">
+                                        No movie box office data recorded for this period.
+                                    </td>
+                                </tr>
+                                <tr th:each="row : ${reportData.movieItems}" class="hover:bg-surface-peach/20 transition-colors">
+                                    <td class="py-3 px-4 font-mono text-xs text-secondary" th:text="'MOV-' + ${row.movieId}">MOV-1</td>
+                                    <td class="py-3 px-4 font-semibold text-text-charcoal" th:text="${row.title}">Avatar</td>
+                                    <td class="py-3 px-4 text-center" th:text="${row.showtimesCount}">2</td>
+                                    <td class="py-3 px-4 text-center font-medium" th:text="${row.soldTickets}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(row.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(row.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right font-bold text-cinema-red" th:text="${#numbers.formatDecimal(row.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                </tr>
+                            </tbody>
+                            <tfoot th:if="${reportData != null and !#lists.isEmpty(reportData.movieItems)}" class="bg-surface-peach/40 font-bold text-text-charcoal border-t-2 border-[#EFE0D5] text-sm">
+                                <tr>
+                                    <td colspan="2" class="py-3 px-4">TOTAL SUMMARY</td>
+                                    <td class="py-3 px-4 text-center" th:text="${totalMovieShowtimes}">0</td>
+                                    <td class="py-3 px-4 text-center" th:text="${summary.totalTickets}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-4 text-right text-cinema-red" th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div id="moviePagination" class="w-full"></div>
+                    </div>
+
+                    <!-- TAB 3: Transaction Ledger Table -->
+                    <div th:if="${activeTab == 'transactions'}" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[850px]">
+                            <thead>
+                                <tr class="h-11 bg-background-warm/80 text-secondary text-xs uppercase tracking-wider font-semibold border-b border-[#EFE0D5]">
+                                    <th class="py-2.5 px-3 rounded-l-lg">Order Code</th>
+                                    <th class="py-2.5 px-3">Timestamp</th>
+                                    <th class="py-2.5 px-3">Customer</th>
+                                    <th class="py-2.5 px-3">Movie &amp; Room</th>
+                                    <th class="py-2.5 px-3">Showtime</th>
+                                    <th class="py-2.5 px-3">Seats</th>
+                                    <th class="py-2.5 px-3 text-right">Tickets</th>
+                                    <th class="py-2.5 px-3 text-right">F&amp;B</th>
+                                    <th class="py-2.5 px-3 text-right">Total</th>
+                                    <th class="py-2.5 px-3 text-center">Payment</th>
+                                    <th class="py-2.5 px-3 text-center rounded-r-lg">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#F5EAE1] text-sm" id="transactionTableBody">
+                                <tr th:if="${reportData == null or #lists.isEmpty(reportData.transactionItems)}" class="empty-state-row">
+                                    <td colspan="11" class="text-center py-12 text-secondary">
+                                        No successful paid transactions found for this timeframe.
+                                    </td>
+                                </tr>
+                                <tr th:each="row : ${reportData.transactionItems}" class="hover:bg-surface-peach/20 transition-colors">
+                                    <td class="py-3 px-3 font-mono font-bold text-cinema-red" th:text="${row.bookingCode}">BK-001</td>
+                                    <td class="py-3 px-3 text-xs text-secondary font-mono" th:text="${#temporals.format(row.bookingTime, 'dd/MM/yyyy HH:mm')}">19/10/2026</td>
+                                    <td class="py-3 px-3">
+                                        <div class="font-medium text-text-charcoal" th:text="${row.customerName}">Nguyen Van A</div>
+                                        <div class="text-[11px] text-secondary" th:text="${row.phone}">0912345678</div>
+                                    </td>
+                                    <td class="py-3 px-3">
+                                        <div class="font-medium text-text-charcoal" th:text="${row.movieTitle}">Avatar</div>
+                                        <div class="text-[11px] text-secondary" th:text="${row.roomName}">Hall 1</div>
+                                    </td>
+                                    <td class="py-3 px-3 text-xs text-secondary font-mono" th:text="${#temporals.format(row.showtimeStartTime, 'dd/MM HH:mm')}">19/10 18:00</td>
+                                    <td class="py-3 px-3 font-semibold text-text-charcoal" th:text="${row.seatLabels}">A1, A2</td>
+                                    <td class="py-3 px-3 text-right text-xs" th:text="${#numbers.formatDecimal(row.ticketAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-3 text-right text-xs" th:text="${#numbers.formatDecimal(row.fbAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-3 text-right font-bold text-cinema-red" th:text="${#numbers.formatDecimal(row.totalAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                                    <td class="py-3 px-3 text-center text-xs font-semibold" th:text="${row.paymentMethod}">VNPAY</td>
+                                    <td class="py-3 px-3 text-center">
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E8F5E9] text-[#2E7D32]" th:text="${row.bookingStatus}">PAID</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div id="transactionPagination" class="w-full"></div>
+                    </div>
+
+                </div>
+
             </div>
-        </form>
+        </main>
     </div>
 
-    <!-- Top Summary KPI Cards (SRS Section 4.9 II) -->
-    <div class="kpi-grid">
-        <div class="kpi-card blue">
-            <div class="kpi-label">Tổng Doanh Thu</div>
-            <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
-            </div>
-            <div class="kpi-sub">Doanh thu ghi nhận thực tế (BR-22)</div>
-        </div>
-        <div class="kpi-card green">
-            <div class="kpi-label">Doanh Thu Vé</div>
-            <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
-            </div>
-            <div class="kpi-sub">Chiếm <span th:if="${summary.totalRevenue > 0}" th:text="${#numbers.formatDecimal((summary.ticketRevenue / summary.totalRevenue) * 100, 1, 1)}">0</span><span th:unless="${summary.totalRevenue > 0}">0</span>% cơ cấu</div>
-        </div>
-        <div class="kpi-card gold">
-            <div class="kpi-label">Doanh Thu F&amp;B</div>
-            <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
-            </div>
-            <div class="kpi-sub">Bắp nước &amp; Combo ưu đãi</div>
-        </div>
-        <div class="kpi-card purple">
-            <div class="kpi-label">Tổng Vé Đã Bán</div>
-            <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.totalTickets, 0, 'COMMA', 0, 'POINT')}">0</span>
-            </div>
-            <div class="kpi-sub">Ghế đã được thanh toán</div>
-        </div>
-        <div class="kpi-card teal">
-            <div class="kpi-label">Đơn Hàng Thành Công</div>
-            <div class="kpi-value">
-                <span th:text="${summary.totalPaidBookings}">0</span>
-            </div>
-            <div class="kpi-sub">Giao dịch Paid / Confirmed</div>
-        </div>
-    </div>
-
-    <!-- Data Table Card -->
-    <div class="table-card">
-        <div class="table-header-row">
-            <div class="table-header-title" id="tableTitle"
-                 th:text="${filterRequest.reportType == 'MOVIE'} ? 'Bảng Thống Kê Hiệu Suất Theo Phim' : (${filterRequest.reportType == 'TRANSACTIONS'} ? 'Danh Sách Giao Dịch Chi Tiết' : 'Bảng Doanh Thu Tổng Hợp Theo Ngày')">
-                Bảng Doanh Thu
-            </div>
-            <div style="font-size:12.5px;color:var(--text-400);">
-                Dữ liệu từ <b th:text="${#temporals.format(filterRequest.startDate, 'dd/MM/yyyy')}">01/10/2026</b>
-                đến <b th:text="${#temporals.format(filterRequest.endDate, 'dd/MM/yyyy')}">31/10/2026</b>
-            </div>
-        </div>
-
-        <!-- 1. Daily Report Table -->
-        <div th:if="${filterRequest.reportType == 'DAILY' or filterRequest.reportType == null}" class="table-responsive">
-            <table class="report-table">
-                <thead>
-                <tr>
-                    <th>Ngày</th>
-                    <th class="text-right">Doanh Thu Vé (VNĐ)</th>
-                    <th class="text-right">Doanh Thu F&amp;B (VNĐ)</th>
-                    <th class="text-right">Giảm Giá (VNĐ)</th>
-                    <th class="text-right">Tổng Doanh Thu (VNĐ)</th>
-                    <th class="text-center">Số Vé Bán</th>
-                    <th class="text-center">Số Đơn Hàng</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="row : ${reportData.dailyItems}">
-                    <td style="font-weight:600;" th:text="${#temporals.format(row.date, 'dd/MM/yyyy')}">19/10/2026</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;color:var(--primary);"
-                        th:text="${#numbers.formatDecimal(row.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-center" th:text="${row.ticketCount}">0</td>
-                    <td class="text-center" th:text="${row.bookingCount}">0</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(reportData.dailyItems)}">
-                    <td colspan="7" class="empty-state">
-                        <div class="empty-icon">📊</div>
-                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu doanh thu trong khoảng thời gian này</div>
-                        <div style="font-size:12px;margin-top:4px;">Vui lòng chọn khoảng thời gian khác hoặc kiểm tra lại bộ lọc.</div>
-                    </td>
-                </tr>
-                </tbody>
-                <tfoot th:if="${!#lists.isEmpty(reportData.dailyItems)}">
-                <tr>
-                    <td>TỔNG CỘNG</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-center" th:text="${summary.totalTickets}">0</td>
-                    <td class="text-center" th:text="${summary.totalPaidBookings}">0</td>
-                </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- 2. Movie Performance Table -->
-        <div th:if="${filterRequest.reportType == 'MOVIE'}" class="table-responsive">
-            <table class="report-table">
-                <thead>
-                <tr>
-                    <th>Mã Phim</th>
-                    <th>Tên Phim</th>
-                    <th class="text-center">Số Suất Chiếu</th>
-                    <th class="text-center">Số Vé Đã Bán</th>
-                    <th class="text-right">Doanh Thu Vé (VNĐ)</th>
-                    <th class="text-right">Doanh Thu F&amp;B (VNĐ)</th>
-                    <th class="text-right">Tổng Doanh Thu (VNĐ)</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="row : ${reportData.movieItems}">
-                    <td style="font-family:monospace;font-size:12px;" th:text="'MOV-' + ${row.movieId}">MOV-1</td>
-                    <td style="font-weight:600;" th:text="${row.title}">Avatar</td>
-                    <td class="text-center" th:text="${row.showtimesCount}">2</td>
-                    <td class="text-center" th:text="${row.soldTickets}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;color:var(--primary);"
-                        th:text="${#numbers.formatDecimal(row.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(reportData.movieItems)}">
-                    <td colspan="7" class="empty-state">
-                        <div class="empty-icon">🎬</div>
-                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu phim trong khoảng thời gian này</div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 3. Transactions Table -->
-        <div th:if="${filterRequest.reportType == 'TRANSACTIONS'}" class="table-responsive">
-            <table class="report-table">
-                <thead>
-                <tr>
-                    <th>Mã Đơn</th>
-                    <th>Thời Gian</th>
-                    <th>Khách Hàng</th>
-                    <th>Phim &amp; Phòng</th>
-                    <th>Suất Chiếu</th>
-                    <th>Ghế</th>
-                    <th class="text-right">Tiền Vé</th>
-                    <th class="text-right">Tiền F&amp;B</th>
-                    <th class="text-right">Tổng Tiền</th>
-                    <th>Hình Thức</th>
-                    <th class="text-center">Trạng Thái</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="row : ${reportData.transactionItems}">
-                    <td style="font-family:monospace;font-weight:700;color:var(--primary);" th:text="${row.bookingCode}">BK-001</td>
-                    <td style="font-size:12px;" th:text="${#temporals.format(row.bookingTime, 'dd/MM/yyyy HH:mm')}">19/10/2026</td>
-                    <td>
-                        <div style="font-weight:600;" th:text="${row.customerName}">Nguyễn Văn A</div>
-                        <small style="color:var(--text-400);" th:text="${row.phone}">0912345678</small>
-                    </td>
-                    <td>
-                        <div style="font-weight:600;" th:text="${row.movieTitle}">Avatar</div>
-                        <small style="color:var(--text-400);" th:text="${row.roomName}">Hall 1</small>
-                    </td>
-                    <td style="font-size:12px;" th:text="${#temporals.format(row.showtimeStartTime, 'dd/MM HH:mm')}">19/10 18:00</td>
-                    <td style="font-weight:600;" th:text="${row.seatLabels}">A1, A2</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.ticketAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(row.fbAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;color:var(--primary);"
-                        th:text="${#numbers.formatDecimal(row.totalAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td th:text="${row.paymentMethod}">VNPAY</td>
-                    <td class="text-center">
-                        <span class="badge-status paid" th:text="${row.bookingStatus}">PAID</span>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(reportData.transactionItems)}">
-                    <td colspan="11" class="empty-state">
-                        <div class="empty-icon">🧾</div>
-                        <div style="font-size:14px;font-weight:600;">Không có giao dịch thành công trong khoảng thời gian này</div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-    </div>
-
-</div>
-</div>
-
-<script th:src="@{/js/manager-reports.js}"></script>
+    <script th:src="@{/js/pagination-helper.js}"></script>
+    <script th:src="@{/js/manager-reports.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.initCineoraPagination) {
+                if (document.getElementById('dailyTableBody')) {
+                    initCineoraPagination({
+                        container: '#dailyTableBody',
+                        itemSelector: 'tr',
+                        controlsContainer: '#dailyPagination',
+                        pageSize: 10,
+                        itemName: 'daily records'
+                    });
+                }
+                if (document.getElementById('movieTableBody')) {
+                    initCineoraPagination({
+                        container: '#movieTableBody',
+                        itemSelector: 'tr',
+                        controlsContainer: '#moviePagination',
+                        pageSize: 5,
+                        itemName: 'movies'
+                    });
+                }
+                if (document.getElementById('transactionTableBody')) {
+                    initCineoraPagination({
+                        container: '#transactionTableBody',
+                        itemSelector: 'tr',
+                        controlsContainer: '#transactionPagination',
+                        pageSize: 5,
+                        itemName: 'transactions'
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>

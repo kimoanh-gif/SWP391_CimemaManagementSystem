@@ -1,309 +1,390 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tổng quan – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
-    <style>
-        /* ---- Dashboard-specific extras ---- */
-        .nav-tiles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 14px;
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="web_dashboard" name="shell-type">
+  <title>Executive Management Dashboard – CINEORA Cinema Suites</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary-fixed": "#ffdad7", "on-tertiary": "#ffffff", "on-primary": "#ffffff",
+            "inverse-primary": "#ffb3af", "on-tertiary-container": "#fff3e6", "surface-container-low": "#feeffd",
+            "surface-container-lowest": "#ffffff", "surface-tint": "#bf0423", "primary-container": "#d92332",
+            "on-tertiary-fixed-variant": "#5f4100", "on-primary-fixed": "#410005", "inverse-on-surface": "#fbecfb",
+            "text-charcoal": "#28202A", "tertiary-fixed": "#ffdeaa", "on-tertiary-fixed": "#271900",
+            "background-warm": "#FFF8F0", "on-secondary-container": "#736057", "on-primary-fixed-variant": "#930017",
+            "on-error-container": "#93000a", "on-surface-variant": "#5c403e", "surface": "#fff7fb",
+            "on-surface": "#211923", "primary": "#b3001f", "tertiary": "#745100",
+            "secondary-container": "#f7ddd1", "secondary-fixed-dim": "#dac2b6", "cinema-gold": "#F2B84B",
+            "surface-dim": "#e4d6e4", "error": "#ba1a1a", "on-primary-container": "#fff2f1",
+            "on-background": "#211923", "tertiary-container": "#946800", "outline": "#906f6d",
+            "on-error": "#ffffff", "on-secondary": "#ffffff", "surface-bright": "#fff7fb",
+            "surface-container-high": "#f2e4f2", "surface-variant": "#eddeec", "surface-container-highest": "#eddeec",
+            "surface-container": "#f8e9f8", "secondary-fixed": "#f7ddd1", "background": "#fff7fb",
+            "tertiary-fixed-dim": "#f7bd4f", "surface-peach": "#FFE5D9", "primary-fixed-dim": "#ffb3af",
+            "on-secondary-fixed": "#261912", "error-container": "#ffdad6", "cinema-red": "#D92332",
+            "secondary": "#6d5a51", "inverse-surface": "#362e38", "outline-variant": "#e5bdba",
+            "on-secondary-fixed-variant": "#54433b"
+          },
+          borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
         }
-        .nav-tile {
-            background: var(--bg-white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            display: flex; align-items: flex-start; gap: 14px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.15s; cursor: pointer;
-            text-decoration: none; color: inherit;
-        }
-        .nav-tile:hover { box-shadow: var(--shadow-md); border-color: var(--primary); transform: translateY(-1px); }
-        .nav-tile.tile-disabled { opacity: 0.5; cursor: not-allowed; }
-        .nav-tile.tile-disabled:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
-        .tile-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .icon-red    { background: #FEE2E2; }
-        .icon-blue   { background: var(--primary-soft); }
-        .icon-green  { background: #D1FAE5; }
-        .icon-gold   { background: #FEF3C7; }
-        .icon-purple { background: #EDE9FE; }
-        .icon-muted  { background: #F3F4F6; color: #9CA3AF; }
-        .tile-info { flex: 1; min-width: 0; }
-        .tile-info h3 { font-size: 13px; font-weight: 700; color: var(--text-900); margin: 0 0 4px; }
-        .tile-info p  { font-size: 12px; color: var(--text-500); margin: 0; line-height: 1.5; }
-        .tile-arrow { font-size: 18px; color: var(--text-400); flex-shrink: 0; margin-top: 2px; }
-        .badge-coming-soon { background: #F3F4F6; color: #6B7280; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; }
-
-        .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .section-row h2 { font-size: 16px; font-weight: 700; margin: 0; }
-        .section-row p  { font-size: 12.5px; color: var(--text-500); margin: 2px 0 0; }
-
-        .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        @media (max-width: 900px) { .ops-grid { grid-template-columns: 1fr; } }
-
-        .room-status-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; }
-        .room-status-item:last-child { border-bottom: none; }
-        .room-status-info small { display: block; font-size: 11.5px; color: var(--text-400); margin-top: 2px; }
-        .room-status-actions { display: flex; align-items: center; gap: 8px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .status-dot.ready     { background: var(--success); }
-        .status-dot.screening { background: var(--primary); }
-        .status-dot.maint     { background: var(--warning); }
-
-        .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .ops-table th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-400); text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg-body); border-bottom: 1px solid var(--border); }
-        .ops-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-700); }
-        .ops-table tr:last-child td { border-bottom: none; }
-        .ops-table tbody tr:hover td { background: #FAFBFF; }
-        .time-code { background: var(--primary-light); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 600; font-family: monospace; }
-    </style>
+      }
+    };
+  </script>
 </head>
-<body>
+<body class="bg-background-warm font-body-md text-text-charcoal min-h-screen">
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='dashboard')}"></div>
+  <!-- Unified CINEORA Sidebar Fragment -->
+  <div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='dashboard')}"></div>
 
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Tổng quan')}"></div>
+  <!-- Unified CINEORA Topbar Fragment -->
+  <div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Executive Dashboard')}"></div>
 
-<!-- Main -->
-<div class="main-wrapper">
-<div class="page-shell">
+  <!-- Main View Wrap -->
+  <div class="pl-[248px]">
+    <main class="relative pt-[68px] min-h-screen bg-background-warm p-[28px]">
+      <div class="flex flex-col w-full space-y-6">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="breadcrumb">Quản lý</div>
-            <h1 class="page-title">Bảng Điều Khiển Tổng Quan</h1>
-            <p class="page-subtitle">Giám sát vận hành: Phim, Phòng chiếu, Lịch chiếu, Bảng giá và Dịch vụ F&amp;B.</p>
-        </div>
-        <div class="page-header-actions">
-            <span class="badge badge-dot badge-green" th:text="${currentDateStr}">Hôm nay</span>
-            <span class="badge badge-blue">MANAGER</span>
-        </div>
-    </div>
-
-    <!-- KPI Stats Row -->
-    <div class="stats-row">
-        <a th:href="@{/manager/movies}" class="stat-card blue" style="text-decoration:none;">
-            <div class="stat-label">Phim Đang Chiếu</div>
-            <div class="stat-value" th:text="${stats.nowShowingMovies}">1</div>
-            <div class="stat-sub">Tổng <b th:text="${stats.totalMovies}">5</b> phim •
-                <span class="up" th:text="${stats.upcomingMovies} + ' sắp chiếu'">1 sắp chiếu</span>
+        <!-- Section 1: Header & Consolidated Operational Status -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl font-bold text-text-charcoal tracking-tight">Executive Management Dashboard</h1>
+              <span class="px-2 py-0.5 rounded font-label-sm text-[11px] font-bold bg-surface-peach text-cinema-red uppercase">M01.1</span>
             </div>
-            <span class="stat-icon">🎬</span>
-        </a>
-        <a th:href="@{/manager/rooms}" class="stat-card green" style="text-decoration:none;">
-            <div class="stat-label">Phòng Chiếu Hoạt Động</div>
-            <div class="stat-value" th:text="${stats.activeRooms}">3</div>
-            <div class="stat-sub">Tổng <b th:text="${stats.totalRooms}">5</b> phòng • Sẵn sàng đón khách</div>
-            <span class="stat-icon">🏟</span>
-        </a>
-        <a th:href="@{/manager/showtimes}" class="stat-card orange" style="text-decoration:none;">
-            <div class="stat-label">Suất Chiếu Hôm Nay</div>
-            <div class="stat-value" th:text="${stats.todayShowtimesCount}">0</div>
-            <div class="stat-sub">Khung giờ sáng, chiều &amp; giờ vàng tối</div>
-            <span class="stat-icon">🕐</span>
-        </a>
-        <a th:href="@{/manager/pricing}" class="stat-card purple" style="text-decoration:none;" title="Giá vé cơ sở trung bình tính từ bảng giá hiện hành">
-            <div class="stat-label">Giá Vé Cơ Sở TB (Bảng Giá)</div>
-            <div class="stat-value">
-                <span th:text="${#numbers.formatDecimal(stats.baseTicketPrice, 0, 'COMMA', 0, 'POINT')}">85.000</span>
-                <small>đ</small>
+            <p class="text-sm text-secondary mt-1">Monitor cinema operations, screening schedules, and box office revenue.</p>
+          </div>
+          <!-- Consolidated Operational Status & Shift Widget -->
+          <div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded-xl shadow-sm border border-[#EFE0D5] self-start sm:self-auto shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#2E9B4E] animate-pulse"></span>
+              <span class="text-xs text-[#1E6B37] font-semibold"
+                    th:text="${stats != null and stats.activeRooms > 0 ? (stats.activeRooms + '/' + stats.totalRooms + ' Rooms Operational') : 'Operations Normal'}">
+                5/5 Rooms Operational
+              </span>
             </div>
-            <div class="stat-sub">ATP: <b th:text="${#numbers.formatDecimal(stats.averageTicketPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">100.833đ</b> (Niêm yết)</div>
-            <span class="stat-icon">🏷</span>
-        </a>
-        <a th:href="@{/manager/fb}" class="stat-card red" style="text-decoration:none;">
-            <div class="stat-label">Dịch Vụ F&amp;B</div>
-            <div class="stat-value" th:text="${stats.activeFBItems}">8</div>
-            <div class="stat-sub" th:text="'Đang mở bán / tổng ' + ${stats.totalFBItems} + ' món'">Đang mở bán</div>
-            <span class="stat-icon">🍿</span>
-        </a>
-        <a th:href="@{/manager/seat-types}" class="stat-card blue" style="text-decoration:none;">
-            <div class="stat-label">Loại Ghế / Thể Loại</div>
-            <div class="stat-value" th:text="${stats.totalSeatTypes} + ' / ' + ${stats.totalGenres}">4 / 13</div>
-            <div class="stat-sub">Cấu hình loại ghế &amp; danh mục thể loại</div>
-            <span class="stat-icon">⚙️</span>
-        </a>
-    </div>
+            <div class="h-4 w-px bg-[#EFE0D5]"></div>
+            <div class="flex items-center gap-1.5 text-secondary text-xs">
+              <span class="material-symbols-outlined text-[17px]">calendar_today</span>
+              <span class="text-text-charcoal font-medium" th:text="${currentDateStr != null ? currentDateStr : 'Wednesday, October 21, 2026'}">Wednesday, October 21, 2026</span>
+              <span>•</span>
+              <span>Day Shift (08:00 - 17:00)</span>
+            </div>
+          </div>
+        </div>
 
-    <!-- Real Transaction & Performance KPIs (P1-04) -->
-    <div class="card" style="margin-bottom:16px;">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <!-- Section 2: Four Primary KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          <!-- Card 1: Today's Revenue -->
+          <a th:href="@{/manager/reports}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] flex flex-col justify-between h-[122px] hover:border-cinema-red hover:shadow-md transition-all">
+            <div class="flex items-start justify-between">
+              <span class="text-xs text-secondary font-medium">Today's Revenue</span>
+              <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-cinema-red text-[20px]">payments</span>
+              </div>
+            </div>
             <div>
-                <h2 class="card-title" style="margin:0;font-size:15px;">Hiệu Suất Vận Hành &amp; Doanh Thu Thực Tế</h2>
-                <small style="color:var(--text-400);">Dữ liệu tổng hợp từ các giao dịch vé và suất chiếu đã xác nhận</small>
+              <div class="text-xl font-bold text-cinema-red leading-none truncate"
+                   th:text="${stats != null and stats.todayRevenue != null ? #numbers.formatDecimal(stats.todayRevenue, 0, 'COMMA', 0, 'POINT') + ' ₫' : '0 ₫'}">0 ₫</div>
+              <span class="text-[11px] text-secondary mt-1.5 block truncate"
+                    th:text="${stats != null and stats.todayRevenue != null and stats.todayRevenue > 0 ? 'Audited gross revenue' : 'No transactions today'}">No transactions today</span>
             </div>
-            <span th:if="${stats.hasTransactionData}" class="badge badge-green">Dữ liệu thực tế</span>
-            <span th:unless="${stats.hasTransactionData}" class="badge badge-gray">Chưa có dữ liệu</span>
-        </div>
-        <div class="card-body">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;">
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Doanh Thu Vé Thực Tế</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
-                        <span th:text="${#numbers.formatDecimal(stats.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Chỉ tính đơn hàng 'Paid' / 'Confirmed'</small>
-                </div>
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Tỷ Lệ Lấp Đầy Ghế (Occupancy)</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
-                        <span th:text="${stats.seatOccupancyRate}">0.0</span>%
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Số vé bán / tổng ghế các suất chiếu</small>
-                </div>
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Số Vé Đã Đặt</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
-                        <span th:text="${stats.totalBookedTickets}">0</span> <small style="font-size:13px;font-weight:500;">vé</small>
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Vé qua quầy &amp; đặt trực tuyến</small>
-                </div>
-            </div>
-        </div>
-    </div>
+          </a>
 
-    <!-- Quick Nav Tiles -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Chức Năng Quản Lý Hệ Thống</h2>
-            <span style="font-size:12.5px;color:var(--text-400)">Truy cập trực tiếp các phân hệ</span>
-        </div>
-        <div class="card-body">
-        <div class="nav-tiles-grid">
-            <a th:href="@{/manager/movies}" class="nav-tile">
-                <div class="tile-icon icon-red">🎬</div>
-                <div class="tile-info"><h3>Quản Lý Phim (Screen 54)</h3><p>Thêm phim mới, chỉnh sửa thông tin, định dạng và trạng thái phát hành (UC-26).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/genres}" class="nav-tile">
-                <div class="tile-icon icon-blue">🏷</div>
-                <div class="tile-info"><h3>Quản Lý Thể Loại (Screen 55)</h3><p>Thiết lập danh mục phân loại phim và trạng thái kích hoạt thể loại.</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/rooms}" class="nav-tile">
-                <div class="tile-icon icon-green">🏟</div>
-                <div class="tile-info"><h3>Quản Lý Phòng Chiếu (Screen 56)</h3><p>Cấu hình phòng Standard, IMAX, Dolby Atmos, sức chứa và kiểm soát vận hành.</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/seat-types}" class="nav-tile">
-                <div class="tile-icon icon-gold">💺</div>
-                <div class="tile-info"><h3>Quản Lý Loại Ghế (Screen 57)</h3><p>Định nghĩa ghế Standard, VIP, Couple và hệ số giá nhân vé (UC-28).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/seats}" class="nav-tile">
-                <div class="tile-icon icon-purple">🗺</div>
-                <div class="tile-info"><h3>Sơ Đồ Bố Trí Ghế (Screen 58)</h3><p>Ma trận ghế phòng chiếu, gán loại ghế và quản lý ghế bảo trì (UC-29).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/showtimes}" class="nav-tile">
-                <div class="tile-icon icon-red">🕐</div>
-                <div class="tile-info"><h3>Quản Lý Lịch Chiếu (Screen 59)</h3><p>Lập lịch suất chiếu, kiểm soát xung đột và thời gian đệm 15 phút (UC-30).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/pricing}" class="nav-tile">
-                <div class="tile-icon icon-gold">💰</div>
-                <div class="tile-info"><h3>Cấu Hình Giá Vé (Screen 60)</h3><p>Ma trận định giá theo khung giờ, loại ngày và phụ thu định dạng (UC-31).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/fb}" class="nav-tile">
-                <div class="tile-icon icon-blue">🍿</div>
-                <div class="tile-info"><h3>Ẩm Thực &amp; Đồ Uống (Screen 61)</h3><p>Quản lý bắp nước, combo ưu đãi, giá bán và lịch sử hóa đơn (UC-32).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <div class="nav-tile tile-disabled">
-                <div class="tile-icon icon-muted">🎁</div>
-                <div class="tile-info"><h3>Khuyến Mãi &amp; Voucher</h3><p>Mã giảm giá và chương trình ưu đãi tri ân thành viên.</p></div>
-                <span class="badge-coming-soon">Sắp Ra Mắt</span>
+          <!-- Card 2: Tickets Sold -->
+          <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] flex flex-col justify-between h-[122px]">
+            <div class="flex items-start justify-between">
+              <span class="text-xs text-secondary font-medium">Tickets Sold</span>
+              <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-cinema-red text-[20px]">confirmation_number</span>
+              </div>
             </div>
-            <a th:href="@{/manager/reports}" class="nav-tile">
-                <div class="tile-icon icon-green">📈</div>
-                <div class="tile-info"><h3>Báo Cáo &amp; Xuất Doanh Thu (Screen 47 &amp; 49)</h3><p>Doanh thu phòng vé, bắp nước, lọc theo thời gian và xuất báo cáo Excel (UC-34).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-        </div>
-        </div>
-    </div>
+            <div>
+              <div class="text-2xl font-bold text-text-charcoal leading-none"
+                   th:text="${stats != null and stats.totalBookedTickets > 0 ? #numbers.formatDecimal(stats.totalBookedTickets, 0, 'COMMA', 0, 'POINT') : '0'}">0</div>
+              <span class="text-[11px] font-medium mt-1.5 block truncate"
+                    th:classappend="${stats != null and stats.totalBookedTickets > 0 ? 'text-emerald-700' : 'text-secondary'}"
+                    th:text="${stats != null and stats.totalBookedTickets > 0 ? 'Confirmed admissions' : 'No tickets sold yet'}">No tickets sold yet</span>
+            </div>
+          </div>
 
-    <!-- Live Operations: Showtimes + Rooms -->
-    <div class="ops-grid">
-        <!-- Today Showtimes -->
-        <div class="table-wrapper">
-            <div class="table-header">
-                <span class="table-header-title">Suất Chiếu Hoạt Động Hôm Nay</span>
-                <a th:href="@{/manager/showtimes}" class="btn btn-secondary btn-sm">Xem tất cả →</a>
+          <!-- Card 3: Today's Showtimes -->
+          <a th:href="@{/manager/showtimes}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] flex flex-col justify-between h-[122px] hover:border-cinema-red hover:shadow-md transition-all">
+            <div class="flex items-start justify-between">
+              <span class="text-xs text-secondary font-medium">Today's Showtimes</span>
+              <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-cinema-red text-[20px]">schedule</span>
+              </div>
             </div>
-            <table class="ops-table">
-                <thead>
-                    <tr>
-                        <th>Phim</th>
-                        <th>Phòng</th>
-                        <th>Giờ Chiếu</th>
-                        <th>Trạng Thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${#lists.isEmpty(todayShowtimes)}">
-                        <td colspan="4" style="text-align:center;padding:24px;color:var(--text-400)">Hôm nay chưa có suất chiếu nào.</td>
-                    </tr>
-                    <tr th:each="st : ${todayShowtimes}">
-                        <td><strong th:text="${st.movieTitle}">Tên Phim</strong></td>
-                        <td><span class="badge badge-blue" th:text="${st.roomName}">Phòng 01</span></td>
-                        <td><span class="time-code" th:text="${#temporals.format(st.startTime, 'HH:mm')} + '–' + ${#temporals.format(st.endTime, 'HH:mm')}">14:00–16:30</span></td>
-                        <td><span class="badge" th:classappend="${st.status == 'Scheduled'} ? ' badge-green' : ' badge-gray'" th:text="${st.status}">Scheduled</span></td>
-                    </tr>
-                </tbody>
+            <div>
+              <div class="text-2xl font-bold text-text-charcoal leading-none"
+                   th:text="${stats != null ? stats.todayShowtimesCount : 0}">0</div>
+              <span class="text-[11px] font-medium mt-1.5 block truncate"
+                    th:classappend="${stats != null and stats.todayShowtimesCount > 0 ? 'text-emerald-700' : 'text-secondary'}"
+                    th:text="${stats != null and stats.todayShowtimesCount > 0 ? 'Scheduled today' : 'No screenings today'}">No screenings today</span>
+            </div>
+          </a>
+
+          <!-- Card 4: Active Promotions -->
+          <a th:href="@{/manager/vouchers}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] flex flex-col justify-between h-[122px] hover:border-cinema-red hover:shadow-md transition-all">
+            <div class="flex items-start justify-between">
+              <span class="text-xs text-secondary font-medium">Active Promotions</span>
+              <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-cinema-red text-[20px]">redeem</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-text-charcoal leading-none"
+                   th:text="${stats != null ? (stats.activePromotionsCount < 10 ? '0' + stats.activePromotionsCount : stats.activePromotionsCount) : '00'}">00</div>
+              <span class="text-[11px] text-secondary mt-1.5 block truncate"
+                    th:text="${stats != null and stats.activePromotionsCount > 0 ? (stats.activePromotionsCount + ' active campaigns') : 'No active campaigns'}">No active campaigns</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Section 3: Analytics and Scheduling (Split 62 : 38) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full">
+          <!-- Left: Revenue Overview (col-span-8) -->
+          <div class="lg:col-span-7 xl:col-span-8 bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-3">
+                <h2 class="text-base font-bold text-text-charcoal">Revenue &amp; Box Office Analytics</h2>
+                <span class="text-xs font-semibold text-cinema-red bg-surface-peach px-2.5 py-0.5 rounded-full"
+                      th:text="${stats.periodRevenue != null and stats.periodRevenue > 0 ? #numbers.formatDecimal(stats.periodRevenue, 0, 'COMMA', 0, 'POINT') + ' ' + stats.periodUnitLabel : '0 ' + stats.periodUnitLabel}">
+                  0 ₫ / 7 days
+                </span>
+              </div>
+              <!-- Period selector tabs -->
+              <div class="flex items-center gap-1 bg-surface-container p-1 rounded-lg text-xs font-medium">
+                <a th:href="@{/manager/dashboard(period='today')}"
+                   th:class="${selectedPeriod == 'today' ? 'px-2.5 py-1 rounded bg-surface-peach text-cinema-red font-semibold transition-colors' : 'px-2.5 py-1 rounded text-secondary hover:text-text-charcoal transition-colors'}">
+                  Today
+                </a>
+                <a th:href="@{/manager/dashboard(period='last7days')}"
+                   th:class="${selectedPeriod == null or selectedPeriod == 'last7days' ? 'px-2.5 py-1 rounded bg-surface-peach text-cinema-red font-semibold transition-colors' : 'px-2.5 py-1 rounded text-secondary hover:text-text-charcoal transition-colors'}">
+                  Last 7 Days
+                </a>
+                <a th:href="@{/manager/dashboard(period='thismonth')}"
+                   th:class="${selectedPeriod == 'thismonth' ? 'px-2.5 py-1 rounded bg-surface-peach text-cinema-red font-semibold transition-colors' : 'px-2.5 py-1 rounded text-secondary hover:text-text-charcoal transition-colors'}">
+                  This Month
+                </a>
+              </div>
+            </div>
+            <!-- Legend Indicator -->
+            <div class="flex items-center gap-5 mb-2 text-xs text-secondary">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded bg-cinema-red"></span>
+                <span th:text="${'Box Office (' + stats.boxOfficePercent + '%)'}">Box Office (0%)</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded bg-cinema-gold"></span>
+                <span th:text="${'Concessions & Combos (' + stats.concessionsPercent + '%)'}">Concessions &amp; Combos (0%)</span>
+              </div>
+            </div>
+            <!-- SVG Bar Chart -->
+            <div class="relative w-full h-[180px] mt-1 select-none">
+              <!-- When revenue is recorded for selected period -->
+              <th:block th:if="${stats.periodRevenue != null and stats.periodRevenue > 0}">
+                <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 680 180">
+                  <line stroke="#F8E9F8" stroke-dasharray="3,3" stroke-width="1" x1="45" x2="665" y1="20" y2="20"></line>
+                  <line stroke="#F8E9F8" stroke-dasharray="3,3" stroke-width="1" x1="45" x2="665" y1="58" y2="58"></line>
+                  <line stroke="#F8E9F8" stroke-dasharray="3,3" stroke-width="1" x1="45" x2="665" y1="96" y2="96"></line>
+                  <line stroke="#F8E9F8" stroke-dasharray="3,3" stroke-width="1" x1="45" x2="665" y1="134" y2="134"></line>
+                  <line stroke="#EDDEEC" stroke-width="1.2" x1="45" x2="665" y1="156" y2="156"></line>
+                  <!-- Chart Bars -->
+                  <g th:each="bar : ${stats.weeklyChartBars}">
+                    <rect th:if="${bar.today}" fill="#FFE5D9" fill-opacity="0.4" height="150" rx="6" width="50" th:x="${bar.rectX - 5}" y="10"></rect>
+                    <rect fill="#D92332" th:height="${bar.ticketBarHeight}" rx="3" width="16" th:x="${bar.rectX}" th:y="${bar.ticketBarY}"></rect>
+                    <rect fill="#F2B84B" th:height="${bar.fbBarHeight}" rx="3" width="16" th:x="${bar.rectX + 20}" th:y="${bar.fbBarY}"></rect>
+                    <text th:fill="${bar.today ? '#D92332' : '#6D5A51'}" font-family="Be Vietnam Pro" font-size="11" th:font-weight="${bar.today ? '600' : '400'}" text-anchor="middle" th:x="${bar.rectX + 18}" y="172" th:text="${bar.today and selectedPeriod != 'thismonth' ? 'Today' : bar.dayLabel}">Mon</text>
+                    <g th:if="${bar.today and bar.totalRevenue > 0}" th:transform="'translate(' + ${bar.rectX - 15} + ', -4)'">
+                      <rect fill="#28202A" height="20" rx="4" width="70" x="0" y="0"></rect>
+                      <text fill="#FFFFFF" font-family="Be Vietnam Pro" font-size="10" font-weight="500" text-anchor="middle" x="35" y="13" th:text="${#numbers.formatDecimal(bar.totalRevenue, 0, 'COMMA', 0, 'POINT') + ' ₫'}">0 ₫</text>
+                    </g>
+                  </g>
+                </svg>
+              </th:block>
+
+              <!-- Empty state when no revenue transactions in selected period -->
+              <th:block th:unless="${stats.periodRevenue != null and stats.periodRevenue > 0}">
+                <div class="flex flex-col items-center justify-center h-full text-center py-4">
+                  <div class="w-12 h-12 rounded-full bg-surface-peach flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-cinema-red text-[24px]">analytics</span>
+                  </div>
+                  <p class="text-sm font-semibold text-text-charcoal">No Revenue Transactions Recorded</p>
+                  <p class="text-xs text-secondary mt-1">Daily box office earnings and concession sales will automatically plot as customers place orders.</p>
+                  <a th:href="@{/manager/reports}" class="mt-2.5 text-xs font-semibold text-cinema-red hover:underline inline-flex items-center gap-1">
+                    <span>View Financial Reports</span>
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  </a>
+                </div>
+              </th:block>
+            </div>
+          </div>
+
+          <!-- Right: Upcoming Showtimes (col-span-4) -->
+          <div class="lg:col-span-5 xl:col-span-4 bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-[#EFE0D5] flex flex-col justify-between">
+            <div class="flex items-center justify-between pb-2 border-b border-[#EFE0D5]">
+              <h2 class="text-base font-bold text-text-charcoal">Upcoming Showtimes</h2>
+              <a class="text-xs text-cinema-red font-semibold hover:underline" th:href="@{/manager/showtimes}">
+                View all &rarr;
+              </a>
+            </div>
+
+            <div class="flex flex-col divide-y divide-[#F5ECE8]">
+              <!-- Dynamic upcoming showtimes -->
+              <th:block th:if="${upcomingShowtimes != null and !#lists.isEmpty(upcomingShowtimes)}">
+                <div th:each="st, iterStat : ${upcomingShowtimes}" class="flex items-center justify-between py-2.5 gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xs font-bold px-2 py-1 rounded"
+                          th:classappend="${iterStat.index == 0} ? ' text-cinema-red bg-surface-peach' : ' text-text-charcoal bg-surface-container'"
+                          th:text="${#temporals.format(st.startTime, 'HH:mm')}">16:30</span>
+                    <div class="flex flex-col min-w-0">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="text-xs font-semibold text-text-charcoal truncate" th:text="${st.movieTitle}">Movie Title</span>
+                        <span class="text-[10px] px-1 bg-surface-peach text-cinema-red font-semibold rounded shrink-0">2D</span>
+                      </div>
+                      <span class="text-[11px] text-secondary truncate" th:text="${st.roomName + ' • ' + (st.status != null ? st.status : 'Ready')}">Room 01</span>
+                    </div>
+                  </div>
+                  <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold shrink-0"
+                        th:classappend="${st.status == 'Scheduled'} ? ' bg-amber-100 text-amber-800' : (${st.status == 'Screening'} ? ' bg-emerald-100 text-emerald-800' : ' bg-surface-peach text-cinema-red')"
+                        th:text="${st.status == 'Scheduled' ? 'Preparing' : (st.status == 'Screening' ? 'Screening' : 'Selling Tickets')}">
+                    Preparing
+                  </span>
+                </div>
+              </th:block>
+
+              <!-- Clean Empty State when no upcoming showtimes exist -->
+              <div th:if="${upcomingShowtimes == null or #lists.isEmpty(upcomingShowtimes)}" class="flex flex-col items-center justify-center py-8 text-center text-secondary">
+                <span class="material-symbols-outlined text-4xl text-secondary/40 mb-1.5">event_busy</span>
+                <p class="text-sm font-semibold text-text-charcoal">No Upcoming Showtimes Scheduled</p>
+                <p class="text-xs text-secondary mt-0.5">There are no remaining screening sessions scheduled for today.</p>
+                <a th:href="@{/manager/showtimes}" class="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-cinema-red hover:underline">
+                  <span>Manage Showtimes</span>
+                  <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Recent Bookings & Transactions Table Card -->
+        <div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-[#EFE0D5] flex flex-col w-full">
+          <div class="flex items-center justify-between pb-3 border-b border-[#EFE0D5] mb-3">
+            <div>
+              <h2 class="text-base font-bold text-text-charcoal">Recent Bookings &amp; Transactions</h2>
+              <span class="text-xs text-secondary">Latest customer bookings and counter transactions during current operations.</span>
+            </div>
+            <a th:href="@{/manager/reports(tab='transactions')}" class="text-xs text-cinema-red font-semibold hover:underline flex items-center gap-1">
+              <span>View all transactions</span>
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </a>
+          </div>
+
+          <div class="overflow-x-auto w-full">
+            <table class="w-full border-collapse text-left min-w-[760px]">
+              <thead>
+                <tr class="h-9 border-b border-[#EFE0D5] bg-background-warm/80 text-secondary text-xs uppercase tracking-wider font-semibold">
+                  <th class="px-4 rounded-l-lg">Booking ID</th>
+                  <th class="px-4">Customer</th>
+                  <th class="px-4">Movie</th>
+                  <th class="px-4">Showtime &amp; Room</th>
+                  <th class="px-4 text-center">Status</th>
+                  <th class="px-4 text-right rounded-r-lg">Total Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#F5EAE1] text-sm">
+                <!-- If recent bookings exist in database -->
+                <tr th:each="b : ${recentBookings}" class="h-11 hover:bg-surface-peach/20 transition-colors">
+                  <td class="px-4 font-mono font-bold text-cinema-red text-xs" th:text="${b.bookingCode != null ? b.bookingCode : ('#BK-' + b.bookingId)}">#BK-001</td>
+                  <td class="px-4">
+                    <div class="font-medium text-text-charcoal text-xs" th:text="${b.customerName}">Customer Name</div>
+                    <div class="text-[11px] text-secondary" th:text="${b.phone}">0912***456</div>
+                  </td>
+                  <td class="px-4 font-semibold text-text-charcoal text-xs" th:text="${b.movieTitle}">Movie Title</td>
+                  <td class="px-4 text-secondary text-xs" th:text="${(b.showtimeStart != null ? #temporals.format(b.showtimeStart, 'HH:mm') : '-') + ' • ' + b.roomName}">Showtime • Room</td>
+                  <td class="px-4 text-center">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          th:classappend="${b.status == 'PAID' or b.status == 'Confirmed' or b.status == 'CONFIRMED' or b.status == 'COMPLETED'} ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-surface-peach text-cinema-red'"
+                          th:text="${b.status}">PAID</span>
+                  </td>
+                  <td class="px-4 text-right font-bold text-text-charcoal text-xs" th:text="${#numbers.formatDecimal(b.totalAmount, 0, 'COMMA', 0, 'POINT') + ' ₫'}">0 ₫</td>
+                </tr>
+
+                <!-- Clean Empty State when no transactions exist in database -->
+                <tr th:if="${recentBookings == null or #lists.isEmpty(recentBookings)}">
+                  <td colspan="6" class="py-8 text-center text-secondary">
+                    <div class="flex flex-col items-center justify-center gap-1.5">
+                      <span class="material-symbols-outlined text-4xl text-secondary/40">receipt_long</span>
+                      <span class="font-semibold text-text-charcoal text-sm">No transactions recorded yet</span>
+                      <span class="text-xs text-secondary">Customer online bookings and counter transactions will appear here in real time.</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
+          </div>
         </div>
 
-        <!-- Room Status -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Tình Trạng Phòng Chiếu</span>
-                <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">Quản lý →</a>
-            </div>
-            <div class="card-body" style="padding-top:8px;padding-bottom:8px;">
-                <div th:if="${#lists.isEmpty(rooms)}" style="text-align:center;padding:24px;color:var(--text-400)">Chưa có phòng chiếu nào.</div>
-                <div th:each="r : ${rooms}" class="room-status-item">
-                    <div class="room-status-info" style="display:flex;align-items:center;gap:10px;">
-                        <span class="status-dot"
-                              th:classappend="${r.status == 'Ready'} ? ' ready' : (${r.status == 'Screening'} ? ' screening' : ' maint')"></span>
-                        <div>
-                            <strong th:text="${r.roomName}">Phòng 01</strong>
-                            <small th:text="${r.roomType + ' • ' + r.capacity + ' ghế'}">IMAX Laser • 320 ghế</small>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span class="badge"
-                              th:classappend="${r.status == 'Ready' or r.status == 'Screening'} ? ' badge-green' : ' badge-gray'"
-                              th:text="${r.status}">Ready</span>
-                        <a th:href="@{'/manager/seats?roomId=' + ${r.roomId}}" class="btn btn-secondary btn-sm btn-icon" title="Sơ đồ ghế">🗺</a>
-                    </div>
+        <!-- Section 5: Quick Management Shortcuts -->
+        <div class="flex flex-col w-full">
+          <h3 class="text-base font-bold text-text-charcoal mb-3">Quick Management Shortcuts</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+            <a th:href="@{/manager/movies}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] hover:border-cinema-red hover:shadow-md flex items-center justify-between group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-surface-peach flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <span class="material-symbols-outlined text-cinema-red text-[22px]">movie</span>
                 </div>
-            </div>
+                <span class="font-semibold text-text-charcoal group-hover:text-cinema-red transition-colors text-sm">Movie Management</span>
+              </div>
+              <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red group-hover:translate-x-1 transition-all text-[20px]">arrow_forward</span>
+            </a>
+
+            <a th:href="@{/manager/showtimes}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] hover:border-cinema-red hover:shadow-md flex items-center justify-between group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-surface-peach flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <span class="material-symbols-outlined text-cinema-red text-[22px]">schedule</span>
+                </div>
+                <span class="font-semibold text-text-charcoal group-hover:text-cinema-red transition-colors text-sm">Showtime Management</span>
+              </div>
+              <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red group-hover:translate-x-1 transition-all text-[20px]">arrow_forward</span>
+            </a>
+
+            <a th:href="@{/manager/reports}" class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-[#EFE0D5] hover:border-cinema-red hover:shadow-md flex items-center justify-between group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-surface-peach flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <span class="material-symbols-outlined text-cinema-red text-[22px]">analytics</span>
+                </div>
+                <span class="font-semibold text-text-charcoal group-hover:text-cinema-red transition-colors text-sm">Reports &amp; Analytics</span>
+              </div>
+              <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red group-hover:translate-x-1 transition-all text-[20px]">arrow_forward</span>
+            </a>
+          </div>
         </div>
-    </div>
 
-</div>
-</div>
+      </div>
+    </main>
+  </div>
 
+  <script th:src="@{/js/manager-dashboard.js}"></script>
 </body>
 </html>

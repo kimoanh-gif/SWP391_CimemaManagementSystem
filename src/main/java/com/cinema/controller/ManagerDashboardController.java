@@ -26,22 +26,36 @@ public class ManagerDashboardController {
     }
 
     @GetMapping({"/manager", "/manager/dashboard"})
-    public String showDashboard(Model model, HttpServletRequest request) {
+    public String showDashboard(
+            @org.springframework.web.bind.annotation.RequestParam(value = "period", required = false, defaultValue = "last7days") String period,
+            Model model,
+            HttpServletRequest request
+    ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
-        ManagerDashboardStats stats = dashboardService.getDashboardStats();
+        ManagerDashboardStats stats = (period == null || "last7days".equalsIgnoreCase(period))
+                ? dashboardService.getDashboardStats()
+                : dashboardService.getDashboardStats(period);
+        if (stats == null) {
+            stats = new ManagerDashboardStats();
+        }
+        if (period != null && !period.isBlank()) {
+            stats.setSelectedPeriod(period);
+        }
+
         model.addAttribute("stats", stats);
+        model.addAttribute("selectedPeriod", stats.getSelectedPeriod());
         model.addAttribute("movieCount", stats.getTotalMovies());
         model.addAttribute("roomCount", stats.getActiveRooms());
         model.addAttribute("upcomingShowtimeCount", stats.getTodayShowtimesCount());
         model.addAttribute("todayShowtimes", dashboardService.getTodayShowtimes());
+        model.addAttribute("upcomingShowtimes", dashboardService.getUpcomingShowtimes());
         model.addAttribute("activeMovies", dashboardService.getActiveMovies());
         model.addAttribute("rooms", dashboardService.getRoomsSummary());
-        model.addAttribute("userRole", ManagerSecurityUtils.resolveRole(request));
+        String resolvedRole = ManagerSecurityUtils.resolveRole(request);
+        model.addAttribute("userRole", resolvedRole != null ? resolvedRole : "MANAGER");
 
-
-
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, 'ngày' dd/MM/yyyy", new Locale("vi", "VN"));
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy", Locale.ENGLISH);
         model.addAttribute("currentDateStr", LocalDate.now().format(dateFormatter));
 
         return "manager/dashboard";
