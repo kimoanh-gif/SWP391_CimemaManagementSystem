@@ -261,12 +261,14 @@ public class AuthController {
                 return "auth/login";
             }
             case INACTIVE_ACCOUNT -> {
-                String reason = "Tài khoản chưa được kích hoạt hoặc đã bị khóa.";
                 if (result.account() != null
                         && "PENDING_VERIFICATION".equalsIgnoreCase(result.account().getStatus())) {
-                    reason = "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để nhập OTP.";
+                    HttpSession activationSession = request.getSession(true);
+                    activationSession.setAttribute("activationEmail",
+                            result.account().getEmail().trim().toLowerCase());
+                    return "redirect:/verify-activation-otp";
                 }
-                model.addAttribute("formError", reason);
+                model.addAttribute("formError", "This account is inactive or locked.");
                 return "auth/login";
             }
             case UNSUPPORTED_ROLE -> { model.addAttribute("formError", "Vai trò tài khoản chưa được hỗ trợ."); return "auth/login"; }

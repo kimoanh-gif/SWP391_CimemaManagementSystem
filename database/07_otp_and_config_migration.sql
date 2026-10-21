@@ -26,15 +26,15 @@ GO
 -- Insert default settings if they don't exist
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'SYSTEM_OTP_MAX_SEND_DAILY')
 BEGIN
-    INSERT INTO dbo.SystemSetting (SettingKey, SettingName, Category, ValueType, Value, DefaultValue, Description, ValidationRules, IsActive)
-    VALUES ('SYSTEM_OTP_MAX_SEND_DAILY', 'OTP Max Sends Per Day', 'SYSTEM', 'NUMBER', '5', '5', 'Maximum OTP codes that can be sent per email per day', 'min:1,max:20', 1)
+    INSERT INTO dbo.SystemSetting (SettingKey, SettingValue, Description)
+    VALUES ('SYSTEM_OTP_MAX_SEND_DAILY', '5', 'Maximum OTP codes that can be sent per email per day')
     PRINT 'Added SYSTEM_OTP_MAX_SEND_DAILY setting'
 END
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'SYSTEM_OTP_RESEND_COOLDOWN')
 BEGIN
-    INSERT INTO dbo.SystemSetting (SettingKey, SettingName, Category, ValueType, Value, DefaultValue, Description, ValidationRules, IsActive)
-    VALUES ('SYSTEM_OTP_RESEND_COOLDOWN', 'OTP Resend Cooldown', 'SYSTEM', 'NUMBER', '60', '60', 'Seconds to wait between OTP resends', 'min:10,max:300', 1)
+    INSERT INTO dbo.SystemSetting (SettingKey, SettingValue, Description)
+    VALUES ('SYSTEM_OTP_RESEND_COOLDOWN', '60', 'Seconds to wait between OTP resends')
     PRINT 'Added SYSTEM_OTP_RESEND_COOLDOWN setting'
 END
 

@@ -266,7 +266,9 @@ public class AuthService {
         if (!"ACTIVE".equals(status)) {
             recordAttempt(normalized, ipAddress, userAgent, false,
                     LoginAttempt.REASON_INACTIVE, LoginAttempt.AUTH_METHOD_PASSWORD_NA);
-            return LoginResult.of(LoginResultStatus.INACTIVE_ACCOUNT);
+            // Preserve the account so the controller can resume activation for
+            // accounts that are still waiting for OTP verification.
+            return new LoginResult(LoginResultStatus.INACTIVE_ACCOUNT, account, 0);
         }
 
         accountDAO.touchLastLogin(account.getAccountId());
