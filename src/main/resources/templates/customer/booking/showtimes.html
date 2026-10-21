@@ -1,8 +1,190 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Select Movie &amp; Showtime | CINEORA</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet"><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head><body data-page="showtimes">
-<header class="site-header"><a class="brand" th:href="@{/customer/dashboard}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a class="active" th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/profile}">Profile</a></nav><div class="account-actions"><span class="material-symbols-outlined">account_circle</span><b th:text="${session.loggedInFullName}">Customer</b><form th:action="@{/logout}" method="post"><button class="link-button" type="submit">Sign out</button></form></div></header>
-<div class="progress-wrap"><div class="stepper five"><div class="step active"><b>1</b><span><small>STEP 1 · CURRENT</small>Showtime</span></div><div class="step"><b>2</b><span><small>STEP 2</small>Seats</span></div><div class="step"><b>3</b><span><small>STEP 3</small>Food</span></div><div class="step"><b>4</b><span><small>STEP 4</small>Promotions</span></div><div class="step"><b>5</b><span><small>STEP 5</small>Payment</span></div></div></div>
-<main class="booking-shell"><section class="hero-row"><div><p class="eyebrow"><span class="material-symbols-outlined">theaters</span>CINEORA CINEMA SUITES</p><h1>Book Movie Tickets Online</h1><p class="lead">Choose your favorite movie, viewing date, and preferred showtime to begin your cinema experience.</p></div><span class="availability"><i></i>Showtimes now on sale</span></section><p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
-<section class="panel date-panel"><div><span class="section-number">1</span><div><h2>Select a Date</h2><p>Available showtimes for the next 14 days.</p></div></div><form id="date-filter" th:action="@{/customer/booking}" method="get"><label for="date">Show date</label><input id="date" name="date" type="date" th:value="${selectedDate}" th:min="${today}" th:max="${maxDate}" required><button class="button secondary" type="submit"><span class="material-symbols-outlined">search</span>Find Showtimes</button></form></section>
-<div class="section-heading"><span class="section-number">2</span><div><h2>Select a Movie &amp; Showtime</h2><p>Choose a convenient time and auditorium.</p></div></div>
-<section class="movie-list" th:if="${!#lists.isEmpty(movies)}"><article class="movie-card" th:each="movie : ${movies}"><div class="poster"><img th:if="${movie.posterUrl != null and !#strings.isEmpty(movie.posterUrl)}" th:src="${movie.posterUrl}" th:alt="${movie.title}"><div class="poster-fallback" th:unless="${movie.posterUrl != null and !#strings.isEmpty(movie.posterUrl)}"><span class="material-symbols-outlined">movie</span></div><span class="rating" th:text="${movie.ageRating ?: 'P'}">P</span></div><div class="movie-info"><p class="movie-genres" th:text="${movie.genres ?: 'Genre information unavailable'}"></p><h2 th:text="${movie.title}">Movie title</h2><div class="movie-meta"><span><i class="material-symbols-outlined">schedule</i><b th:text="${movie.duration + ' min'}">120 min</b></span><span><i class="material-symbols-outlined">language</i><b th:text="${movie.language ?: 'Not available'}"></b></span><span th:if="${movie.director}"><i class="material-symbols-outlined">movie_edit</i><b th:text="${movie.director}"></b></span></div><p class="description" th:text="${movie.description ?: 'Movie information will be available soon.'}"></p><div class="showtime-section"><h3>Showtimes for <span th:text="${#temporals.format(selectedDate,'MMM d, yyyy')}"></span></h3><div class="showtime-grid"><form th:each="showtime : ${movie.showtimes}" th:action="@{/customer/booking/showtime}" method="post"><input type="hidden" name="showtimeId" th:value="${showtime.showtimeId}"><button class="showtime-button" type="submit" th:disabled="${showtime.availableSeats == 0}"><strong th:text="${#temporals.format(showtime.startTime,'HH:mm')}">19:30</strong><small th:text="${showtime.roomName}"></small><span th:text="${showtime.availableSeats + ' seats available'}"></span><em th:text="${#numbers.formatDecimal(showtime.basePrice,0,'COMMA',0,'POINT') + ' ₫'}"></em></button></form></div></div></div></article></section>
-<section class="empty-state panel" th:if="${#lists.isEmpty(movies)}"><span class="material-symbols-outlined">event_busy</span><h2>No Showtimes Available</h2><p>There are no available showtimes on this date. Please select another date.</p></section></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Select Movie &amp; Showtime | CINEORA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
+  </head>
+  <body data-page="showtimes">
+    <header class="site-header">
+      <a class="brand" th:href="@{/customer/dashboard}"
+        ><span>C</span
+        ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
+      >
+      <nav>
+        <a class="active" th:href="@{/customer/booking}"
+          >Movies &amp; Showtimes</a
+        ><a th:href="@{/customer/profile}">Profile</a>
+      </nav>
+      <div class="account-actions">
+        <span class="material-symbols-outlined">account_circle</span
+        ><b th:text="${session.loggedInFullName}">Customer</b>
+        <form th:action="@{/logout}" method="post">
+          <button class="link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+    <div class="progress-wrap">
+      <div class="stepper five">
+        <div class="step active">
+          <b>1</b><span><small>STEP 1 · CURRENT</small>Showtime</span>
+        </div>
+        <div class="step">
+          <b>2</b><span><small>STEP 2</small>Seats</span>
+        </div>
+        <div class="step">
+          <b>3</b><span><small>STEP 3</small>Food</span>
+        </div>
+        <div class="step">
+          <b>4</b><span><small>STEP 4</small>Promotions</span>
+        </div>
+        <div class="step">
+          <b>5</b><span><small>STEP 5</small>Payment</span>
+        </div>
+      </div>
+    </div>
+    <main class="booking-shell">
+      <section class="hero-row">
+        <div>
+          <p class="eyebrow">
+            <span class="material-symbols-outlined">theaters</span>CINEORA
+            CINEMA SUITES
+          </p>
+          <h1>Book Movie Tickets Online</h1>
+          <p class="lead">
+            Choose your favorite movie, viewing date, and preferred showtime to
+            begin your cinema experience.
+          </p>
+        </div>
+        <span class="availability"><i></i>Showtimes now on sale</span>
+      </section>
+      <p
+        class="alert error"
+        th:if="${errorMessage}"
+        th:text="${errorMessage}"
+      ></p>
+      <section class="panel date-panel">
+        <div>
+          <span class="section-number">1</span>
+          <div>
+            <h2>Select a Date</h2>
+            <p>Available showtimes for the next 14 days.</p>
+          </div>
+        </div>
+        <form id="date-filter" th:action="@{/customer/booking}" method="get">
+          <label for="date">Show date</label
+          ><input
+            id="date"
+            name="date"
+            type="date"
+            th:value="${selectedDate}"
+            th:min="${today}"
+            th:max="${maxDate}"
+            required
+          /><button class="button secondary" type="submit">
+            <span class="material-symbols-outlined">search</span>Find Showtimes
+          </button>
+        </form>
+      </section>
+      <div class="section-heading">
+        <span class="section-number">2</span>
+        <div>
+          <h2>Select a Movie &amp; Showtime</h2>
+          <p>Choose a convenient time and auditorium.</p>
+        </div>
+      </div>
+      <section class="movie-list" th:if="${!#lists.isEmpty(movies)}">
+        <article class="movie-card" th:each="movie : ${movies}">
+          <div class="poster">
+            <img
+              th:if="${movie.posterUrl != null and !#strings.isEmpty(movie.posterUrl)}"
+              th:src="${movie.posterUrl}"
+              th:alt="${movie.title}"
+            />
+            <div
+              class="poster-fallback"
+              th:unless="${movie.posterUrl != null and !#strings.isEmpty(movie.posterUrl)}"
+            >
+              <span class="material-symbols-outlined">movie</span>
+            </div>
+            <span class="rating" th:text="${movie.ageRating ?: 'P'}">P</span>
+          </div>
+          <div class="movie-info">
+            <p
+              class="movie-genres"
+              th:text="${movie.genres ?: 'Genre information unavailable'}"
+            ></p>
+            <h2 th:text="${movie.title}">Movie title</h2>
+            <div class="movie-meta">
+              <span
+                ><i class="material-symbols-outlined">schedule</i
+                ><b th:text="${movie.duration + ' min'}">120 min</b></span
+              ><span
+                ><i class="material-symbols-outlined">language</i
+                ><b th:text="${movie.language ?: 'Not available'}"></b></span
+              ><span th:if="${movie.director}"
+                ><i class="material-symbols-outlined">movie_edit</i
+                ><b th:text="${movie.director}"></b
+              ></span>
+            </div>
+            <p
+              class="description"
+              th:text="${movie.description ?: 'Movie information will be available soon.'}"
+            ></p>
+            <div class="showtime-section">
+              <h3>
+                Showtimes for
+                <span
+                  th:text="${#temporals.format(selectedDate,'MMM d, yyyy')}"
+                ></span>
+              </h3>
+              <div class="showtime-grid">
+                <form
+                  th:each="showtime : ${movie.showtimes}"
+                  th:action="@{/customer/booking/showtime}"
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="showtimeId"
+                    th:value="${showtime.showtimeId}"
+                  /><button
+                    class="showtime-button"
+                    type="submit"
+                    th:disabled="${showtime.availableSeats == 0}"
+                  >
+                    <strong
+                      th:text="${#temporals.format(showtime.startTime,'HH:mm')}"
+                      >19:30</strong
+                    ><small th:text="${showtime.roomName}"></small
+                    ><span
+                      th:text="${showtime.availableSeats + ' seats available'}"
+                    ></span
+                    ><em
+                      th:text="${#numbers.formatDecimal(showtime.basePrice,0,'COMMA',0,'POINT') + ' ₫'}"
+                    ></em>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+      <section class="empty-state panel" th:if="${#lists.isEmpty(movies)}">
+        <span class="material-symbols-outlined">event_busy</span>
+        <h2>No Showtimes Available</h2>
+        <p>
+          There are no available showtimes on this date. Please select another
+          date.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
