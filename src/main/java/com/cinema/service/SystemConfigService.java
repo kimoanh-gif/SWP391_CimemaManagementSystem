@@ -6,6 +6,8 @@ import com.cinema.model.MembershipRank;
 import com.cinema.model.SystemSetting;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 @Service
 public class SystemConfigService implements CommandLineRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(SystemConfigService.class);
+
     private final SystemSettingDAO systemSettingDAO;
     private final MembershipRankDAO membershipRankDAO;
 
@@ -31,9 +35,13 @@ public class SystemConfigService implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Seed default settings on startup
-        systemSettingDAO.seedDefaultSettings();
-        membershipRankDAO.seedDefaultRanks();
+        try {
+            systemSettingDAO.seedDefaultSettings();
+            membershipRankDAO.seedDefaultRanks();
+        } catch (Exception ex) {
+            log.warn("Default configuration seeding was skipped because the database is unavailable: {}",
+                    ex.getMessage());
+        }
     }
 
     // ==================== SETTINGS ====================

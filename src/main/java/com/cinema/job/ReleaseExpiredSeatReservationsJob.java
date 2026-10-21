@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Background Job Inventory: JOB-01: Release Expired Seat Reservations (SRS 6.1 / Item 74).
@@ -28,7 +27,6 @@ public class ReleaseExpiredSeatReservationsJob {
      * Default delay: 30 seconds (configurable via app.jobs.release-expired-seats.delay-ms).
      */
     @Scheduled(fixedDelayString = "${app.jobs.release-expired-seats.delay-ms:30000}", initialDelay = 10000)
-    @Transactional
     public int execute() {
         try {
             int releasedCount = bookingDAO.releaseExpiredSeatReservations();
