@@ -1,6 +1,216 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Food &amp; Services | CINEORA</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet"><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head><body data-page="foods" th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}">
-<header class="site-header"><a class="brand" th:href="@{/customer/dashboard}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a class="active" th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/profile}">Profile</a></nav><div class="account-actions"><span class="material-symbols-outlined">account_circle</span><b th:text="${session.loggedInFullName}">Customer</b></div></header>
-<div class="progress-wrap"><div class="stepper five"><div class="step done"><b>✓</b><span><small>COMPLETED</small>Showtime</span></div><div class="step done"><b>✓</b><span><small>COMPLETED</small>Seats</span></div><div class="step active"><b>3</b><span><small>STEP 3 · CURRENT</small>Food</span></div><div class="step"><b>4</b><span><small>STEP 4</small>Promotions</span></div><div class="step"><b>5</b><span><small>STEP 5</small>Payment</span></div></div></div>
-<main class="booking-shell"><section class="hero-row compact"><div><a class="back-link" th:href="@{/customer/booking/seats}"><span class="material-symbols-outlined">arrow_back</span>Change seats</a><p class="eyebrow">CINEORA CONCESSIONS</p><h1>Food, Drinks &amp; Services</h1><p class="lead">Add your favorites for the complete cinema experience, or skip this step and continue.</p></div><div class="hold-timer"><span class="material-symbols-outlined">timer</span><span>Seat hold expires in<small id="hold-countdown">10:00</small></span></div></section><p class="alert success" th:if="${successMessage}" th:text="${successMessage}"></p><p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
-<form id="food-form" th:action="@{/customer/booking/foods}" method="post"><div class="food-layout"><section><div class="food-grid" th:if="${!#lists.isEmpty(items)}"><article class="panel food-card" th:each="item : ${items}"><div class="food-image"><img th:if="${item.imageUrl != null and !#strings.isEmpty(item.imageUrl)}" th:src="${item.imageUrl}" th:alt="${item.name}"><span class="material-symbols-outlined" th:unless="${item.imageUrl != null and !#strings.isEmpty(item.imageUrl)}" th:text="${#strings.equalsIgnoreCase(item.itemType,'DRINK') ? 'local_drink' : 'fastfood'}">fastfood</span></div><div class="food-content"><span class="item-type" th:text="${item.itemType}">COMBO</span><h2 th:text="${item.name}">Combo</h2><p th:text="${item.description ?: 'Available at the cinema.'}"></p><div class="food-bottom"><strong th:text="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT') + ' ₫'}"></strong><div class="quantity-picker"><button type="button" class="quantity-minus" aria-label="Decrease quantity">−</button><input type="hidden" name="itemIds" th:value="${item.itemId}"><input class="quantity" name="quantities" type="number" min="0" max="20" step="1" required th:value="${item.quantity}" th:attr="data-price=${item.price}" th:aria-label="${'Quantity for ' + item.name}"><button type="button" class="quantity-plus" aria-label="Increase quantity">+</button></div></div></div></article></div><section class="panel empty-state" th:if="${#lists.isEmpty(items)}"><span class="material-symbols-outlined">no_food</span><h2>No Food or Drinks Available</h2><p>You can skip this step and continue.</p></section></section>
-<aside class="panel order-card sticky"><p class="eyebrow">BOOKING SUMMARY</p><h2 th:text="${summary.movieTitle}">Movie title</h2><p class="booking-code" th:text="${summary.bookingCode}">BK0001</p><dl><div><dt>Showtime</dt><dd th:text="${#temporals.format(summary.startTime,'HH:mm · MMM d, yyyy')}"></dd></div><div><dt>Auditorium</dt><dd th:text="${summary.roomName}"></dd></div><div><dt>Seats</dt><dd th:text="${summary.seatLabels}"></dd></div><div><dt>Tickets</dt><dd th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' ₫'}"></dd></div><div><dt>Food &amp; drinks</dt><dd id="food-total" th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' ₫'}"></dd></div></dl><div class="total-row"><span>Total</span><strong id="grand-total" th:attr="data-seat-total=${summary.seatTotal}" th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"></strong></div><button class="button primary full" type="submit">Save &amp; Continue <span class="material-symbols-outlined">arrow_forward</span></button><p class="fine-print">Leave all quantities at zero to skip concessions.</p></aside></div></form><form th:action="@{/customer/booking/cancel}" method="post" class="cancel-form"><button class="link-button danger" type="submit">Cancel booking and release seats</button></form></main><script th:src="@{/js/customer-booking.js}"></script></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Food &amp; Services | CINEORA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
+  </head>
+  <body
+    data-page="foods"
+    th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}"
+  >
+    <header class="site-header">
+      <a class="brand" th:href="@{/customer/dashboard}"
+        ><span>C</span
+        ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
+      >
+      <nav>
+        <a class="active" th:href="@{/customer/booking}"
+          >Movies &amp; Showtimes</a
+        ><a th:href="@{/customer/profile}">Profile</a>
+      </nav>
+      <div class="account-actions">
+        <span class="material-symbols-outlined">account_circle</span
+        ><b th:text="${session.loggedInFullName}">Customer</b>
+      </div>
+    </header>
+    <div class="progress-wrap">
+      <div class="stepper five">
+        <div class="step done">
+          <b>✓</b><span><small>COMPLETED</small>Showtime</span>
+        </div>
+        <div class="step done">
+          <b>✓</b><span><small>COMPLETED</small>Seats</span>
+        </div>
+        <div class="step active">
+          <b>3</b><span><small>STEP 3 · CURRENT</small>Food</span>
+        </div>
+        <div class="step">
+          <b>4</b><span><small>STEP 4</small>Promotions</span>
+        </div>
+        <div class="step">
+          <b>5</b><span><small>STEP 5</small>Payment</span>
+        </div>
+      </div>
+    </div>
+    <main class="booking-shell">
+      <section class="hero-row compact">
+        <div>
+          <a class="back-link" th:href="@{/customer/booking/seats}"
+            ><span class="material-symbols-outlined">arrow_back</span>Change
+            seats</a
+          >
+          <p class="eyebrow">CINEORA CONCESSIONS</p>
+          <h1>Food, Drinks &amp; Services</h1>
+          <p class="lead">
+            Add your favorites for the complete cinema experience, or skip this
+            step and continue.
+          </p>
+        </div>
+        <div class="hold-timer">
+          <span class="material-symbols-outlined">timer</span
+          ><span
+            >Seat hold expires in<small id="hold-countdown">10:00</small></span
+          >
+        </div>
+      </section>
+      <p
+        class="alert success"
+        th:if="${successMessage}"
+        th:text="${successMessage}"
+      ></p>
+      <p
+        class="alert error"
+        th:if="${errorMessage}"
+        th:text="${errorMessage}"
+      ></p>
+      <form id="food-form" th:action="@{/customer/booking/foods}" method="post">
+        <div class="food-layout">
+          <section>
+            <div class="food-grid" th:if="${!#lists.isEmpty(items)}">
+              <article class="panel food-card" th:each="item : ${items}">
+                <div class="food-image">
+                  <img
+                    th:if="${item.imageUrl != null and !#strings.isEmpty(item.imageUrl)}"
+                    th:src="${item.imageUrl}"
+                    th:alt="${item.name}"
+                  /><span
+                    class="material-symbols-outlined"
+                    th:unless="${item.imageUrl != null and !#strings.isEmpty(item.imageUrl)}"
+                    th:text="${#strings.equalsIgnoreCase(item.itemType,'DRINK') ? 'local_drink' : 'fastfood'}"
+                    >fastfood</span
+                  >
+                </div>
+                <div class="food-content">
+                  <span class="item-type" th:text="${item.itemType}"
+                    >COMBO</span
+                  >
+                  <h2 th:text="${item.name}">Combo</h2>
+                  <p
+                    th:text="${item.description ?: 'Available at the cinema.'}"
+                  ></p>
+                  <div class="food-bottom">
+                    <strong
+                      th:text="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT') + ' ₫'}"
+                    ></strong>
+                    <div class="quantity-picker">
+                      <button
+                        type="button"
+                        class="quantity-minus"
+                        aria-label="Decrease quantity"
+                      >
+                        −</button
+                      ><input
+                        type="hidden"
+                        name="itemIds"
+                        th:value="${item.itemId}"
+                      /><input
+                        class="quantity"
+                        name="quantities"
+                        type="number"
+                        min="0"
+                        max="20"
+                        step="1"
+                        required
+                        th:value="${item.quantity}"
+                        th:attr="data-price=${item.price}"
+                        th:aria-label="${'Quantity for ' + item.name}"
+                      /><button
+                        type="button"
+                        class="quantity-plus"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <section class="panel empty-state" th:if="${#lists.isEmpty(items)}">
+              <span class="material-symbols-outlined">no_food</span>
+              <h2>No Food or Drinks Available</h2>
+              <p>You can skip this step and continue.</p>
+            </section>
+          </section>
+          <aside class="panel order-card sticky">
+            <p class="eyebrow">BOOKING SUMMARY</p>
+            <h2 th:text="${summary.movieTitle}">Movie title</h2>
+            <p class="booking-code" th:text="${summary.bookingCode}">BK0001</p>
+            <dl>
+              <div>
+                <dt>Showtime</dt>
+                <dd
+                  th:text="${#temporals.format(summary.startTime,'HH:mm · MMM d, yyyy')}"
+                ></dd>
+              </div>
+              <div>
+                <dt>Auditorium</dt>
+                <dd th:text="${summary.roomName}"></dd>
+              </div>
+              <div>
+                <dt>Seats</dt>
+                <dd th:text="${summary.seatLabels}"></dd>
+              </div>
+              <div>
+                <dt>Tickets</dt>
+                <dd
+                  th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' ₫'}"
+                ></dd>
+              </div>
+              <div>
+                <dt>Food &amp; drinks</dt>
+                <dd
+                  id="food-total"
+                  th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' ₫'}"
+                ></dd>
+              </div>
+            </dl>
+            <div class="total-row">
+              <span>Total</span
+              ><strong
+                id="grand-total"
+                th:attr="data-seat-total=${summary.seatTotal}"
+                th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
+              ></strong>
+            </div>
+            <button class="button primary full" type="submit">
+              Save &amp; Continue
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <p class="fine-print">
+              Leave all quantities at zero to skip concessions.
+            </p>
+          </aside>
+        </div>
+      </form>
+      <form
+        th:action="@{/customer/booking/cancel}"
+        method="post"
+        class="cancel-form"
+      >
+        <button class="link-button danger" type="submit">
+          Cancel booking and release seats
+        </button>
+      </form>
+    </main>
+    <script th:src="@{/js/customer-booking.js}"></script>
+  </body>
+</html>
