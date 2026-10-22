@@ -1,7 +1,10 @@
-package com.cinema.model;
+package com.cinema.dto;
 
-import jakarta.validation.constraints.*;
-import org.springframework.format.annotation.DateTimeFormat;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * DTO for creating/updating a Room.
@@ -39,7 +42,9 @@ public class RoomForm {
     @Size(max = 500, message = "Mô tả không được vượt quá 500 ký tự")
     private String description;
 
-    // Getters & Setters
+    public RoomForm() {
+    }
+
     public Integer getRoomId() { return roomId; }
     public void setRoomId(Integer roomId) { this.roomId = roomId; }
     public String getRoomCode() { return roomCode; }

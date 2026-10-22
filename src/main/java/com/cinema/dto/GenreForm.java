@@ -1,5 +1,6 @@
-package com.cinema.model;
+package com.cinema.dto;
 
+import com.cinema.model.Genre;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

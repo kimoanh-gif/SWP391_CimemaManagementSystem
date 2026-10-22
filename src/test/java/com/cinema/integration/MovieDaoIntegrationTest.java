@@ -2,7 +2,7 @@ package com.cinema.integration;
 
 import com.cinema.dao.MovieDao;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

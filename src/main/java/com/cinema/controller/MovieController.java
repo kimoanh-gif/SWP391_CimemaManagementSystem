@@ -5,7 +5,7 @@ import com.cinema.exception.MovieHasActiveShowtimesException;
 import com.cinema.exception.MovieNotFoundException;
 import com.cinema.model.Genre;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import com.cinema.service.GenreService;
 import com.cinema.service.MovieService;
 import com.cinema.util.ManagerSecurityUtils;

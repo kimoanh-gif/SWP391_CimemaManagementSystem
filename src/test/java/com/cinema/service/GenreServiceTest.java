@@ -5,7 +5,7 @@ import com.cinema.exception.DuplicateGenreException;
 import com.cinema.exception.GenreAssociationException;
 import com.cinema.exception.GenreNotFoundException;
 import com.cinema.model.Genre;
-import com.cinema.model.GenreForm;
+import com.cinema.dto.GenreForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

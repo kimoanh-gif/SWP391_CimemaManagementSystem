@@ -5,7 +5,7 @@ import com.cinema.exception.InvalidMovieStatusException;
 import com.cinema.exception.MovieHasActiveShowtimesException;
 import com.cinema.exception.MovieNotFoundException;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

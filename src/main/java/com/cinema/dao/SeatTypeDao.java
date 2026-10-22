@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.SeatType;
-import com.cinema.model.SeatTypeForm;
+import com.cinema.dto.SeatTypeForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

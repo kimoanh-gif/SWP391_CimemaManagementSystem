@@ -1,7 +1,7 @@
 package com.cinema.controller;
 
 import com.cinema.model.CustomerProfile;
-import com.cinema.model.ProfileUpdateForm;
+import com.cinema.dto.ProfileUpdateForm;
 import com.cinema.service.CustomerProfileService;
 import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpSession;

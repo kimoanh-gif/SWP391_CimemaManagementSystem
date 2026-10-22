@@ -4,7 +4,7 @@ import com.cinema.dao.RevenueReportDao;
 import com.cinema.model.report.DailyRevenueItem;
 import com.cinema.model.report.MovieRevenueItem;
 import com.cinema.model.report.RevenueReportData;
-import com.cinema.model.report.RevenueReportRequest;
+import com.cinema.dto.RevenueReportRequest;
 import com.cinema.model.report.RevenueReportSummary;
 import com.cinema.model.report.TransactionRevenueItem;
 import org.junit.jupiter.api.BeforeEach;

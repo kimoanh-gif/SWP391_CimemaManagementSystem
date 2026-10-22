@@ -1,5 +1,10 @@
 package com.cinema.controller;
 
+import com.cinema.dto.ForgotForm;
+import com.cinema.dto.LoginForm;
+import com.cinema.dto.OtpForm;
+import com.cinema.dto.RegisterForm;
+import com.cinema.dto.ResetPasswordForm;
 import com.cinema.model.Account;
 import com.cinema.service.AuthService;
 import com.cinema.service.OtpService;
@@ -477,94 +482,5 @@ public class AuthController {
         String name = parts[0];
         String visible = name.length() <= 2 ? name.substring(0, 1) : name.substring(0, 2);
         return visible + "***@" + parts[1];
-    }
-
-    // ================================================================ Forms
-    public static class LoginForm {
-        @NotBlank(message = "Vui lòng nhập email hoặc tên đăng nhập.")
-        @Size(max = 255)
-        private String identifier;
-
-        @NotBlank(message = "Vui lòng nhập mật khẩu.")
-        @Size(min = 8, max = 128)
-        private String password;
-
-        public String getIdentifier() { return identifier; }
-        public void setIdentifier(String identifier) { this.identifier = identifier; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-    }
-
-    public static class RegisterForm {
-        @NotBlank(message = "Vui lòng nhập tên đăng nhập.")
-        @Size(min = 4, max = 50, message = "Tên đăng nhập phải có độ dài 4-50 ký tự.")
-        @Pattern(regexp = "^[A-Za-z0-9_.-]+$",
-                 message = "Tên đăng nhập chỉ chứa chữ, số, dấu chấm, gạch dưới hoặc gạch ngang.")
-        private String username;
-
-        @NotBlank(message = "Vui lòng nhập email.")
-        @Email(message = "Email không hợp lệ.")
-        private String email;
-
-        @NotBlank(message = "Vui lòng nhập mật khẩu.")
-        @Size(min = 8, max = 128, message = "Mật khẩu phải có độ dài 8-128 ký tự.")
-        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
-                 message = "Mật khẩu phải chứa ít nhất một chữ cái và một chữ số.")
-        private String password;
-
-        @NotBlank(message = "Vui lòng nhập họ tên.")
-        @Size(min = 2, max = 100, message = "Họ tên phải có độ dài 2-100 ký tự.")
-        private String fullName;
-
-        @Pattern(regexp = "^(0|\\+84)[0-9]{9,10}$",
-                 message = "Số điện thoại không hợp lệ.")
-        private String phone;
-
-        private String confirmPassword; // not a @ModelAttribute field – validated manually
-
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getFullName() { return fullName; }
-        public void setFullName(String fullName) { this.fullName = fullName; }
-        public String getPhone() { return phone; }
-        public void setPhone(String phone) { this.phone = phone; }
-        public String getConfirmPassword() { return confirmPassword; }
-        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
-    }
-
-    public static class OtpForm {
-        @NotBlank
-        @Size(min = 6, max = 6, message = "Mã OTP gồm 6 chữ số.")
-        private String otp;
-        public String getOtp() { return otp; }
-        public void setOtp(String otp) { this.otp = otp; }
-    }
-
-    public static class ForgotForm {
-        @NotBlank(message = "Vui lòng nhập email.")
-        @Email(message = "Email không hợp lệ.")
-        private String email;
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-    }
-
-    public static class ResetPasswordForm {
-        @NotBlank(message = "Vui lòng nhập mật khẩu mới.")
-        @Size(min = 8, max = 128, message = "Mật khẩu phải có độ dài 8-128 ký tự.")
-        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
-                 message = "Mật khẩu phải chứa ít nhất một chữ cái và một chữ số.")
-        private String password;
-
-        @NotBlank(message = "Vui lòng xác nhận mật khẩu.")
-        private String confirmPassword;
-
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getConfirmPassword() { return confirmPassword; }
-        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
     }
 }

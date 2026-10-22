@@ -10,7 +10,7 @@ import com.cinema.exception.ShowtimeNotFoundException;
 import com.cinema.model.Movie;
 import com.cinema.model.Room;
 import com.cinema.model.Showtime;
-import com.cinema.model.ShowtimeForm;
+import com.cinema.dto.ShowtimeForm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

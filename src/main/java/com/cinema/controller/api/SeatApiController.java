@@ -1,6 +1,6 @@
 package com.cinema.controller.api;
 
-import com.cinema.model.ApiResponse;
+import com.cinema.dto.ApiResponse;
 import com.cinema.model.Seat;
 import com.cinema.service.SeatService;
 import com.cinema.util.ManagerSecurityUtils;

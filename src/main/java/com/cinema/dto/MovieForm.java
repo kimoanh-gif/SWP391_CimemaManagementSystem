@@ -1,4 +1,4 @@
-package com.cinema.model;
+package com.cinema.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -60,36 +60,14 @@ public class MovieForm {
     @Size(max = 500, message = "Đường dẫn Trailer không được vượt quá 500 ký tự")
     private String trailer;
 
-    @NotBlank(message = "Trạng thái phim không được để trống")
-    @Pattern(regexp = "^(Upcoming|Now Showing|Ended|Archived)$", message = "Trạng thái phim phải là Upcoming, Now Showing, Ended hoặc Archived")
+    @NotBlank(message = "Trạng thái không được để trống")
+    @Pattern(regexp = "^(Upcoming|Now Showing|Ended|Archived)$",
+             message = "Trạng thái phải là một trong các giá trị: Upcoming, Now Showing, Ended, Archived")
     private String status = "Upcoming";
 
     private List<Integer> genreIds = new ArrayList<>();
 
     public MovieForm() {
-    }
-
-    public static MovieForm from(Movie movie) {
-        if (movie == null) {
-            return new MovieForm();
-        }
-        MovieForm form = new MovieForm();
-        form.setId(movie.getMovieId());
-        form.setTitle(movie.getTitle());
-        form.setOriginalTitle(movie.getOriginalTitle());
-        form.setDuration(movie.getDuration());
-        form.setReleaseDate(movie.getReleaseDate());
-        form.setEndDate(movie.getEndDate());
-        form.setLanguage(movie.getLanguage());
-        form.setDirector(movie.getDirector());
-        form.setActors(movie.getActors());
-        form.setAgeRating(movie.getAgeRating() != null ? movie.getAgeRating() : "P");
-        form.setDescription(movie.getDescription());
-        form.setPoster(movie.getPoster());
-        form.setTrailer(movie.getTrailer());
-        form.setStatus(movie.getStatus() != null ? movie.getStatus() : "Upcoming");
-        form.setGenreIds(movie.getGenreIds());
-        return form;
     }
 
     public Integer getId() {

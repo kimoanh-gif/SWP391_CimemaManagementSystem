@@ -1,4 +1,4 @@
-package com.cinema.model;
+package com.cinema.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;

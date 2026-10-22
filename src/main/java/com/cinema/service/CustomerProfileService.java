@@ -2,7 +2,7 @@ package com.cinema.service;
 
 import com.cinema.dao.CustomerProfileDao;
 import com.cinema.model.CustomerProfile;
-import com.cinema.model.ProfileUpdateForm;
+import com.cinema.dto.ProfileUpdateForm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

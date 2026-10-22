@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.CustomerProfile;
-import com.cinema.model.ProfileUpdateForm;
+import com.cinema.dto.ProfileUpdateForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

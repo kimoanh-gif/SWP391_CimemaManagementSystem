@@ -1,8 +1,8 @@
 package com.cinema.controller.api;
 
-import com.cinema.model.ApiResponse;
+import com.cinema.dto.ApiResponse;
 import com.cinema.model.report.RevenueReportData;
-import com.cinema.model.report.RevenueReportRequest;
+import com.cinema.dto.RevenueReportRequest;
 import com.cinema.service.RevenueReportService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;

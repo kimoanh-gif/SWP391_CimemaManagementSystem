@@ -1,6 +1,6 @@
 package com.cinema.controller.api;
 
-import com.cinema.model.ApiResponse;
+import com.cinema.dto.ApiResponse;
 import com.cinema.model.ManagerDashboardStats;
 import com.cinema.service.ManagerDashboardService;
 import com.cinema.util.ManagerSecurityUtils;

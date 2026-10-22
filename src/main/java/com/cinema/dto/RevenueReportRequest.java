@@ -1,4 +1,6 @@
-package com.cinema.model.report;
+package com.cinema.dto;
+
+import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
@@ -9,7 +11,13 @@ public class RevenueReportRequest {
 
     private LocalDate startDate;
     private LocalDate endDate;
+
+    @Pattern(regexp = "^(today|last7days|thismonth|thisquarter|all|custom)$",
+             message = "Khoảng thời gian chọn sẵn không hợp lệ")
     private String preset; // "today", "last7days", "thismonth", "thisquarter", "all", "custom"
+
+    @Pattern(regexp = "^(DAILY|MOVIE|TRANSACTIONS)$",
+             message = "Loại báo cáo không hợp lệ")
     private String reportType; // "DAILY", "MOVIE", "TRANSACTIONS"
 
     public RevenueReportRequest() {
