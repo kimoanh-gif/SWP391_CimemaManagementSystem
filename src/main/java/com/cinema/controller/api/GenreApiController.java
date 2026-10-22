@@ -6,7 +6,7 @@ import com.cinema.exception.GenreNotFoundException;
 import com.cinema.exception.UnauthorizedManagerException;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.Genre;
-import com.cinema.model.GenreForm;
+import com.cinema.dto.GenreForm;
 import com.cinema.model.MovieSummary;
 import com.cinema.service.GenreService;
 import com.cinema.util.ManagerSecurityUtils;

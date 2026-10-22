@@ -2,7 +2,7 @@ package com.cinema.dao;
 
 import com.cinema.model.Genre;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

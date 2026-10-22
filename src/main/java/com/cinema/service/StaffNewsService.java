@@ -1,7 +1,7 @@
 package com.cinema.service;
 
 import com.cinema.dao.StaffNewsDAO;
-import com.cinema.model.NewsRequest;
+import com.cinema.dto.NewsRequest;
 import com.cinema.model.StaffNewsArticle;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

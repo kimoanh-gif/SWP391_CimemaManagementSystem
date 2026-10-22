@@ -3,7 +3,7 @@ package com.cinema.controller;
 import com.cinema.exception.InvalidFBItemException;
 import com.cinema.exception.FBItemNotFoundException;
 import com.cinema.model.FBItem;
-import com.cinema.model.FBItemForm;
+import com.cinema.dto.FBItemForm;
 import com.cinema.service.FBItemService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;

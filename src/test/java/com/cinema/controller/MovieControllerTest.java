@@ -2,7 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.model.Genre;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import com.cinema.service.GenreService;
 import com.cinema.service.MovieService;
 import org.junit.jupiter.api.DisplayName;

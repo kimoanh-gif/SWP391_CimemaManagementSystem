@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.FBItem;
-import com.cinema.model.FBItemForm;
+import com.cinema.dto.FBItemForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.TicketPricing;
-import com.cinema.model.TicketPricingForm;
+import com.cinema.dto.TicketPricingForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

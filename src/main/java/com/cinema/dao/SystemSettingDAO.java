@@ -19,15 +19,9 @@ public class SystemSettingDAO {
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<SystemSetting> rowMapper = (rs, rowNum) -> mapResultSetToModel(rs);
     private static final String SELECT_COLUMNS = """
-            SELECT SettingID, SettingKey, SettingKey AS SettingName,
-                   CASE WHEN CHARINDEX('_', SettingKey) > 0
-                        THEN LEFT(SettingKey, CHARINDEX('_', SettingKey) - 1)
-                        ELSE 'SYSTEM' END AS Category,
-                   CASE WHEN TRY_CONVERT(DECIMAL(38, 10), SettingValue) IS NOT NULL
-                        THEN 'NUMBER' ELSE 'STRING' END AS ValueType,
-                   SettingValue AS [Value], SettingValue AS DefaultValue, [Description],
-                   CAST(NULL AS NVARCHAR(500)) AS ValidationRules,
-                   CAST(1 AS BIT) AS IsActive, UpdatedAt AS CreatedAt, UpdatedAt
+            SELECT SettingID, SettingKey, SettingName, Category, ValueType,
+                   Value, DefaultValue, [Description], ValidationRules,
+                   IsActive, UpdatedAt AS CreatedAt, UpdatedAt
             """;
 
     @Autowired
@@ -88,13 +82,15 @@ public class SystemSettingDAO {
     public List<SystemSetting> findByCategory(String category) {
         return jdbcTemplate.query(SELECT_COLUMNS + """
             FROM dbo.SystemSetting
-            WHERE UPPER(SettingKey) LIKE UPPER(LTRIM(RTRIM(?))) + '[_]%'
+            WHERE UPPER(Category) = UPPER(LTRIM(RTRIM(?)))
             ORDER BY SettingKey
             """, rowMapper, category);
     }
 
     public List<SystemSetting> findActive() {
-        return findAll();
+        return jdbcTemplate.query(SELECT_COLUMNS + """
+            FROM dbo.SystemSetting WHERE IsActive = 1 ORDER BY SettingKey
+            """, rowMapper);
     }
 
     public boolean existsByKey(String settingKey) {
@@ -108,31 +104,47 @@ public class SystemSettingDAO {
 
     public int insert(SystemSetting setting) {
         String sql = """
-            INSERT INTO dbo.SystemSetting (SettingKey, SettingValue, [Description])
+            INSERT INTO dbo.SystemSetting
+                (SettingKey, Value, [Description], SettingName, Category, ValueType,
+                 DefaultValue, ValidationRules, IsActive)
             OUTPUT inserted.SettingID
-            VALUES (?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         Integer id = jdbcTemplate.queryForObject(sql, Integer.class,
                 setting.getSettingKey(),
                 setting.getValue(),
-                setting.getDescription());
+                setting.getDescription(),
+                setting.getSettingName(),
+                setting.getCategory(),
+                setting.getValueType(),
+                setting.getDefaultValue(),
+                setting.getValidationRules(),
+                !Boolean.FALSE.equals(setting.getIsActive()));
         return id != null ? id : 0;
     }
 
     public int updateValue(int settingId, String newValue) {
         return jdbcTemplate.update("""
-            UPDATE dbo.SystemSetting SET SettingValue = ?, UpdatedAt = SYSDATETIME() WHERE SettingID = ?
+            UPDATE dbo.SystemSetting SET Value = ?, UpdatedAt = SYSDATETIME() WHERE SettingID = ?
             """, newValue, settingId);
     }
 
     public int update(SystemSetting setting) {
         return jdbcTemplate.update("""
             UPDATE dbo.SystemSetting
-            SET SettingValue = ?, [Description] = ?, UpdatedAt = SYSDATETIME()
+            SET Value = ?, [Description] = ?, SettingName = ?, Category = ?,
+                ValueType = ?, DefaultValue = ?, ValidationRules = ?, IsActive = ?,
+                UpdatedAt = SYSDATETIME()
             WHERE SettingID = ?
             """,
                 setting.getValue(),
                 setting.getDescription(),
+                setting.getSettingName(),
+                setting.getCategory(),
+                setting.getValueType(),
+                setting.getDefaultValue(),
+                setting.getValidationRules(),
+                !Boolean.FALSE.equals(setting.getIsActive()),
                 setting.getSettingId());
     }
 
@@ -142,7 +154,7 @@ public class SystemSettingDAO {
 
     public int countByCategory(String category) {
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM dbo.SystemSetting WHERE UPPER(SettingKey) LIKE UPPER(LTRIM(RTRIM(?))) + '[_]%'",
+            "SELECT COUNT(*) FROM dbo.SystemSetting WHERE UPPER(Category) = UPPER(LTRIM(RTRIM(?)))",
             Integer.class, category);
         return count != null ? count : 0;
     }
