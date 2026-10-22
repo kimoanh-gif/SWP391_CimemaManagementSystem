@@ -1,104 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nhập mã OTP | CinemaSystem</title>
-<link rel="stylesheet" th:href="@{/css/auth.css}">
-<style>
-.otp-input-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin: 20px 0 24px;
-  flex-wrap: nowrap;
-}
-.otp-digit {
-  width: 50px;
-  height: 60px;
-  text-align: center;
-  font-size: 26px;
-  font-weight: 700;
-  border: 2px solid var(--border, #d1d5db);
-  border-radius: 10px;
-  background: var(--surface-raised, #fff);
-  color: var(--text-primary, #111827);
-  transition: border-color .2s, box-shadow .2s, transform .15s;
-  flex: 0 0 auto;
-  -moz-appearance: textfield;
-}
-.otp-digit::-webkit-outer-spin-button,
-.otp-digit::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.otp-digit:focus { outline: none; border-color: var(--purple-400, #a78bfa); box-shadow: 0 0 0 3px rgba(167,139,250,.2); }
-.otp-digit.error { border-color: #ef4444; animation: shake .4s; }
-.otp-digit.success { border-color: #10b981; background: rgba(16,185,129,.1); }
-.otp-digit:disabled { background: #f3f4f6; cursor: not-allowed; opacity: .7; }
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
-}
-.otp-status {
-  text-align: center;
-  font-size: 15px;
-  margin: 0 0 16px;
-  min-height: 24px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-.otp-status:empty { display: none; }
-.otp-status.success { color: #047857; background: #d1fae5; border: 1px solid #10b981; }
-.otp-status.error   { color: #b91c1c; background: #fee2e2; border: 1px solid #ef4444; }
-.otp-status.waiting { color: #6b7280; background: #f3f4f6; }
-
-.otp-countdown-wrap { margin: 20px 0; text-align: center; }
-.otp-countdown-bar {
-  width: 100%; max-width: 320px; height: 6px;
-  background: #e5e7eb; border-radius: 3px;
-  overflow: hidden; margin: 0 auto;
-}
-.otp-countdown-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
-  transition: width 1s linear;
-}
-.otp-countdown-text { font-size: 13px; color: #6b7280; margin-top: 10px; }
-.otp-countdown-text span { color: #7c3aed; font-weight: 700; font-size: 15px; }
-
-.next-step-notice {
-  text-align: center; padding: 14px; margin: 16px 0;
-  background: #d1fae5; border: 1px solid #10b981;
-  border-radius: 8px; color: #047857; font-weight: 500;
-}
-
-@media (max-width: 480px) {
-  .otp-digit { width: 42px; height: 52px; font-size: 22px; }
-  .otp-input-wrap { gap: 6px; }
-}
-</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verify Reset Code | CINEORA</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/cineora-otp.css" th:href="@{/css/cineora-otp.css}">
 </head>
 <body>
-<div class="auth-page">
-  <aside class="auth-hero" aria-label="Không gian rạp chiếu phim">
-    <div class="auth-hero-caption">
-      <div class="eyebrow">Password recovery</div>
-      <h1>Đặt lại mật khẩu</h1>
-      <div class="line"></div>
-      <p>Nhập mã OTP gồm 6 chữ số đã gửi đến <strong th:text="${email}">email của bạn</strong>.</p>
-    </div>
-  </aside>
-
-  <main class="auth-panel-wrap">
-    <section class="auth-panel" aria-labelledby="reset-otp-title">
-      <div class="auth-brand-mobile">
-        <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
-      </div>
-      <h2 id="reset-otp-title">Xác minh OTP</h2>
-      <p class="auth-intro">Mã xác minh đã được gửi đến <strong th:text="${email}">email của bạn</strong>.</p>
-
-      <!-- Error/Success from server -->
-      <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
+<header><a class="brand" href="/" th:href="@{/}"><img src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo"><span><strong>CINEORA</strong><small>Every Story Begins Here</small></span></a><a class="nav" href="/forgot-password" th:href="@{/forgot-password}">Back to Recovery</a></header>
+<main><section class="card" aria-labelledby="reset-otp-title">
+ <div class="emblem"><img src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA"></div>
+ <span class="step">PASSWORD RECOVERY</span><h1 id="reset-otp-title">Verify Reset Code</h1>
+ <p>Enter the 6-digit verification code sent to your email address.</p>
+ <div class="email" th:if="${email}" th:text="${email}">Your registered email</div>
+ <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
       <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
 
       <!-- OTP Status (JavaScript updates this) -->
@@ -137,10 +52,7 @@
       </div>
 
       <div class="auth-bottom"><a th:href="@{/forgot-password}">← Yêu cầu mã khác</a></div>
-    </section>
-  </main>
-</div>
-
+ </section></main>
 <script>
 // Expose verifyOtp to global scope (called by inline onclick)
 // and bind after DOM is ready.

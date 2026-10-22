@@ -1,112 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Create Account | CinemaSystem</title>
-<link rel="stylesheet" th:href="@{/css/auth.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | CINEORA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/cineora-register.css" th:href="@{/css/cineora-register.css}">
 </head>
 <body>
-<div class="cinema-scene">
-  <!-- Film strips -->
-  <div class="film-strip-top"></div>
-  <div class="film-strip-bottom"></div>
-  
-  <!-- Spotlight effects -->
-  <div class="spotlight-container">
-    <div class="spotlight spotlight-1"></div>
-    <div class="spotlight spotlight-2"></div>
-    <div class="spotlight spotlight-3"></div>
-  </div>
-  
-  <!-- Film reels -->
-  <div class="film-reel film-reel-1"></div>
-  <div class="film-reel film-reel-2"></div>
-  
-  <!-- Film frames -->
-  <div class="film-frame film-frame-1"></div>
-  <div class="film-frame film-frame-2"></div>
-  <div class="film-frame film-frame-3"></div>
-  
-  <!-- Stars -->
-  <div class="stars-container">
-    <div class="star star-1"></div>
-    <div class="star star-2"></div>
-    <div class="star star-3"></div>
-    <div class="star star-4"></div>
-    <div class="star star-5"></div>
-    <div class="star star-6"></div>
-    <div class="star star-7"></div>
-    <div class="star star-8"></div>
-    <div class="star star-9"></div>
-    <div class="star star-10"></div>
-  </div>
-  
-  <!-- Award sparkles -->
-  <div class="sparkle sparkle-1"></div>
-  <div class="sparkle sparkle-2"></div>
-  <div class="sparkle sparkle-3"></div>
-  
-  <!-- Curtains -->
-  <div class="curtain-left"></div>
-  <div class="curtain-right"></div>
-</div>
-
-<div class="auth-page">
-  <!-- Left: Hero Panel -->
-  <aside class="auth-hero" aria-label="Cinema experience">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    
-    <div class="auth-hero-content">
-      <div class="auth-hero-logo">
-        <div class="logo-icon">▶</div>
-        <div class="logo-text">
-          CINEMA
-          <span>SYSTEM</span>
-        </div>
-      </div>
-
-      <div class="auth-hero-tagline">Your cinema experience</div>
-      <h1 class="auth-hero-headline">Start your cinematic journey.</h1>
-      <p class="auth-hero-desc">
-        Create an account to book tickets, earn points, and enjoy member benefits.
-      </p>
-
-      <div class="hero-features">
-        <div class="hero-feature">
-          <div class="hero-feature-icon">🎬</div>
-          <span>Book tickets for any showtime instantly</span>
-        </div>
-        <div class="hero-feature">
-          <div class="hero-feature-icon">⭐</div>
-          <span>Earn loyalty points with every transaction</span>
-        </div>
-        <div class="hero-feature">
-          <div class="hero-feature-icon">🎁</div>
-          <span>Access exclusive member promotions</span>
-        </div>
-        <div class="hero-feature">
-          <div class="hero-feature-icon">📱</div>
-          <span>Manage bookings anytime, anywhere</span>
-        </div>
-      </div>
+  <header class="topbar">
+    <div class="top-inner">
+      <a href="/" th:href="@{/}" class="brand" aria-label="CINEORA Home">
+        <img src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo">
+        <span><span class="brand-name">CINEORA</span><span class="brand-tag">Every Story Begins Here</span></span>
+      </a>
+      <a class="back" href="/" th:href="@{/}">Back to Home</a>
     </div>
-  </aside>
-
-  <!-- Right: Registration Form -->
-  <main class="auth-panel-wrap">
-    <section class="auth-panel" aria-labelledby="register-title">
-      <div class="auth-brand-mobile">
-        <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
-      </div>
-      <h2 id="register-title">Create Account</h2>
-      <p class="auth-intro">Register to become a CinemaSystem member. Your account will be activated via OTP code sent to your email.</p>
-
-      <div class="auth-notice error" role="alert" th:if="${formError}" th:text="${formError}"></div>
-      <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
-
-      <a class="auth-btn-google" th:if="${googleOAuthEnabled}" th:href="@{/oauth2/authorization/google}" aria-label="Sign up with Google">
+  </header>
+  <main>
+    <section class="card" aria-labelledby="page-title">
+      <div class="accent"></div>
+      <div class="content">
+        <div class="intro">
+          <img class="hero-logo" src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA">
+          <span class="eyebrow">CINEORA Club</span>
+          <h1 id="page-title">Create Your Account</h1>
+          <p>Join CINEORA to book movie tickets, earn rewards, and enjoy a better cinema experience.</p>
+        </div>
+        <div class="auth-notice error" role="alert" th:if="${formError}" th:text="${formError}"></div>
+        <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
+        <a class="auth-btn-google" th:if="${googleOAuthEnabled}" th:href="@{/oauth2/authorization/google}" aria-label="Sign up with Google">
         <svg viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.2 3.6l6.9-6.9C35.9 2.4 30.3 0 24 0 14.6 0 6.45 5.4 2.55 13.3l8.06 6.26C12.6 13.3 17.85 9.5 24 9.5z"/>
           <path fill="#4285F4" d="M46.1 24.5c0-1.6-.14-3.1-.4-4.5H24v9h12.5c-.55 2.9-2.2 5.4-4.7 7.1l7.3 5.7c4.3-4 6.8-9.8 6.8-17.3z"/>
@@ -115,10 +40,8 @@
         </svg>
         <span>Sign up with Google</span>
       </a>
-
-      <div class="auth-divider"><span>OR CREATE WITH EMAIL</span></div>
-
-      <form th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
+        <div class="auth-divider" th:if="${googleOAuthEnabled}"><span>OR CREATE WITH EMAIL</span></div>
+        <form th:action="@{/register}" th:object="${registerForm}" method="post" novalidate>
         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
 
         <!-- Full Name -->
@@ -220,13 +143,12 @@
           <span class="spinner" aria-hidden="true"></span>
         </button>
       </form>
-
-      <div class="auth-bottom">Already have an account? <a th:href="@{/login}">Login</a></div>
+        <p class="next-step">Next, verify your email with a 6-digit code.</p>
+        <div class="signin">Already have an account? <a href="/login" th:href="@{/login}">Sign In</a></div>
+      </div>
     </section>
   </main>
-</div>
-
-<script>
+  <script>
 (() => {
   // Toggle password visibility
   function setupToggle(toggleId, inputId, iconId) {

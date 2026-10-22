@@ -4,6 +4,7 @@ import com.cinema.dao.AccountDAO;
 import com.cinema.dao.RoleDAO;
 import com.cinema.model.Account;
 import com.cinema.model.Role;
+import com.cinema.util.AccountValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -68,8 +69,8 @@ public class StaffAccountService {
         if (username == null || username.trim().isEmpty()) {
             return "EMPTY_USERNAME";
         }
-        if (username.trim().length() < 3) {
-            return "INVALID_USERNAME_LENGTH";
+        if (!AccountValidation.USERNAME.matcher(username.trim()).matches()) {
+            return "INVALID_USERNAME";
         }
         if (email == null || email.trim().isEmpty()) {
             return "EMPTY_EMAIL";
@@ -79,11 +80,11 @@ public class StaffAccountService {
         }
 
         String emailTrimmed = email.trim();
-        if (!emailTrimmed.matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$")) {
+        if (!AccountValidation.EMAIL.matcher(emailTrimmed).matches()) {
             return "INVALID_EMAIL";
         }
         String phoneTrimmed = phone.trim();
-        if (!phoneTrimmed.matches("^0[0-9]{9,10}$")) {
+        if (!AccountValidation.PHONE.matcher(phoneTrimmed).matches()) {
             return "INVALID_PHONE_FORMAT";
         }
 
@@ -93,21 +94,30 @@ public class StaffAccountService {
         if (accountDAO.existsByEmail(emailTrimmed.toLowerCase())) {
             return "DUPLICATE_EMAIL";
         }
+        if (accountDAO.existsByPhone(phoneTrimmed)) {
+            return "DUPLICATE_PHONE";
+        }
         return null;
     }
 
     public OperationResult createAccount(String username, String email, String password,
                                         String fullName, String phone, String roleName) {
+        if (!"STAFF".equals(roleName) && !"MANAGER".equals(roleName)) {
+            return OperationResult.error("INVALID_ROLE", "Only Staff and Manager accounts can be created.");
+        }
+        if (fullName == null || fullName.trim().length() < 2 || fullName.trim().length() > 100) {
+            return OperationResult.error("INVALID_FULLNAME", "Full name must be 2-100 characters.");
+        }
         String validation = validateAccount(username, email, phone, null);
         if (validation != null) {
             return OperationResult.error(validation, getErrorMessage(validation));
         }
-        if (password == null || password.length() < 6) {
-            return OperationResult.error("INVALID_PASSWORD", "Password must be at least 6 characters.");
+        if (password == null || !AccountValidation.PASSWORD.matcher(password).matches()) {
+            return OperationResult.error("INVALID_PASSWORD", "Password must be 8-128 characters with at least one letter and one number.");
         }
 
         Optional<Role> role = roleDAO.findByName(roleName);
-        if (role.isEmpty() || "CUSTOMER".equalsIgnoreCase(roleName)) {
+        if (role.isEmpty()) {
             return OperationResult.error("INVALID_ROLE", "Invalid role selected.");
         }
 
@@ -140,15 +150,18 @@ public class StaffAccountService {
         if (phone == null || phone.trim().isEmpty()) {
             return OperationResult.error("EMPTY_PHONE", "Phone number is required.");
         }
-        if (!email.trim().matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$")) {
+        if (!AccountValidation.EMAIL.matcher(email.trim()).matches()) {
             return OperationResult.error("INVALID_EMAIL", "Invalid email format.");
         }
-        if (!phone.trim().matches("^0[0-9]{9,10}$")) {
-            return OperationResult.error("INVALID_PHONE_FORMAT", "Phone must be 10-11 digits starting with 0.");
+        if (!AccountValidation.PHONE.matcher(phone.trim()).matches()) {
+            return OperationResult.error("INVALID_PHONE_FORMAT", "Phone must start with 0 or +84 followed by 9-10 digits.");
+        }
+        if (fullName == null || fullName.trim().length() < 2 || fullName.trim().length() > 100) {
+            return OperationResult.error("INVALID_FULLNAME", "Full name must be 2-100 characters.");
         }
 
         Optional<Role> role = roleDAO.findByName(roleName);
-        if (role.isEmpty() || "CUSTOMER".equalsIgnoreCase(roleName)) {
+        if (role.isEmpty() || (!"STAFF".equals(roleName) && !"MANAGER".equals(roleName))) {
             return OperationResult.error("INVALID_ROLE", "Invalid role selected.");
         }
 
@@ -312,11 +325,11 @@ public class StaffAccountService {
     private String getErrorMessage(String code) {
         return switch (code) {
             case "EMPTY_USERNAME"          -> "Username is required.";
-            case "INVALID_USERNAME_LENGTH" -> "Username must be at least 3 characters.";
+            case "INVALID_USERNAME" -> "Username must be 4-50 characters using letters, numbers, dots, underscores or hyphens.";
             case "EMPTY_EMAIL"             -> "Email is required.";
             case "INVALID_EMAIL"           -> "Invalid email format.";
             case "EMPTY_PHONE"             -> "Phone number is required.";
-            case "INVALID_PHONE_FORMAT"    -> "Phone must be 10-11 digits starting with 0.";
+            case "INVALID_PHONE_FORMAT"    -> "Phone must start with 0 or +84 followed by 9-10 digits.";
             case "DUPLICATE_USERNAME"      -> "Username already exists. Please choose another.";
             case "DUPLICATE_EMAIL"         -> "Email already exists. Please use another email.";
             case "DUPLICATE_PHONE"         -> "Phone number already exists. Please use another.";

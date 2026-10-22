@@ -220,11 +220,11 @@ tbody tr:hover td { background: var(--purple-50); }
         <input type="hidden" id="formAccountId">
         <div class="form-group">
           <label for="fUsername">Username *</label>
-          <input type="text" id="fUsername" required minlength="3" placeholder="e.g. johndoe123" autocomplete="off">
+          <input type="text" id="fUsername" required minlength="4" maxlength="50" pattern="[A-Za-z0-9_.\-]{4,50}" title="4-50 letters, numbers, dots, underscores or hyphens" placeholder="e.g. johndoe123" autocomplete="off">
         </div>
         <div class="form-group">
           <label for="fFullName">Full Name *</label>
-          <input type="text" id="fFullName" required placeholder="e.g. John Doe" autocomplete="name">
+          <input type="text" id="fFullName" required minlength="2" maxlength="100" placeholder="e.g. John Doe" autocomplete="name">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -233,7 +233,7 @@ tbody tr:hover td { background: var(--purple-50); }
           </div>
           <div class="form-group">
             <label for="fPhone">Phone *</label>
-            <input type="tel" id="fPhone" required pattern="0[0-9]{9,10}" placeholder="0912345678">
+            <input type="tel" id="fPhone" required maxlength="13" pattern="(0|\+84)[0-9]{9,10}" title="0 or +84 followed by 9-10 digits" placeholder="0912345678">
           </div>
         </div>
         <div class="form-row">
@@ -242,19 +242,22 @@ tbody tr:hover td { background: var(--purple-50); }
             <select id="fRole" required>
               <option value="STAFF">Staff</option>
               <option value="MANAGER">Manager</option>
-              <option value="ADMIN">Administrator</option>
             </select>
           </div>
           <div class="form-group" id="pwGroup">
             <label for="fPassword">Password *</label>
-            <input type="password" id="fPassword" placeholder="Min. 6 characters">
+            <input type="password" id="fPassword" minlength="8" maxlength="128" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,128}" title="8-128 characters with at least one letter and one number" autocomplete="new-password" placeholder="8-128 characters with letters and numbers">
           </div>
+        </div>
+        <div class="form-group" id="confirmPwGroup">
+          <label for="fConfirmPassword">Confirm Password *</label>
+          <input type="password" id="fConfirmPassword" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Re-enter password">
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
-      <button class="btn btn-primary" id="formSubmitBtn">Create Account</button>
+      <button class="btn btn-primary" type="submit" form="staffForm" id="formSubmitBtn">Create Account</button>
     </div>
   </div>
 </div>
@@ -407,6 +410,10 @@ function openCreateModal() {
   document.getElementById('formSubmitBtn').textContent = 'Create Account';
   document.getElementById('pwGroup').style.display = 'block';
   document.getElementById('fPassword').required = true;
+  document.getElementById('confirmPwGroup').style.display = 'block';
+  document.getElementById('fConfirmPassword').required = true;
+  document.getElementById('fPassword').disabled = false;
+  document.getElementById('fConfirmPassword').disabled = false;
   document.getElementById('staffForm').reset();
   document.getElementById('formAccountId').value = '';
   document.getElementById('formModal').classList.add('show');
@@ -421,6 +428,10 @@ function openEditModal(accountId) {
   document.getElementById('formSubmitBtn').textContent = 'Save Changes';
   document.getElementById('pwGroup').style.display = 'none';
   document.getElementById('fPassword').required = false;
+  document.getElementById('confirmPwGroup').style.display = 'none';
+  document.getElementById('fConfirmPassword').required = false;
+  document.getElementById('fPassword').disabled = true;
+  document.getElementById('fConfirmPassword').disabled = true;
   
   document.getElementById('formAccountId').value = accountId;
   document.getElementById('fUsername').value = s.username || '';
@@ -448,14 +459,17 @@ async function submitForm(e) {
     role: document.getElementById('fRole').value
   };
   
-  if (!payload.username || payload.username.length < 3) { showToast('Username must be at least 3 characters.', 'error'); return; }
-  if (!payload.fullName) { showToast('Full name is required.', 'error'); return; }
-  if (!payload.email || !/^[^\s@]+@[^\s@]+\.\w+/.test(payload.email)) { showToast('Invalid email format.', 'error'); return; }
-  if (!payload.phone || !/^0[0-9]{9,10}$/.test(payload.phone)) { showToast('Phone must be 10-11 digits starting with 0.', 'error'); return; }
+  if (!/^[A-Za-z0-9_.-]{4,50}$/.test(payload.username)) { showToast('Username must be 4-50 characters using letters, numbers, dots, underscores or hyphens.', 'error'); return; }
+  if (payload.fullName.length < 2 || payload.fullName.length > 100) { showToast('Full name must be 2-100 characters.', 'error'); return; }
+  if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(payload.email)) { showToast('Invalid email format.', 'error'); return; }
+  if (!/^(0|\+84)[0-9]{9,10}$/.test(payload.phone)) { showToast('Phone must start with 0 or +84 followed by 9-10 digits.', 'error'); return; }
+  if (!['STAFF', 'MANAGER'].includes(payload.role)) { showToast('Only Staff and Manager roles are allowed.', 'error'); return; }
   
   if (!editMode) {
     payload.password = document.getElementById('fPassword').value;
-    if (!payload.password || payload.password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+    if (!/^(?=.*[A-Za-z])(?=.*[0-9]).{8,128}$/.test(payload.password)) { showToast('Password must be 8-128 characters with at least one letter and one number.', 'error'); return; }
+    payload.confirmPassword = document.getElementById('fConfirmPassword').value;
+    if (payload.confirmPassword !== payload.password) { showToast('Passwords do not match.', 'error'); return; }
   }
   
   const url = editMode ? `/api/admin/staffs/${accountId}` : '/api/admin/staffs';
