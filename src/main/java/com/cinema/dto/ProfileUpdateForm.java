@@ -1,5 +1,6 @@
-package com.cinema.model;
+package com.cinema.dto;
 
+import com.cinema.model.CustomerProfile;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;

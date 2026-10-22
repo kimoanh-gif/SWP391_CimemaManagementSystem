@@ -1,5 +1,6 @@
-package com.cinema.model;
+package com.cinema.dto;
 
+import com.cinema.model.Movie;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

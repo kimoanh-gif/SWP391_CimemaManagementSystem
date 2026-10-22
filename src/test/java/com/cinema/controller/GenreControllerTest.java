@@ -1,7 +1,7 @@
 package com.cinema.controller;
 
 import com.cinema.model.Genre;
-import com.cinema.model.GenreForm;
+import com.cinema.dto.GenreForm;
 import com.cinema.service.GenreService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

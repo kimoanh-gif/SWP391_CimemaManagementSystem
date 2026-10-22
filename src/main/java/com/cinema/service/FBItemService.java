@@ -4,7 +4,7 @@ import com.cinema.dao.FBItemDao;
 import com.cinema.exception.FBItemNotFoundException;
 import com.cinema.exception.InvalidFBItemException;
 import com.cinema.model.FBItem;
-import com.cinema.model.FBItemForm;
+import com.cinema.dto.FBItemForm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

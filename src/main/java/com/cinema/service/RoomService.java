@@ -4,7 +4,7 @@ import com.cinema.dao.RoomDao;
 import com.cinema.exception.RoomHasActiveShowtimesException;
 import com.cinema.exception.RoomNotFoundException;
 import com.cinema.model.Room;
-import com.cinema.model.RoomForm;
+import com.cinema.dto.RoomForm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

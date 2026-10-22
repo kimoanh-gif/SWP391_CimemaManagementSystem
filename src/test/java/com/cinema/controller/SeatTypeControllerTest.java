@@ -1,7 +1,7 @@
 package com.cinema.controller;
 
 import com.cinema.model.SeatType;
-import com.cinema.model.SeatTypeForm;
+import com.cinema.dto.SeatTypeForm;
 import com.cinema.service.TicketPricingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

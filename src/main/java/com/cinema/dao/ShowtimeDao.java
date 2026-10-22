@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.Showtime;
-import com.cinema.model.ShowtimeForm;
+import com.cinema.dto.ShowtimeForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

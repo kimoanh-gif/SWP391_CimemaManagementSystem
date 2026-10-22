@@ -2,7 +2,7 @@ package com.cinema.controller.api;
 
 import com.cinema.model.ApiResponse;
 import com.cinema.model.SeatType;
-import com.cinema.model.SeatTypeForm;
+import com.cinema.dto.SeatTypeForm;
 import com.cinema.service.TicketPricingService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;

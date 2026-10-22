@@ -6,7 +6,7 @@ import com.cinema.exception.ShowtimeNotFoundException;
 import com.cinema.model.Movie;
 import com.cinema.model.Room;
 import com.cinema.model.Showtime;
-import com.cinema.model.ShowtimeForm;
+import com.cinema.dto.ShowtimeForm;
 import com.cinema.service.MovieService;
 import com.cinema.service.RoomService;
 import com.cinema.service.ShowtimeService;

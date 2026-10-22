@@ -2,7 +2,7 @@ package com.cinema.service;
 
 import com.cinema.dao.CustomerProfileDao;
 import com.cinema.model.CustomerProfile;
-import com.cinema.model.ProfileUpdateForm;
+import com.cinema.dto.ProfileUpdateForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

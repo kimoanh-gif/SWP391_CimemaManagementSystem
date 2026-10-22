@@ -3,7 +3,7 @@ package com.cinema.controller.api;
 import com.cinema.exception.DuplicateGenreException;
 import com.cinema.exception.GenreAssociationException;
 import com.cinema.model.Genre;
-import com.cinema.model.GenreForm;
+import com.cinema.dto.GenreForm;
 import com.cinema.service.GenreService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;

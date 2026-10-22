@@ -1,6 +1,6 @@
 package com.cinema.controller;
 
-import com.cinema.model.NewsRequest;
+import com.cinema.dto.NewsRequest;
 import com.cinema.model.StaffNewsArticle;
 import com.cinema.service.SessionService;
 import com.cinema.service.StaffNewsService;

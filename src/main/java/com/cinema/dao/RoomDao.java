@@ -1,7 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.Room;
-import com.cinema.model.RoomForm;
+import com.cinema.dto.RoomForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

@@ -4,7 +4,7 @@ import com.cinema.exception.DuplicateGenreException;
 import com.cinema.exception.GenreAssociationException;
 import com.cinema.exception.GenreNotFoundException;
 import com.cinema.model.Genre;
-import com.cinema.model.GenreForm;
+import com.cinema.dto.GenreForm;
 import com.cinema.service.GenreService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;

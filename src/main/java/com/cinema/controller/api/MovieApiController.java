@@ -6,7 +6,7 @@ import com.cinema.exception.MovieNotFoundException;
 import com.cinema.exception.UnauthorizedManagerException;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.Movie;
-import com.cinema.model.MovieForm;
+import com.cinema.dto.MovieForm;
 import com.cinema.service.MovieService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;

@@ -8,7 +8,7 @@ import com.cinema.exception.ShowtimeConflictException;
 import com.cinema.model.Movie;
 import com.cinema.model.Room;
 import com.cinema.model.Showtime;
-import com.cinema.model.ShowtimeForm;
+import com.cinema.dto.ShowtimeForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

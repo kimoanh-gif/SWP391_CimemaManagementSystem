@@ -2,7 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.exception.RoomNotFoundException;
 import com.cinema.model.Room;
-import com.cinema.model.RoomForm;
+import com.cinema.dto.RoomForm;
 import com.cinema.service.RoomService;
 import com.cinema.util.ManagerSecurityUtils;
 import org.springframework.stereotype.Controller;
