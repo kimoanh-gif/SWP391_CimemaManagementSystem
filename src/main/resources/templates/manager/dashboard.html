@@ -1,37 +1,335 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Quản lý | CinemaSystem</title>
-<link rel="stylesheet" th:href="@{/css/auth.css}">
-</head>
-<body>
-<div class="dash-shell">
-  <header class="dash-header">
-    <div class="dash-brand">
-      <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
-    </div>
-    <div class="dash-user" th:if="${user != null}">
-      <span class="role-badge" th:text="${user.role}">MANAGER</span>
-      <span th:text="${user.fullName}">Quản lý</span>
-      <form th:action="@{/logout}" method="post">
-        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-        <button class="dash-logout" type="submit">Đăng xuất</button>
-      </form>
-    </div>
-    <!-- DEBUG: remove after testing -->
-    <div th:if="${user == null}" style="color:#f00;font-size:12px;background:#300;">
-      user==null | sessionId=<span th:text="${#session.id}">?</span>
-    </div>
-  </header>
-  <main class="dash-body">
-    <h1>Khu vực quản lý</h1>
-    <p class="subtitle">Quản lý suất chiếu, phòng vé, khuyến mãi và báo cáo doanh thu.</p>
-    <div class="dash-card">
-      <p>Xin chào <strong th:text="${user != null ? user.fullName : 'quản lý'}">quản lý</strong>.</p>
-      <p style="color: var(--cinema-text-muted);">Các nghiệp vụ quản lý sẽ được bổ sung trong các sprint tiếp theo.</p>
-    </div>
-  </main>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{manager/fragments/layout :: head('Dashboard')}"></head>
+<body class="bg-background-warm font-body-md text-on-surface min-h-screen antialiased">
+
+<aside th:replace="~{manager/fragments/layout :: sidebar('dashboard')}"></aside>
+
+<div class="pl-[248px] min-h-screen flex flex-col">
+    <header th:replace="~{manager/fragments/layout :: topbar('CINEORA Management System')}"></header>
+
+    <main class="relative pt-[68px] w-full bg-background-warm min-w-0 flex-1 pb-10">
+        <div class="flex flex-col w-full p-7 space-y-[22px] box-border min-w-0">
+
+            <!-- Page title + date / shift pill -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0">
+                <div class="flex flex-col min-w-0">
+                    <h1 class="font-display-lg text-display-lg text-text-charcoal tracking-tight font-semibold truncate">Management Overview</h1>
+                    <p class="font-body-md text-body-md text-secondary mt-0.5 truncate">Monitor cinema activity and operational performance.</p>
+                </div>
+                <div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded-xl shadow-sm self-start md:self-auto shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full"
+                              th:classappend="${header.allRoomsActive} ? 'bg-[#2E9B4E] animate-pulse' : 'bg-cinema-gold'"></span>
+                        <span class="font-label-sm text-label-sm font-medium"
+                              th:classappend="${header.allRoomsActive} ? 'text-[#1E6B37]' : 'text-[#B47800]'"
+                              th:text="${header.allRoomsActive} ? 'Operating normally' : 'Some rooms unavailable'">Operating normally</span>
+                    </div>
+                    <div class="h-4 w-px bg-surface-peach"></div>
+                    <div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm">
+                        <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                        <span class="text-text-charcoal font-medium" th:text="${todayText}">Thursday, 27/02/2025</span>
+                        <span class="text-outline-variant">•</span>
+                        <span th:text="${shiftText}">Day shift (08:00 - 17:00)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 w-full min-w-0">
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Total movies</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">movie</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-display-lg text-display-lg font-semibold text-text-charcoal leading-none" th:text="${summary.totalMovies}">0</span>
+                        <span class="font-caption text-caption text-secondary mt-1 truncate"
+                              th:text="${summary.nowShowingMovies} + ' now showing • ' + ${summary.comingSoonMovies} + ' coming soon'">0 now showing</span>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Total genres</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">category</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-display-lg text-display-lg font-semibold text-text-charcoal leading-none" th:text="${summary.totalGenres}">0</span>
+                        <span class="font-caption text-caption text-secondary mt-1 truncate">Movie genre catalog</span>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Today's showtimes</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">schedule</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-display-lg text-display-lg font-semibold text-text-charcoal leading-none" th:text="${summary.showtimesToday}">0</span>
+                        <span class="font-caption text-caption text-[#1E6B37] font-medium mt-1 truncate"
+                              th:text="${summary.showtimesFinishedToday} + ' screened • ' + ${summary.showtimesUpcomingToday} + ' upcoming'">0 screened</span>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Tickets sold today</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">confirmation_number</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-display-lg text-display-lg font-semibold text-text-charcoal leading-none"
+                              th:text="${#numbers.formatInteger(summary.ticketsToday, 1, 'COMMA')}">0</span>
+                        <span th:with="change=${summary.ticketChangePercent}"
+                              class="font-caption text-caption font-medium mt-1 truncate flex items-center gap-0.5"
+                              th:classappend="${change == null} ? 'text-secondary' : (${change >= 0} ? 'text-[#1E6B37]' : 'text-[#C2202E]')">
+                            <span th:if="${change != null}" class="material-symbols-outlined text-[13px]"
+                                  th:text="${change >= 0} ? 'arrow_upward' : 'arrow_downward'">arrow_upward</span>
+                            <span th:text="${change == null} ? 'No sales yesterday' : ((${change >= 0} ? '+' : '') + ${change} + '% vs yesterday')">+0% vs yesterday</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Today's revenue</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">payments</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-headline-md text-headline-md font-semibold text-cinema-red leading-none truncate"
+                              th:text="${#numbers.formatDecimal(summary.revenueToday, 1, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                        <span th:with="change=${summary.revenueChangePercent}" class="font-caption text-caption text-secondary mt-1 truncate"
+                              th:text="${change == null} ? 'Paid bookings only' : ((${change >= 0} ? '+' : '') + ${change} + '% vs yesterday')">Paid bookings only</span>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[122px] min-w-0 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <span class="font-label-sm text-label-sm text-secondary truncate">Active promotions</span>
+                        <div class="w-9 h-9 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined icon-fill text-cinema-red text-[20px]">redeem</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-display-lg text-display-lg font-semibold text-text-charcoal leading-none"
+                              th:text="${#numbers.formatInteger(summary.activePromotions, 2)}">00</span>
+                        <span class="font-caption text-caption text-secondary mt-1 truncate"
+                              th:text="${summary.activeVouchers} + ' active vouchers'">0 active vouchers</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue chart + upcoming showtimes -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full min-w-0">
+                <section class="lg:col-span-7 xl:col-span-8 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col min-w-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2 min-w-0 mb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <h2 class="font-headline-sm text-headline-sm font-semibold text-text-charcoal truncate">Revenue Overview</h2>
+                            <span class="font-label-sm text-label-sm font-medium text-cinema-red bg-surface-peach px-2.5 py-0.5 rounded-full shrink-0"
+                                  th:text="${#numbers.formatDecimal(chart.total, 1, 'COMMA', 0, 'POINT')} + ' ₫ ' + ${chart.totalSuffix}">0 ₫</span>
+                        </div>
+                        <div class="flex items-center gap-1 bg-background-warm p-1 rounded-lg">
+                            <a th:href="@{/manager/dashboard(range='today')}"
+                               class="px-2.5 py-1 rounded font-label-sm text-label-sm transition-colors"
+                               th:classappend="${chart.range == 'today'} ? 'bg-surface-peach text-cinema-red font-medium' : 'text-secondary hover:text-text-charcoal'">Today</a>
+                            <a th:href="@{/manager/dashboard(range='7d')}"
+                               class="px-2.5 py-1 rounded font-label-sm text-label-sm transition-colors"
+                               th:classappend="${chart.range == '7d'} ? 'bg-surface-peach text-cinema-red font-medium' : 'text-secondary hover:text-text-charcoal'">Last 7 days</a>
+                            <a th:href="@{/manager/dashboard(range='month')}"
+                               class="px-2.5 py-1 rounded font-label-sm text-label-sm transition-colors"
+                               th:classappend="${chart.range == 'month'} ? 'bg-surface-peach text-cinema-red font-medium' : 'text-secondary hover:text-text-charcoal'">This month</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-5 mb-3">
+                        <div class="flex items-center gap-1.5 font-caption text-caption text-secondary">
+                            <span class="w-3 h-3 rounded bg-cinema-red"></span>
+                            <span th:text="'Ticket revenue (' + ${chart.ticketSharePercent} + '%)'">Ticket revenue</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 font-caption text-caption text-secondary">
+                            <span class="w-3 h-3 rounded bg-cinema-gold"></span>
+                            <span th:text="'Popcorn &amp; Combos (' + ${chart.fnbSharePercent} + '%)'">Popcorn &amp; Combos</span>
+                        </div>
+                    </div>
+
+                    <!-- Bar chart: heights are percentages computed in ManagerDashboardService -->
+                    <div class="flex w-full h-[200px] gap-2 select-none">
+                        <div class="flex flex-col justify-between text-right text-[10px] text-outline pb-6 w-10 shrink-0">
+                            <span th:each="label : ${chart.axisLabels}" th:text="${label}">0</span>
+                        </div>
+                        <div class="relative flex-1 min-w-0">
+                            <div class="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none">
+                                <div class="border-t border-dashed border-surface-container"></div>
+                                <div class="border-t border-dashed border-surface-container"></div>
+                                <div class="border-t border-dashed border-surface-container"></div>
+                                <div class="border-t border-dashed border-surface-container"></div>
+                                <div class="border-t border-surface-variant"></div>
+                            </div>
+                            <div class="absolute inset-0 flex items-stretch gap-1">
+                                <div th:each="bar : ${chart.bars}" class="chart-group relative flex-1 min-w-0 flex flex-col">
+                                    <div class="relative flex-1 flex items-end justify-center gap-[3px] rounded-md"
+                                         th:classappend="${bar.today} ? 'bg-surface-peach/40'">
+                                        <div class="chart-bar w-1/3 max-w-[18px] rounded-t bg-cinema-red" th:style="'height:' + ${bar.ticketHeight} + '%'"></div>
+                                        <div class="chart-bar w-1/3 max-w-[18px] rounded-t bg-cinema-gold" th:style="'height:' + ${bar.fnbHeight} + '%'"></div>
+                                        <div class="chart-tip absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-text-charcoal text-white text-[10px] font-medium px-2 py-1 rounded z-10"
+                                             th:text="${bar.tooltip}">tooltip</div>
+                                    </div>
+                                    <span class="h-6 pt-1 text-center text-[11px] truncate"
+                                          th:classappend="${bar.today} ? 'text-cinema-red font-semibold' : 'text-secondary'"
+                                          th:text="${bar.label}">Mon</span>
+                                </div>
+                            </div>
+                            <div th:if="${chart.empty}" class="absolute inset-0 bottom-6 flex items-center justify-center">
+                                <span class="font-caption text-caption text-secondary bg-surface-container-lowest/80 px-3 py-1 rounded-full">No paid bookings in this period yet</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="lg:col-span-5 xl:col-span-4 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col min-w-0">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#F5ECE8] min-w-0">
+                        <h2 class="font-headline-sm text-headline-sm font-semibold text-text-charcoal truncate">Upcoming showtimes</h2>
+                        <a th:href="@{/showtimes}" class="font-label-sm text-label-sm text-cinema-red font-medium hover:underline shrink-0">View all →</a>
+                    </div>
+                    <div class="flex flex-col divide-y divide-[#F5ECE8]">
+                        <div th:each="st, it : ${upcoming}" class="flex items-center justify-between py-2.5 gap-2 min-w-0">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="font-label-sm text-label-sm font-semibold px-2 py-1 rounded shrink-0"
+                                      th:classappend="${it.first} ? 'text-cinema-red bg-surface-peach' : 'text-text-charcoal bg-background-warm'"
+                                      th:text="${st.startTimeText}">16:30</span>
+                                <div class="flex flex-col min-w-0">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="font-label-sm text-label-sm font-medium text-text-charcoal truncate" th:text="${st.movieTitle}">Movie</span>
+                                        <span class="text-[10px] px-1 font-semibold rounded shrink-0"
+                                              th:classappend="${st.generalAudience} ? 'bg-[#E8F3EE] text-[#1E6B37]' : 'bg-surface-peach text-cinema-red'"
+                                              th:text="${st.ageRating != null and !#strings.isEmpty(st.ageRating)} ? ${st.ageRating} : 'P'">T16</span>
+                                    </div>
+                                    <span class="font-caption text-caption text-secondary truncate"
+                                          th:text="${st.roomName} + ' • ' + ${st.bookedSeats} + '/' + ${st.capacity} + ' seats'">Room • 0/0 seats</span>
+                                </div>
+                            </div>
+                            <span class="font-caption text-caption px-2 py-0.5 rounded-full font-medium shrink-0"
+                                  th:classappend="${st.statusClass}" th:text="${st.statusLabel}">Selling tickets</span>
+                        </div>
+                        <div th:if="${#lists.isEmpty(upcoming)}" class="py-10 flex flex-col items-center text-center gap-2">
+                            <span class="material-symbols-outlined text-[32px] text-outline-variant">event_busy</span>
+                            <span class="font-label-sm text-label-sm text-secondary">No upcoming showtimes scheduled.</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Recent bookings -->
+            <section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col w-full min-w-0">
+                <div class="flex flex-col mb-4 min-w-0">
+                    <h2 class="font-headline-md text-headline-md font-semibold text-text-charcoal truncate">Recent bookings and transactions</h2>
+                    <span class="font-caption text-caption text-secondary truncate">The latest online and counter booking transactions.</span>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full border-collapse text-left min-w-[760px]">
+                        <thead>
+                        <tr class="h-10 border-b border-[#F1E5E0] bg-background-warm/60">
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal">Booking ID</th>
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal">Customer</th>
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal">Movie</th>
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal">Showtime &amp; Room</th>
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal">Status</th>
+                            <th class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal text-right">Total</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#F5ECE8]">
+                        <tr th:each="b : ${bookings}" class="h-12 hover:bg-surface-peach/40 transition-colors">
+                            <td class="px-4 font-label-sm text-label-sm font-medium text-cinema-red" th:text="'#' + ${b.bookingCode}">#BK-0001</td>
+                            <td class="px-4">
+                                <div class="flex flex-col">
+                                    <span class="font-label-sm text-label-sm font-medium text-text-charcoal" th:text="${b.displayName}">Customer</span>
+                                    <span class="font-caption text-caption text-secondary" th:text="${b.subtitle}">0912***456</span>
+                                </div>
+                            </td>
+                            <td class="px-4 font-body-md text-body-md text-text-charcoal truncate max-w-[200px]" th:text="${b.movieTitle}">Movie</td>
+                            <td class="px-4 font-body-md text-body-md text-secondary" th:text="${b.showtimeText}">16:30 • Room</td>
+                            <td class="px-4">
+                                <span class="inline-flex items-center gap-1 font-caption text-caption px-2.5 py-0.5 rounded-full font-medium"
+                                      th:classappend="${b.statusClass}">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${b.dotClass}"></span>
+                                    <span th:text="${b.statusLabel}">Paid</span>
+                                </span>
+                            </td>
+                            <td class="px-4 font-label-sm text-label-sm font-semibold text-text-charcoal text-right"
+                                th:text="${#numbers.formatDecimal(b.totalAmount, 1, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(bookings)}">
+                            <td colspan="6" class="px-4 py-10 text-center font-label-sm text-label-sm text-secondary">No bookings yet.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Quick admin access -->
+            <section class="flex flex-col gap-3">
+                <h2 class="font-headline-md text-headline-md font-semibold text-text-charcoal">Quick Admin Access</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                    <a th:href="@{/manager/news(status='PENDING')}"
+                       class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow group">
+                        <div class="w-12 h-12 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-cinema-red">newspaper</span>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <span class="font-label-lg text-label-lg text-text-charcoal font-medium truncate">News Management</span>
+                            <span class="font-caption text-caption text-secondary truncate">Review articles waiting for approval</span>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red">arrow_forward</span>
+                    </a>
+                    <a th:href="@{/movies}"
+                       class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow group">
+                        <div class="w-12 h-12 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-cinema-red">movie</span>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <span class="font-label-lg text-label-lg text-text-charcoal font-medium truncate">Movie catalog</span>
+                            <span class="font-caption text-caption text-secondary truncate"
+                                  th:text="${summary.totalMovies} + ' movies on the public site'">movies</span>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red">arrow_forward</span>
+                    </a>
+                    <a th:href="@{/showtimes}"
+                       class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow group">
+                        <div class="w-12 h-12 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-cinema-red">schedule</span>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <span class="font-label-lg text-label-lg text-text-charcoal font-medium truncate">Showtime schedule</span>
+                            <span class="font-caption text-caption text-secondary truncate"
+                                  th:text="${summary.showtimesToday} + ' showtimes today'">showtimes today</span>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red">arrow_forward</span>
+                    </a>
+                    <a th:href="@{/promotions-news}"
+                       class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow group">
+                        <div class="w-12 h-12 rounded-lg bg-surface-peach flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-cinema-red">redeem</span>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <span class="font-label-lg text-label-lg text-text-charcoal font-medium truncate">Promotions &amp; News page</span>
+                            <span class="font-caption text-caption text-secondary truncate">See what customers see</span>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary group-hover:text-cinema-red">arrow_forward</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
 </div>
 </body>
 </html>

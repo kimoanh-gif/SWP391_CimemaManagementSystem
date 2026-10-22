@@ -1,0 +1,33 @@
+/* CINEORA Manager area - small additions on top of Tailwind (see js/manager-tailwind.js). */
+
+html, body { margin: 0; padding: 0; }
+body { font-family: "Be Vietnam Pro", Inter, sans-serif; background: #FFF8F0; color: #28202A; }
+
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
+.icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+/* Sidebar navigation */
+.mgr-nav {
+    display: flex; align-items: center; gap: 10px;
+    height: 42px; padding: 0 12px; border-radius: 8px;
+    color: #54433b; text-decoration: none;
+    transition: background-color .15s, color .15s;
+}
+a.mgr-nav:hover { background: #FFE5D9; color: #D92332; }
+.mgr-nav-active { background: #FFE5D9; color: #D92332; font-weight: 600; border-left: 3px solid #D92332; }
+.mgr-nav-soon { opacity: .55; cursor: not-allowed; }
+.mgr-soon {
+    font-size: 10px; font-weight: 600; letter-spacing: .02em;
+    padding: 1px 6px; border-radius: 999px; background: #F8E9F8; color: #6d5a51;
+}
+
+/* Modals / drawers */
+.mgr-overlay { position: fixed; inset: 0; z-index: 70; background: rgba(40, 32, 42, .4); backdrop-filter: blur(2px); }
+.mgr-overlay[hidden] { display: none !important; }
+
+/* Revenue chart bars */
+.chart-bar { transition: height .4s ease; min-height: 0; }
+.chart-group:hover .chart-tip { opacity: 1; }
+.chart-tip { opacity: 0; transition: opacity .15s; pointer-events: none; }
+
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }

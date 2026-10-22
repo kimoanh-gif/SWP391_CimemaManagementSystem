@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--/* Shared CINEORA Manager layout (sidebar, top bar, toast) built from the Stitch mockups.
+       Usage in a page:
+         <head th:replace="~{manager/fragments/layout :: head('Page title')}"></head>
+         <aside th:replace="~{manager/fragments/layout :: sidebar('news')}"></aside>
+         <header th:replace="~{manager/fragments/layout :: topbar('News Management')}"></header>
+         <div th:replace="~{manager/fragments/layout :: toast}"></div>
+       The "header" model attribute comes from ManagerLayoutAdvice. */-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | CINEORA Manager'">CINEORA Manager</title>
+    <link rel="icon" type="image/png" th:href="@{/images/cineora-logo.png}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script th:src="@{/js/manager-tailwind.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/manager.css}">
+</head>
+
+<body>
+
+<!-- ============================================================ SIDEBAR -->
+<aside th:fragment="sidebar(active)"
+       class="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest z-50 flex flex-col border-r border-[#F1E5E0]">
+    <div class="h-[68px] px-5 flex items-center gap-3 border-b border-[#F1E5E0] shrink-0">
+        <img th:src="@{/images/cineora-logo.png}" alt="CINEORA Logo" class="w-9 h-9 rounded-lg object-cover shrink-0">
+        <div class="flex flex-col min-w-0">
+            <span class="text-cinema-red text-[18px] tracking-wider uppercase font-bold leading-none">CINEORA</span>
+            <span class="text-[10px] text-secondary truncate leading-tight mt-1">Every Story Begins Here.</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-2.5 px-2.5 flex flex-col gap-1 font-label-sm text-label-sm">
+        <a th:href="@{/manager/dashboard}" class="mgr-nav" th:classappend="${active == 'dashboard'} ? 'mgr-nav-active'"
+           th:attr="aria-current=${active == 'dashboard'} ? 'page' : null">
+            <span class="material-symbols-outlined text-[20px] shrink-0">dashboard</span><span class="truncate">Overview</span>
+        </a>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">movie</span><span class="truncate flex-1">Movie Management</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">category</span><span class="truncate flex-1">Movie Genres</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">meeting_room</span><span class="truncate flex-1">Screening Rooms</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">chair</span><span class="truncate flex-1">Seat Types</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">grid_view</span><span class="truncate flex-1">Seat Maps</span><span class="mgr-soon">Soon</span>
+        </span>
+        <a th:href="@{/manager/news}" class="mgr-nav" th:classappend="${active == 'news'} ? 'mgr-nav-active'"
+           th:attr="aria-current=${active == 'news'} ? 'page' : null">
+            <span class="material-symbols-outlined text-[20px] shrink-0">newspaper</span><span class="truncate">News Management</span>
+        </a>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">schedule</span><span class="truncate flex-1">Showtimes</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">confirmation_number</span><span class="truncate flex-1">Ticket Pricing</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">fastfood</span><span class="truncate flex-1">Food &amp; Beverage</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">redeem</span><span class="truncate flex-1">Promotions &amp; Vouchers</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">insights</span><span class="truncate flex-1">Movie Sales Analysis</span><span class="mgr-soon">Soon</span>
+        </span>
+        <span class="mgr-nav mgr-nav-soon" title="Coming in a later iteration">
+            <span class="material-symbols-outlined text-[20px] shrink-0">payments</span><span class="truncate flex-1">Revenue Report</span><span class="mgr-soon">Soon</span>
+        </span>
+    </nav>
+
+    <div class="h-[64px] px-3 border-t border-[#F1E5E0] shrink-0 flex items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-surface-peach text-cinema-red text-xs font-semibold flex items-center justify-center shrink-0"
+                 th:text="${header.userInitials}">LH</div>
+            <div class="flex flex-col min-w-0">
+                <span class="font-label-sm text-label-sm font-semibold text-text-charcoal truncate" th:text="${header.userName}">Manager</span>
+                <span class="text-[11px] text-secondary truncate" th:text="${header.roleLabel}">Cinema Manager</span>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post" class="shrink-0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" title="Sign out"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-cinema-red hover:bg-surface-peach transition-colors">
+                <span class="material-symbols-outlined text-[20px]">logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- ============================================================ TOP BAR -->
+<header th:fragment="topbar(crumb)"
+        class="fixed top-0 left-[248px] right-0 h-[68px] bg-surface-container-lowest border-b border-[#F1E5E0] z-40 px-6 flex items-center justify-between">
+    <div class="flex items-center gap-2 min-w-0">
+        <a th:href="@{/manager/dashboard}" class="material-symbols-outlined text-secondary text-[20px] hover:text-cinema-red">home</a>
+        <span class="text-outline text-caption">/</span>
+        <span class="font-label-md text-label-md text-text-charcoal font-medium truncate" th:text="${crumb}">CINEORA Management System</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
+             th:classappend="${header.allRoomsActive} ? 'bg-[#EBF6EE] text-[#1E6B37]' : 'bg-[#FEF6E4] text-[#B47800]'">
+            <span class="w-2 h-2 rounded-full" th:classappend="${header.allRoomsActive} ? 'bg-[#2E9B4E]' : 'bg-cinema-gold'"></span>
+            <span th:text="${header.activeRooms} + '/' + ${header.totalRooms} + ' screening rooms active'">5/5 screening rooms active</span>
+        </div>
+        <div class="h-6 w-px bg-[#F1E5E0]"></div>
+        <div class="flex items-center gap-2.5">
+            <img th:src="@{/images/cineora-logo.png}" alt="" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#F1E5E0]">
+            <div class="flex flex-col text-left">
+                <span class="font-label-sm text-label-sm text-text-charcoal font-semibold leading-tight" th:text="${header.userName}">Manager</span>
+                <span class="text-[10px] text-secondary leading-tight">CINEORA Cinema Suites</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ============================================================ TOAST (flash message) -->
+<div th:fragment="toast" th:if="${toast != null}" id="mgr-toast" role="status"
+     class="fixed bottom-6 right-6 z-[60] bg-[#3A2E39] text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 max-w-md transition-opacity duration-500">
+    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+         th:classappend="${toastType == 'error'} ? 'bg-[#FFE8E8] text-[#C2202E]' : 'bg-[#E8F5E9] text-[#0E7044]'">
+        <span class="material-symbols-outlined text-[18px]" th:text="${toastType == 'error'} ? 'error' : 'done'">done</span>
+    </div>
+    <span class="font-label-md text-label-md" th:text="${toast}">Saved.</span>
+    <script>
+        setTimeout(function () {
+            var t = document.getElementById('mgr-toast');
+            if (t) { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 600); }
+        }, 4500);
+    </script>
+</div>
+
+</body>
+</html>

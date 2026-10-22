@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{manager/fragments/layout :: head('News Management')}"></head>
+<body class="bg-background-warm font-body-md text-on-surface min-h-screen antialiased">
+
+<aside th:replace="~{manager/fragments/layout :: sidebar('news')}"></aside>
+
+<div class="pl-[248px] min-h-screen flex flex-col">
+    <header th:replace="~{manager/fragments/layout :: topbar('News Management')}"></header>
+
+    <main class="relative pt-[68px] w-full min-h-screen bg-background-warm">
+        <div class="flex flex-col w-full p-7 text-[#3A2E39] pb-12 min-w-0">
+
+            <!-- Title + actions -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                <div class="flex flex-col gap-1.5 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-caption text-caption font-semibold bg-surface-peach text-cinema-red">Module M07 • News approval</span>
+                        <span class="text-[#3A2E39]/40 text-xs">•</span>
+                        <span class="font-caption text-caption text-[#4A3B49] font-medium">CINEORA Suites</span>
+                    </div>
+                    <h1 class="font-display-lg text-display-lg font-semibold tracking-tight text-[#3A2E39]">News Management</h1>
+                    <p class="font-body-md text-body-md text-[#4A3B49]">Check quality and approve cinema announcements, promotions and events before they reach customers.</p>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <button type="button" data-open="drawer-history"
+                            class="h-11 px-4 rounded-xl bg-surface-container-lowest text-[#3A2E39] font-label-md text-label-md font-medium shadow-sm hover:bg-surface-peach transition-all flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-[#4A3B49]">history</span>
+                        <span>View news review history</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status metric cards (click = filter) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
+                <a th:href="@{/manager/news(status='ALL')}"
+                   class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[96px] relative overflow-hidden hover:shadow-md transition-shadow"
+                   th:classappend="${status == 'ALL'} ? 'ring-2 ring-cinema-red/30'">
+                    <div class="flex items-center justify-between">
+                        <span class="font-caption text-caption font-medium text-[#4A3B49]">Total news</span>
+                        <div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-[#4A3B49]">
+                            <span class="material-symbols-outlined text-[18px]">article</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="font-display-lg text-display-lg font-semibold text-[#3A2E39]" th:text="${counts.total}">0</span>
+                        <span class="font-caption text-caption text-[#4A3B49]">All articles</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4A3B49]/20"></div>
+                </a>
+
+                <a th:href="@{/manager/news(status='PENDING')}"
+                   class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[96px] relative overflow-hidden hover:shadow-md transition-shadow"
+                   th:classappend="${status == 'PENDING'} ? 'ring-2 ring-cinema-red/30'">
+                    <div class="flex items-center justify-between">
+                        <span class="font-caption text-caption font-medium text-[#3A2E39]">Pending</span>
+                        <span th:if="${counts.pending > 0}"
+                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-caption text-caption font-semibold bg-[#FEF6E4] text-[#B47800]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cinema-gold animate-ping"></span>Needs attention
+                        </span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="font-display-lg text-display-lg font-semibold text-cinema-red"
+                              th:text="${#numbers.formatInteger(counts.pending, 2)}">00</span>
+                        <span class="font-caption text-caption text-[#B47800] font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+                            <span th:text="${counts.submittedToday} + ' submitted today'">0 submitted today</span>
+                        </span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-cinema-gold"></div>
+                </a>
+
+                <a th:href="@{/manager/news(status='APPROVED')}"
+                   class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[96px] relative overflow-hidden hover:shadow-md transition-shadow"
+                   th:classappend="${status == 'APPROVED'} ? 'ring-2 ring-cinema-red/30'">
+                    <div class="flex items-center justify-between">
+                        <span class="font-caption text-caption font-medium text-[#4A3B49]">Approved</span>
+                        <div class="w-7 h-7 rounded-lg bg-[#E8F5E9] flex items-center justify-center text-[#0E7044]">
+                            <span class="material-symbols-outlined icon-fill text-[18px]">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="font-display-lg text-display-lg font-semibold text-[#3A2E39]" th:text="${#numbers.formatInteger(counts.approved, 2)}">00</span>
+                        <span class="font-caption text-caption text-[#0E7044] font-medium">Ready to publish</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0E7044]/30"></div>
+                </a>
+
+                <a th:href="@{/manager/news(status='REJECTED')}"
+                   class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[96px] relative overflow-hidden hover:shadow-md transition-shadow"
+                   th:classappend="${status == 'REJECTED'} ? 'ring-2 ring-cinema-red/30'">
+                    <div class="flex items-center justify-between">
+                        <span class="font-caption text-caption font-medium text-[#4A3B49]">Rejected</span>
+                        <div class="w-7 h-7 rounded-lg bg-[#FFE8E8] flex items-center justify-center text-[#C2202E]">
+                            <span class="material-symbols-outlined text-[18px]">cancel</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="font-display-lg text-display-lg font-semibold text-[#3A2E39]" th:text="${#numbers.formatInteger(counts.rejected, 2)}">00</span>
+                        <span class="font-caption text-caption text-[#C2202E] font-medium">Needs revision</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C2202E]/30"></div>
+                </a>
+
+                <a th:href="@{/manager/news(status='PUBLISHED')}"
+                   class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between h-[96px] relative overflow-hidden hover:shadow-md transition-shadow"
+                   th:classappend="${status == 'PUBLISHED'} ? 'ring-2 ring-cinema-red/30'">
+                    <div class="flex items-center justify-between">
+                        <span class="font-caption text-caption font-medium text-[#4A3B49]">Published</span>
+                        <div class="w-7 h-7 rounded-lg bg-[#EDE8F5] flex items-center justify-center text-[#5C388E]">
+                            <span class="material-symbols-outlined text-[18px]">public</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="font-display-lg text-display-lg font-semibold text-[#3A2E39]" th:text="${#numbers.formatInteger(counts.published, 2)}">00</span>
+                        <span class="font-caption text-caption text-[#5C388E] font-medium">Online App/Web</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5C388E]/40"></div>
+                </a>
+            </div>
+
+            <!-- Filter bar -->
+            <form th:action="@{/manager/news}" method="get" id="filter-form"
+                  class="bg-surface-container-lowest rounded-xl p-4 mb-5 shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3 flex-1">
+                    <div class="relative w-full sm:w-[300px]">
+                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-[#4A3B49]/60">search</span>
+                        <input type="search" name="q" th:value="${q}" maxlength="100" placeholder="Search by title, author or code..."
+                               class="w-full h-11 pl-10 pr-4 bg-background-warm border-0 rounded-lg font-body-md text-body-md text-[#3A2E39] placeholder-[#4A3B49]/50 focus:ring-2 focus:ring-cinema-red/30">
+                    </div>
+                    <select name="status" aria-label="Status"
+                            class="w-full sm:w-[190px] h-11 bg-background-warm border-0 rounded-lg font-label-md text-label-md text-[#3A2E39] focus:ring-2 focus:ring-cinema-red/30">
+                        <option value="ALL" th:selected="${status == 'ALL'}" th:text="'All statuses (' + ${counts.total} + ')'">All statuses</option>
+                        <option value="PENDING" th:selected="${status == 'PENDING'}" th:text="'Pending (' + ${counts.pending} + ')'">Pending</option>
+                        <option value="APPROVED" th:selected="${status == 'APPROVED'}" th:text="'Approved (' + ${counts.approved} + ')'">Approved</option>
+                        <option value="REJECTED" th:selected="${status == 'REJECTED'}" th:text="'Rejected (' + ${counts.rejected} + ')'">Rejected</option>
+                        <option value="PUBLISHED" th:selected="${status == 'PUBLISHED'}" th:text="'Published (' + ${counts.published} + ')'">Published</option>
+                        <option value="DRAFT" th:selected="${status == 'DRAFT'}" th:text="'Drafts (' + ${counts.draft} + ')'">Drafts</option>
+                    </select>
+                    <select name="period" aria-label="Time"
+                            class="w-full sm:w-[170px] h-11 bg-background-warm border-0 rounded-lg font-label-md text-label-md text-[#3A2E39] focus:ring-2 focus:ring-cinema-red/30">
+                        <option value="all" th:selected="${period == 'all'}">Any time</option>
+                        <option value="week" th:selected="${period == 'week'}">This week</option>
+                        <option value="30d" th:selected="${period == '30d'}">Last 30 days</option>
+                        <option value="month" th:selected="${period == 'month'}">This month</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="submit"
+                            class="h-11 px-4 rounded-lg bg-surface-peach text-cinema-red font-label-md text-label-md font-semibold hover:bg-[#FAD5C5] transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px]">filter_alt</span><span>Filter</span>
+                    </button>
+                    <a th:href="@{/manager/news}" title="Reset filters"
+                       class="h-11 px-3 rounded-lg bg-background-warm text-[#4A3B49] font-label-md text-label-md font-medium hover:bg-surface-peach transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">restart_alt</span><span>Reset</span>
+                    </a>
+                </div>
+            </form>
+
+            <!-- Table -->
+            <div th:unless="${result.empty}" class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left border-collapse min-w-[960px]">
+                        <thead>
+                        <tr class="bg-[#FAF3EC] text-[#4A3B49] font-label-sm text-label-sm">
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold w-[90px] text-center">Image</th>
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold min-w-[280px]">News title</th>
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold w-[200px]">Created by</th>
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold w-[170px]">Time</th>
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold w-[140px] text-center">Status</th>
+                            <th class="py-3 px-4 uppercase tracking-wider font-semibold w-[210px] text-right">Review actions</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#F3EAE2] font-body-md text-body-md">
+                        <tr th:each="n : ${result.items}" class="hover:bg-[#FFF5EE] transition-colors h-[72px] group">
+                            <td class="py-3 px-4 text-center">
+                                <div class="w-16 h-11 rounded-lg overflow-hidden bg-surface-container shadow-sm mx-auto flex items-center justify-center">
+                                    <img th:if="${n.hasThumbnail()}" th:src="${n.thumbnailUrl}" alt="" loading="lazy"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    <span th:unless="${n.hasThumbnail()}" class="material-symbols-outlined text-[20px] text-outline">image</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex flex-col min-w-0">
+                                    <span class="self-start font-caption text-caption font-semibold px-1.5 py-0.5 mb-0.5 rounded bg-surface-peach text-cinema-red"
+                                          th:text="${n.code}">#NEWS-001</span>
+                                    <button type="button" th:data-detail="${n.newsId}"
+                                            class="text-left font-label-lg text-label-lg font-semibold text-[#3A2E39] hover:text-cinema-red transition-colors line-clamp-1"
+                                            th:text="${n.title}">Title</button>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-7 h-7 rounded-full bg-[#E5BDBA] text-cinema-red font-semibold text-xs flex items-center justify-center shrink-0"
+                                         th:text="${n.authorInitials}">AB</div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="font-label-md text-label-md font-medium text-[#3A2E39] truncate"
+                                              th:text="${n.authorName != null} ? ${n.authorName} : 'Unknown staff'">Author</span>
+                                        <span class="font-caption text-caption text-[#4A3B49] truncate"
+                                              th:text="${n.authorPosition != null} ? ${n.authorPosition} : 'Staff'">Staff</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex flex-col font-caption text-caption">
+                                    <span class="font-medium text-[#3A2E39]" th:text="${n.createdAtText}">01/01/2025 10:00</span>
+                                    <span th:classappend="${n.rejected} ? 'text-[#C2202E]' : (${n.approved} ? 'text-[#0E7044]' : 'text-[#4A3B49]')"
+                                          th:text="${n.activityLabel}">Updated</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <span th:if="${n.pending}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-caption text-caption font-semibold bg-[#FEF6E4] text-[#B47800]">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cinema-gold animate-pulse"></span>Pending</span>
+                                <span th:if="${n.approved}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-caption text-caption font-semibold bg-[#E8F5E9] text-[#0E7044]">
+                                    <span class="material-symbols-outlined icon-fill text-[13px]">verified</span>Approved</span>
+                                <span th:if="${n.rejected}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-caption text-caption font-semibold bg-[#FFE8E8] text-[#C2202E]">
+                                    <span class="material-symbols-outlined text-[13px]">block</span>Rejected</span>
+                                <span th:if="${n.published}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-caption text-caption font-semibold bg-[#EDE8F5] text-[#5C388E]">
+                                    <span class="material-symbols-outlined text-[13px]">public</span>Published</span>
+                                <span th:if="${n.draft}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-caption text-caption font-semibold bg-surface-container text-[#4A3B49]">
+                                    <span class="material-symbols-outlined text-[13px]">edit_note</span>Draft</span>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <th:block th:if="${n.pending}">
+                                        <button type="button" title="Approve this article"
+                                                th:attr="data-approve=@{/manager/news/{id}/approve(id=${n.newsId})},data-code=${n.code},data-title=${n.title},data-author=${n.authorName}"
+                                                class="px-2.5 py-1.5 rounded-lg bg-[#E8F5E9] text-[#0E7044] hover:bg-[#C8E6C9] font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">check</span><span>Approve</span>
+                                        </button>
+                                        <button type="button" title="Reject"
+                                                th:attr="data-reject=@{/manager/news/{id}/reject(id=${n.newsId})},data-code=${n.code}"
+                                                class="px-2.5 py-1.5 rounded-lg bg-[#FFE8E8] text-[#C2202E] hover:bg-[#FFCDD2] font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">close</span><span>Reject</span>
+                                        </button>
+                                    </th:block>
+
+                                    <form th:if="${n.approved}" method="post" th:action="@{/manager/news/{id}/publish(id=${n.newsId})}">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="returnTo" th:value="${returnTo}">
+                                        <button type="submit" th:data-confirm="'Publish ' + ${n.code} + ' to the customer pages now?'"
+                                                class="px-2.5 py-1.5 rounded-lg bg-surface-peach text-cinema-red hover:bg-[#FAD5C5] font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">send</span><span>Publish</span>
+                                        </button>
+                                    </form>
+
+                                    <form th:if="${n.published}" method="post" th:action="@{/manager/news/{id}/unpublish(id=${n.newsId})}">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="returnTo" th:value="${returnTo}">
+                                        <button type="submit" title="Unpublish"
+                                                th:data-confirm="'Unpublish ' + ${n.code} + '? It will be hidden from customers and moved back to Approved.'"
+                                                class="p-1.5 rounded-lg text-[#4A3B49] hover:bg-surface-peach hover:text-cinema-red transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">unpublished</span>
+                                        </button>
+                                    </form>
+
+                                    <th:block th:if="${n.rejected}">
+                                        <button type="button" title="View rejection reason" th:data-detail="${n.newsId}"
+                                                class="px-2.5 py-1.5 rounded-lg bg-[#FFE8E8] text-[#C2202E] hover:bg-[#FFCDD2] font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">feedback</span><span>Reason</span>
+                                        </button>
+                                        <form method="post" th:action="@{/manager/news/{id}/reopen(id=${n.newsId})}">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                            <input type="hidden" name="returnTo" th:value="${returnTo}">
+                                            <button type="submit" title="Send back to the review queue"
+                                                    th:data-confirm="'Send ' + ${n.code} + ' back to the review queue?'"
+                                                    class="p-1.5 rounded-lg text-[#0E7044] hover:bg-[#E8F5E9] transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">sync</span>
+                                            </button>
+                                        </form>
+                                    </th:block>
+
+                                    <button type="button" title="View details" th:data-detail="${n.newsId}"
+                                            class="p-1.5 rounded-lg text-[#4A3B49] hover:bg-surface-container transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    </button>
+                                </div>
+
+                                <!-- Detail content for the preview modal (cloned by manager-news.js) -->
+                                <template th:id="'news-detail-' + ${n.newsId}">
+                                    <div class="flex items-center gap-2 flex-wrap pb-3 mb-4 border-b border-[#F3EAE2]">
+                                        <span class="px-2.5 py-1 rounded bg-surface-peach text-cinema-red font-caption text-caption font-semibold" th:text="${n.code}">#NEWS</span>
+                                        <span class="px-2.5 py-1 rounded-full bg-background-warm text-[#4A3B49] font-caption text-caption font-semibold" th:text="${n.statusLabel}">Pending</span>
+                                    </div>
+                                    <div th:if="${n.hasThumbnail()}" class="w-full aspect-[16/9] rounded-xl overflow-hidden bg-surface-container mb-4">
+                                        <img th:src="${n.thumbnailUrl}" alt="" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-3 text-xs text-[#4A3B49] mb-3">
+                                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cinema-red">person</span>
+                                            Author: <strong class="text-[#3A2E39]" th:text="${n.authorName != null} ? ${n.authorName} : 'Unknown staff'">Author</strong></span>
+                                        <span>•</span>
+                                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span>
+                                            Created at: <strong class="text-[#3A2E39]" th:text="${n.createdAtText}">date</strong></span>
+                                        <th:block th:if="${n.reviewerName != null}">
+                                            <span>•</span>
+                                            <span>Last reviewed by <strong class="text-[#3A2E39]" th:text="${n.reviewerName}">Manager</strong></span>
+                                        </th:block>
+                                    </div>
+                                    <h2 class="font-headline-md text-[22px] leading-8 font-semibold text-[#3A2E39] mb-4" th:text="${n.title}">Title</h2>
+                                    <div th:if="${n.rejected and n.rejectionReason != null}" class="p-3.5 rounded-xl bg-[#FFE8E8] text-[#C2202E] mb-4">
+                                        <div class="flex items-center gap-2 font-semibold font-label-md text-label-md mb-1">
+                                            <span class="material-symbols-outlined text-[18px]">error</span><span>Rejection reason from Manager:</span>
+                                        </div>
+                                        <p class="font-body-md text-body-md pl-6" th:text="${n.rejectionReason}">reason</p>
+                                    </div>
+                                    <div class="font-body-md text-body-md text-[#4A3B49] whitespace-pre-line max-h-[300px] overflow-y-auto pr-1"
+                                         th:text="${n.content}">content</div>
+                                    <div class="flex flex-wrap items-center justify-end gap-2 pt-4 mt-4 border-t border-[#F3EAE2]">
+                                        <button type="button" data-close
+                                                class="px-4 py-2 rounded-xl text-[#4A3B49] font-label-md text-label-md font-medium hover:bg-background-warm">Close</button>
+                                        <th:block th:if="${n.pending}">
+                                            <button type="button"
+                                                    th:attr="data-reject=@{/manager/news/{id}/reject(id=${n.newsId})},data-code=${n.code}"
+                                                    class="px-4 py-2 rounded-xl bg-[#FFE8E8] text-[#C2202E] font-label-md text-label-md font-semibold flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-[16px]">close</span><span>Reject</span>
+                                            </button>
+                                            <button type="button"
+                                                    th:attr="data-approve=@{/manager/news/{id}/approve(id=${n.newsId})},data-code=${n.code},data-title=${n.title},data-author=${n.authorName}"
+                                                    class="px-4 py-2 rounded-xl bg-cinema-red text-white font-label-md text-label-md font-semibold flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-[16px]">check_circle</span><span>Approve this article</span>
+                                            </button>
+                                        </th:block>
+                                    </div>
+                                </template>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="p-4 bg-[#FAF3EC] flex flex-col sm:flex-row items-center justify-between gap-3 font-label-sm text-label-sm text-[#4A3B49]">
+                    <div class="flex items-center gap-2">
+                        <span>Showing <strong class="text-[#3A2E39]" th:text="${result.from} + ' - ' + ${result.to}">1 - 10</strong>
+                            of <strong class="text-[#3A2E39]" th:text="${result.totalItems}">0</strong> articles</span>
+                        <span class="text-[#4A3B49]/40">•</span>
+                        <select form="filter-form" name="size" aria-label="Page size" data-autosubmit
+                                class="h-8 py-0 pl-2 pr-7 bg-surface-container-lowest border-0 rounded-md text-[#3A2E39] text-[13px]">
+                            <option th:each="s : ${pageSizes}" th:value="${s}" th:selected="${s == result.size}" th:text="${s} + ' per page'">10 per page</option>
+                        </select>
+                    </div>
+                    <nav class="flex items-center gap-1" aria-label="Pagination">
+                        <a th:if="${result.hasPrevious()}"
+                           th:href="@{/manager/news(status=${status},q=${q},period=${period},size=${result.size},page=${result.page - 1})}"
+                           class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center hover:bg-surface-peach" aria-label="Previous page">
+                            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                        </a>
+                        <th:block th:each="p : ${result.pageNumbers}">
+                            <span th:if="${p == 0}" class="px-1">...</span>
+                            <a th:if="${p != 0}"
+                               th:href="@{/manager/news(status=${status},q=${q},period=${period},size=${result.size},page=${p})}"
+                               class="w-8 h-8 rounded-lg flex items-center justify-center"
+                               th:classappend="${p == result.page} ? 'bg-cinema-red text-white font-semibold' : 'bg-surface-container-lowest text-[#3A2E39] hover:bg-surface-peach'"
+                               th:text="${p}">1</a>
+                        </th:block>
+                        <a th:if="${result.hasNext()}"
+                           th:href="@{/manager/news(status=${status},q=${q},period=${period},size=${result.size},page=${result.page + 1})}"
+                           class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center hover:bg-surface-peach" aria-label="Next page">
+                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${result.empty}" class="bg-surface-container-lowest rounded-xl p-12 text-center flex flex-col items-center shadow-sm">
+                <div class="w-20 h-20 rounded-full bg-surface-peach flex items-center justify-center text-cinema-red mb-4">
+                    <span class="material-symbols-outlined text-[40px]">newspaper</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md font-semibold text-[#3A2E39] mb-1">No articles found</h3>
+                <p class="font-body-md text-body-md text-[#4A3B49] max-w-md mb-6"
+                   th:text="${status == 'PENDING' and #strings.isEmpty(q)} ? 'There are no articles waiting for review. Good job!' : 'There is currently no news matching the search criteria or filtered status. Please try again with a different keyword.'">
+                    No news.</p>
+                <a th:href="@{/manager/news(status='ALL')}" class="h-10 px-5 rounded-lg bg-cinema-red text-white font-label-md text-label-md font-medium flex items-center">Show all articles</a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ================================================= APPROVE MODAL -->
+<div id="modal-approve" class="mgr-overlay flex items-center justify-center p-4" hidden>
+    <form method="post" id="approve-form" role="dialog" aria-modal="true" aria-labelledby="approve-heading"
+          class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#F3EAE2]">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#E8F5E9] text-[#0E7044] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[22px]">verified</span>
+                </div>
+                <div>
+                    <h3 id="approve-heading" class="font-headline-sm text-headline-sm font-semibold text-[#3A2E39]">Confirm news approval</h3>
+                    <span class="font-caption text-caption text-[#4A3B49]" data-field="code">#NEWS</span>
+                </div>
+            </div>
+            <button type="button" data-close class="w-8 h-8 rounded-lg flex items-center justify-center text-[#4A3B49] hover:bg-background-warm" aria-label="Close">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+        <div class="space-y-3.5 mb-6">
+            <div class="p-3.5 rounded-xl bg-background-warm">
+                <span class="font-caption text-caption text-[#4A3B49] block mb-1">Article title:</span>
+                <p class="font-label-lg text-label-lg font-semibold text-[#3A2E39] leading-snug" data-field="title">Title</p>
+                <div class="mt-2 text-xs text-[#4A3B49]">Author: <strong class="text-[#3A2E39]" data-field="author">Author</strong></div>
+            </div>
+            <label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-lowest border border-[#F3EAE2] cursor-pointer hover:bg-background-warm">
+                <input type="radio" name="mode" value="publish" checked class="mt-0.5 text-cinema-red focus:ring-cinema-red">
+                <span class="flex flex-col">
+                    <span class="font-label-md text-label-md font-semibold text-[#3A2E39]">Approve &amp; publish immediately</span>
+                    <span class="font-caption text-caption text-[#4A3B49]">Shown to customers on the Promotions &amp; News pages right away.</span>
+                </span>
+            </label>
+            <label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-lowest border border-[#F3EAE2] cursor-pointer hover:bg-background-warm">
+                <input type="radio" name="mode" value="approve" class="mt-0.5 text-cinema-red focus:ring-cinema-red">
+                <span class="flex flex-col">
+                    <span class="font-label-md text-label-md font-semibold text-[#3A2E39]">Only save Approved status</span>
+                    <span class="font-caption text-caption text-[#4A3B49]">Keep it hidden for now and publish it later from this screen.</span>
+                </span>
+            </label>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#F3EAE2]">
+            <button type="button" data-close class="px-4 py-2.5 rounded-xl text-[#4A3B49] font-label-md text-label-md font-medium hover:bg-background-warm">Cancel</button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-cinema-red text-white font-label-md text-label-md font-semibold flex items-center gap-1.5 hover:bg-[#BF1B29]">
+                <span class="material-symbols-outlined text-[18px]">task_alt</span><span>Confirm news approval</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ================================================= REJECT MODAL -->
+<div id="modal-reject" class="mgr-overlay flex items-center justify-center p-4" hidden>
+    <form method="post" id="reject-form" role="dialog" aria-modal="true" aria-labelledby="reject-heading" novalidate
+          class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#F3EAE2]">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#FFE8E8] text-[#C2202E] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[22px]">assignment_late</span>
+                </div>
+                <div>
+                    <h3 id="reject-heading" class="font-headline-sm text-headline-sm font-semibold text-[#3A2E39]">Reject news</h3>
+                    <span class="font-caption text-caption text-cinema-red font-semibold" data-field="code">#NEWS</span>
+                </div>
+            </div>
+            <button type="button" data-close class="w-8 h-8 rounded-lg flex items-center justify-center text-[#4A3B49] hover:bg-background-warm" aria-label="Close">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+        <p class="font-body-md text-body-md text-[#4A3B49] mb-3">Please provide a rejection reason so the author knows what to adjust:</p>
+        <div class="mb-3">
+            <span class="font-caption text-caption font-semibold text-[#3A2E39] block mb-1.5">Quick reasons:</span>
+            <div class="flex flex-wrap gap-1.5">
+                <button type="button" data-reason="Image resolution does not meet the sharp 16:9 standard." class="px-2.5 py-1 rounded-md bg-background-warm hover:bg-surface-peach font-caption text-caption text-[#4A3B49]">Image does not meet standards</button>
+                <button type="button" data-reason="Incorrect applied time or showtime information." class="px-2.5 py-1 rounded-md bg-background-warm hover:bg-surface-peach font-caption text-caption text-[#4A3B49]">Incorrect program information</button>
+                <button type="button" data-reason="Missing detailed terms and conditions." class="px-2.5 py-1 rounded-md bg-background-warm hover:bg-surface-peach font-caption text-caption text-[#4A3B49]">Missing detailed terms</button>
+                <button type="button" data-reason="Content duplicates a program that is already published." class="px-2.5 py-1 rounded-md bg-background-warm hover:bg-surface-peach font-caption text-caption text-[#4A3B49]">Duplicate content</button>
+            </div>
+        </div>
+        <div class="mb-5">
+            <label for="reject-reason" class="font-label-md text-label-md font-medium text-[#3A2E39] block mb-1">
+                Specific rejection reason <span class="text-cinema-red font-semibold">(*)</span>
+            </label>
+            <textarea id="reject-reason" name="reason" th:maxlength="${reasonMax}" required
+                      placeholder="Enter a detailed reason (e.g.: missing contact info, copyright-infringing images, typos...)"
+                      class="w-full h-28 p-3 rounded-xl bg-background-warm border-0 font-body-md text-body-md text-[#3A2E39] focus:ring-2 focus:ring-cinema-red/30 resize-none"></textarea>
+            <div class="flex items-center justify-between mt-1">
+                <span id="reject-error" class="font-caption text-caption text-[#ba1a1a]" hidden>Please enter a rejection reason before confirming.</span>
+                <span id="reject-count" class="font-caption text-caption text-[#4A3B49] ml-auto" th:text="'0/' + ${reasonMax} + ' characters'">0/300 characters</span>
+            </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#F3EAE2]">
+            <button type="button" data-close class="px-4 py-2.5 rounded-xl text-[#4A3B49] font-label-md text-label-md font-medium hover:bg-background-warm">Cancel</button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#C2202E] text-white font-label-md text-label-md font-semibold flex items-center gap-1.5 hover:bg-[#A51B27]">
+                <span class="material-symbols-outlined text-[18px]">cancel</span><span>Confirm rejection</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ================================================= DETAIL MODAL -->
+<div id="modal-detail" class="mgr-overlay flex items-center justify-center p-4" hidden>
+    <div role="dialog" aria-modal="true" aria-label="Article details"
+         class="bg-surface-container-lowest rounded-2xl max-w-[760px] w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl" id="detail-body"></div>
+</div>
+
+<!-- ================================================= HISTORY DRAWER -->
+<div id="drawer-history" class="mgr-overlay flex justify-end" hidden>
+    <div role="dialog" aria-modal="true" aria-labelledby="history-heading"
+         class="bg-surface-container-lowest w-full max-w-md h-full shadow-2xl flex flex-col">
+        <div class="p-5 border-b border-[#F3EAE2] flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-surface-peach text-cinema-red flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[20px]">history</span>
+                </div>
+                <div>
+                    <h3 id="history-heading" class="font-headline-sm text-headline-sm font-semibold text-[#3A2E39]">News review history</h3>
+                    <span class="font-caption text-caption text-[#4A3B49]">Latest 30 review actions</span>
+                </div>
+            </div>
+            <button type="button" data-close class="w-8 h-8 rounded-lg flex items-center justify-center text-[#4A3B49] hover:bg-background-warm" aria-label="Close">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-5 space-y-4">
+            <div th:each="h : ${history}" class="p-3 rounded-xl bg-background-warm border-l-4" th:classappend="${h.toneClass}">
+                <span class="font-caption text-caption text-[#4A3B49] block" th:text="${h.createdAtText}">date</span>
+                <p class="font-label-md text-label-md font-semibold text-[#3A2E39]"
+                   th:text="${(h.reviewerName != null ? h.reviewerName : 'Someone') + ' ' + h.actionVerb + ' ' + h.code}">Manager approved #NEWS-001</p>
+                <p class="font-caption text-caption mt-0.5"
+                   th:classappend="${h.action == 'REJECT'} ? 'text-[#C2202E]' : 'text-[#4A3B49]'"
+                   th:text="${h.action == 'REJECT'} ? ('Reason: ' + ${h.note}) : ${h.newsTitle}">note</p>
+            </div>
+            <div th:if="${#lists.isEmpty(history)}" class="text-center py-10 font-label-sm text-label-sm text-[#4A3B49]">
+                No review actions recorded yet.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{manager/fragments/layout :: toast}"></div>
+
+<script th:src="@{/js/manager-news.js}"></script>
+</body>
+</html>

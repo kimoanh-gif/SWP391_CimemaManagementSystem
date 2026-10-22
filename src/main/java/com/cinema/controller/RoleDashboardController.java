@@ -36,13 +36,7 @@ public class RoleDashboardController {
         return "staff/dashboard";
     }
 
-    @GetMapping("/manager/dashboard")
-    public String manager(HttpSession session, Model model) {
-        if (!sessionService.hasRole(session, "MANAGER", "ADMIN"))
-            return "redirect:/login";
-        model.addAttribute("user", sessionService.getCurrentUser(session));
-        return "manager/dashboard";
-    }
+    // "/manager/dashboard" is served by ManagerDashboardController (M01).
 
     @GetMapping("/admin/dashboard")
     public String admin(HttpSession session, Model model) {
