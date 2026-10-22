@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>System Configuration | CinemaSystem</title>
+<title>System Configuration | CINEORA</title>
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 <style>
 /* Page Layout */
@@ -92,6 +92,8 @@
   .category-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 8px; }
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/cineora-admin.css" th:href="@{/css/cineora-admin.css}">
 </head>
 <body>
 
@@ -103,8 +105,8 @@
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
     <a th:href="@{/admin/dashboard}" class="sidebar-brand">
-      <div class="brand-icon">▶</div>
-      <div class="brand-text">CINEMA<span>SYSTEM</span></div>
+      <img class="cineora-brand-logo" src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo">
+      <div class="brand-text">CINEORA<span>Every Story Begins Here</span></div>
     </a>
     <div class="sidebar-section">Management</div>
     <nav class="sidebar-nav">
