@@ -1,0 +1,40 @@
+:root{--red:#D92332;--gold:#F2B84B;--peach:#FFE5D9;--cream:#FFF8F0;--ink:#28202A;--muted:#6d5a51}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:'Be Vietnam Pro',sans-serif;min-height:100vh}header{height:76px;display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:auto;padding:0 24px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.brand img{height:42px;width:42px;border-radius:11px;object-fit:cover}.brand strong{display:block;color:var(--red);font-size:20px;letter-spacing:.5px}.brand small{font-size:11px;color:var(--muted)}a{color:var(--red);text-decoration:none}a:hover{text-decoration:underline}.nav{font-size:13px;font-weight:600}main{display:flex;align-items:center;justify-content:center;padding:32px 18px 70px;min-height:calc(100vh - 76px);background:radial-gradient(circle at 15% 20%,#ffe5d980,transparent 35%),radial-gradient(circle at 85% 85%,#f2b84b1c,transparent 35%)}.card{width:100%;max-width:490px;background:#fff;border-radius:20px;padding:38px;box-shadow:0 15px 50px #28202a12;border-top:5px solid var(--red);text-align:center}.emblem{height:64px;width:64px;border-radius:18px;background:var(--peach);display:grid;place-items:center;margin:0 auto 18px;color:var(--red);font-size:29px}.step{display:inline-block;color:var(--red);background:#fff0eb;border-radius:20px;padding:6px 13px;font-size:11px;font-weight:700;letter-spacing:.08em}h1{font-size:27px;line-height:1.25;margin:17px 0 10px}p{font-size:13px;line-height:1.8;color:var(--muted);margin:0}.email{display:inline-block;margin:15px 0 23px;background:#fff3ed;padding:9px 15px;border-radius:9px;font-weight:600;font-size:13px;overflow-wrap:anywhere}.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:8px 0 15px}.otp input{width:100%;height:58px;border:1px solid #e7d8d2;border-radius:10px;background:#fffaf7;text-align:center;font:700 24px 'Be Vietnam Pro',sans-serif;color:var(--ink);outline:none}.otp input:focus{border-color:var(--red);box-shadow:0 0 0 3px #d9233220}.hint{font-size:12px;margin-bottom:20px}.message{display:none;padding:11px 13px;border-radius:9px;text-align:left;font-size:12px;margin-bottom:15px}.message.error{display:block;background:#fff0ef;color:#a71e2c}.message.info{display:block;background:#fff3e6;color:#664800}.primary{border:0;width:100%;height:48px;border-radius:10px;background:var(--red);color:white;font:600 14px 'Be Vietnam Pro',sans-serif;cursor:pointer}.primary:hover{background:#b91c2b}.primary:disabled{opacity:.65;cursor:wait}.resend{margin-top:22px;font-size:12px;color:var(--muted)}.resend button{border:0;background:none;color:var(--red);font:600 12px 'Be Vietnam Pro',sans-serif;cursor:pointer;padding:5px}.resend button:disabled{color:#9b8b86;cursor:not-allowed}.back{display:block;margin-top:22px;font-size:12px}@media(max-width:520px){header{padding:0 16px}.card{padding:27px 20px}.otp{gap:6px}.otp input{height:48px;font-size:20px}h1{font-size:23px}}
+/* Existing OTP controls retain their original IDs, bindings and handlers. */
+.emblem img { width:64px; height:64px; border-radius:18px; object-fit:cover; }
+.auth-field { margin: 8px 0 20px; }
+.auth-field label { display:block; text-align:left; margin-bottom:9px; font-size:12px; font-weight:600; }
+.auth-input-wrap > svg { display:none; }
+.otp-input { width:100%; min-width:0; height:58px; border:1px solid #e7d8d2; border-radius:10px; background:#fffaf7; text-align:center; font:700 26px 'Be Vietnam Pro',sans-serif; letter-spacing:.5em; color:var(--ink); outline:none; }
+.otp-input:focus, .otp-digit:focus { border-color:var(--red); box-shadow:0 0 0 3px #d9233220; outline:none; }
+.auth-input-wrap.invalid input { border-color:var(--red); }
+.auth-error { color:#a71e2c; font-size:12px; text-align:left; margin-top:7px; }
+.auth-notice { padding:11px 13px; border-radius:9px; text-align:left; font-size:12px; line-height:1.7; margin-bottom:15px; overflow-wrap:anywhere; }
+.auth-notice.error, .otp-status.error { background:#fff0ef; color:#a71e2c; }
+.auth-notice.success, .otp-status.success, .next-step-notice { background:#f1f9ef; color:#356e3c; }
+.auth-notice.warning, .otp-status.waiting { background:#fff3e6; color:#664800; }
+.auth-btn { display:flex; align-items:center; justify-content:center; gap:10px; border:0; width:100%; min-height:48px; padding:12px; border-radius:10px; background:var(--red); color:white; font:600 14px 'Be Vietnam Pro',sans-serif; cursor:pointer; }
+.auth-btn:hover { background:#b91c2b; }
+.auth-btn:disabled { opacity:.65; cursor:wait; }
+.auth-btn .spinner { display:none; width:17px; height:17px; border:2px solid #ffffff66; border-top-color:white; border-radius:50%; animation:spin .8s linear infinite; }
+.auth-btn.loading .spinner { display:block; }
+.otp-resend { margin-top:22px; font-size:12px; color:var(--muted); line-height:1.8; }
+.otp-resend a { font-weight:600; padding:5px; }
+.auth-bottom { margin-top:22px; font-size:12px; }
+.otp-input-wrap { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:9px; margin:8px 0 20px; }
+.otp-digit { width:100%; min-width:0; height:58px; border:1px solid #e7d8d2; border-radius:10px; background:#fffaf7; text-align:center; font:700 24px 'Be Vietnam Pro',sans-serif; color:var(--ink); }
+.otp-digit.error { border-color:#a71e2c; }
+.otp-digit.success { border-color:#356e3c; background:#f1f9ef; }
+.otp-digit:disabled { opacity:.7; cursor:not-allowed; }
+.otp-status { padding:11px 13px; border-radius:9px; font-size:12px; margin-bottom:15px; }
+.otp-status:empty { display:none; }
+.otp-countdown-wrap { margin:20px 0; }
+.otp-countdown-bar { height:6px; background:#f5e8e1; border-radius:3px; overflow:hidden; }
+.otp-countdown-fill { height:100%; background:linear-gradient(90deg,var(--red),var(--gold)); transition:width 1s linear; }
+.otp-countdown-text { font-size:12px; color:var(--muted); margin-top:10px; }
+.otp-countdown-text span { color:var(--red); font-weight:700; }
+.next-step-notice { padding:14px; margin:16px 0; border-radius:9px; font-size:12px; line-height:1.7; }
+a:focus-visible, button:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@media(max-width:520px) { .otp-input-wrap { gap:6px; } .otp-digit { height:48px; font-size:20px; } .otp-input { font-size:22px; letter-spacing:.35em; } }
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+

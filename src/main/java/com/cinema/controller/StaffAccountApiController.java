@@ -59,6 +59,10 @@ public class StaffAccountApiController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Map<String, String> body) {
+        if (body.get("password") == null || !body.get("password").equals(body.get("confirmPassword"))) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false, "code", "PASSWORD_MISMATCH", "message", "Passwords do not match."));
+        }
         var result = service.createAccount(
                 body.get("username"),
                 body.get("email"),

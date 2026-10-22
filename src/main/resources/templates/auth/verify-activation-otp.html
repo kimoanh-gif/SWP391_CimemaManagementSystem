@@ -1,30 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Xác minh OTP | CinemaSystem</title>
-<link rel="stylesheet" th:href="@{/css/auth.css}">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verify Your Email | CINEORA</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/cineora-otp.css" th:href="@{/css/cineora-otp.css}">
 </head>
 <body th:attr="data-redirect-delay=${redirectDelay}">
-<div class="auth-page">
-  <aside class="auth-hero" aria-label="Không gian rạp chiếu phim">
-    <div class="auth-hero-caption">
-      <div class="eyebrow">Account activation</div>
-      <h1>Một bước nữa<br>để hoàn tất.</h1>
-      <div class="line"></div>
-      <p>Chúng tôi đã gửi mã xác minh 6 chữ số đến email của bạn. Vui lòng kiểm tra hộp thư đến (hoặc thư mục spam).</p>
-    </div>
-  </aside>
-
-  <main class="auth-panel-wrap">
-    <section class="auth-panel" aria-labelledby="otp-title">
-      <div class="auth-brand-mobile">
-        <span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span>
-      </div>
-      <h2 id="otp-title">Kích hoạt tài khoản</h2>
-      <p class="auth-intro">Nhập mã OTP gồm 6 chữ số đã gửi đến email của bạn.</p>
-
-      <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
+<header><a class="brand" href="/" th:href="@{/}"><img src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo"><span><strong>CINEORA</strong><small>Every Story Begins Here</small></span></a><a class="nav" href="/register" th:href="@{/register}">Back to Register</a></header>
+<main><section class="card" aria-labelledby="otp-title">
+ <div class="emblem"><img src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA"></div>
+ <span class="step">STEP 2 OF 2</span><h1 id="otp-title">Verify Your Email</h1>
+ <p>Enter the 6-digit verification code sent to your email address.</p>
+ <div class="email" th:if="${email}" th:text="${email}">Your registered email</div>
+ <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
       <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
       <div class="auth-notice success" id="activationSuccess" role="status"
            th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
@@ -59,10 +48,7 @@
       </div>
 
       <div class="auth-bottom"><a th:href="@{/login}">← Quay lại đăng nhập</a></div>
-    </section>
-  </main>
-</div>
-
+ </section></main>
 <script>
 (() => {
   // Check if an error was just shown (prevent auto-submit race condition)

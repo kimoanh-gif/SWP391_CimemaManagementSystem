@@ -39,10 +39,10 @@ import java.util.regex.Pattern;
 @Service
 public class AuthService {
 
-    private static final Pattern EMAIL_RE    = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    private static final Pattern PHONE_RE    = Pattern.compile("^(0|\\+84)[0-9]{9,10}$");
-    private static final Pattern USERNAME_RE = Pattern.compile("^[A-Za-z0-9_.-]{4,50}$");
-    private static final Pattern PASSWORD_RE = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,128}$");
+    private static final Pattern EMAIL_RE    = com.cinema.util.AccountValidation.EMAIL;
+    private static final Pattern PHONE_RE    = com.cinema.util.AccountValidation.PHONE;
+    private static final Pattern USERNAME_RE = com.cinema.util.AccountValidation.USERNAME;
+    private static final Pattern PASSWORD_RE = com.cinema.util.AccountValidation.PASSWORD;
 
     private final AccountDAO       accountDAO;
     private final RoleDAO          roleDAO;
