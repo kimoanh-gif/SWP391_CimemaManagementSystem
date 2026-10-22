@@ -202,7 +202,8 @@ public class CustomerBookingDAO {
         jdbcTemplate.update("""
                 UPDATE b
                 SET Subtotal = totals.Subtotal,
-                    TotalAmount = totals.Subtotal - b.DiscountAmount
+                    TotalAmount = CASE WHEN totals.Subtotal < COALESCE(b.DiscountAmount, 0) THEN 0
+                                       ELSE totals.Subtotal - COALESCE(b.DiscountAmount, 0) END
                 FROM dbo.Booking b
                 CROSS APPLY (
                     SELECT
