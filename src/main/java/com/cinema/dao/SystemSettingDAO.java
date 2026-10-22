@@ -18,6 +18,11 @@ public class SystemSettingDAO {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<SystemSetting> rowMapper = (rs, rowNum) -> mapResultSetToModel(rs);
+    private static final String SELECT_COLUMNS = """
+            SELECT SettingID, SettingKey, SettingName, Category, ValueType,
+                   Value, DefaultValue, [Description], ValidationRules,
+                   IsActive, UpdatedAt AS CreatedAt, UpdatedAt
+            """;
 
     @Autowired
     public SystemSettingDAO(JdbcTemplate jdbcTemplate) {
@@ -46,9 +51,7 @@ public class SystemSettingDAO {
     // ==================== READ OPERATIONS ====================
 
     public Optional<SystemSetting> findByKey(String settingKey) {
-        String sql = """
-            SELECT SettingID, SettingKey, SettingName, Category, ValueType, Value,
-                   DefaultValue, Description, ValidationRules, IsActive, CreatedAt, UpdatedAt
+        String sql = SELECT_COLUMNS + """
             FROM dbo.SystemSetting
             WHERE UPPER(LTRIM(RTRIM(SettingKey))) = UPPER(LTRIM(RTRIM(?)))
             """;
@@ -60,9 +63,7 @@ public class SystemSettingDAO {
     }
 
     public Optional<SystemSetting> findById(int settingId) {
-        String sql = """
-            SELECT SettingID, SettingKey, SettingName, Category, ValueType, Value,
-                   DefaultValue, Description, ValidationRules, IsActive, CreatedAt, UpdatedAt
+        String sql = SELECT_COLUMNS + """
             FROM dbo.SystemSetting WHERE SettingID = ?
             """;
         try {
@@ -73,28 +74,22 @@ public class SystemSettingDAO {
     }
 
     public List<SystemSetting> findAll() {
-        return jdbcTemplate.query("""
-            SELECT SettingID, SettingKey, SettingName, Category, ValueType, Value,
-                   DefaultValue, Description, ValidationRules, IsActive, CreatedAt, UpdatedAt
-            FROM dbo.SystemSetting ORDER BY Category, SettingName
+        return jdbcTemplate.query(SELECT_COLUMNS + """
+            FROM dbo.SystemSetting ORDER BY SettingKey
             """, rowMapper);
     }
 
     public List<SystemSetting> findByCategory(String category) {
-        return jdbcTemplate.query("""
-            SELECT SettingID, SettingKey, SettingName, Category, ValueType, Value,
-                   DefaultValue, Description, ValidationRules, IsActive, CreatedAt, UpdatedAt
-            FROM dbo.SystemSetting 
-            WHERE UPPER(LTRIM(RTRIM(Category))) = UPPER(LTRIM(RTRIM(?)))
-            ORDER BY SettingName
+        return jdbcTemplate.query(SELECT_COLUMNS + """
+            FROM dbo.SystemSetting
+            WHERE UPPER(Category) = UPPER(LTRIM(RTRIM(?)))
+            ORDER BY SettingKey
             """, rowMapper, category);
     }
 
     public List<SystemSetting> findActive() {
-        return jdbcTemplate.query("""
-            SELECT SettingID, SettingKey, SettingName, Category, ValueType, Value,
-                   DefaultValue, Description, ValidationRules, IsActive, CreatedAt, UpdatedAt
-            FROM dbo.SystemSetting WHERE IsActive = 1 ORDER BY Category, SettingName
+        return jdbcTemplate.query(SELECT_COLUMNS + """
+            FROM dbo.SystemSetting WHERE IsActive = 1 ORDER BY SettingKey
             """, rowMapper);
     }
 
@@ -109,21 +104,22 @@ public class SystemSettingDAO {
 
     public int insert(SystemSetting setting) {
         String sql = """
-            INSERT INTO dbo.SystemSetting (SettingKey, SettingName, Category, ValueType, Value,
-                                          DefaultValue, Description, ValidationRules, IsActive)
+            INSERT INTO dbo.SystemSetting
+                (SettingKey, Value, [Description], SettingName, Category, ValueType,
+                 DefaultValue, ValidationRules, IsActive)
             OUTPUT inserted.SettingID
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         Integer id = jdbcTemplate.queryForObject(sql, Integer.class,
                 setting.getSettingKey(),
+                setting.getValue(),
+                setting.getDescription(),
                 setting.getSettingName(),
                 setting.getCategory(),
                 setting.getValueType(),
-                setting.getValue(),
                 setting.getDefaultValue(),
-                setting.getDescription(),
                 setting.getValidationRules(),
-                setting.getIsActive() != null ? setting.getIsActive() : true);
+                !Boolean.FALSE.equals(setting.getIsActive()));
         return id != null ? id : 0;
     }
 
@@ -135,18 +131,20 @@ public class SystemSettingDAO {
 
     public int update(SystemSetting setting) {
         return jdbcTemplate.update("""
-            UPDATE dbo.SystemSetting 
-            SET SettingName = ?, ValueType = ?, Value = ?, DefaultValue = ?,
-                Description = ?, ValidationRules = ?, IsActive = ?, UpdatedAt = SYSDATETIME()
+            UPDATE dbo.SystemSetting
+            SET Value = ?, [Description] = ?, SettingName = ?, Category = ?,
+                ValueType = ?, DefaultValue = ?, ValidationRules = ?, IsActive = ?,
+                UpdatedAt = SYSDATETIME()
             WHERE SettingID = ?
             """,
-                setting.getSettingName(),
-                setting.getValueType(),
                 setting.getValue(),
-                setting.getDefaultValue(),
                 setting.getDescription(),
+                setting.getSettingName(),
+                setting.getCategory(),
+                setting.getValueType(),
+                setting.getDefaultValue(),
                 setting.getValidationRules(),
-                setting.getIsActive(),
+                !Boolean.FALSE.equals(setting.getIsActive()),
                 setting.getSettingId());
     }
 
@@ -156,7 +154,7 @@ public class SystemSettingDAO {
 
     public int countByCategory(String category) {
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM dbo.SystemSetting WHERE UPPER(LTRIM(RTRIM(Category))) = UPPER(LTRIM(RTRIM(?)))",
+            "SELECT COUNT(*) FROM dbo.SystemSetting WHERE UPPER(Category) = UPPER(LTRIM(RTRIM(?)))",
             Integer.class, category);
         return count != null ? count : 0;
     }

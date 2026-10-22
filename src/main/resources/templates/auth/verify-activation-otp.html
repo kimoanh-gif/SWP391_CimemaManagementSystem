@@ -26,7 +26,8 @@
 
       <div class="auth-notice error"   role="alert"  th:if="${formError}"  th:text="${formError}"></div>
       <div class="auth-notice success" role="status" th:if="${formSuccess}" th:text="${formSuccess}"></div>
-      <div class="auth-notice success" role="status" th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
+      <div class="auth-notice success" id="activationSuccess" role="status"
+           th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
 
       <!-- Fallback OTP display when email delivery fails -->
       <div class="auth-notice warning" role="alert" th:if="${fallbackOtp}">
@@ -66,8 +67,8 @@
 (() => {
   // Check if an error was just shown (prevent auto-submit race condition)
   const hasError = document.querySelector('.auth-notice.error') !== null;
-  const hasSuccess = document.querySelector('.auth-notice.success') !== null;
-  const shouldPreventAutoSubmit = hasError || hasSuccess;
+  const activationSucceeded = document.getElementById('activationSuccess') !== null;
+  const shouldPreventAutoSubmit = hasError || activationSucceeded;
 
   // Auto-submit when 6 digits entered (only if no error/success message shown)
   const otp = document.getElementById('otp');
@@ -92,7 +93,7 @@
   }
 
   // If success message shown, auto-redirect after delay
-  if (hasSuccess) {
+  if (activationSucceeded) {
     const redirectDelay = parseInt(document.body.getAttribute('data-redirect-delay') || '5000', 10);
     setTimeout(() => {
       window.location.href = '/login?activated';

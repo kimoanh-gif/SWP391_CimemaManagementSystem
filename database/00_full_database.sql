@@ -53,12 +53,47 @@ BEGIN
     CREATE TABLE dbo.MembershipRank (
         RankID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MembershipRank PRIMARY KEY,
         [Name] NVARCHAR(50) NOT NULL CONSTRAINT UQ_MembershipRank_Name UNIQUE,
-        MinTierPoints INT NOT NULL,
-        BenefitDescription NVARCHAR(500) NULL,
-        [Status] VARCHAR(30) NOT NULL CONSTRAINT DF_MembershipRank_Status DEFAULT 'ACTIVE',
-        CONSTRAINT CK_MembershipRank_MinTierPoints CHECK (MinTierPoints >= 0)
+        DisplayName NVARCHAR(100) NULL,
+        MinPoints INT NOT NULL CONSTRAINT DF_MembershipRank_MinPoints DEFAULT 0,
+        MaxPoints INT NULL,
+        Benefits NVARCHAR(MAX) NULL,
+        DiscountPercent DECIMAL(5, 2) NULL CONSTRAINT DF_MembershipRank_Discount DEFAULT 0,
+        IsActive BIT NOT NULL CONSTRAINT DF_MembershipRank_IsActive DEFAULT 1,
+        CONSTRAINT CK_MembershipRank_MinPoints CHECK (MinPoints >= 0)
     );
 END;
+
+/* Upgrade an existing database that still has the legacy rank columns. */
+IF COL_LENGTH(N'dbo.MembershipRank', N'DisplayName') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD DisplayName NVARCHAR(100) NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'MinPoints') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD MinPoints INT NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'MaxPoints') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD MaxPoints INT NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'Benefits') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD Benefits NVARCHAR(MAX) NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'DiscountPercent') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD DiscountPercent DECIMAL(5, 2) NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'IsActive') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD IsActive BIT NULL;
+
+IF COL_LENGTH(N'dbo.MembershipRank', N'MinTierPoints') IS NOT NULL
+BEGIN
+    EXEC(N'UPDATE dbo.MembershipRank SET MinPoints = COALESCE(MinPoints, MinTierPoints)');
+    /* Keep the legacy column only for backward compatibility; new writes no longer populate it. */
+    EXEC(N'ALTER TABLE dbo.MembershipRank ALTER COLUMN MinTierPoints INT NULL');
+END;
+IF COL_LENGTH(N'dbo.MembershipRank', N'BenefitDescription') IS NOT NULL
+    EXEC(N'UPDATE dbo.MembershipRank SET Benefits = COALESCE(Benefits, BenefitDescription)');
+IF COL_LENGTH(N'dbo.MembershipRank', N'Status') IS NOT NULL
+    EXEC(N'UPDATE dbo.MembershipRank SET IsActive = COALESCE(IsActive, CASE WHEN [Status] = ''ACTIVE'' THEN 1 ELSE 0 END)');
+EXEC(N'UPDATE dbo.MembershipRank
+       SET DisplayName = COALESCE(DisplayName, [Name]),
+           MinPoints = COALESCE(MinPoints, 0),
+           DiscountPercent = COALESCE(DiscountPercent, 0),
+           IsActive = COALESCE(IsActive, 1)');
+ALTER TABLE dbo.MembershipRank ALTER COLUMN MinPoints INT NOT NULL;
+ALTER TABLE dbo.MembershipRank ALTER COLUMN IsActive BIT NOT NULL;
 
 IF OBJECT_ID(N'dbo.Account', N'U') IS NULL
 BEGIN
@@ -74,9 +109,19 @@ BEGIN
         EmailVerifiedAt DATETIME2 NULL,
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Account_CreatedAt DEFAULT SYSDATETIME(),
         LastLoginAt DATETIME2 NULL,
+        CurrentAddress NVARCHAR(255) NULL,
+        AvatarUrl NVARCHAR(500) NULL,
+        Notes NVARCHAR(500) NULL,
         CONSTRAINT FK_Account_Role FOREIGN KEY (RoleID) REFERENCES dbo.[Role](RoleID)
     );
 END;
+
+IF COL_LENGTH(N'dbo.Account', N'CurrentAddress') IS NULL
+    ALTER TABLE dbo.Account ADD CurrentAddress NVARCHAR(255) NULL;
+IF COL_LENGTH(N'dbo.Account', N'AvatarUrl') IS NULL
+    ALTER TABLE dbo.Account ADD AvatarUrl NVARCHAR(500) NULL;
+IF COL_LENGTH(N'dbo.Account', N'Notes') IS NULL
+    ALTER TABLE dbo.Account ADD Notes NVARCHAR(500) NULL;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Account') AND [name] = N'UX_Account_Phone')
     CREATE UNIQUE INDEX UX_Account_Phone ON dbo.Account(Phone) WHERE Phone IS NOT NULL;
@@ -614,13 +659,45 @@ BEGIN
     CREATE TABLE dbo.SystemSetting (
         SettingID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SystemSetting PRIMARY KEY,
         SettingKey VARCHAR(100) NOT NULL CONSTRAINT UQ_SystemSetting_Key UNIQUE,
-        SettingValue NVARCHAR(MAX) NULL,
+        Value NVARCHAR(MAX) NULL,
         [Description] NVARCHAR(500) NULL,
         UpdatedByAccountID INT NULL,
         UpdatedAt DATETIME2 NOT NULL CONSTRAINT DF_SystemSetting_UpdatedAt DEFAULT SYSDATETIME(),
+        SettingName NVARCHAR(255) NULL,
+        Category NVARCHAR(100) NULL,
+        ValueType NVARCHAR(50) NULL,
+        DefaultValue NVARCHAR(MAX) NULL,
+        ValidationRules NVARCHAR(MAX) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_SystemSetting_IsActive DEFAULT 1,
         CONSTRAINT FK_SystemSetting_Account FOREIGN KEY (UpdatedByAccountID) REFERENCES dbo.Account(AccountID)
     );
 END;
+
+/* Upgrade an existing database that still uses SettingValue. */
+IF COL_LENGTH(N'dbo.SystemSetting', N'Value') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD Value NVARCHAR(MAX) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'SettingName') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD SettingName NVARCHAR(255) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'Category') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD Category NVARCHAR(100) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'ValueType') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD ValueType NVARCHAR(50) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'DefaultValue') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD DefaultValue NVARCHAR(MAX) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'ValidationRules') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD ValidationRules NVARCHAR(MAX) NULL;
+IF COL_LENGTH(N'dbo.SystemSetting', N'IsActive') IS NULL
+    ALTER TABLE dbo.SystemSetting ADD IsActive BIT NULL;
+
+IF COL_LENGTH(N'dbo.SystemSetting', N'SettingValue') IS NOT NULL
+    EXEC(N'UPDATE dbo.SystemSetting SET Value = COALESCE(Value, SettingValue)');
+EXEC(N'UPDATE dbo.SystemSetting
+       SET SettingName = COALESCE(SettingName, SettingKey),
+           Category = COALESCE(Category,
+               CASE WHEN CHARINDEX(''_'', SettingKey) > 0 THEN LEFT(SettingKey, CHARINDEX(''_'', SettingKey) - 1) ELSE N''SYSTEM'' END),
+           ValueType = COALESCE(ValueType, CASE WHEN TRY_CONVERT(DECIMAL(38, 10), Value) IS NOT NULL THEN N''NUMBER'' ELSE N''STRING'' END),
+           DefaultValue = COALESCE(DefaultValue, Value),
+           IsActive = COALESCE(IsActive, 1)');
 
 IF OBJECT_ID(N'dbo.OtpToken', N'U') IS NULL
 BEGIN
@@ -635,9 +712,13 @@ BEGIN
         AttemptCount INT NOT NULL CONSTRAINT DF_OtpToken_AttemptCount DEFAULT 0,
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OtpToken_CreatedAt DEFAULT SYSDATETIME(),
         LastSentAt DATETIME2 NULL,
+        LockedUntil DATETIME2 NULL,
         CONSTRAINT FK_OtpToken_Account FOREIGN KEY (AccountID) REFERENCES dbo.Account(AccountID)
     );
 END;
+
+IF COL_LENGTH(N'dbo.OtpToken', N'LockedUntil') IS NULL
+    ALTER TABLE dbo.OtpToken ADD LockedUntil DATETIME2 NULL;
 
 IF OBJECT_ID(N'dbo.LoginAttempt', N'U') IS NULL
 BEGIN
@@ -652,6 +733,36 @@ BEGIN
         AttemptedAt DATETIME2 NOT NULL CONSTRAINT DF_LoginAttempt_At DEFAULT SYSDATETIME()
     );
 END;
+
+IF OBJECT_ID(N'dbo.OtpAttempt', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.OtpAttempt (
+        AttemptID BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OtpAttempt PRIMARY KEY,
+        OtpTokenID BIGINT NULL,
+        Email NVARCHAR(255) NOT NULL,
+        Purpose NVARCHAR(50) NOT NULL,
+        IpAddress NVARCHAR(45) NOT NULL,
+        UserAgent NVARCHAR(500) NULL,
+        AttemptResult VARCHAR(30) NOT NULL,
+        AttemptedAt DATETIME2 NOT NULL CONSTRAINT DF_OtpAttempt_At DEFAULT SYSDATETIME()
+    );
+END;
+
+IF OBJECT_ID(N'dbo.IpRateLimit', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.IpRateLimit (
+        RateLimitID BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_IpRateLimit PRIMARY KEY,
+        IpAddress NVARCHAR(45) NOT NULL,
+        [Action] VARCHAR(50) NOT NULL,
+        WindowStart DATETIME2 NOT NULL CONSTRAINT DF_IpRateLimit_Window DEFAULT SYSDATETIME(),
+        AttemptCount INT NOT NULL CONSTRAINT DF_IpRateLimit_Count DEFAULT 0,
+        LockedUntil DATETIME2 NULL,
+        LastUpdatedAt DATETIME2 NOT NULL CONSTRAINT DF_IpRateLimit_Updated DEFAULT SYSDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.IpRateLimit') AND [name] = N'UX_IpRateLimit_Key')
+    CREATE UNIQUE INDEX UX_IpRateLimit_Key ON dbo.IpRateLimit(IpAddress, [Action]);
 
 IF OBJECT_ID(N'dbo.OAuthAccount', N'U') IS NULL
 BEGIN
@@ -711,14 +822,14 @@ WHERE NOT EXISTS (
 );
 
 IF NOT EXISTS (SELECT 1 FROM dbo.MembershipRank WHERE [Name] = N'STANDARD')
-    INSERT dbo.MembershipRank ([Name], MinTierPoints, BenefitDescription, [Status])
-    VALUES (N'STANDARD', 0, N'Hạng thành viên mặc định', 'ACTIVE');
+    INSERT dbo.MembershipRank ([Name], DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive)
+    VALUES (N'STANDARD', N'Standard Member', 0, 999, N'{"pointsRate":1,"birthdayBonus":false,"priorityBooking":false}', 0, 1);
 IF NOT EXISTS (SELECT 1 FROM dbo.MembershipRank WHERE [Name] = N'SILVER')
-    INSERT dbo.MembershipRank ([Name], MinTierPoints, BenefitDescription, [Status])
-    VALUES (N'SILVER', 1000, N'Ưu đãi dành cho thành viên Silver', 'ACTIVE');
+    INSERT dbo.MembershipRank ([Name], DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive)
+    VALUES (N'SILVER', N'Silver Member', 1000, 2999, N'{"pointsRate":1,"birthdayBonus":true,"priorityBooking":false}', 0, 1);
 IF NOT EXISTS (SELECT 1 FROM dbo.MembershipRank WHERE [Name] = N'GOLD')
-    INSERT dbo.MembershipRank ([Name], MinTierPoints, BenefitDescription, [Status])
-    VALUES (N'GOLD', 3000, N'Ưu đãi dành cho thành viên Gold', 'ACTIVE');
+    INSERT dbo.MembershipRank ([Name], DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive)
+    VALUES (N'GOLD', N'Gold Member', 3000, NULL, N'{"pointsRate":1.5,"birthdayBonus":true,"priorityBooking":true}', 5, 1);
 GO
 
 DECLARE @Genres TABLE ([Name] NVARCHAR(100), [Description] NVARCHAR(500));
@@ -940,7 +1051,111 @@ END;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'BOOKING_HOLD_MINUTES')
-    INSERT dbo.SystemSetting (SettingKey, SettingValue, [Description]) VALUES ('BOOKING_HOLD_MINUTES', N'10', N'Thời gian giữ ghế chưa thanh toán');
+    INSERT dbo.SystemSetting
+        (SettingKey, Value, [Description], SettingName, Category, ValueType, DefaultValue, ValidationRules, IsActive)
+    VALUES ('BOOKING_HOLD_MINUTES', N'10', N'Thời gian giữ ghế chưa thanh toán',
+            N'Seat Hold Time', N'BOOKING', N'NUMBER', N'10', N'min:1,max:60', 1);
+
+/* ================================================================
+   7. AUTH CONSTRAINTS, INDEXES AND SETTINGS
+   ================================================================ */
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints
+               WHERE [name] = N'CK_OtpToken_Purpose' AND parent_object_id = OBJECT_ID(N'dbo.OtpToken'))
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.OtpToken WHERE Purpose NOT IN (N'ACTIVATION', N'RESET_PASSWORD'))
+        ALTER TABLE dbo.OtpToken WITH NOCHECK
+            ADD CONSTRAINT CK_OtpToken_Purpose CHECK (Purpose IN (N'ACTIVATION', N'RESET_PASSWORD'));
+    ELSE
+        ALTER TABLE dbo.OtpToken WITH CHECK
+            ADD CONSTRAINT CK_OtpToken_Purpose CHECK (Purpose IN (N'ACTIVATION', N'RESET_PASSWORD'));
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints
+               WHERE [name] = N'CK_OAuthAccount_Provider' AND parent_object_id = OBJECT_ID(N'dbo.OAuthAccount'))
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.OAuthAccount WHERE Provider <> 'GOOGLE')
+        ALTER TABLE dbo.OAuthAccount WITH NOCHECK
+            ADD CONSTRAINT CK_OAuthAccount_Provider CHECK (Provider = 'GOOGLE');
+    ELSE
+        ALTER TABLE dbo.OAuthAccount WITH CHECK
+            ADD CONSTRAINT CK_OAuthAccount_Provider CHECK (Provider = 'GOOGLE');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys
+               WHERE [name] = N'FK_OtpAttempt_OtpToken' AND parent_object_id = OBJECT_ID(N'dbo.OtpAttempt'))
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.OtpAttempt x
+               WHERE x.OtpTokenID IS NOT NULL
+                 AND NOT EXISTS (SELECT 1 FROM dbo.OtpToken t WHERE t.OtpTokenID = x.OtpTokenID))
+        ALTER TABLE dbo.OtpAttempt WITH NOCHECK
+            ADD CONSTRAINT FK_OtpAttempt_OtpToken FOREIGN KEY (OtpTokenID) REFERENCES dbo.OtpToken(OtpTokenID);
+    ELSE
+        ALTER TABLE dbo.OtpAttempt WITH CHECK
+            ADD CONSTRAINT FK_OtpAttempt_OtpToken FOREIGN KEY (OtpTokenID) REFERENCES dbo.OtpToken(OtpTokenID);
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Account') AND [name] = N'IX_Account_RoleID')
+    CREATE INDEX IX_Account_RoleID ON dbo.Account(RoleID);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.OtpToken') AND [name] = N'IX_OtpToken_Email_Purpose')
+    CREATE INDEX IX_OtpToken_Email_Purpose ON dbo.OtpToken(Email, Purpose);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.OtpToken') AND [name] = N'IX_OtpToken_Account_Purpose')
+    CREATE INDEX IX_OtpToken_Account_Purpose ON dbo.OtpToken(AccountID, Purpose);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.OtpAttempt') AND [name] = N'IX_OtpAttempt_EmailPurpose')
+    CREATE INDEX IX_OtpAttempt_EmailPurpose ON dbo.OtpAttempt(Email, Purpose, AttemptedAt DESC);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.OtpAttempt') AND [name] = N'IX_OtpAttempt_IpAddress')
+    CREATE INDEX IX_OtpAttempt_IpAddress ON dbo.OtpAttempt(IpAddress, AttemptedAt DESC);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LoginAttempt') AND [name] = N'IX_LoginAttempt_Identifier_Time')
+    CREATE INDEX IX_LoginAttempt_Identifier_Time ON dbo.LoginAttempt(Identifier, AttemptedAt DESC, Success);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LoginAttempt') AND [name] = N'IX_LoginAttempt_IPAddress_Time')
+    CREATE INDEX IX_LoginAttempt_IPAddress_Time ON dbo.LoginAttempt(IPAddress, AttemptedAt DESC, Success);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.OAuthAccount') AND [name] = N'IX_OAuthAccount_Account')
+    CREATE INDEX IX_OAuthAccount_Account ON dbo.OAuthAccount(AccountID);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.IpRateLimit') AND [name] = N'IX_IpRateLimit_Locked')
+    CREATE INDEX IX_IpRateLimit_Locked ON dbo.IpRateLimit(LockedUntil) WHERE LockedUntil IS NOT NULL;
+
+DECLARE @AuthSettings TABLE (
+    SettingKey VARCHAR(100), Value NVARCHAR(50), [Description] NVARCHAR(500),
+    SettingName NVARCHAR(255), DefaultValue NVARCHAR(50), ValidationRules NVARCHAR(100)
+);
+INSERT @AuthSettings VALUES
+    ('SYSTEM_PASSWORD_MIN_LENGTH',     N'8',  N'Minimum password length',                              N'Password Minimum Length', N'8',  N'min:6,max:32'),
+    ('SYSTEM_OTP_EXPIRY_MINUTES',      N'5',  N'OTP validity in minutes',                              N'OTP Expiry Time',         N'5',  N'min:1,max:30'),
+    ('SYSTEM_OTP_MAX_SEND_DAILY',      N'5',  N'Maximum OTP codes that can be sent per email per day', N'OTP Max Sends Per Day',   N'5',  N'min:1,max:20'),
+    ('SYSTEM_OTP_RESEND_COOLDOWN',     N'60', N'Seconds to wait between OTP resends',                  N'OTP Resend Cooldown',     N'60', N'min:10,max:300'),
+    ('SYSTEM_SESSION_TIMEOUT_MINUTES', N'30', N'Session timeout in minutes',                           N'Session Timeout',         N'30', N'min:5,max:480'),
+    ('SYSTEM_LOGIN_ATTEMPTS',          N'5',  N'Maximum failed login attempts before lockout',         N'Max Login Attempts',      N'5',  N'min:1,max:10');
+
+INSERT dbo.SystemSetting
+    (SettingKey, Value, [Description], SettingName, Category, ValueType, DefaultValue, ValidationRules, IsActive)
+SELECT s.SettingKey, s.Value, s.[Description], s.SettingName, N'SYSTEM', N'NUMBER', s.DefaultValue, s.ValidationRules, 1
+FROM @AuthSettings s
+WHERE NOT EXISTS (SELECT 1 FROM dbo.SystemSetting x WHERE x.SettingKey = s.SettingKey);
+
+INSERT dbo.Customer (AccountID, RankID)
+SELECT a.AccountID, (SELECT TOP (1) RankID FROM dbo.MembershipRank WHERE [Name] = N'STANDARD')
+FROM dbo.Account a
+JOIN dbo.[Role] r ON r.RoleID = a.RoleID
+WHERE r.[Name] = N'CUSTOMER'
+  AND NOT EXISTS (SELECT 1 FROM dbo.Customer c WHERE c.AccountID = a.AccountID);
+
+INSERT dbo.Staff (AccountID, Position, [Status])
+SELECT a.AccountID, N'Nhân viên', 'ACTIVE'
+FROM dbo.Account a
+JOIN dbo.[Role] r ON r.RoleID = a.RoleID
+WHERE r.[Name] = N'STAFF'
+  AND NOT EXISTS (SELECT 1 FROM dbo.Staff s WHERE s.AccountID = a.AccountID);
+
+UPDATE dbo.Customer
+SET RankID = (SELECT TOP (1) RankID FROM dbo.MembershipRank WHERE [Name] = N'STANDARD')
+WHERE RankID IS NULL
+  AND EXISTS (SELECT 1 FROM dbo.MembershipRank WHERE [Name] = N'STANDARD');
+
+UPDATE dbo.Account
+SET EmailVerifiedAt = SYSDATETIME()
+WHERE EmailVerifiedAt IS NULL
+  AND [Status] = 'ACTIVE'
+  AND Email IN ('admin@cinema.com', 'manager@cinema.com', 'staff@cinema.com', 'customer@cinema.com');
 
 PRINT N'CinemaManagementDB schema and demo data are ready.';
 GO

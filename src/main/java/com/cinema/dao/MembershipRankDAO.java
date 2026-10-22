@@ -17,6 +17,10 @@ public class MembershipRankDAO {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<MembershipRank> rowMapper = (rs, rowNum) -> mapResultSetToModel(rs);
+    private static final String SELECT_COLUMNS = """
+            SELECT RankID, [Name], DisplayName, MinPoints, MaxPoints,
+                   Benefits, DiscountPercent, IsActive
+            """;
 
     @Autowired
     public MembershipRankDAO(JdbcTemplate jdbcTemplate) {
@@ -38,8 +42,7 @@ public class MembershipRankDAO {
     }
 
     public Optional<MembershipRank> findById(int rankId) {
-        String sql = """
-            SELECT RankID, Name, DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive
+        String sql = SELECT_COLUMNS + """
             FROM dbo.MembershipRank WHERE RankID = ?
             """;
         try {
@@ -50,8 +53,7 @@ public class MembershipRankDAO {
     }
 
     public Optional<MembershipRank> findByName(String name) {
-        String sql = """
-            SELECT RankID, Name, DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive
+        String sql = SELECT_COLUMNS + """
             FROM dbo.MembershipRank WHERE UPPER(LTRIM(RTRIM(Name))) = UPPER(LTRIM(RTRIM(?)))
             """;
         try {
@@ -62,22 +64,21 @@ public class MembershipRankDAO {
     }
 
     public List<MembershipRank> findAll() {
-        return jdbcTemplate.query("""
-            SELECT RankID, Name, DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive
+        return jdbcTemplate.query(SELECT_COLUMNS + """
             FROM dbo.MembershipRank ORDER BY MinPoints
             """, rowMapper);
     }
 
     public List<MembershipRank> findActive() {
-        return jdbcTemplate.query("""
-            SELECT RankID, Name, DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive
+        return jdbcTemplate.query(SELECT_COLUMNS + """
             FROM dbo.MembershipRank WHERE IsActive = 1 ORDER BY MinPoints
             """, rowMapper);
     }
 
     public int insert(MembershipRank rank) {
         String sql = """
-            INSERT INTO dbo.MembershipRank (Name, DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive)
+            INSERT INTO dbo.MembershipRank
+                ([Name], DisplayName, MinPoints, MaxPoints, Benefits, DiscountPercent, IsActive)
             OUTPUT inserted.RankID
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
@@ -88,22 +89,24 @@ public class MembershipRankDAO {
                 rank.getMaxPoints(),
                 rank.getBenefits(),
                 rank.getDiscountPercent(),
-                rank.getIsActive() != null ? rank.getIsActive() : true);
+                !Boolean.FALSE.equals(rank.getIsActive()));
         return id != null ? id : 0;
     }
 
     public int update(MembershipRank rank) {
         return jdbcTemplate.update("""
-            UPDATE dbo.MembershipRank 
-            SET DisplayName = ?, MinPoints = ?, MaxPoints = ?, Benefits = ?, DiscountPercent = ?, IsActive = ?
+            UPDATE dbo.MembershipRank
+            SET [Name] = ?, DisplayName = ?, MinPoints = ?, MaxPoints = ?,
+                Benefits = ?, DiscountPercent = ?, IsActive = ?
             WHERE RankID = ?
             """,
+                rank.getName(),
                 rank.getDisplayName(),
                 rank.getMinPoints(),
                 rank.getMaxPoints(),
                 rank.getBenefits(),
                 rank.getDiscountPercent(),
-                rank.getIsActive(),
+                !Boolean.FALSE.equals(rank.getIsActive()),
                 rank.getRankId());
     }
 

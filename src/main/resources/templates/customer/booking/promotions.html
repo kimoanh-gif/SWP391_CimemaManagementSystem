@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Promotions &amp; Vouchers | CINEORA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
+  </head>
+  <body
+    data-page="promotions"
+    th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}"
+  >
+    <header class="site-header">
+      <a class="brand" th:href="@{/customer/dashboard}"
+        ><span>C</span
+        ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
+      >
+      <nav>
+        <a class="active" th:href="@{/customer/booking}"
+          >Movies &amp; Showtimes</a
+        ><a th:href="@{/customer/profile}">Profile</a>
+      </nav>
+      <div class="account-actions">
+        <span class="material-symbols-outlined">account_circle</span
+        ><b th:text="${session.loggedInFullName}">Customer</b>
+      </div>
+    </header>
+    <div class="progress-wrap">
+      <div class="stepper five">
+        <div class="step done">
+          <b>✓</b><span><small>COMPLETED</small>Showtime</span>
+        </div>
+        <div class="step done">
+          <b>✓</b><span><small>COMPLETED</small>Seats</span>
+        </div>
+        <div class="step done">
+          <b>✓</b><span><small>COMPLETED</small>Food</span>
+        </div>
+        <div class="step active">
+          <b>4</b><span><small>STEP 4 · CURRENT</small>Promotions</span>
+        </div>
+        <div class="step">
+          <b>5</b><span><small>STEP 5</small>Payment</span>
+        </div>
+      </div>
+    </div>
+    <main class="booking-shell">
+      <section class="hero-row compact">
+        <div>
+          <a class="back-link" th:href="@{/customer/booking/foods}"
+            ><span class="material-symbols-outlined">arrow_back</span>Change
+            food selection</a
+          >
+          <p class="eyebrow">MEMBER BENEFITS</p>
+          <h1>Promotions &amp; Vouchers</h1>
+          <p class="lead">
+            Apply a personal voucher, event gift code, or partner promotion
+            before payment.
+          </p>
+        </div>
+        <div class="hold-timer">
+          <span class="material-symbols-outlined">timer</span
+          ><span
+            >Seat hold expires in<small id="hold-countdown">10:00</small></span
+          >
+        </div>
+      </section>
+      <div class="checkout-layout">
+        <section class="checkout-main">
+          <form
+            class="panel voucher-panel"
+            th:action="@{/customer/booking/promotions}"
+            method="post"
+          >
+            <div class="section-heading">
+              <span class="section-number">4</span>
+              <div>
+                <h2>Promo Code / E‑Voucher</h2>
+                <p>Enter a valid code or continue without one.</p>
+              </div>
+            </div>
+            <label class="field-label" for="voucherCode">Voucher code</label>
+            <div class="voucher-entry">
+              <input
+                id="voucherCode"
+                name="voucherCode"
+                autocomplete="off"
+                placeholder="Enter your promo code"
+              /><button
+                class="button secondary"
+                type="button"
+                id="preview-voucher"
+              >
+                Apply
+              </button>
+            </div>
+            <p class="voucher-note" id="voucher-message">
+              Voucher validation will be enabled when the promotion service is
+              connected.
+            </p>
+            <div class="promotion-options">
+              <article>
+                <span class="material-symbols-outlined">loyalty</span>
+                <div>
+                  <b>CINEORA Member Benefits</b
+                  ><small
+                    >Membership benefits are automatically associated with your
+                    account.</small
+                  >
+                </div>
+              </article>
+              <article>
+                <span class="material-symbols-outlined">redeem</span>
+                <div>
+                  <b>Partner &amp; Event Offers</b
+                  ><small
+                    >Use the code printed on your voucher or digital gift
+                    card.</small
+                  >
+                </div>
+              </article>
+            </div>
+            <button class="button primary full" type="submit">
+              Continue to Payment
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </form>
+        </section>
+        <aside class="panel order-card sticky">
+          <p class="eyebrow">BOOKING SUMMARY</p>
+          <h2 th:text="${summary.movieTitle}">Movie title</h2>
+          <p class="booking-code" th:text="${summary.bookingCode}">BK0001</p>
+          <dl>
+            <div>
+              <dt>Showtime</dt>
+              <dd
+                th:text="${#temporals.format(summary.startTime,'HH:mm · MMM d, yyyy')}"
+              ></dd>
+            </div>
+            <div>
+              <dt>Auditorium</dt>
+              <dd th:text="${summary.roomName}"></dd>
+            </div>
+            <div>
+              <dt>Seats</dt>
+              <dd th:text="${summary.seatLabels}"></dd>
+            </div>
+            <div>
+              <dt>Tickets</dt>
+              <dd
+                th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' ₫'}"
+              ></dd>
+            </div>
+            <div>
+              <dt>Food &amp; drinks</dt>
+              <dd
+                th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' ₫'}"
+              ></dd>
+            </div>
+          </dl>
+          <div class="total-row">
+            <span>Total</span
+            ><strong
+              th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
+            ></strong>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script th:src="@{/js/customer-booking.js}"></script>
+  </body>
+</html>

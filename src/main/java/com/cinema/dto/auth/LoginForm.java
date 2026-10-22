@@ -1,10 +1,9 @@
-package com.cinema.dto;
+package com.cinema.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class LoginForm {
-
     @NotBlank(message = "Vui lòng nhập email hoặc tên đăng nhập.")
     @Size(max = 255)
     private String identifier;
@@ -13,27 +12,14 @@ public class LoginForm {
     @Size(min = 8, max = 128)
     private String password;
 
-    public LoginForm() {
-    }
-
+    public LoginForm() {}
     public LoginForm(String identifier, String password) {
         this.identifier = identifier;
         this.password = password;
     }
 
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getIdentifier() { return identifier; }
+    public void setIdentifier(String identifier) { this.identifier = identifier; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

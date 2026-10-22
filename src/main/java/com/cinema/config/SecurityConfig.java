@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -168,6 +169,7 @@ public class SecurityConfig {
      * Used once to seed the test-account SQL script.
      */
     @Bean
+    @Profile("dev-password-tools")
     CommandLineRunner printBcryptHashes(PasswordEncoder pe) {
         return args -> {
             System.out.println("\n╔══════════════════════════════════════════════════╗");
@@ -187,6 +189,7 @@ public class SecurityConfig {
      * Runs AFTER the PasswordEncoder bean is ready, so it can generate hashes.
      */
     @Bean
+    @Profile("dev-password-tools")
     CommandLineRunner seedTestPasswords(PasswordEncoder pe, org.springframework.beans.factory.ObjectProvider<AccountDAO> accountDAOProvider) {
         return args -> {
             try {

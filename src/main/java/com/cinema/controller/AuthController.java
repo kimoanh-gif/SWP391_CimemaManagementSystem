@@ -1,10 +1,10 @@
 package com.cinema.controller;
 
-import com.cinema.dto.ForgotForm;
-import com.cinema.dto.LoginForm;
-import com.cinema.dto.OtpForm;
-import com.cinema.dto.RegisterForm;
-import com.cinema.dto.ResetPasswordForm;
+import com.cinema.dto.auth.ForgotPasswordForm;
+import com.cinema.dto.auth.LoginForm;
+import com.cinema.dto.auth.OtpForm;
+import com.cinema.dto.auth.RegisterForm;
+import com.cinema.dto.auth.ResetPasswordForm;
 import com.cinema.model.Account;
 import com.cinema.service.AuthService;
 import com.cinema.service.OtpService;
@@ -12,10 +12,6 @@ import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -80,16 +76,15 @@ public class AuthController {
             return "auth/register";
         }
 
-        AuthService.RegisterResult r = authService.register(
-                form.getUsername(), form.getEmail(), form.getPassword(),
-                form.getFullName(), form.getPhone());
-        String rawOtp = r.rawOtp();
-
-        // Confirm-password check
         if (!form.getPassword().equals(form.getConfirmPassword())) {
             model.addAttribute("confirmPasswordError", "Mật khẩu xác nhận không khớp.");
             return "auth/register";
         }
+
+        AuthService.RegisterResult r = authService.register(
+                form.getUsername(), form.getEmail(), form.getPassword(),
+                form.getFullName(), form.getPhone());
+        String rawOtp = r.rawOtp();
 
         String status = r.status();
         switch (status) {
@@ -139,10 +134,15 @@ public class AuthController {
     }
 
     @PostMapping("/verify-activation-otp")
-    public String doActivationOtp(@ModelAttribute("activationForm") OtpForm form,
-                                  HttpSession session, Model model) {
+    public String doActivationOtp(@Valid @ModelAttribute("activationForm") OtpForm form,
+                                  BindingResult binding, HttpSession session, Model model) {
         String email = (String) session.getAttribute("activationEmail");
         if (email == null) return "redirect:/register";
+        if (binding.hasErrors()) {
+            model.addAttribute("otpError", binding.getFieldError("otp").getDefaultMessage());
+            model.addAttribute("email", email);
+            return "auth/verify-activation-otp";
+        }
 
         AuthService.OtpResult r = authService.activate(email, form.getOtp());
         switch (r) {
@@ -266,12 +266,14 @@ public class AuthController {
                 return "auth/login";
             }
             case INACTIVE_ACCOUNT -> {
-                String reason = "Tài khoản chưa được kích hoạt hoặc đã bị khóa.";
                 if (result.account() != null
                         && "PENDING_VERIFICATION".equalsIgnoreCase(result.account().getStatus())) {
-                    reason = "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để nhập OTP.";
+                    HttpSession activationSession = request.getSession(true);
+                    activationSession.setAttribute("activationEmail",
+                            result.account().getEmail().trim().toLowerCase());
+                    return "redirect:/verify-activation-otp";
                 }
-                model.addAttribute("formError", reason);
+                model.addAttribute("formError", "This account is inactive or locked.");
                 return "auth/login";
             }
             case UNSUPPORTED_ROLE -> { model.addAttribute("formError", "Vai trò tài khoản chưa được hỗ trợ."); return "auth/login"; }
@@ -296,12 +298,12 @@ public class AuthController {
     @GetMapping("/forgot-password")
     public String showForgot(Model model) {
         if (!model.containsAttribute("forgotForm"))
-            model.addAttribute("forgotForm", new ForgotForm());
+            model.addAttribute("forgotForm", new ForgotPasswordForm());
         return "auth/forgot-password";
     }
 
     @PostMapping("/forgot-password")
-    public String doForgot(@Valid @ModelAttribute("forgotForm") ForgotForm form,
+    public String doForgot(@Valid @ModelAttribute("forgotForm") ForgotPasswordForm form,
                            BindingResult binding, Model model, HttpSession session) {
         if (binding.hasErrors()) {
             binding.getFieldErrors().forEach(e ->
@@ -332,10 +334,15 @@ public class AuthController {
     }
 
     @PostMapping("/verify-reset-otp")
-    public String doVerifyReset(@ModelAttribute("resetOtpForm") OtpForm form,
-                                HttpSession session, Model model) {
+    public String doVerifyReset(@Valid @ModelAttribute("resetOtpForm") OtpForm form,
+                                BindingResult binding, HttpSession session, Model model) {
         String email = (String) session.getAttribute("resetEmail");
         if (email == null) return "redirect:/forgot-password";
+        if (binding.hasErrors()) {
+            model.addAttribute("otpError", binding.getFieldError("otp").getDefaultMessage());
+            model.addAttribute("email", maskEmail(email));
+            return "auth/verify-reset-otp";
+        }
 
         AuthService.OtpResult r = authService.preCheckOtp(email, form.getOtp() == null ? "" : form.getOtp().trim(),
                 com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD);
@@ -365,15 +372,12 @@ public class AuthController {
 
     // ========================================== API: AJAX verify reset OTP
     @PostMapping("/api/auth/verify-reset-otp")
-    public ResponseEntity<?> apiVerifyResetOtp(@RequestBody Map<String, String> body, HttpSession session) {
+    public ResponseEntity<?> apiVerifyResetOtp(@Valid @RequestBody OtpForm form, HttpSession session) {
         String email = (String) session.getAttribute("resetEmail");
         if (email == null) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Phiên hết hạn. Vui lòng yêu cầu mã mới."));
         }
-        String otp = body.getOrDefault("otp", "").trim();
-        if (otp.length() != 6) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã OTP phải có 6 chữ số."));
-        }
+        String otp = form.getOtp().trim();
 
         AuthService.OtpResult r = authService.preCheckOtp(email, otp, com.cinema.model.OtpToken.PURPOSE_RESET_PASSWORD);
         switch (r) {
