@@ -17,7 +17,7 @@
     th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}"
   >
     <header class="site-header">
-      <a class="brand" th:href="@{/customer/dashboard}"
+      <a class="brand" th:href="@{/}"
         ><span>C</span
         ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
       >
@@ -81,28 +81,33 @@
             <div class="section-heading">
               <span class="section-number">4</span>
               <div>
-                <h2>Promo Code / E‑Voucher</h2>
-                <p>Enter a valid code or continue without one.</p>
+                <h2>My Vouchers</h2>
+                <p>Select a voucher assigned to your account or enter the code printed on a physical voucher.</p>
               </div>
             </div>
-            <label class="field-label" for="voucherCode">Voucher code</label>
+            <div class="promotion-options">
+              <article>
+                <span class="material-symbols-outlined">confirmation_number</span>
+                <div><b>No personal vouchers are currently available</b><small>Vouchers assigned to your account will appear here.</small></div>
+              </article>
+            </div>
+            <label class="field-label" for="voucherCode">Enter a voucher code</label>
             <div class="voucher-entry">
               <input
                 id="voucherCode"
                 name="voucherCode"
                 autocomplete="off"
-                placeholder="Enter your promo code"
+                placeholder="For example: WELCOME10"
               /><button
                 class="button secondary"
                 type="button"
                 id="preview-voucher"
               >
-                Apply
+                Check Code
               </button>
             </div>
             <p class="voucher-note" id="voucher-message">
-              Voucher validation will be enabled when the promotion service is
-              connected.
+              The code is saved with this booking session. Discount calculation will be enabled after Manager voucher configuration is available.
             </p>
             <div class="promotion-options">
               <article>
@@ -118,7 +123,7 @@
               <article>
                 <span class="material-symbols-outlined">redeem</span>
                 <div>
-                  <b>Partner &amp; Event Offers</b
+                  <b>Physical &amp; Partner Vouchers</b
                   ><small
                     >Use the code printed on your voucher or digital gift
                     card.</small

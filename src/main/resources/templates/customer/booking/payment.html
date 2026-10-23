@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payment | CINEORA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
+</head>
+<body data-page="payment" th:attr="data-payment-expires=${payment != null ? payment.expiresAt : ''},data-held-until=${payment != null ? payment.heldUntil : ''}">
+<header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/booking/history}">My Tickets</a></nav></header>
+<main class="booking-shell">
+  <p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+  <div class="checkout-layout" th:if="${payment != null}">
+    <section class="panel payment-stage">
+      <p class="eyebrow">SECURE SIMULATED PAYMENT</p>
+      <h1 th:text="${payment.method == 'CASH' ? 'Pay at the Counter' : 'Scan the QR Code to Pay'}">Payment</h1>
+      <p th:if="${payment.status == 'PENDING'}">Complete the transaction before the code expires. Your seats are held for ten minutes in total.</p>
+      <div class="qr-shell" th:if="${payment.method != 'CASH' and payment.status == 'PENDING'}">
+        <div class="fake-qr" aria-label="Simulated payment QR code"><span>C</span></div>
+        <strong th:text="${payment.transactionRef}">PAY0001</strong>
+        <small>Simulated code for internal review</small>
+      </div>
+      <div class="cash-instruction" th:if="${payment.method == 'CASH' and payment.status == 'PENDING'}">
+        <span class="material-symbols-outlined">point_of_sale</span><p>Present your booking code at the counter and confirm after payment.</p>
+      </div>
+      <div class="payment-clock" th:if="${payment.status == 'PENDING'}">Payment code expires in <strong id="payment-countdown">03:00</strong></div>
+      <div class="alert error" id="payment-expired" th:if="${payment.status == 'EXPIRED'}">This payment code has expired. Generate a new one if your seat hold is still active.</div>
+      <form th:if="${payment.status == 'PENDING'}" th:action="@{/customer/booking/payment/{id}/confirm(id=${payment.paymentId})}" method="post">
+        <button class="button primary full" type="submit"><span class="material-symbols-outlined">verified</span>I Have Completed the Transfer</button>
+      </form>
+      <form th:if="${payment.status == 'EXPIRED'}" th:action="@{/customer/booking/payment/{id}/regenerate(id=${payment.paymentId})}" method="post">
+        <button class="button primary full" type="submit"><span class="material-symbols-outlined">refresh</span>Generate a New Payment Code</button>
+      </form>
+      <a class="button secondary full" th:href="@{/customer/booking/checkout}">Back to Payment Methods</a>
+    </section>
+    <aside class="panel order-card sticky" th:if="${summary != null}">
+      <p class="eyebrow">BOOKING SUMMARY</p><h2 th:text="${summary.movieTitle}"></h2><p class="booking-code" th:text="${summary.bookingCode}"></p>
+      <dl><div><dt>Showtime</dt><dd th:text="${#temporals.format(summary.startTime,'HH:mm · dd/MM/yyyy')}"></dd></div><div><dt>Auditorium</dt><dd th:text="${summary.roomName}"></dd></div><div><dt>Seats</dt><dd th:text="${summary.seatLabels}"></dd></div></dl>
+      <div class="total-row"><span>Total Payment</span><strong th:text="${#numbers.formatDecimal(payment.amount,0,'COMMA',0,'POINT') + ' ₫'}"></strong></div>
+      <p class="fine-print">Seat hold remaining: <b id="hold-countdown">--:--</b></p>
+    </aside>
+  </div>
+</main>
+<script th:src="@{/js/customer-booking.js}"></script>
+</body></html>

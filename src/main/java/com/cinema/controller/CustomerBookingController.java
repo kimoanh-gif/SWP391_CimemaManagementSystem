@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
@@ -185,6 +186,21 @@ public class CustomerBookingController {
         }
     }
 
+    @PostMapping("/foods/skip")
+    public String skipFoodSelection(HttpSession session, RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+        if (bookingId == null) return "redirect:/customer/booking/seats";
+        try {
+            bookingService.saveFoodSelections(bookingId, accountId, null, null);
+            return "redirect:/customer/booking/promotions";
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/foods";
+        }
+    }
+
     @GetMapping("/promotions")
     public String showPromotionSelection(HttpSession session, Model model,
                                          RedirectAttributes redirectAttributes) {
@@ -231,11 +247,91 @@ public class CustomerBookingController {
     }
 
     @PostMapping("/checkout")
-    public String submitCheckout(HttpSession session, RedirectAttributes redirectAttributes) {
-        if (customerAccountId(session) == null) return "redirect:/login";
-        redirectAttributes.addFlashAttribute("errorMessage",
-                "Online payment is not connected yet. Your seats remain held until the timer expires.");
-        return "redirect:/customer/booking/checkout";
+    public String submitCheckout(@RequestParam(defaultValue = "QR_TRANSFER") String paymentMethod,
+                                 HttpSession session, RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+        if (bookingId == null) return "redirect:/customer/booking/seats";
+        try {
+            int paymentId = bookingService.startSimulatedPayment(bookingId, accountId, paymentMethod);
+            session.setAttribute("customerPaymentId", paymentId);
+            return "redirect:/customer/booking/payment/" + paymentId;
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/checkout";
+        }
+    }
+
+    @GetMapping("/payment/{paymentId}")
+    public String showPayment(@PathVariable int paymentId, HttpSession session, Model model) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        try {
+            var payment = bookingService.getPayment(paymentId, accountId);
+            model.addAttribute("payment", payment);
+            model.addAttribute("summary", bookingService.getActiveBooking(payment.bookingId(), accountId));
+            return "customer/booking/payment";
+        } catch (BookingException exception) {
+            model.addAttribute("errorMessage", exception.getMessage());
+            return "customer/booking/payment";
+        }
+    }
+
+    @PostMapping("/payment/{paymentId}/confirm")
+    public String confirmPayment(@PathVariable int paymentId, HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        try {
+            int bookingId = bookingService.confirmSimulatedPayment(paymentId, accountId);
+            clearBookingSession(session);
+            session.removeAttribute("customerPaymentId");
+            return "redirect:/customer/booking/success/" + bookingId;
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/payment/" + paymentId;
+        }
+    }
+
+    @PostMapping("/payment/{paymentId}/regenerate")
+    public String regeneratePayment(@PathVariable int paymentId, HttpSession session,
+                                    RedirectAttributes redirectAttributes) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        try {
+            int newPaymentId = bookingService.regeneratePayment(paymentId, accountId);
+            session.setAttribute("customerPaymentId", newPaymentId);
+            return "redirect:/customer/booking/payment/" + newPaymentId;
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking/seats";
+        }
+    }
+
+    @GetMapping("/success/{bookingId}")
+    public String showSuccess(@PathVariable int bookingId, HttpSession session, Model model) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        model.addAttribute("tickets", bookingService.getTickets(bookingId, accountId));
+        model.addAttribute("bookingId", bookingId);
+        return "customer/booking/success";
+    }
+
+    @GetMapping("/tickets/{bookingId}")
+    public String showTickets(@PathVariable int bookingId, HttpSession session, Model model) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        model.addAttribute("tickets", bookingService.getTickets(bookingId, accountId));
+        return "customer/booking/tickets";
+    }
+
+    @GetMapping("/history")
+    public String showHistory(HttpSession session, Model model) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        model.addAttribute("bookings", bookingService.getBookingHistory(accountId));
+        return "customer/booking/history";
     }
 
     @PostMapping("/cancel")
@@ -280,5 +376,6 @@ public class CustomerBookingController {
         session.removeAttribute(SESSION_SHOWTIME_ID);
         session.removeAttribute(SESSION_BOOKING_ID);
         session.removeAttribute("customerBookingVoucherCode");
+        session.removeAttribute("customerPaymentId");
     }
 }

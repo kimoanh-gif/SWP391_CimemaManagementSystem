@@ -153,7 +153,7 @@
         <div class="movie-grid" th:if="${nowShowingMovies != null && !nowShowingMovies.isEmpty()}">
             <article class="movie-card" th:each="movie : ${nowShowingMovies}">
                 <div class="movie-poster-wrap">
-                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
+                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
                     <span class="badge-duration" th:text="${movie.duration + ' phút'}">118 phút</span>
@@ -218,7 +218,7 @@
         <div class="movie-grid">
             <article class="movie-card" th:each="movie : ${comingSoonMovies}">
                 <div class="movie-poster-wrap">
-                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
+                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
                     <span class="badge-duration" th:text="${movie.duration + ' phút'}">105 phút</span>
@@ -272,7 +272,7 @@
             <div th:each="st : ${todayShowtimes}"
                  style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.25rem;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;gap:12px;align-items:center;">
-                    <img th:src="${st.moviePosterUrl}" th:alt="${st.movieTitle}"
+                    <img th:src="${st.moviePosterUrl}" th:alt="${st.movieTitle}" loading="lazy" decoding="async"
                          style="width:48px;height:70px;border-radius:var(--radius-sm);object-fit:cover;"
                          onerror="this.src='/images/cinema-login-hero.png'" />
                     <div>
@@ -317,7 +317,7 @@
         <div class="promo-grid">
             <article class="promo-card" th:each="promo : ${promotions}">
                 <div class="promo-banner-wrap">
-                    <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img"
+                    <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
                     <span class="promo-tag-badge" th:text="${promo.discountDisplay}">Giảm 20%</span>
                 </div>
@@ -361,7 +361,7 @@
         <div class="news-grid">
             <article class="news-card" th:each="news : ${newsList}">
                 <div class="news-thumbnail-wrap">
-                    <img th:src="${news.thumbnailUrl}" th:alt="${news.title}" class="news-thumbnail"
+                    <img th:src="${news.thumbnailUrl}" th:alt="${news.title}" class="news-thumbnail" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
                 </div>
                 <div class="news-body">

@@ -62,10 +62,6 @@ public class SessionService {
                 authMethod == null ? AUTH_METHOD_PASSWORD : authMethod);
 
         session.setAttribute(ATTR_USER, user);
-        System.out.println("=== SESSION LOGIN ===");
-        System.out.println("sessionId=" + session.getId());
-        System.out.println("user=" + user.getUsername() + " role=" + user.getRole());
-        System.out.println("session.getAttribute=" + session.getAttribute(ATTR_USER));
     }
 
     public void logout(HttpSession session) {
@@ -79,12 +75,8 @@ public class SessionService {
     }
 
     public AuthenticatedUser getCurrentUser(HttpSession session) {
-        if (session == null) {
-            System.out.println(">>> getCurrentUser: session is NULL");
-            return null;
-        }
+        if (session == null) return null;
         Object u = session.getAttribute(ATTR_USER);
-        System.out.println(">>> getCurrentUser: sessionId=" + session.getId() + ", attr=" + u + ", class=" + (u == null ? "null" : u.getClass().getName()));
         return (u instanceof AuthenticatedUser au) ? au : null;
     }
 

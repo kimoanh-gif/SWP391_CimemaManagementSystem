@@ -92,9 +92,38 @@
     updateTimer();
   };
 
+  const setupPayment = () => {
+    const countdown = document.querySelector("#payment-countdown");
+    const holdCountdown = document.querySelector("#hold-countdown");
+    const paymentExpires = document.body.dataset.paymentExpires;
+    const heldUntil = document.body.dataset.heldUntil;
+    const formatRemaining = (dateValue) => {
+      const remaining = Math.max(0, new Date(dateValue).getTime() - Date.now());
+      return {
+        remaining,
+        text: `${String(Math.floor(remaining / 60000)).padStart(2, "0")}:${String(Math.floor((remaining % 60000) / 1000)).padStart(2, "0")}`,
+      };
+    };
+    let reloading = false;
+    const update = () => {
+      if (countdown && paymentExpires) {
+        const value = formatRemaining(paymentExpires);
+        countdown.textContent = value.text;
+        if (value.remaining === 0 && !reloading) {
+          reloading = true;
+          window.setTimeout(() => window.location.reload(), 500);
+        }
+      }
+      if (holdCountdown && heldUntil) holdCountdown.textContent = formatRemaining(heldUntil).text;
+    };
+    window.setInterval(update, 1000);
+    update();
+  };
+
   if (document.body.dataset.page === "seats") setupSeats();
   if (["foods", "promotions", "checkout"].includes(document.body.dataset.page))
     setupFoods();
+  if (document.body.dataset.page === "payment") setupPayment();
 
   const vatToggle = document.querySelector("#vat-toggle");
   const vatFields = document.querySelector("#vat-fields");
