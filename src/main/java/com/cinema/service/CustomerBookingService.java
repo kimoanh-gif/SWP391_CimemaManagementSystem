@@ -6,6 +6,9 @@ import com.cinema.model.FoodBeverageOption;
 import com.cinema.model.MovieBookingOption;
 import com.cinema.model.SeatOption;
 import com.cinema.model.ShowtimeOption;
+import com.cinema.model.PaymentView;
+import com.cinema.model.CustomerTicket;
+import com.cinema.model.BookingHistoryItem;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ public class CustomerBookingService {
 
     public static final int MAX_SEATS_PER_BOOKING = 10;
     public static final int HOLD_MINUTES = 10;
+    public static final int PAYMENT_QR_MINUTES = 3;
 
     private final CustomerBookingDAO bookingDAO;
 
@@ -108,7 +112,7 @@ public class CustomerBookingService {
         bookingDAO.expireOldHolds();
         BookingSummary summary = bookingDAO.findBookingSummary(bookingId, accountId)
                 .orElseThrow(() -> new BookingException("Your current booking could not be found."));
-        if (!"PENDING".equalsIgnoreCase(summary.getStatus())
+        if (!("PENDING".equalsIgnoreCase(summary.getStatus()) || "PAYMENT_PENDING".equalsIgnoreCase(summary.getStatus()))
                 || summary.getHeldUntil() == null
                 || !summary.getHeldUntil().isAfter(LocalDateTime.now())) {
             throw new BookingException("Your seat hold has expired. Please select your seats again.");
@@ -163,10 +167,73 @@ public class CustomerBookingService {
         bookingDAO.releaseBooking(bookingId, accountId);
     }
 
+    @Transactional
+    public int startSimulatedPayment(int bookingId, int accountId, String paymentMethod) {
+        BookingSummary booking = getActiveBooking(bookingId, accountId);
+        String method = "CASH".equalsIgnoreCase(paymentMethod) ? "CASH" : "QR_TRANSFER";
+        LocalDateTime qrExpiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);
+        if (booking.getHeldUntil().isBefore(qrExpiry)) qrExpiry = booking.getHeldUntil();
+        try {
+            return bookingDAO.createPayment(bookingId, accountId, method, generateTransactionRef(), qrExpiry);
+        } catch (RuntimeException exception) {
+            throw new BookingException("Payment could not be started. Please try again.");
+        }
+    }
+
+    @Transactional
+    public PaymentView getPayment(int paymentId, int accountId) {
+        bookingDAO.expirePaymentIfNeeded(paymentId, accountId);
+        return bookingDAO.findPayment(paymentId, accountId)
+                .orElseThrow(() -> new BookingException("The payment transaction could not be found."));
+    }
+
+    @Transactional
+    public int regeneratePayment(int paymentId, int accountId) {
+        PaymentView old = getPayment(paymentId, accountId);
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);
+        if (old.heldUntil() == null || !old.heldUntil().isAfter(LocalDateTime.now()))
+            throw new BookingException("Your seat hold has expired. Please select your seats again.");
+        if (old.heldUntil().isBefore(expiry)) expiry = old.heldUntil();
+        try {
+            return bookingDAO.regeneratePayment(paymentId, accountId, generateTransactionRef(), expiry);
+        } catch (IllegalStateException exception) {
+            throw new BookingException(exception.getMessage());
+        }
+    }
+
+    @Transactional
+    public int confirmSimulatedPayment(int paymentId, int accountId) {
+        PaymentView payment = getPayment(paymentId, accountId);
+        try {
+            bookingDAO.confirmSimulatedPayment(paymentId, accountId);
+            return payment.bookingId();
+        } catch (IllegalStateException exception) {
+            throw new BookingException(exception.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerTicket> getTickets(int bookingId, int accountId) {
+        List<CustomerTicket> tickets = bookingDAO.findTicketsByBooking(bookingId, accountId);
+        if (tickets.isEmpty()) throw new BookingException("The tickets have not been issued or do not exist.");
+        return tickets;
+    }
+
+    @Transactional
+    public List<BookingHistoryItem> getBookingHistory(int accountId) {
+        bookingDAO.expireOldHolds();
+        return bookingDAO.findBookingHistory(accountId);
+    }
+
     private String generateBookingCode() {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
         String random = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         return "BK" + time + random;
+    }
+
+    private String generateTransactionRef() {
+        return "PAY" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"))
+                + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
     }
 
     public static class BookingException extends RuntimeException {

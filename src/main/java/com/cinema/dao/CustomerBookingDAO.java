@@ -5,6 +5,9 @@ import com.cinema.model.FoodBeverageOption;
 import com.cinema.model.MovieBookingOption;
 import com.cinema.model.SeatOption;
 import com.cinema.model.ShowtimeOption;
+import com.cinema.model.PaymentView;
+import com.cinema.model.CustomerTicket;
+import com.cinema.model.BookingHistoryItem;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class CustomerBookingDAO {
@@ -350,25 +354,133 @@ public class CustomerBookingDAO {
 
     public void releaseBooking(int bookingId, int accountId) {
         jdbcTemplate.update("""
+                UPDATE p SET p.[Status] = 'CANCELLED', p.UpdatedAt = SYSDATETIME()
+                FROM dbo.Payment p
+                JOIN dbo.Booking b ON b.BookingID = p.BookingID
+                JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
+                WHERE b.BookingID = ? AND c.AccountID = ?
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
+                  AND UPPER(p.[Status]) = 'PENDING'
+                """, bookingId, accountId);
+        jdbcTemplate.update("""
                 DELETE food
                 FROM dbo.BookingFoodBeverage food
                 JOIN dbo.Booking b ON b.BookingID = food.BookingID
                 JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
-                WHERE b.BookingID = ? AND c.AccountID = ? AND b.[Status] = 'PENDING'
+                WHERE b.BookingID = ? AND c.AccountID = ? AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                 """, bookingId, accountId);
         jdbcTemplate.update("""
                 DELETE seat
                 FROM dbo.BookingSeat seat
                 JOIN dbo.Booking b ON b.BookingID = seat.BookingID
                 JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
-                WHERE b.BookingID = ? AND c.AccountID = ? AND b.[Status] = 'PENDING'
+                WHERE b.BookingID = ? AND c.AccountID = ? AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                 """, bookingId, accountId);
         jdbcTemplate.update("""
                 UPDATE b SET b.[Status] = 'CANCELLED'
                 FROM dbo.Booking b
                 JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
-                WHERE b.BookingID = ? AND c.AccountID = ? AND b.[Status] = 'PENDING'
+                WHERE b.BookingID = ? AND c.AccountID = ? AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                 """, bookingId, accountId);
+    }
+
+    public int createPayment(int bookingId, int accountId, String method, String transactionRef,
+                             LocalDateTime expiresAt) {
+        Integer id = jdbcTemplate.queryForObject("""
+                INSERT INTO dbo.Payment (BookingID, Method, Amount, TransactionRef, [Status], InitiatedAt, ExpiresAt, UpdatedAt)
+                OUTPUT inserted.PaymentID
+                SELECT b.BookingID, ?, b.TotalAmount, ?, 'PENDING', SYSDATETIME(), ?, SYSDATETIME()
+                FROM dbo.Booking b JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
+                WHERE b.BookingID = ? AND c.AccountID = ? AND UPPER(b.[Status]) = 'PENDING'
+                  AND EXISTS (SELECT 1 FROM dbo.BookingSeat bs WHERE bs.BookingID=b.BookingID AND bs.HeldUntil>SYSDATETIME())
+                """, Integer.class, method, transactionRef, expiresAt, bookingId, accountId);
+        if (id == null) throw new IllegalStateException("Payment could not be started for this booking.");
+        jdbcTemplate.update("UPDATE dbo.Booking SET [Status]='PAYMENT_PENDING' WHERE BookingID=?", bookingId);
+        return id;
+    }
+
+    public Optional<PaymentView> findPayment(int paymentId, int accountId) {
+        return jdbcTemplate.query("""
+                SELECT p.PaymentID,p.BookingID,b.BookingCode,p.TransactionRef,p.Method,p.Amount,p.[Status],p.ExpiresAt,
+                       (SELECT MIN(bs.HeldUntil) FROM dbo.BookingSeat bs WHERE bs.BookingID=b.BookingID) HeldUntil
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                WHERE p.PaymentID=? AND c.AccountID=?
+                """, (rs,n) -> new PaymentView(rs.getInt("PaymentID"), rs.getInt("BookingID"),
+                rs.getString("BookingCode"), rs.getString("TransactionRef"), rs.getString("Method"),
+                rs.getBigDecimal("Amount"), rs.getString("Status"),
+                rs.getObject("ExpiresAt", LocalDateTime.class), rs.getObject("HeldUntil", LocalDateTime.class)),
+                paymentId, accountId).stream().findFirst();
+    }
+
+    public void expirePaymentIfNeeded(int paymentId, int accountId) {
+        jdbcTemplate.update("""
+                UPDATE p SET p.[Status]='EXPIRED',p.UpdatedAt=SYSDATETIME()
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                WHERE p.PaymentID=? AND c.AccountID=? AND p.[Status]='PENDING' AND p.ExpiresAt<=SYSDATETIME()
+                """, paymentId, accountId);
+    }
+
+    public int regeneratePayment(int oldPaymentId, int accountId, String transactionRef, LocalDateTime expiresAt) {
+        PaymentView old = findPayment(oldPaymentId, accountId)
+                .orElseThrow(() -> new IllegalStateException("The payment transaction could not be found."));
+        if (old.heldUntil() == null || !old.heldUntil().isAfter(LocalDateTime.now()))
+            throw new IllegalStateException("Your seat hold has expired. Please select your seats again.");
+        jdbcTemplate.update("UPDATE dbo.Payment SET [Status]='EXPIRED',UpdatedAt=SYSDATETIME() WHERE PaymentID=? AND [Status]='PENDING'", oldPaymentId);
+        Integer id = jdbcTemplate.queryForObject("""
+                INSERT INTO dbo.Payment (BookingID,Method,Amount,TransactionRef,[Status],InitiatedAt,ExpiresAt,UpdatedAt)
+                OUTPUT inserted.PaymentID SELECT BookingID,Method,Amount,?,'PENDING',SYSDATETIME(),?,SYSDATETIME()
+                FROM dbo.Payment WHERE PaymentID=?
+                """, Integer.class, transactionRef, expiresAt, oldPaymentId);
+        return id == null ? 0 : id;
+    }
+
+    public void confirmSimulatedPayment(int paymentId, int accountId) {
+        PaymentView payment = findPayment(paymentId, accountId)
+                .orElseThrow(() -> new IllegalStateException("The payment transaction could not be found."));
+        LocalDateTime now = LocalDateTime.now();
+        if (!"PENDING".equalsIgnoreCase(payment.status()) || payment.expiresAt() == null || !payment.expiresAt().isAfter(now))
+            throw new IllegalStateException("The payment code has expired. Please generate a new code.");
+        if (payment.heldUntil() == null || !payment.heldUntil().isAfter(now))
+            throw new IllegalStateException("Your seat hold has expired. Please select your seats again.");
+        jdbcTemplate.update("UPDATE dbo.Payment SET [Status]='PAID',PaidAt=SYSDATETIME(),UpdatedAt=SYSDATETIME(),ResponseCode='00',TransactionStatus='SUCCESS' WHERE PaymentID=? AND [Status]='PENDING'", paymentId);
+        jdbcTemplate.update("UPDATE dbo.Booking SET [Status]='CONFIRMED' WHERE BookingID=? AND [Status]='PAYMENT_PENDING'", payment.bookingId());
+        jdbcTemplate.update("UPDATE dbo.BookingSeat SET [Status]='BOOKED',HeldUntil=NULL WHERE BookingID=? AND [Status]='HELD'", payment.bookingId());
+        List<Integer> bookingSeatIds = jdbcTemplate.queryForList("SELECT BookingSeatID FROM dbo.BookingSeat WHERE BookingID=?", Integer.class, payment.bookingId());
+        for (Integer bookingSeatId : bookingSeatIds) {
+            jdbcTemplate.update("""
+                    IF NOT EXISTS (SELECT 1 FROM dbo.Ticket WHERE BookingSeatID=?)
+                    INSERT dbo.Ticket(BookingSeatID,QRCode,TicketStatus) VALUES (?,?,'VALID')
+                    """, bookingSeatId, bookingSeatId, "CINEORA-" + UUID.randomUUID());
+        }
+    }
+
+    public List<CustomerTicket> findTicketsByBooking(int bookingId, int accountId) {
+        return jdbcTemplate.query("""
+                SELECT t.TicketID,t.QRCode,t.TicketStatus,b.BookingCode,m.Title,r.RoomName,st.StartTime,
+                       CONCAT(s.RowLabel,s.SeatNumber) SeatLabel
+                FROM dbo.Ticket t JOIN dbo.BookingSeat bs ON bs.BookingSeatID=t.BookingSeatID
+                JOIN dbo.Booking b ON b.BookingID=bs.BookingID JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID JOIN dbo.Movie m ON m.MovieID=st.MovieID
+                JOIN dbo.Room r ON r.RoomID=st.RoomID JOIN dbo.Seat s ON s.SeatID=bs.SeatID
+                WHERE b.BookingID=? AND c.AccountID=? ORDER BY s.GridRow,s.GridColumn
+                """, (rs,n) -> new CustomerTicket(rs.getInt("TicketID"),rs.getString("QRCode"),rs.getString("TicketStatus"),
+                rs.getString("BookingCode"),rs.getString("Title"),rs.getString("RoomName"),
+                rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabel")), bookingId, accountId);
+    }
+
+    public List<BookingHistoryItem> findBookingHistory(int accountId) {
+        return jdbcTemplate.query("""
+                SELECT b.BookingID,b.BookingCode,m.Title,r.RoomName,st.StartTime,b.TotalAmount,b.[Status],
+                       COALESCE((SELECT TOP 1 p.[Status] FROM dbo.Payment p WHERE p.BookingID=b.BookingID ORDER BY p.PaymentID DESC),'UNPAID') PaymentStatus,
+                       (SELECT STRING_AGG(CONCAT(s.RowLabel,s.SeatNumber),', ') FROM dbo.BookingSeat bs JOIN dbo.Seat s ON s.SeatID=bs.SeatID WHERE bs.BookingID=b.BookingID) SeatLabels
+                FROM dbo.Booking b JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID JOIN dbo.Movie m ON m.MovieID=st.MovieID
+                JOIN dbo.Room r ON r.RoomID=st.RoomID WHERE c.AccountID=? ORDER BY b.BookingTime DESC
+                """, (rs,n) -> new BookingHistoryItem(rs.getInt("BookingID"),rs.getString("BookingCode"),rs.getString("Title"),
+                rs.getString("RoomName"),rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabels"),
+                rs.getBigDecimal("TotalAmount"),rs.getString("Status"),rs.getString("PaymentStatus")), accountId);
     }
 
     public void releaseCounterBooking(int bookingId, int staffId) {
@@ -400,7 +512,13 @@ public class CustomerBookingDAO {
      * Returns the count of released seat holds.
      */
     public int releaseExpiredSeatReservations() {
-        // 1. Mark eligible expired bookings as EXPIRED
+        // 1. Expire pending payment attempts whose QR/session deadline passed.
+        jdbcTemplate.update("""
+                UPDATE dbo.Payment SET [Status]='EXPIRED', UpdatedAt=SYSDATETIME()
+                WHERE UPPER([Status])='PENDING' AND ExpiresAt IS NOT NULL AND ExpiresAt<=SYSDATETIME()
+                """);
+
+        // 2. Mark eligible expired bookings as EXPIRED
         jdbcTemplate.update("""
                 UPDATE b SET b.[Status] = 'EXPIRED'
                 FROM dbo.Booking b
@@ -423,7 +541,7 @@ public class CustomerBookingDAO {
                   )
                 """);
 
-        // 2. Remove associated F&B selections for expired bookings
+        // 3. Remove associated F&B selections for expired bookings
         jdbcTemplate.update("""
                 DELETE food
                 FROM dbo.BookingFoodBeverage food
@@ -431,7 +549,7 @@ public class CustomerBookingDAO {
                 WHERE b.[Status] = 'EXPIRED'
                 """);
 
-        // 3. Release/delete expired BookingSeat records so seats become available again
+        // 4. Release/delete expired BookingSeat records so seats become available again
         return jdbcTemplate.update("""
                 DELETE seat
                 FROM dbo.BookingSeat seat

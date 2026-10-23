@@ -17,7 +17,7 @@
     th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}"
   >
     <header class="site-header">
-      <a class="brand" th:href="@{/customer/dashboard}"
+      <a class="brand" th:href="@{/}"
         ><span>C</span
         ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
       >
@@ -192,15 +192,16 @@
               ></strong>
             </div>
             <button class="button primary full" type="submit">
-              Save &amp; Continue
+              Save Selection &amp; Continue
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
-            <p class="fine-print">
-              Leave all quantities at zero to skip concessions.
-            </p>
+            <button class="button secondary full" type="submit" form="skip-food-form">
+              Skip Food &amp; Drinks
+            </button>
           </aside>
         </div>
       </form>
+      <form id="skip-food-form" th:action="@{/customer/booking/foods/skip}" method="post"></form>
       <form
         th:action="@{/customer/booking/cancel}"
         method="post"

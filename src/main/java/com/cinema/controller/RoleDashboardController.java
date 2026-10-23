@@ -23,12 +23,10 @@ public class RoleDashboardController {
         this.staffOperationsService = staffOperationsService;
     }
 
+    /** Legacy customer-dashboard URL; the SRS sends customers to the public home page. */
     @GetMapping("/customer/dashboard")
-    public String customer(HttpSession session, Model model) {
-        if (!sessionService.hasRole(session, "CUSTOMER", "ADMIN", "MANAGER", "STAFF"))
-            return "redirect:/login";
-        model.addAttribute("user", sessionService.getCurrentUser(session));
-        return "customer/dashboard";
+    public String customer() {
+        return "redirect:/";
     }
 
     @GetMapping("/staff/dashboard")

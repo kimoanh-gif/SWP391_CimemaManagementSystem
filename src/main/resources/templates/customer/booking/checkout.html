@@ -17,7 +17,7 @@
     th:attr="data-held-until=${summary.heldUntil},data-expired-url=@{/customer/booking/seats}"
   >
     <header class="site-header">
-      <a class="brand" th:href="@{/customer/dashboard}"
+      <a class="brand" th:href="@{/}"
         ><span>C</span
         ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
       >
@@ -83,8 +83,8 @@
               <div class="section-heading">
                 <span class="section-number">5</span>
                 <div>
-                  <h2>Select a Secure Payment Method</h2>
-                  <p>Your payment details are protected during processing.</p>
+                <h2>Select a Payment Method</h2>
+                  <p>A simulated QR payment completes the internal happy-case flow.</p>
                 </div>
               </div>
               <div class="payment-methods">
@@ -92,29 +92,14 @@
                   ><input
                     type="radio"
                     name="paymentMethod"
-                    value="VNPAY"
+                    value="QR_TRANSFER"
                     checked
                   /><span
-                    ><b>VNPay</b><small>Bank account or QR payment</small></span
+                    ><b>QR Bank Transfer</b><small>Generate a time-limited QR code</small></span
                   ><i class="material-symbols-outlined">qr_code_2</i></label
-                ><label
-                  ><input type="radio" name="paymentMethod" value="MOMO" /><span
-                    ><b>MoMo</b><small>MoMo e-wallet</small></span
-                  ><i class="material-symbols-outlined"
-                    >account_balance_wallet</i
-                  ></label
-                ><label
-                  ><input
-                    type="radio"
-                    name="paymentMethod"
-                    value="ZALOPAY"
-                  /><span><b>ZaloPay</b><small>ZaloPay e-wallet</small></span
-                  ><i class="material-symbols-outlined">phone_iphone</i></label
-                ><label
-                  ><input type="radio" name="paymentMethod" value="CARD" /><span
-                    ><b>Credit / Debit Card</b
-                    ><small>Visa, Mastercard, JCB</small></span
-                  ><i class="material-symbols-outlined">credit_card</i></label
+                ><label><input type="radio" name="paymentMethod" value="CASH" /><span
+                    ><b>Cash at the Counter</b><small>Keep the reservation and pay at the cinema</small></span
+                  ><i class="material-symbols-outlined">payments</i></label
                 >
               </div>
             </div>
@@ -205,7 +190,7 @@
               ></strong>
             </div>
             <button class="button primary full" type="submit">
-              <span class="material-symbols-outlined">lock</span>Pay Securely
+              <span class="material-symbols-outlined">lock</span>Continue to Payment
             </button>
             <p class="fine-print">
               Payment is not charged until the gateway confirms the transaction.
