@@ -247,7 +247,7 @@ public class CustomerBookingController {
     }
 
     @PostMapping("/checkout")
-    public String submitCheckout(@RequestParam(defaultValue = "QR_TRANSFER") String paymentMethod,
+    public String submitCheckout(@RequestParam(defaultValue = "VNPAY") String paymentMethod,
                                  HttpSession session, RedirectAttributes redirectAttributes) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";

@@ -84,23 +84,26 @@
                 <span class="section-number">5</span>
                 <div>
                 <h2>Select a Payment Method</h2>
-                  <p>A simulated QR payment completes the internal happy-case flow.</p>
+                  <p>Pay securely online using your preferred wallet or banking app.</p>
                 </div>
               </div>
               <div class="payment-methods">
-                <label
-                  ><input
-                    type="radio"
-                    name="paymentMethod"
-                    value="QR_TRANSFER"
-                    checked
-                  /><span
-                    ><b>QR Bank Transfer</b><small>Generate a time-limited QR code</small></span
-                  ><i class="material-symbols-outlined">qr_code_2</i></label
-                ><label><input type="radio" name="paymentMethod" value="CASH" /><span
-                    ><b>Cash at the Counter</b><small>Keep the reservation and pay at the cinema</small></span
-                  ><i class="material-symbols-outlined">payments</i></label
-                >
+                <label><input type="radio" name="paymentMethod" value="VNPAY" checked />
+                  <span><b>VNPAY-QR</b><small>Scan with a supported mobile banking app</small></span>
+                  <span class="payment-brand vnpay" aria-label="VNPAY logo">VN<span>PAY</span></span>
+                </label>
+                <label><input type="radio" name="paymentMethod" value="MOMO" />
+                  <span><b>MoMo</b><small>Pay with your MoMo e-wallet</small></span>
+                  <span class="payment-brand momo" aria-label="MoMo logo">MoMo</span>
+                </label>
+                <label><input type="radio" name="paymentMethod" value="ZALOPAY" />
+                  <span><b>ZaloPay</b><small>Pay with the ZaloPay app</small></span>
+                  <span class="payment-brand zalopay" aria-label="ZaloPay logo">ZaloPay</span>
+                </label>
+                <label><input type="radio" name="paymentMethod" value="NAPAS" />
+                  <span><b>NAPAS</b><small>Domestic ATM and bank cards</small></span>
+                  <span class="payment-brand napas" aria-label="NAPAS logo">NAPAS</span>
+                </label>
               </div>
             </div>
             <div class="panel recipient-panel">

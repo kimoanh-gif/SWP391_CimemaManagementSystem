@@ -1059,6 +1059,25 @@ h1 {
   color: var(--red);
   font-style: normal;
 }
+.payment-brand {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  width: 58px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+.payment-brand.vnpay { background: #075aa9; }
+.payment-brand.vnpay span { display: inline; flex: none; color: #e61f2d; }
+.payment-brand.momo { background: #a50064; }
+.payment-brand.zalopay { background: #0068ff; }
+.payment-brand.napas { background: #005baa; color: #fff; }
+.payment-provider { margin-top: -8px; color: var(--muted); }
 .section-icon {
   display: grid;
   width: 30px;
@@ -1140,3 +1159,44 @@ h1 {
     gap: 3px;
   }
 }
+
+/* Digital cinema pass */
+.ticket-page { background: #f6f2ed; }
+.ticket-shell { max-width: 1180px; }
+.cinema-pass-list { display: grid; gap: 28px; }
+.cinema-pass { display: grid; grid-template-columns: minmax(0, 2.3fr) minmax(250px, .8fr); overflow: hidden; border: 1px solid #eed9d4; border-radius: 16px; background: #fff; box-shadow: 0 18px 50px rgba(66,31,29,.1); }
+.pass-main { padding: 22px 28px; }
+.pass-brand-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 13px; border-bottom: 1px solid #eadedb; }
+.pass-brand { display: flex; align-items: center; gap: 7px; color: #a90025; }
+.pass-brand > span { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 5px; background: #b00027; color: #fff; font-weight: 900; }
+.pass-brand b { font-size: 15px; }
+.pass-brand small { color: #6f5e5a; font-size: 8px; letter-spacing: .07em; }
+.pass-type { padding: 7px 11px; border: 1px solid #edcfd4; border-radius: 4px; color: #9f1830; font-size: 9px; font-weight: 800; }
+.pass-movie { display: grid; grid-template-columns: 115px 1fr; gap: 24px; padding: 22px 0; }
+.pass-poster { display: grid; min-height: 160px; place-items: center; overflow: hidden; border-radius: 7px; background: linear-gradient(145deg,#231b24,#b00027); color: #fff; font-size: 48px; font-weight: 900; box-shadow: 0 7px 18px rgba(0,0,0,.18); }
+.pass-poster img { width: 100%; height: 100%; object-fit: cover; }
+.pass-movie-info h2 { margin: 10px 0 6px; color: #38191c; font-size: 25px; text-transform: uppercase; }
+.pass-hint { margin: 0; color: #7d6965; font-size: 11px; }
+.pass-details { display: grid; grid-template-columns: repeat(4,minmax(90px,1fr)); gap: 0; margin: 24px 0 0; }
+.pass-details div { padding: 0 15px; border-left: 1px solid #eadedb; }
+.pass-details div:first-child { padding-left: 0; border-left: 0; }
+.pass-details dt, .pass-footer small { color: #8f7772; font-size: 9px; }
+.pass-details dd { margin: 5px 0 0; color: #48272b; font-size: 16px; font-weight: 800; }
+.pass-details .seat-value { color: #b00027; font-size: 20px; }
+.pass-footer { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; padding: 15px 18px; border-radius: 9px; background: #fff3ee; }
+.pass-footer div { display: flex; flex-direction: column; gap: 4px; }
+.pass-footer b { color: #62363b; font-size: 11px; }
+.pass-stub { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; background: #fff3fb; text-align: center; }
+.pass-stub::before { content: ""; position: absolute; inset: 0 auto 0 -1px; border-left: 2px dashed #eccbdc; }
+.pass-stub p { display: flex; flex-direction: column; margin: 0 0 14px; color: #a50064; }
+.pass-stub p b { font-size: 12px; }
+.pass-stub p small { margin-top: 4px; color: #6e5862; font-size: 8px; }
+.pass-qr { width: 142px; height: 142px; margin: 0; border-width: 9px; background-size: 19px 19px; box-shadow: none; }
+.pass-qr span { width: 36px; height: 36px; font-size: 20px; }
+.pass-stub em { margin-top: 10px; padding: 5px 10px; border-radius: 4px; background: #dff7ed; color: #08794f; font-size: 8px; font-style: normal; font-weight: 800; }
+.ticket-barcode { width: 170px; height: 42px; margin: 17px 0 7px; background: repeating-linear-gradient(90deg,#251c22 0 2px,transparent 2px 5px,#251c22 5px 6px,transparent 6px 9px,#251c22 9px 13px,transparent 13px 15px); }
+.pass-stub code { max-width: 190px; overflow-wrap: anywhere; color: #3b2b32; font-size: 8px; }
+.stub-status { margin-top: 12px; color: #b00027; font-size: 9px; }
+.ticket-back { text-align: center; }
+@media (max-width: 800px) { .cinema-pass { grid-template-columns: 1fr; } .pass-stub::before { inset: -1px 0 auto; border-top: 2px dashed #eccbdc; border-left: 0; } .pass-details { grid-template-columns: repeat(2,1fr); gap: 16px; } .pass-details div:nth-child(3) { padding-left: 0; border-left: 0; } .pass-brand small { display: none; } }
+@media (max-width: 520px) { .pass-main { padding: 18px; } .pass-movie { grid-template-columns: 78px 1fr; gap: 14px; } .pass-poster { min-height: 115px; } .pass-movie-info h2 { font-size: 18px; } .pass-footer { grid-template-columns: 1fr; } .pass-type { display: none; } }

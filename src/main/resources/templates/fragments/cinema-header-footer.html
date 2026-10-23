@@ -64,22 +64,34 @@
                 🎫 Bàn Nhân Viên
             </a>
 
-            <!-- Customer profile badge -->
-            <a th:href="@{/customer/profile}" class="user-badge" title="Xem thông tin cá nhân">
+            <!-- Customer account dropdown -->
+            <details th:if="${currentUser.role == 'CUSTOMER'}" class="account-dropdown">
+              <summary class="user-badge" title="Account menu">
                 <div class="user-avatar" th:text="${currentUser.fullName != null && !currentUser.fullName.isEmpty() ? #strings.substring(currentUser.fullName, 0, 1) : 'U'}">U</div>
                 <div class="user-info-text">
-                    <span class="user-name" th:text="${currentUser.fullName}">Nguyễn Văn A</span>
+                    <span class="user-name" th:text="${currentUser.fullName}">Customer</span>
                     <span class="user-points" th:if="${availablePoints != null}">
-                        ⭐ <span th:text="${availablePoints}">0</span> điểm
+                        ⭐ <span th:text="${availablePoints}">0</span> points
                     </span>
-                    <span class="user-points" th:if="${availablePoints == null}" th:text="${currentUser.role}">CUSTOMER</span>
+                    <span class="user-points" th:if="${availablePoints == null}">My account</span>
                 </div>
-            </a>
+                <span class="account-chevron">⌄</span>
+              </summary>
+              <div class="account-dropdown-menu">
+                <a th:href="@{/customer/profile}">My Profile</a>
+                <a th:href="@{/customer/booking/history}">My Booking History</a>
+                <a th:href="@{/customer/profile#loyalty}">Loyalty</a>
+                <form th:action="@{/logout}" method="post">
+                  <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
+                  <button type="submit">Log Out</button>
+                </form>
+              </div>
+            </details>
 
-            <form th:action="@{/logout}" method="post" style="display:inline;margin:0;">
+            <form th:if="${currentUser.role != 'CUSTOMER'}" th:action="@{/logout}" method="post" style="display:inline;margin:0;">
                 <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
-                <button type="submit" class="btn-auth-login" style="padding:6px 12px;font-size:0.8rem;" title="Đăng xuất">
-                    Đăng xuất
+                <button type="submit" class="btn-auth-login" style="padding:6px 12px;font-size:0.8rem;">
+                    Log Out
                 </button>
             </form>
         </div>

@@ -230,6 +230,40 @@ button, input, select, textarea {
     border-color: var(--border-focus);
 }
 
+.account-dropdown { position: relative; }
+.account-dropdown > summary { list-style: none; }
+.account-dropdown > summary::-webkit-details-marker { display: none; }
+.account-chevron { color: var(--text-secondary); transition: transform var(--transition-fast); }
+.account-dropdown[open] .account-chevron { transform: rotate(180deg); }
+.account-dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 220px;
+    padding: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: var(--bg-surface-elevated);
+    box-shadow: 0 18px 45px rgba(0,0,0,.28);
+}
+.account-dropdown-menu a,
+.account-dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    border: 0;
+    border-radius: 9px;
+    color: var(--text-primary);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.account-dropdown-menu a:hover,
+.account-dropdown-menu button:hover { background: var(--bg-surface); color: var(--primary); }
+.account-dropdown-menu form { margin: 6px 0 0; padding-top: 6px; border-top: 1px solid var(--border-subtle); }
+
 .user-avatar {
     width: 34px;
     height: 34px;
