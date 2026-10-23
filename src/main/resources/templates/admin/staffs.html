@@ -364,7 +364,7 @@ function renderTable() {
       <td>
         <div class="actions">
           <button class="btn btn-sm btn-secondary" onclick="openEditModal(${s.accountId})">Edit</button>
-          <button class="btn btn-sm btn-warning" onclick="resetPassword(${s.accountId}, '${escHtml(s.fullName)}')">Reset PW</button>
+          <button class="btn btn-sm btn-warning" data-reset-account="${s.accountId}" onclick="resetPassword(${s.accountId}, '${escHtml(s.fullName)}')">Reset PW</button>
           ${s.status === 'ACTIVE'
             ? `<button class="btn btn-sm btn-danger" onclick="confirmAction(${s.accountId}, '${escHtml(s.fullName)}', 'suspend')">Suspend</button>`
             : `<button class="btn btn-sm btn-success" onclick="confirmAction(${s.accountId}, '${escHtml(s.fullName)}', 'reactivate')">Activate</button>`
@@ -505,66 +505,19 @@ async function confirmAction(accountId, name, action) {
   } catch (e) { showToast('An error occurred.', 'error'); }
 }
 
+const passwordResetsInFlight = new Set();
 async function resetPassword(accountId, name) {
-  if (!confirm(`Reset password for "${name}"?\n\nA new temporary password will be generated and displayed to you.`)) return;
-  
+  if (passwordResetsInFlight.has(accountId)) return;
+  if (!confirm(`Reset password for "${name}"? A new login password will be sent to their registered email and will replace the old password.`)) return;
+  passwordResetsInFlight.add(accountId);
+  const buttons = [...document.querySelectorAll('[data-reset-account]')].filter(button => button.dataset.resetAccount === String(accountId));
+  buttons.forEach(button => button.disabled = true);
   try {
     const resp = await fetch(`/api/admin/staffs/${accountId}/reset-password`, { method: 'POST', headers: getCsrfHeaders() });
     const json = await resp.json();
-    
-    if (json.success) {
-      showResetResultModal(name, json.tempPassword, json.message);
-    } else {
-      showToast(json.message || 'Failed to reset password.', 'error');
-    }
-  } catch (e) { showToast('An error occurred.', 'error'); }
-}
-
-function showResetResultModal(name, tempPassword, message) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay show';
-  overlay.innerHTML = `
-    <div class="modal" style="width: 460px;">
-      <div class="modal-header">
-        <h2>Password Reset Successful</h2>
-        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-      </div>
-      <div class="modal-body" style="text-align: center;">
-        <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 24px; margin-bottom: 16px;">
-          <div style="color: #065F46; font-size: 13px; font-weight: 600; margin-bottom: 8px;">TEMPORARY PASSWORD</div>
-          <div style="font-family: monospace; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px; background: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #A7F3D0; display: inline-block;" id="tempPwDisplay">${escHtml(tempPassword)}</div>
-        </div>
-        <p style="color: #6B7280; font-size: 14px; margin-bottom: 16px;">
-          Password for <strong>${escHtml(name)}</strong> has been reset.
-        </p>
-        <p style="color: #92400E; font-size: 13px; background: #FEF3C7; padding: 10px 14px; border-radius: 8px; text-align: left;">
-          <strong>⚠️ Important:</strong> Please securely communicate this password to the user. Instruct them to change it after logging in.
-        </p>
-      </div>
-      <div class="modal-footer" style="justify-content: center;">
-        <button class="btn btn-secondary" onclick="copyPassword('${escHtml(tempPassword)}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          Copy Password
-        </button>
-        <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Done</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
-
-function copyPassword(password) {
-  navigator.clipboard.writeText(password).then(() => {
-    showToast('Password copied to clipboard!', 'success');
-  }).catch(() => {
-    const textarea = document.createElement('textarea');
-    textarea.value = password;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showToast('Password copied to clipboard!', 'success');
-  });
+    showToast(json.message || 'Password reset failed.', json.success ? 'success' : 'error');
+  } catch (e) { showToast('The reset result could not be confirmed. Check the registered inbox before trying again.', 'error'); }
+  finally { passwordResetsInFlight.delete(accountId); buttons.forEach(button => button.disabled = false); }
 }
 
 function showToast(message, type) {

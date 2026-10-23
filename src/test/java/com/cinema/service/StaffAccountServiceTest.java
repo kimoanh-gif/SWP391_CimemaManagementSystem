@@ -26,7 +26,7 @@ class StaffAccountServiceTest {
     void setUp() {
         accounts = mock(AccountDAO.class);
         roles = mock(RoleDAO.class);
-        service = new StaffAccountService(accounts, roles);
+        service = new StaffAccountService(accounts, roles, mock(AdminPasswordResetService.class));
     }
 
     @ParameterizedTest

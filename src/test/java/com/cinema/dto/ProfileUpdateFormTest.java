@@ -59,12 +59,12 @@ class ProfileUpdateFormTest {
     }
 
     @Test
-    void rejectsAddressLongerThanDatabaseLimit() {
+    void rejectsFullNameLongerThanAllowedLimit() {
         ProfileUpdateForm form = validForm();
-        form.setAddress("a".repeat(256));
+        form.setFullName("a".repeat(101));
 
         assertTrue(validator.validate(form).stream()
-                .anyMatch(error -> error.getPropertyPath().toString().equals("address")));
+                .anyMatch(error -> error.getPropertyPath().toString().equals("fullName")));
     }
 
     private ProfileUpdateForm validForm() {
@@ -72,7 +72,6 @@ class ProfileUpdateFormTest {
         form.setFullName("Customer Example");
         form.setPhone("0901234567");
         form.setDateOfBirth(LocalDate.now().minusYears(20));
-        form.setAddress("Cinema Street");
         return form;
     }
 }

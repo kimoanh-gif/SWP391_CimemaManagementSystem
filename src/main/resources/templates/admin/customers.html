@@ -250,9 +250,9 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
           </div>
         </div>
         <div class="form-group">
-          <label for="fPhone">Phone Number *</label>
-          <input type="tel" id="fPhone" required pattern="0[0-9]{9,10}" placeholder="0912345678">
-          <div class="field-error" id="errPhone">Phone already exists or invalid (10-11 digits starting with 0).</div>
+          <label for="fPhone">Phone Number (optional)</label>
+          <input type="tel" id="fPhone" maxlength="13" pattern="(0|\+84)[0-9]{9,10}" title="0 or +84 followed by 9-10 digits" placeholder="0912345678 or +84912345678">
+          <div class="field-error" id="errPhone">Phone already exists or must start with 0 or +84 followed by 9-10 digits.</div>
         </div>
         <div id="editMeta" style="display:none; background:var(--surface-muted); border-radius:var(--radius-md); padding:14px 16px; margin-bottom:18px; font-size:13px; color:var(--text-secondary);">
           <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Account ID:</strong> <span id="metaAccountId">-</span></div>
@@ -288,7 +288,7 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
   </div>
 </div>
 
-<!-- RESET PASSWORD MODAL (send OTP to customer) -->
+<!-- RESET PASSWORD MODAL (email a new password) -->
 <div class="modal-overlay" id="resetPwdModal">
   <div class="modal" style="width:400px;">
     <div class="modal-header">
@@ -297,15 +297,15 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
     </div>
     <div class="modal-body">
       <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px;">
-        An OTP code will be sent to <strong id="resetPwdEmail" style="color:var(--text-primary);">-</strong> for password reset.
+        A new login password will be sent to <strong id="resetPwdEmail" style="color:var(--text-primary);">-</strong> for password reset.
       </p>
       <p style="color:var(--text-secondary);font-size:13px;">
-        The customer will receive an email with the OTP code to set a new password.
+        The previous password will be replaced. The customer can sign in with the emailed password and should change it after signing in.
       </p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeResetPwd()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitResetPassword()">Send OTP</button>
+      <button class="btn btn-primary" id="resetPasswordBtn" onclick="submitResetPassword()">Reset &amp; Email Password</button>
     </div>
   </div>
 </div>
@@ -553,7 +553,7 @@ async function submitForm(e) {
   if (payload.username.length < 3) { markError('fUsername','errUsername'); showToast('Username must be at least 3 characters.','error'); return; }
   if (!payload.fullName) { markError('fFullName','errFullName'); showToast('Full name is required.','error'); return; }
   if (!payload.email || !/^[^\s@]+@[^\s@]+\.\w+/.test(payload.email)) { markError('fEmail','errEmail'); showToast('Invalid email format.','error'); return; }
-  if (!payload.phone || !/^0[0-9]{9,10}$/.test(payload.phone)) { markError('fPhone','errPhone'); showToast('Phone must be 10-11 digits starting with 0.','error'); return; }
+  if (payload.phone && !/^(0|\+84)[0-9]{9,10}$/.test(payload.phone)) { markError('fPhone','errPhone'); showToast('Phone must start with 0 or +84 followed by 9-10 digits.','error'); return; }
 
   if (!editMode) {
     payload.password = document.getElementById('fPassword').value;
@@ -586,7 +586,7 @@ function handleApiError(json) {
   else if (code === 'INVALID_EMAIL')            { markError('fEmail','errEmail'); document.getElementById('errEmail').textContent = 'Invalid email format.'; showToast('Invalid email format.','error'); }
   else if (code === 'DUPLICATE_EMAIL')    { markError('fEmail','errEmail'); document.getElementById('errEmail').textContent = 'Email already exists.'; showToast(json.message,'error'); }
   else if (code === 'EMPTY_PHONE')               { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone number is required.'; showToast('Phone number is required.','error'); }
-  else if (code === 'INVALID_PHONE_FORMAT')      { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone must be 10-11 digits starting with 0.'; showToast('Phone must be 10-11 digits starting with 0.','error'); }
+  else if (code === 'INVALID_PHONE_FORMAT')      { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone must start with 0 or +84 followed by 9-10 digits.'; showToast('Phone must start with 0 or +84 followed by 9-10 digits.','error'); }
   else if (code === 'DUPLICATE_PHONE')    { markError('fPhone','errPhone'); document.getElementById('errPhone').textContent = 'Phone number already exists.'; showToast(json.message,'error'); }
   else { showToast(json.message || 'Operation failed.', 'error'); }
 }
@@ -715,14 +715,20 @@ function closeResetPwd() {
 }
 
 async function submitResetPassword() {
+  const button = document.getElementById('resetPasswordBtn');
+  if (button.disabled) return;
+  const accountId = currentCustomerId;
+  button.disabled = true;
+  button.textContent = 'Sending...';
   try {
-    const resp = await fetch(`/api/admin/customers/${currentCustomerId}/reset-password`, {
+    const resp = await fetch(`/api/admin/customers/${accountId}/reset-password`, {
       method: 'POST', headers: { ...getCsrfHeaders() }
     });
     const json = await resp.json();
     showToast(json.message, json.success ? 'success' : 'error');
     if (json.success) closeResetPwd();
-  } catch (e) { showToast('An error occurred.', 'error'); }
+  } catch (e) { showToast('The reset result could not be confirmed. Check the registered inbox before trying again.', 'error'); }
+  finally { button.disabled = false; button.textContent = 'Reset & Email Password'; }
 }
 
 // STATS REFRESH

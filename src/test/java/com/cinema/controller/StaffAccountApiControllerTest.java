@@ -42,4 +42,12 @@ class StaffAccountApiControllerTest {
         verify(service).createAccount("staffuser", "staff@example.com", "Password1", "Staff User",
                 "0912345678", "STAFF");
     }
+
+    @Test
+    void resetResponseContainsNoPlaintextPassword() {
+        when(service.resetPassword(42)).thenReturn(StaffAccountService.OperationResult.success("Password emailed."));
+        var response=controller.resetPassword(42);
+        assertEquals(200,response.getStatusCode().value());
+        assertEquals(Map.of("success",true,"message","Password emailed."),response.getBody());
+    }
 }

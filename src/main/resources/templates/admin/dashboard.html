@@ -1,64 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin Dashboard | CINEORA</title>
 <link rel="stylesheet" th:href="@{/css/auth.css}">
-<style>
-/* Dashboard stats */
-.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.dash-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 16px; transition: box-shadow .2s; }
-.dash-stat-card:hover { box-shadow: var(--shadow-md); }
-.dash-stat-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
-.dash-stat-info { flex: 1; }
-.dash-stat-num { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
-.dash-stat-lbl { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
-.dash-stat-card.blue   .dash-stat-num { color: #2563EB; }
-.dash-stat-card.green  .dash-stat-num { color: #059669; }
-.dash-stat-card.red    .dash-stat-num { color: #DC2626; }
-.dash-stat-card.purple .dash-stat-num { color: var(--purple-600); }
-.dash-stat-card.blue   .dash-stat-icon { background: #DBEAFE; }
-.dash-stat-card.green  .dash-stat-icon { background: #D1FAE5; }
-.dash-stat-card.red    .dash-stat-icon { background: #FEE2E2; }
-.dash-stat-card.purple .dash-stat-icon { background: var(--purple-100); }
-
-/* System modules grid */
-.dash-modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.dash-module { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-decoration: none; color: inherit; display: block; box-shadow: var(--shadow-sm); transition: all .25s; position: relative; overflow: hidden; }
-.dash-module::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--purple-400), var(--purple-600)); opacity: 0; transition: opacity .25s; }
-.dash-module:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--purple-200); text-decoration: none; }
-.dash-module:hover::before { opacity: 1; }
-.dash-module-icon { font-size: 28px; margin-bottom: 12px; }
-.dash-module h3 { font-size: 15px; margin-bottom: 6px; color: var(--text-primary); }
-.dash-module p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.dash-module-tags { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
-.dash-module-tag { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-.tag-blue   { background: #DBEAFE; color: #1E40AF; }
-.tag-green  { background: #D1FAE5; color: #065F46; }
-.tag-purple { background: var(--purple-100); color: var(--purple-700); }
-.tag-amber  { background: #FEF3C7; color: #92400E; }
-
-/* Quick actions */
-.dash-quick { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: var(--shadow-sm); }
-.dash-quick h3 { font-size: 15px; margin-bottom: 16px; }
-.dash-quick-links { display: flex; gap: 10px; flex-wrap: wrap; }
-
-@media (max-width: 900px) {
-  .dash-stats { grid-template-columns: repeat(2, 1fr); }
-}
-</style>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/cineora-admin.css" th:href="@{/css/cineora-admin.css}">
-</head>
-<body>
-
-<!-- Mobile sidebar overlay -->
+<link rel="stylesheet" th:href="@{/css/cineora-admin.css}">
+<link rel="stylesheet" th:href="@{/css/cineora-admin-dashboard.css}">
+</head><body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
-
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
 <div class="admin-layout">
-
-  <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
     <a th:href="@{/admin/dashboard}" class="sidebar-brand">
       <img class="cineora-brand-logo" src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo">
@@ -104,100 +55,34 @@
       </form>
     </div>
   </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="admin-main">
-    <div class="admin-topbar">
-      <div class="page-title">🏠 Admin Dashboard</div>
-      <div class="topbar-actions">
-        <span style="font-size:13px;color:var(--text-secondary);">
-          Welcome, <strong th:text="${user != null ? user.fullName : 'Admin'}">Admin</strong>
-        </span>
-      </div>
-    </div>
-
-    <div class="admin-content">
-      <!-- Stats Row -->
-      <div class="dash-stats">
-        <div class="dash-stat-card blue">
-          <div class="dash-stat-icon">👥</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-num" th:text="${stats != null ? stats.customerCount : '—'}">—</div>
-            <div class="dash-stat-lbl">Customers</div>
-          </div>
-        </div>
-        <div class="dash-stat-card green">
-          <div class="dash-stat-icon">🛡️</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-num" th:text="${stats != null ? (stats.staffCount + stats.managerCount) : '—'}">—</div>
-            <div class="dash-stat-lbl">Staffs & Managers</div>
-          </div>
-        </div>
-        <div class="dash-stat-card purple">
-          <div class="dash-stat-icon">🔑</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-num">4</div>
-            <div class="dash-stat-lbl">System Roles</div>
-          </div>
-        </div>
-        <div class="dash-stat-card red">
-          <div class="dash-stat-icon">⚠️</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-num" th:text="${stats != null ? stats.lockedAccounts : '—'}">—</div>
-            <div class="dash-stat-lbl">Locked Accounts</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Management Modules -->
-      <div class="dash-modules">
-        <a th:href="@{/admin/customers}" class="dash-module">
-          <div class="dash-module-icon">👥</div>
-          <h3>Customer Accounts</h3>
-          <p>View, create, edit, suspend/reactivate, and reset passwords for customer accounts.</p>
-          <div class="dash-module-tags">
-            <span class="dash-module-tag tag-blue">Management</span>
-          </div>
-        </a>
-        <a th:href="@{/admin/staffs}" class="dash-module">
-          <div class="dash-module-icon">🛡️</div>
-          <h3>Staff & Manager Accounts</h3>
-          <p>Manage staff and manager accounts, assign roles.</p>
-          <div class="dash-module-tags">
-            <span class="dash-module-tag tag-green">Management</span>
-          </div>
-        </a>
-        <a th:href="@{/admin/roles}" class="dash-module">
-          <div class="dash-module-icon">🔑</div>
-          <h3>Roles & Permissions</h3>
-          <p>Configure roles (ADMIN, MANAGER, STAFF, CUSTOMER) and their permissions.</p>
-          <div class="dash-module-tags">
-            <span class="dash-module-tag tag-amber">Config</span>
-          </div>
-        </a>
-        <a th:href="@{/admin/config}" class="dash-module">
-          <div class="dash-module-icon">⚙️</div>
-          <h3>System Configuration</h3>
-          <p>Configure theaters, screening rooms, operating hours and pricing.</p>
-          <div class="dash-module-tags">
-            <span class="dash-module-tag tag-purple">Settings</span>
-          </div>
-        </a>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="dash-quick">
-        <h3>🔗 Quick Actions</h3>
-        <div class="dash-quick-links">
-          <a th:href="@{/admin/config}" class="btn btn-secondary">⚙️ Configuration</a>
-          <a th:href="@{/admin/roles}" class="btn btn-secondary">🔑 Roles</a>
-        </div>
-      </div>
-
-    </div>
-  </main>
+<main class="admin-main">
+<header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div><div class="topbar-actions"><span class="profile-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</span><span class="admin-pill">ADMIN</span></div></header>
+<div class="admin-content dashboard-content">
+<div class="dashboard-heading"><div><span class="eyebrow">CINEORA / ADMIN CONSOLE</span><h1>Admin Dashboard</h1><p>Revenue, bookings and cinema activity at a glance.</p></div><div class="heading-actions"><a class="btn btn-secondary" th:href="@{/admin/customers}">Customer accounts</a><a class="btn btn-primary" th:href="@{/admin/dashboard}">Refresh dashboard &#8635;</a></div></div>
+<div class="dashboard-error" role="alert" th:if="${dashboardError}" th:text="${dashboardError}"></div>
+<th:block th:if="${dashboard != null}" th:with="d=${dashboard}">
+<div class="data-caption"><span class="live-dot"></span><span>Database snapshot</span><span th:text="${#temporals.format(d.updatedAt,'dd/MM/yyyy HH:mm')}" ></span><span>UTC+7</span></div>
+<div class="metric-grid">
+<article class="metric-card"><div class="metric-top"><span>Revenue today</span><span class="metric-icon">&#8363;</span></div><strong class="metric-value" th:text="${#numbers.formatDecimal(d.revenue,0,'POINT',0,'COMMA') + ' &#8363;'}">&#8212;</strong><p>Successful payments, tickets &amp; concessions</p></article>
+<article class="metric-card"><div class="metric-top"><span>Tickets sold today</span><span class="metric-icon gold">&#127903;</span></div><strong class="metric-value" th:text="${#numbers.formatInteger(d.tickets,1,'POINT')}">&#8212;</strong><p>Booked seats from today's paid bookings</p></article>
+<article class="metric-card"><div class="metric-top"><span>Pending bookings</span><span class="metric-icon gold">&#9201;</span></div><strong class="metric-value" th:text="${d.pending}">&#8212;</strong><p>Awaiting payment or confirmation</p></article>
+<article class="metric-card"><div class="metric-top"><span>Active customers</span><span class="metric-icon">&#128101;</span></div><strong class="metric-value" th:text="${#numbers.formatInteger(d.activeCustomers,1,'POINT')}">&#8212;</strong><p><b th:text="${d.newCustomers}">0</b> registered today</p></article>
 </div>
-
+<div class="analytics-grid">
+<section class="dashboard-panel chart-panel"><div class="panel-title"><div><h2>Revenue over the last 7 days</h2><p>Payments received across online and counter sales</p></div><span class="date-chip" th:text="${#temporals.format(d.startDate,'dd/MM') + ' - ' + #temporals.format(d.today,'dd/MM/yyyy')}"></span></div>
+<div class="chart-total"><strong th:text="${#numbers.formatDecimal(d.weekTotal,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong><span>Total collected this week</span></div>
+<div class="revenue-chart" role="group" aria-label="Daily revenue chart"><div class="chart-day" th:each="day : ${d.days}"><div class="bar-track"><div class="chart-bar" th:classappend="${day.peak} ? 'peak' : ''" th:style="${'height:' + day.height + '%'}"></div></div><span class="bar-date" th:text="${#temporals.format(day.day,'dd/MM')}"></span><span class="bar-amount" th:text="${#numbers.formatDecimal(day.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></span></div></div>
+<div class="chart-legend"><span><i></i>Revenue received</span><span><i class="peak"></i>Weekly peak</span></div></section>
+<section class="dashboard-panel"><div class="panel-title"><div><h2>Top performing movies</h2><p>Revenue received in the last 7 days</p></div></div><p class="empty-message" th:if="${#lists.isEmpty(d.topMovies)}">No paid movie bookings in this period.</p><div class="movie-row" th:each="movie, row : ${d.topMovies}"><span class="movie-rank" th:text="${row.count}"></span><div><h3 th:text="${movie.title}"></h3><p><span th:text="${movie.bookings}"></span> paid bookings</p></div><strong th:text="${#numbers.formatDecimal(movie.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong></div></section>
+</div>
+<div class="operations-grid">
+<section class="dashboard-panel recent-panel"><div class="panel-title"><div><h2>Recent bookings</h2><p>Latest transactions across all sales channels</p></div></div><div class="dashboard-table-wrap"><table><thead><tr><th>Booking</th><th>Movie / showtime</th><th>Amount</th><th>Status</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(d.recent)}"><td colspan="4" class="empty-message">No bookings yet.</td></tr><tr th:each="booking : ${d.recent}"><td><strong th:text="${booking.code}"></strong><small th:text="${booking.channel}"></small></td><td><span th:text="${booking.title}"></span><small th:text="${#temporals.format(booking.startTime.toLocalDateTime(),'dd/MM HH:mm')}"></small></td><td class="money-cell" th:text="${#numbers.formatDecimal(booking.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></td><td><span class="booking-status" th:classappend="${booking.status == 'CONFIRMED' or booking.status == 'PAID' or booking.status == 'COMPLETED'} ? 'paid' : ''" th:text="${booking.status}"></span></td></tr></tbody></table></div></section>
+<div class="operations-side"><section class="dashboard-panel"><div class="panel-title"><div><h2>Upcoming screenings</h2><p>Remaining scheduled shows today</p></div></div><p class="empty-message" th:if="${#lists.isEmpty(d.upcoming)}">No more screenings scheduled today.</p><div class="screening-row" th:each="show : ${d.upcoming}"><time th:text="${#temporals.format(show.startTime.toLocalDateTime(),'HH:mm')}"></time><div><h3 th:text="${show.title}"></h3><p th:text="${show.room}"></p><span th:text="${T(java.lang.Math).max(0, show.capacity - show.reserved) + ' / ' + show.capacity + ' seats available'}"></span></div></div></section>
+<section class="dashboard-panel account-summary"><h2>Account overview</h2><a th:href="@{/admin/customers}"><span>Customers</span><strong th:text="${d.customers}"></strong></a><a th:href="@{/admin/staffs}"><span>Staff &amp; managers</span><strong th:text="${d.staff}"></strong></a><a th:href="@{/admin/roles}"><span>System roles</span><strong th:text="${d.roles}"></strong></a><a th:href="@{/admin/customers}"><span>Locked / inactive accounts</span><strong th:text="${d.locked}"></strong></a></section></div>
+</div>
+</th:block>
+<nav class="dashboard-shortcuts" aria-label="Administration shortcuts"><a th:href="@{/admin/customers}">Customers &rarr;</a><a th:href="@{/admin/staffs}">Staff &amp; managers &rarr;</a><a th:href="@{/admin/roles}">Roles &amp; permissions &rarr;</a><a th:href="@{/admin/config}">System configuration &rarr;</a></nav>
+</div></main></div>
 <script>
 function openSidebar() {
   document.getElementById('adminSidebar').classList.add('mobile-open');
@@ -208,5 +93,4 @@ function closeSidebar() {
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
 </script>
-</body>
-</html>
+</body></html>

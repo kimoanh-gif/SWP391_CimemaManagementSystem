@@ -92,6 +92,7 @@ class AuthServiceTest {
         when(accountDAO.existsByUsername(anyString())).thenReturn(false);
         when(roleDAO.findByName("CUSTOMER")).thenReturn(Optional.of(new Role(4, "CUSTOMER", "Customer")));
         when(accountDAO.insert(any(Account.class))).thenReturn(100);
+        when(customerDAO.insert(100)).thenReturn(200);
         when(otpService.generateCode()).thenReturn("123456");
         when(otpService.hash(anyString())).thenReturn("$2a$10$hashed");
         when(otpService.sendByEmail(anyString(), anyString(), anyString())).thenReturn(true);

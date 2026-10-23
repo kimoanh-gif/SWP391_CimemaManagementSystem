@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.security.SecureRandom;
+
 
 /**
  * Service for Staff & Manager Account Management (Admin).
@@ -21,12 +21,14 @@ public class StaffAccountService {
 
     private final AccountDAO accountDAO;
     private final RoleDAO roleDAO;
+    private final AdminPasswordResetService passwordResetService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
-    public StaffAccountService(AccountDAO accountDAO, RoleDAO roleDAO) {
+    public StaffAccountService(AccountDAO accountDAO, RoleDAO roleDAO, AdminPasswordResetService passwordResetService) {
         this.accountDAO = accountDAO;
         this.roleDAO = roleDAO;
+        this.passwordResetService = passwordResetService;
     }
 
     public List<Account> getAllStaffs() {
@@ -210,91 +212,18 @@ public class StaffAccountService {
                 : OperationResult.error("REACTIVATE_FAILED", "Failed to reactivate account.");
     }
 
-    /**
-     * A5 - Reset Password
-     * Generates a secure temporary password and returns it to the Admin.
-     * Logic:
-     * 1. Check account exists and is a staff/manager (not customer)
-     * 2. Check account is not already suspended (suspended accounts can't reset password until reactivated)
-     * 3. Generate cryptographically secure random password (12 chars: letters + digits)
-     * 4. Hash and save to database
-     * 5. Return plain temporary password for Admin to communicate to user
-     */
+    /** Password plaintext is sent only to the account's registered address. */
     public OperationResult resetPassword(int accountId) {
-        // 1. Check account exists
-        Optional<Account> existing = getStaffById(accountId);
-        if (existing.isEmpty()) {
-            return OperationResult.error("NOT_FOUND", "Account not found.");
+        if (getStaffById(accountId).isEmpty()) return OperationResult.error("NOT_FOUND", "Account not found.");
+        try {
+            var result=passwordResetService.reset(accountId);
+            return result.success() ? OperationResult.success(result.message())
+                    : OperationResult.error(result.code(),result.message());
+        } catch (AdminPasswordResetService.DeliveryFailure ex) {
+            return OperationResult.error("EMAIL_FAILED", "Email delivery failed. The password was not changed. Please try again later.");
+        } catch (org.springframework.dao.DataAccessException ex) {
+            return OperationResult.error("RESET_FAILED", "Password reset failed. Please try again later.");
         }
-        
-        Account account = existing.get();
-        
-        // 2. Cannot reset password for suspended accounts - must reactivate first
-        if ("SUSPENDED".equals(account.getStatus())) {
-            return OperationResult.error("SUSPENDED_ACCOUNT", 
-                    "Cannot reset password for suspended account. Please reactivate the account first.");
-        }
-        
-        // 3. Generate secure temporary password
-        String tempPassword = generateSecureTempPassword();
-        
-        // 4. Hash and save
-        String hash = passwordEncoder.encode(tempPassword);
-        int updated = accountDAO.updatePasswordHash(accountId, hash);
-        
-        if (updated <= 0) {
-            return OperationResult.error("RESET_FAILED", "Failed to reset password. Please try again.");
-        }
-        
-        // 5. Return success with temporary password
-        return OperationResult.success(
-                "Password has been reset successfully. Temporary password: " + tempPassword + 
-                ". Please instruct the user to change this password after logging in.",
-                tempPassword
-        );
-    }
-    
-    /**
-     * Generates a cryptographically secure temporary password.
-     * Format: 2 uppercase + 2 lowercase + 4 digits + 4 mixed = 12 chars
-     * Example: Ma2bc9def3gh
-     */
-    private String generateSecureTempPassword() {
-        String uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";  // Removed I, O to avoid confusion
-        String lowercase = "abcdefghjkmnpqrstuvwxyz";   // Removed l to avoid confusion  
-        String digits = "23456789";                      // Removed 0, 1 to avoid confusion
-        
-        SecureRandom random = new SecureRandom();
-        
-        StringBuilder sb = new StringBuilder();
-        // Add 2 uppercase
-        for (int i = 0; i < 2; i++) {
-            sb.append(uppercase.charAt(random.nextInt(uppercase.length())));
-        }
-        // Add 2 lowercase
-        for (int i = 0; i < 2; i++) {
-            sb.append(lowercase.charAt(random.nextInt(lowercase.length())));
-        }
-        // Add 4 digits
-        for (int i = 0; i < 4; i++) {
-            sb.append(digits.charAt(random.nextInt(digits.length())));
-        }
-        // Add 4 mixed chars
-        String mixed = uppercase + lowercase + digits;
-        for (int i = 0; i < 4; i++) {
-            sb.append(mixed.charAt(random.nextInt(mixed.length())));
-        }
-        
-        // Shuffle to mix characters
-        char[] chars = sb.toString().toCharArray();
-        for (int i = chars.length - 1; i > 0; i--) {
-            int j = random.nextInt(i + 1);
-            char temp = chars[i];
-            chars[i] = chars[j];
-            chars[j] = temp;
-        }
-        
-        return new String(chars);
     }
 
     // Stats
@@ -339,40 +268,11 @@ public class StaffAccountService {
         };
     }
 
-    public static class OperationResult {
-        private final boolean success;
-        private final String code;
-        private final String message;
-        private String tempPassword;  // For reset password feature
-
-        private OperationResult(boolean success, String code, String message) {
-            this.success = success;
-            this.code = code;
-            this.message = message;
-        }
-        
-        private OperationResult(boolean success, String code, String message, String tempPassword) {
-            this.success = success;
-            this.code = code;
-            this.message = message;
-            this.tempPassword = tempPassword;
-        }
-
-        public static OperationResult success(String message) {
-            return new OperationResult(true, null, message);
-        }
-        
-        public static OperationResult success(String message, String tempPassword) {
-            return new OperationResult(true, null, message, tempPassword);
-        }
-
-        public static OperationResult error(String code, String message) {
-            return new OperationResult(false, code, message);
-        }
-
-        public boolean isSuccess()  { return success; }
-        public String getCode()     { return code; }
-        public String getMessage()  { return message; }
-        public String getTempPassword() { return tempPassword; }
+    public record OperationResult(boolean success, String code, String message) {
+        public static OperationResult success(String message) { return new OperationResult(true,null,message); }
+        public static OperationResult error(String code,String message) { return new OperationResult(false,code,message); }
+        public boolean isSuccess() { return success; }
+        public String getCode() { return code; }
+        public String getMessage() { return message; }
     }
 }
