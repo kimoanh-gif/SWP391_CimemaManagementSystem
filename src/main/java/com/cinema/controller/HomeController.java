@@ -52,38 +52,32 @@ public class HomeController {
 
     @GetMapping({"/", "/home"})
     public String home(HttpSession session, Model model) {
-        // 1. Featured movies for Hero Slider
-        List<Movie> featuredMovies = movieService.getFeaturedMovies(5);
-        if (featuredMovies.isEmpty()) {
-            featuredMovies = movieService.getNowShowingMovies(5);
-        }
-        model.addAttribute("featuredMovies", featuredMovies);
-
-        // 2. Now Showing movies
+        // Homepage catalog sections.
         List<Movie> nowShowing = movieService.getNowShowingMovies(8);
         model.addAttribute("nowShowingMovies", nowShowing);
 
-        // 3. Coming Soon movies
-        List<Movie> comingSoon = movieService.getComingSoonMovies(6);
+        // The hero exclusively promotes upcoming releases.
+        List<Movie> comingSoon = movieService.getComingSoonMovies(15);
+        model.addAttribute("featuredMovies", comingSoon);
         model.addAttribute("comingSoonMovies", comingSoon);
 
-        // 4. Today's Showtimes preview
+        // 3. Today's Showtimes preview
         List<PublicShowtime> todayShowtimes = showtimeService.getTodayShowtimes(8);
         model.addAttribute("todayShowtimes", todayShowtimes);
 
-        // 5. Featured Promotions
+        // 4. Featured Promotions
         List<Promotion> promotions = promotionNewsService.getLatestPromotions(4);
         model.addAttribute("promotions", promotions);
 
-        // 6. Latest Cinema News
+        // 5. Latest Cinema News
         List<NewsArticle> newsList = promotionNewsService.getLatestNews(3);
         model.addAttribute("newsList", newsList);
 
-        // 7. Quick Booking Bar options
+        // 6. Quick Booking Bar options
         model.addAttribute("allMovies", movieService.searchMovies(null, null, "ALL", "newest"));
         model.addAttribute("upcomingDates", showtimeService.getUpcomingDates(7));
 
-        // 8. Session user info
+        // 7. Session user info
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("currentUser", user);
         if (user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())) {

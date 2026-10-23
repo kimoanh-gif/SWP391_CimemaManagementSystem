@@ -8,19 +8,21 @@
   <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
   <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
 </head>
-<body class="booking-history-page">
+<body class="customer-booking-page booking-history-page">
   <div th:replace="~{fragments/cinema-header-footer :: header('profile')}"></div>
   <main class="booking-shell history-shell">
     <nav class="history-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/}">Home</a><span>›</span><strong>My Booking History</strong></nav>
     <section class="hero-row compact history-heading"><div><p class="eyebrow">CINEORA ACCOUNT</p><h1>My Booking History</h1><p class="lead">Review your bookings and open the digital tickets for confirmed reservations.</p></div></section>
     <section class="history-list" th:if="${!#lists.isEmpty(bookings)}">
       <article class="panel history-card" th:each="booking : ${bookings}">
-        <div><span class="status-pill" th:text="${booking.bookingStatus}">CONFIRMED</span><small th:text="${booking.paymentStatus}">PAID</small></div>
-        <h2 th:text="${booking.movieTitle}">Movie Title</h2>
-        <p><b th:text="${booking.bookingCode}">BOOKING-CODE</b> · <span th:text="${booking.seatLabels ?: 'Seats released'}">A1, A2</span></p>
-        <p th:text="${booking.roomName + ' · ' + #temporals.format(booking.startTime,'HH:mm dd/MM/yyyy')}">Room 1 · 19:30 23/10/2026</p>
-        <strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong>
-        <a th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button secondary" th:href="@{/customer/booking/tickets/{id}(id=${booking.bookingId})}">View Digital Tickets</a>
+        <div class="history-poster"><img th:if="${booking.posterUrl != null and !#strings.isEmpty(booking.posterUrl)}" th:src="${booking.posterUrl}" th:alt="${booking.movieTitle}"><span th:unless="${booking.posterUrl != null and !#strings.isEmpty(booking.posterUrl)}">C</span></div>
+        <div class="history-card-content">
+          <div class="history-status"><span class="status-pill" th:text="${booking.bookingStatus}">CONFIRMED</span><small th:text="${booking.paymentStatus}">PAID</small></div>
+          <h2 th:text="${booking.movieTitle}">Movie Title</h2>
+          <p><b th:text="${booking.bookingCode}">BOOKING-CODE</b></p>
+          <div class="history-meta"><span th:text="${#strings.replace(booking.roomName,'Phòng Chiếu','Cinema')}">Cinema 01</span><span th:text="${#temporals.format(booking.startTime,'HH:mm · MMM d, yyyy')}">19:30 · Oct 23, 2026</span><span th:text="${'Seats: ' + (booking.seatLabels ?: 'Released')}">Seats: A1, A2</span></div>
+        </div>
+        <div class="history-card-actions"><strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong><a th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button secondary" th:href="@{/customer/booking/tickets/{id}(id=${booking.bookingId})}">View Digital Tickets</a></div>
       </article>
     </section>
     <section class="panel empty-state" th:if="${#lists.isEmpty(bookings)}"><h2>You have no booking history yet</h2><p>Your completed bookings will appear here.</p></section>

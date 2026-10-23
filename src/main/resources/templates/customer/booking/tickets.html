@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digital Tickets | CINEORA</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head>
-<body class="ticket-page">
-<header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Book Tickets</a><a class="active" th:href="@{/customer/booking/history}">My Booking History</a></nav></header>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digital Tickets | CINEORA</title><link rel="stylesheet" th:href="@{/css/cinema-portal.css}"><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head>
+<body class="ticket-page customer-booking-page">
+<div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
 <main class="booking-shell ticket-shell">
   <section class="hero-row compact"><div><p class="eyebrow">ADMIT ONE</p><h1>Digital Cinema Ticket</h1><p class="lead">Present the QR code at the auditorium entrance.</p></div></section>
   <div class="cinema-pass-list">

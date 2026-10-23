@@ -12,58 +12,46 @@
     <!-- =====================================================================
          1. HERO FEATURED MOVIE SLIDER
          ===================================================================== -->
-    <section class="hero-slider-section cinematic-hero" th:if="${featuredMovies != null && !featuredMovies.isEmpty()}"
-             th:style="|--hero-image:url('${featuredMovies[0].posterUrl}')|">
-        <!-- Render first featured movie prominently with banner -->
-        <div class="hero-slider-container" th:with="hero=${featuredMovies[0]}">
-            <div class="hero-content">
-                <div class="hero-tag">
-                    <span>Featured This Week</span>
-                </div>
-                <h1 class="hero-title" th:text="${hero.title}">Light Speedway</h1>
-                <div class="hero-meta">
-                    <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
-                    <div class="hero-meta-item">
-                        <span>⏱️</span>
-                        <span th:text="${hero.duration + ' min'}">118 min</span>
-                    </div>
-                    <div class="hero-meta-item">
-                        <span>🎭</span>
-                        <span th:text="${hero.genres}">Action, Adventure</span>
-                    </div>
-                    <div class="hero-meta-item">
-                        <span>⭐</span>
-                        <span th:text="${hero.averageRating + ' / 5.0'}">4.8 / 5.0</span>
-                    </div>
-                </div>
-                <p class="hero-description" th:text="${hero.description}">
-                    A spectacular cinematic adventure with breathtaking visuals and an unforgettable story.
-                </p>
-                <div class="hero-actions">
-                    <a th:href="@{/movies/{id}(id=${hero.movieId})#showtimes}" class="btn-primary">
-                        <span>Book Tickets</span>
-                    </a>
-                    <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}"
-                            type="button"
-                            class="btn-secondary"
-                            th:attr="onclick=|openTrailer('${hero.trailerUrl}')|">
-                        <span>▶ Watch Trailer</span>
-                    </button>
-                    <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-secondary">
-                        <span>Movie Details</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="hero-poster-wrap">
-                <div class="hero-poster-card">
-                    <img th:src="${hero.posterUrl}" th:alt="${hero.title}" class="hero-poster-img"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
-                    <div class="hero-poster-overlay">
+    <section class="hero-slider-section cinematic-hero hero-carousel" data-hero-carousel
+             th:if="${featuredMovies != null && !featuredMovies.isEmpty()}"
+             aria-roledescription="carousel" aria-label="Featured movies">
+        <article class="hero-carousel-slide"
+                 th:each="hero, stat : ${featuredMovies}"
+                 th:classappend="${stat.first} ? ' active'"
+                 th:style="|--hero-image:url('${hero.posterUrl}')|"
+                 th:attr="aria-hidden=${!stat.first},data-slide-index=${stat.index}">
+            <div class="hero-slider-container">
+                <div class="hero-content">
+                    <div class="hero-tag"><span>Featured This Week</span></div>
+                    <h1 class="hero-title" th:text="${hero.title}">Movie title</h1>
+                    <div class="hero-meta">
                         <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
+                        <div class="hero-meta-item"><span>◷</span><span th:text="${hero.formattedDuration}">1h 58m</span></div>
+                        <div class="hero-meta-item"><span>◆</span><span th:text="${hero.genresFormatted}">Action, Adventure</span></div>
+                        <div class="hero-meta-item"><span>★</span><span th:text="${hero.averageRating + ' / 5.0'}">4.8 / 5.0</span></div>
+                    </div>
+                    <p class="hero-description" th:text="${hero.description}">A spectacular cinematic experience.</p>
+                    <div class="hero-actions">
+                        <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-primary"><span>View Movie Details</span></a>
+                        <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}" type="button"
+                                class="btn-secondary" th:attr="onclick=|openTrailer('${hero.trailerUrl}')|">
+                            <span>▶ Watch Trailer</span>
+                        </button>
+                        <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-secondary"><span>Movie Details</span></a>
                     </div>
                 </div>
             </div>
+        </article>
+
+        <div class="hero-carousel-thumbnails" role="tablist" aria-label="Choose a featured movie">
+            <button class="hero-carousel-thumb" type="button"
+                    th:each="hero, stat : ${featuredMovies}"
+                    th:classappend="${stat.first} ? ' active'"
+                    th:attr="data-slide-target=${stat.index},aria-selected=${stat.first},aria-label=|Show ${hero.title}|"
+                    role="tab">
+                <img th:src="${hero.posterUrl}" th:alt="${hero.title}" onerror="this.src='/images/cinema-login-hero.png'" />
+                <span th:text="${hero.title}">Movie title</span>
+            </button>
         </div>
     </section>
 
@@ -94,7 +82,7 @@
         <div class="quick-booking-inner">
             <div class="quick-booking-field">
                 <label for="quickMovieSelect">
-                    <span>🎬</span> 1. Select Movie
+                    1. Select Movie
                 </label>
                 <select id="quickMovieSelect">
                     <option value="">Select a movie</option>
@@ -108,7 +96,7 @@
 
             <div class="quick-booking-field">
                 <label for="quickDateSelect">
-                    <span>📅</span> 2. Select Date
+                    2. Select Date
                 </label>
                 <select id="quickDateSelect">
                     <option th:each="d, stat : ${upcomingDates}"
@@ -121,7 +109,7 @@
 
             <div class="quick-booking-field">
                 <label>
-                    <span>⚡</span> 3. Showtime
+                    3. Showtime
                 </label>
                 <div style="font-size:0.85rem;color:var(--text-muted);padding-top:8px;">
                     Continue to view available showtimes and seats
@@ -129,7 +117,7 @@
             </div>
 
             <button type="button" id="quickBookBtn" class="btn-quick-book">
-                <span>Find Showtimes ➔</span>
+                <span>Find Showtimes →</span>
             </button>
         </div>
     </div>
@@ -141,13 +129,11 @@
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Playing Today</span>
-                <h2 class="section-title">
-                    <span class="section-title-icon">🎬</span> Now Showing
-                </h2>
+                    <h2 class="section-title">Now Showing</h2>
             </div>
             <a th:href="@{/movies?type=now-showing}" class="section-link">
                 <span>View All Movies</span>
-                <span>➔</span>
+                <span>→</span>
             </a>
         </div>
 
@@ -170,7 +156,7 @@
                         <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
                            th:href="@{/movies/{id}(id=${movie.movieId})}"
                            class="btn-play-trailer" title="View details">
-                            ℹ️
+                            Details
                         </a>
                     </div>
                 </div>
@@ -179,16 +165,16 @@
                     <h3 class="movie-card-title">
                         <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
                     </h3>
-                    <div class="movie-card-genres" th:text="${movie.genres}">Action, Adventure</div>
+                    <div class="movie-card-genres" th:text="${movie.genresFormatted}">Action, Adventure</div>
                     <div class="movie-card-meta">
                         <span class="movie-rating-stars">
-                            ⭐ <span th:text="${movie.averageRating}">4.8</span>
+                            Rating <span th:text="${movie.averageRating}">4.8</span>
                         </span>
                         <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
                     </div>
                     <div class="movie-card-actions">
                         <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Details</a>
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Book Now</a>
+                        <a th:href="@{/movies/{id}(id=${movie.movieId})} + '#showtimes'" class="btn-card-book">Book Now</a>
                     </div>
                 </div>
             </article>
@@ -202,17 +188,15 @@
     <!-- =====================================================================
          4. PHIM SẮP CHIẾU (COMING SOON)
          ===================================================================== -->
-    <section class="section-shell" id="coming-soon" th:if="${comingSoonMovies != null && !comingSoonMovies.isEmpty()}">
+    <section class="section-shell" id="coming-soon">
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Coming to CINEORA</span>
-                <h2 class="section-title">
-                    <span class="section-title-icon">✨</span> Coming Soon
-                </h2>
+                <h2 class="section-title">Coming Soon</h2>
             </div>
             <a th:href="@{/movies?type=coming-soon}" class="section-link">
                 <span>View Coming Soon</span>
-                <span>➔</span>
+                <span>→</span>
             </a>
         </div>
 
@@ -239,7 +223,7 @@
                     <h3 class="movie-card-title">
                         <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
                     </h3>
-                    <div class="movie-card-genres" th:text="${movie.genres}">Animation, Family</div>
+                    <div class="movie-card-genres" th:text="${movie.genresFormatted}">Animation, Family</div>
                     <div class="movie-card-meta">
                         <span>Release:</span>
                         <strong style="color:var(--gold);" th:text="${movie.formattedReleaseDate}">25/10/2026</strong>
@@ -250,22 +234,21 @@
                 </div>
             </article>
         </div>
+        <div class="home-empty-state" th:if="${comingSoonMovies == null || comingSoonMovies.isEmpty()}">Upcoming releases will be announced soon.</div>
     </section>
 
     <!-- =====================================================================
          5. SUẤT CHIẾU HÔM NAY (TODAY'S SHOWTIMES PREVIEW)
          ===================================================================== -->
-    <section class="section-shell" th:if="${todayShowtimes != null && !todayShowtimes.isEmpty()}">
+    <section class="section-shell">
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Live Schedule</span>
-                <h2 class="section-title">
-                    <span class="section-title-icon">🎟️</span> Today's Showtimes
-                </h2>
+                <h2 class="section-title">Today's Auditorium Schedule</h2>
             </div>
             <a th:href="@{/showtimes}" class="section-link">
                 <span>View Full Schedule</span>
-                <span>➔</span>
+                <span>→</span>
             </a>
         </div>
 
@@ -278,12 +261,12 @@
                          onerror="this.src='/images/cinema-login-hero.png'" />
                     <div>
                         <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;" th:text="${st.movieTitle}">Movie Title</h4>
-                        <div style="font-size:0.8rem;color:var(--text-muted);" th:text="${st.roomName + ' · ' + st.roomType}">Cinema 01 · 2D</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);" th:text="${#strings.replace(st.roomName,'Phòng Chiếu','Cinema') + ' · ' + st.roomType}">Cinema 01 · 2D</div>
                     </div>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border-subtle);">
                     <div>
-                        <div style="font-size:1.15rem;font-weight:800;color:#fff;" th:text="${st.formattedStartTime}">19:30</div>
+                        <div style="font-size:1.15rem;font-weight:800;color:var(--text-primary);" th:text="${st.formattedStartTime}">19:30</div>
                         <div style="font-size:0.75rem;color:var(--text-muted);" th:text="${'Ends ' + st.formattedEndTime}">Ends 21:30</div>
                     </div>
                     <div style="text-align:right;">
@@ -296,6 +279,7 @@
                 </a>
             </div>
         </div>
+        <div class="home-empty-state" th:if="${todayShowtimes == null || todayShowtimes.isEmpty()}">There are no scheduled screenings today.</div>
     </section>
 
     <!-- =====================================================================
@@ -305,13 +289,11 @@
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Special Offers</span>
-                <h2 class="section-title">
-                    <span class="section-title-icon">🎁</span> Featured Promotions
-                </h2>
+                <h2 class="section-title">Featured Promotions</h2>
             </div>
             <a th:href="@{/promotions-news?tab=promotions}" class="section-link">
                 <span>View All Offers</span>
-                <span>➔</span>
+                <span>→</span>
             </a>
         </div>
 
@@ -349,13 +331,11 @@
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Latest Updates</span>
-                <h2 class="section-title">
-                    <span class="section-title-icon">📰</span> Cinema News &amp; Events
-                </h2>
+                <h2 class="section-title">Cinema News &amp; Events</h2>
             </div>
             <a th:href="@{/promotions-news?tab=news}" class="section-link">
                 <span>View All News</span>
-                <span>➔</span>
+                <span>→</span>
             </a>
         </div>
 
@@ -377,7 +357,7 @@
                     <p class="news-excerpt" th:text="${news.getExcerpt(140)}">The latest cinema news, releases, and events from CINEORA.</p>
                     <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
                         <span>Read More</span>
-                        <span>➔</span>
+                        <span>→</span>
                     </a>
                 </div>
             </article>

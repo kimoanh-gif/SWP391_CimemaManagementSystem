@@ -10,47 +10,31 @@
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" th:href="@{/css/cinema-portal.css}" />
     <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
   </head>
-  <body data-page="seats" th:attr="data-max-seats=${maxSeats}">
-    <header class="site-header">
-      <a class="brand" th:href="@{/}"
-        ><span>C</span
-        ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
-      >
-      <nav>
-        <a class="active" th:href="@{/customer/booking}"
-          >Movies &amp; Showtimes</a
-        ><a th:href="@{/customer/profile}">Profile</a>
-      </nav>
-      <div class="account-actions">
-        <span class="material-symbols-outlined">account_circle</span
-        ><b th:text="${session.loggedInFullName}">Customer</b>
-      </div>
-    </header>
+  <body class="customer-booking-page" data-page="seats" th:attr="data-max-seats=${maxSeats}">
+    <div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
     <div class="progress-wrap">
-      <div class="stepper five">
-        <div class="step done">
-          <b>✓</b><span><small>COMPLETED</small>Showtime</span>
-        </div>
+      <div class="stepper">
         <div class="step active">
-          <b>2</b><span><small>STEP 2 · CURRENT</small>Seats</span>
+          <b>1</b><span><small>STEP 1 · CURRENT</small>Seats</span>
         </div>
         <div class="step">
-          <b>3</b><span><small>STEP 3</small>Food</span>
+          <b>2</b><span><small>STEP 2</small>Food</span>
         </div>
         <div class="step">
-          <b>4</b><span><small>STEP 4</small>Promotions</span>
+          <b>3</b><span><small>STEP 3</small>Promotions</span>
         </div>
         <div class="step">
-          <b>5</b><span><small>STEP 5</small>Payment</span>
+          <b>4</b><span><small>STEP 4</small>Payment</span>
         </div>
       </div>
     </div>
     <main class="booking-shell">
       <section class="hero-row compact">
         <div>
-          <a class="back-link" th:href="@{/customer/booking}"
+          <a class="back-link" th:href="@{/customer/booking/change-showtime}"
             ><span class="material-symbols-outlined">arrow_back</span>Change
             showtime</a
           >
@@ -144,7 +128,7 @@
               type="submit"
               disabled
             >
-              Hold Seats &amp; Continue
+              Continue
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
             <p class="fine-print">

@@ -25,6 +25,33 @@ button,
 input {
   font: inherit;
 }
+
+/* Keep the shared customer header aligned with the light Homepage reference. */
+.customer-booking-page .cinema-header {
+  height: 80px;
+  color: var(--ink);
+  border-bottom-color: rgba(144, 111, 109, 0.16);
+  background: rgba(255, 248, 240, 0.95);
+  box-shadow: 0 1px 8px rgba(40, 32, 42, 0.06);
+}
+.customer-booking-page .nav-link { color: #5c403e; }
+.customer-booking-page .nav-link:hover { color: var(--red); background: var(--peach); }
+.customer-booking-page .nav-link.active {
+  color: var(--red);
+  border-color: transparent;
+  border-bottom: 2px solid var(--red);
+  border-radius: 0;
+  background: transparent;
+}
+.customer-booking-page .user-badge { color: var(--ink); border-color: var(--line); background: #fff; }
+.customer-booking-page .user-avatar { color: #fff; background: var(--red); }
+.customer-booking-page .user-name { color: var(--ink); }
+.customer-booking-page .user-points { color: #745100; }
+.customer-booking-page .account-dropdown-menu { border-color: var(--line); background: #fff; }
+.customer-booking-page .account-dropdown-menu a,
+.customer-booking-page .account-dropdown-menu button { color: var(--ink); }
+.customer-booking-page .account-dropdown-menu a:hover,
+.customer-booking-page .account-dropdown-menu button:hover { color: var(--red); background: #fff1ec; }
 .material-symbols-outlined {
   font-size: 20px;
   line-height: 1;
@@ -1232,3 +1259,20 @@ h1 {
 .booking-history-page .cinema-footer { color: var(--muted); border-top-color: var(--line); background: #fff0e8; }
 .booking-history-page .footer-col h4 { color: var(--ink); }
 .booking-history-page .footer-links a:hover { color: var(--red); }
+.booking-history-page .history-card { grid-template-columns:110px minmax(0,1fr) auto;gap:20px;padding:16px;overflow:hidden; }
+.history-poster { width:110px;aspect-ratio:2/3;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,var(--red),#ef8a67);color:#fff;font-size:34px;font-weight:800; }
+.history-poster img { width:100%;height:100%;object-fit:cover; }
+.history-card-content { display:grid;gap:9px;min-width:0; }
+.history-status { display:flex;align-items:center;gap:10px; }
+.history-card-content h2 { font-size:1.35rem; }
+.history-meta { display:flex;flex-wrap:wrap;gap:7px 16px;color:var(--muted);font-size:13px; }
+.history-meta span { position:relative; }
+.history-meta span+span::before { content:"•";position:absolute;left:-10px;color:var(--red); }
+.history-card-actions { display:grid;justify-items:end;gap:16px;min-width:190px; }
+.history-card-actions strong { color:var(--red);font-size:1.15rem; }
+@media(max-width:720px){
+  .booking-history-page .history-card { grid-template-columns:82px 1fr; }
+  .history-poster { width:82px; }
+  .history-card-actions { grid-column:1/-1;width:100%;display:flex;align-items:center;justify-content:space-between; }
+  .history-card-actions .button { width:auto; }
+}

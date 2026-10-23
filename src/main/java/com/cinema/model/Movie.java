@@ -358,9 +358,11 @@ public class Movie {
         String t = (trailer != null && !trailer.isBlank()) ? trailer : "";
         if (t.isBlank()) return "";
         if (t.contains("watch?v=")) {
-            return t.replace("watch?v=", "embed/");
+            String videoId = t.substring(t.indexOf("watch?v=") + 8).split("[&?#]")[0];
+            return "https://www.youtube.com/embed/" + videoId;
         } else if (t.contains("youtu.be/")) {
-            return t.replace("youtu.be/", "www.youtube.com/embed/");
+            String videoId = t.substring(t.indexOf("youtu.be/") + 9).split("[?&#]")[0];
+            return "https://www.youtube.com/embed/" + videoId;
         }
         return t;
     }

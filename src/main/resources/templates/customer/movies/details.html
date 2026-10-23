@@ -21,6 +21,10 @@
          1. MOVIE HERO SECTION
          ===================================================================== -->
     <section class="movie-details-hero">
+        <div class="movie-details-backdrop"
+             th:if="${movie.posterUrl != null && !movie.posterUrl.isEmpty()}"
+             th:style="|background-image: url('${movie.posterUrl}')|"></div>
+        <div class="movie-details-scrim"></div>
         <div class="movie-details-container">
             <!-- Use the clean database poster only; never place generated text artwork here. -->
             <div class="movie-details-poster-wrap">
@@ -39,11 +43,14 @@
                 </div>
 
                 <h1 class="movie-details-title" th:text="${movie.title}">Movie Title</h1>
+                <p class="movie-original-title"
+                   th:if="${movie.originalTitle != null && !movie.originalTitle.isEmpty() && movie.originalTitle != movie.title}"
+                   th:text="${movie.originalTitle}">Original title</p>
 
                 <div class="movie-meta-pills">
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">T13</span>
-                    <span class="meta-pill" th:text="${movie.duration + ' minutes'}">118 minutes</span>
-                    <span class="meta-pill" th:text="${movie.genres}">Action, Adventure</span>
+                    <span class="meta-pill"><span aria-hidden="true">◷</span> <span th:text="${movie.formattedDuration}">1h 58m</span></span>
+                    <span class="meta-pill" th:text="${movie.genresFormatted}">Action, Adventure</span>
                     <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
                         ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5.0
                         <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ' reviews)'}">(12 reviews)</span>
@@ -53,6 +60,9 @@
                 <div class="movie-info-table">
                     <div class="info-label">Director:</div>
                     <div class="info-val" th:text="${movie.director != null ? movie.director : 'To be updated'}">Director</div>
+
+                    <div class="info-label">Cast:</div>
+                    <div class="info-val" th:text="${movie.actors != null && !movie.actors.isEmpty() ? movie.actors : 'To be updated'}">Cast</div>
 
                     <div class="info-label">Language:</div>
                     <div class="info-val" th:text="${movie.language != null ? movie.language : 'To be updated'}">Language</div>
@@ -128,7 +138,7 @@
                    th:href="@{/customer/booking/select(showtimeId=${st.showtimeId})}"
                    class="showtime-slot-btn"
                    th:classappend="${st.soldOut} ? 'seat-sold-out'">
-                    <span class="room-format-badge" th:text="${st.roomType + ' · ' + st.roomName}">2D · Cinema 01</span>
+                    <span class="room-format-badge" th:text="${st.roomType + ' · ' + #strings.replace(st.roomName, 'Phòng Chiếu', 'Cinema')}">2D · Cinema 01</span>
                     <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
                     <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
                     <span class="slot-price" th:text="${st.formattedPrice}">85,000 VND</span>
@@ -142,6 +152,23 @@
             <div style="font-size:2.5rem;margin-bottom:12px;">🎟️</div>
             <h4 style="font-size:1.2rem;margin-bottom:6px;">No showtimes are available for this date</h4>
             <p style="color:var(--text-muted);font-size:0.9rem;">Choose another date to view available showtimes.</p>
+        </div>
+    </section>
+
+    <section class="section-shell movie-trailer-section"
+             th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">OFFICIAL VIDEO</span>
+                <h2 class="section-title">Official Trailer</h2>
+            </div>
+            <button type="button" class="btn-secondary trailer-popup-button"
+                    th:attr="onclick=|openTrailer('${movie.trailerUrl}')|">Open in player</button>
+        </div>
+        <div class="inline-trailer-frame">
+            <iframe th:src="${movie.embedTrailerUrl}" th:title="${movie.title + ' official trailer'}"
+                    loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
         </div>
     </section>
 
@@ -247,10 +274,10 @@
                     <h3 class="movie-card-title">
                         <a th:href="@{/movies/{id}(id=${m.movieId})}" th:text="${m.title}">Movie Title</a>
                     </h3>
-                    <div class="movie-card-genres" th:text="${m.genres}">Genres</div>
+                    <div class="movie-card-genres" th:text="${m.genresFormatted}">Genres</div>
                     <div class="movie-card-actions">
                         <a th:href="@{/movies/{id}(id=${m.movieId})}" class="btn-card-detail">Details</a>
-                        <a th:href="@{/movies/{id}(id=${m.movieId})#showtimes}" class="btn-card-book">Book Tickets</a>
+                        <a th:href="@{/movies/{id}(id=${m.movieId})} + '#showtimes'" class="btn-card-book">Book Tickets</a>
                     </div>
                 </div>
             </article>

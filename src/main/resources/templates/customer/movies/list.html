@@ -108,7 +108,7 @@
                 <h3 class="movie-card-title">
                     <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
                 </h3>
-                <div class="movie-card-genres" th:text="${movie.genres}">Action, Adventure</div>
+                <div class="movie-card-genres" th:text="${movie.genresFormatted}">Action, Adventure</div>
                 <div class="movie-card-meta">
                     <span class="movie-rating-stars">
                         ⭐ <span th:text="${movie.averageRating}">4.8</span>
@@ -118,7 +118,7 @@
                 </div>
                 <div class="movie-card-actions">
                     <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Details</a>
-                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Book Now</a>
+                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})} + '#showtimes'" class="btn-card-book">Book Now</a>
                     <a th:if="${movie.comingSoon}" th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail" style="border-color:var(--gold);color:var(--gold);">Coming Soon</a>
                 </div>
             </div>
