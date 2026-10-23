@@ -5,6 +5,15 @@
    ===================================================================== */
 
 :root {
+    /* Shared CINEORA tokens: use these for every customer-facing screen. */
+    --cineora-red: #d92332;
+    --cineora-red-dark: #b3001f;
+    --cineora-gold: #f2b84b;
+    --cineora-cream: #fff8f0;
+    --cineora-peach: #ffe5d9;
+    --cineora-charcoal: #28202a;
+    --cineora-secondary: #6d5a51;
+    --cineora-outline: #e5bdba;
     --bg-dark: #090d16;
     --bg-surface: #101626;
     --bg-surface-elevated: #161e33;
@@ -1664,4 +1673,121 @@ button, input, select, textarea {
     .footer-top {
         grid-template-columns: 1fr;
     }
+}
+
+/* =====================================================================
+   CINEORA CUSTOMER DESIGN SYSTEM — homepage reference baseline
+   ===================================================================== */
+.brand-image {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 3px 12px rgba(40, 32, 42, .14);
+}
+
+.brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.brand-copy strong {
+    color: #d92332;
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.brand-copy small {
+    margin-top: 5px;
+    color: #6d5a51;
+    font-size: .55rem;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.cineora-home {
+    --bg-dark: #fff8f0;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #fff7fb;
+    --bg-surface-glass: rgba(255, 248, 240, .95);
+    --primary: #d92332;
+    --primary-light: #b3001f;
+    --primary-dark: #930017;
+    --accent: #f2b84b;
+    --accent-glow: rgba(217, 35, 50, .22);
+    --gold: #f2b84b;
+    --text-primary: #28202a;
+    --text-secondary: #6d5a51;
+    --text-muted: #846f67;
+    --border-subtle: rgba(144, 111, 109, .24);
+    --border-focus: rgba(217, 35, 50, .55);
+    color: var(--text-primary);
+    background: var(--bg-dark);
+}
+
+.cineora-home .cinema-header {
+    height: 80px;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(144,111,109,.16);
+    background: rgba(255,248,240,.95);
+    box-shadow: 0 1px 8px rgba(40,32,42,.06);
+}
+
+.cineora-home .nav-link { color: #5c403e; }
+.cineora-home .nav-link:hover { color: var(--primary); background: #ffe5d9; }
+.cineora-home .nav-link.active { color: var(--primary); border-color: transparent; border-bottom: 2px solid var(--primary); border-radius: 0; background: transparent; }
+.cineora-home .btn-auth-login { color: var(--text-primary); border-color: transparent; background: transparent; }
+.cineora-home .btn-auth-login:hover { color: var(--primary); background: #ffe5d9; }
+.cineora-home .btn-auth-register { color: #fff; border: 0; background: var(--primary); box-shadow: 0 3px 12px rgba(217,35,50,.2); }
+.cineora-home .user-badge { color: var(--text-primary); border-color: var(--border-subtle); background: #fff; }
+.cineora-home .user-avatar { color: #fff; background: var(--primary); }
+.cineora-home .user-name { color: var(--text-primary); }
+.cineora-home .user-points { color: #745100; }
+.cineora-home .account-dropdown-menu { border-color: var(--border-subtle); background: #fff; box-shadow: 0 16px 36px rgba(40,32,42,.14); }
+.cineora-home .account-dropdown-menu a,.cineora-home .account-dropdown-menu button { color: var(--text-primary); }
+.cineora-home .account-dropdown-menu a:hover,.cineora-home .account-dropdown-menu button:hover { color: var(--primary); background: #fff1ec; }
+
+.cineora-home .hero-slider-section {
+    min-height: 590px;
+    padding-top: 62px;
+    background: radial-gradient(circle at 72% 42%,rgba(242,184,75,.23),transparent 31%),linear-gradient(115deg,#211923 0%,#36242a 58%,#5e272c 100%);
+}
+.cineora-home .hero-slider-section::before { opacity: .18; background: radial-gradient(circle at 20% 20%,#d92332,transparent 35%); }
+.cineora-home .hero-slider-container { max-width: 1280px; min-height: 500px; }
+.cineora-home .hero-tag { color: #f7bd4f; border-color: rgba(242,184,75,.38); background: rgba(242,184,75,.12); }
+.cineora-home .hero-title { max-width: 760px; font-size: clamp(2.55rem,5vw,4.4rem); }
+.cineora-home .hero-description { color: #dac2b6; }
+.cineora-home .btn-primary,.cineora-home .btn-quick-book,.cineora-home .btn-card-book { color: #fff; background: var(--primary); box-shadow: 0 5px 16px rgba(217,35,50,.24); }
+.cineora-home .btn-primary:hover,.cineora-home .btn-quick-book:hover,.cineora-home .btn-card-book:hover { background: #b3001f; box-shadow: 0 8px 22px rgba(217,35,50,.3); }
+.cineora-home .hero-poster-card { border-color: rgba(255,229,217,.2); box-shadow: 0 28px 70px rgba(0,0,0,.42); }
+
+.cineora-home .quick-booking-bar { max-width: 1280px; margin-top: -50px; }
+.cineora-home .quick-booking-inner { border: 1px solid rgba(144,111,109,.22); border-radius: 14px; background: #fff; box-shadow: 0 10px 34px rgba(40,32,42,.11); }
+.cineora-home .quick-booking-field label { color: #5c403e; }
+.cineora-home .quick-booking-field select { color: var(--text-primary); border-color: rgba(144,111,109,.32); background: #fff8f0; }
+
+.cineora-home .section-shell { max-width: 1280px; }
+.cineora-home .section-header { border-color: rgba(229,189,186,.55); }
+.cineora-home .section-eyebrow,.cineora-home .section-link { color: var(--primary); }
+.cineora-home .section-title { color: var(--text-primary); }
+.cineora-home .movie-card,.cineora-home .promo-card,.cineora-home .news-card { border-color: rgba(229,189,186,.5); background: #fff; box-shadow: 0 5px 20px rgba(40,32,42,.07); }
+.cineora-home .movie-card:hover,.cineora-home .promo-card:hover,.cineora-home .news-card:hover { border-color: rgba(217,35,50,.28); box-shadow: 0 14px 34px rgba(40,32,42,.12); }
+.cineora-home .movie-card-title,.cineora-home .promo-title,.cineora-home .news-title { color: var(--text-primary); }
+.cineora-home .btn-card-detail { color: var(--primary); border-color: rgba(217,35,50,.35); background: #fff; }
+.cineora-home .btn-card-detail:hover { color: #fff; background: var(--primary); }
+.cineora-home .promo-voucher-box { border-color: rgba(242,184,75,.38); background: #fff7e6; }
+.cineora-home .voucher-code-pill { color: #745100; border-color: rgba(242,184,75,.5); background: #ffdeaa; }
+.cineora-home .cinema-footer { color: #6d5a51; border-top-color: #e5bdba; background: #fff0e8; }
+.cineora-home .footer-col h4 { color: var(--text-primary); }
+.cineora-home .footer-links a:hover { color: var(--primary); }
+
+@media (max-width: 640px) {
+    .brand-copy small { display: none; }
+    .brand-image { width: 38px; height: 38px; flex-basis: 38px; }
+    .cineora-home .hero-slider-section { min-height: 530px; padding-top: 42px; }
+    .cineora-home .hero-title { font-size: 2.35rem; }
 }
