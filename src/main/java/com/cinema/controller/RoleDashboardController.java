@@ -39,13 +39,8 @@ public class RoleDashboardController {
         return "staff/dashboard";
     }
 
-    @GetMapping("/manager/dashboard")
-    public String manager(HttpSession session, Model model) {
-        if (!sessionService.hasRole(session, "MANAGER", "ADMIN"))
-            return "redirect:/login";
-        model.addAttribute("user", sessionService.getCurrentUser(session));
-        return "manager/dashboard";
-    }
+    /* /manager/dashboard is served by ManagerDashboardController (Screen 53).
+       A second mapping here caused "Ambiguous handler methods" (HTTP 500) after manager login. */
 
     /** Logged-in header fragment - exposes the current user. */
     @GetMapping("/me")
