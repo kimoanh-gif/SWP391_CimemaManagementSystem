@@ -21,6 +21,12 @@
     <link rel="stylesheet" th:href="@{/css/cineora-manager.css}">
 </th:block>
 
+<!-- For pages that still use legacy manager-common.css components: load AFTER manager-common.css -->
+<th:block th:fragment="legacy-head">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/cineora-manager-legacy.css}">
+</th:block>
+
 <aside th:fragment="sidebar(activeMenu)" class="cm-sidebar">
     <a class="cm-brand" th:href="@{/manager/dashboard}">
         <img alt="CINEORA logo" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png">
@@ -79,9 +85,9 @@
         <span>CINEORA Management System</span>
     </div>
     <div class="cm-topbar-right">
-        <span class="cm-pill cm-pill-success" th:if="${stats != null}">
+        <span class="cm-pill cm-pill-success" th:if="${roomsActiveLabel != null}">
             <span class="cm-dot"></span>
-            <span th:text="${stats.activeRooms} + '/' + ${stats.totalRooms} + ' Screening rooms active'">5/5 Screening rooms active</span>
+            <span th:text="${roomsActiveLabel}">5/5 Screening rooms active</span>
         </span>
         <span class="cm-divider"></span>
         <span class="cm-topbar-user">

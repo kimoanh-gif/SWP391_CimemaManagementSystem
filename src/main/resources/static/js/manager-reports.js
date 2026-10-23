@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (startDateInput.value && endDateInput.value) {
             if (startDateInput.value > endDateInput.value) {
                 e.preventDefault();
-                alert('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+                alert('The start date cannot be after the end date.');
                 return;
             }
         }
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const reportType = reportTypeSelect.value || 'DAILY';
 
             if (startDate && endDate && startDate > endDate) {
-                alert('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+                alert('The start date cannot be after the end date.');
                 return;
             }
 

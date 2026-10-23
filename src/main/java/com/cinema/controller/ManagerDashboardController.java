@@ -53,6 +53,7 @@ public class ManagerDashboardController {
         model.addAttribute("activeMovies", dashboardService.getActiveMovies());
         model.addAttribute("rooms", dashboardService.getRoomsSummary());
         model.addAttribute("userRole", ManagerSecurityUtils.resolveRole(request));
+        model.addAttribute("roomsActiveLabel", stats.getActiveRooms() + "/" + stats.getTotalRooms() + " Screening rooms active");
 
         // Revenue overview chart (last 7 days) + recent bookings table
         List<DashboardRevenueDay> weeklyRevenue = insightsService.getWeeklyRevenue();
