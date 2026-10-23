@@ -257,22 +257,6 @@
                                     <span>Reset</span>
                                 </a>
                             </div>
-
-                            <!-- Right QA Switcher Buttons -->
-                            <div class="flex items-center gap-1.5 bg-background-warm/60 p-1 rounded-lg shrink-0 self-start xl:self-auto overflow-x-auto max-w-full">
-                                <button type="button" onclick="switchViewState('normal')" data-state-btn="normal" class="px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium transition-colors bg-cinema-red text-on-primary shadow-xs whitespace-nowrap">
-                                    Standard (<span th:text="${filteredCount}">0</span>)
-                                </button>
-                                <button type="button" onclick="switchViewState('empty')" data-state-btn="empty" class="px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium text-secondary hover:text-text-charcoal transition-colors whitespace-nowrap">
-                                    Empty State
-                                </button>
-                                <button type="button" onclick="switchViewState('loading')" data-state-btn="loading" class="px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium text-secondary hover:text-text-charcoal transition-colors whitespace-nowrap">
-                                    Loading
-                                </button>
-                                <button type="button" onclick="switchViewState('error')" data-state-btn="error" class="px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium text-secondary hover:text-text-charcoal transition-colors whitespace-nowrap">
-                                    Connection Error
-                                </button>
-                            </div>
                         </form>
                     </div>
 
@@ -451,44 +435,6 @@
                                 </a>
                             </div>
                         </div>
-
-                        <!-- 2. Interactive Alternate State: Empty Catalog (Hidden by default) -->
-                        <div class="hidden flex-col items-center justify-center py-16 px-4 text-center" id="viewEmpty">
-                            <div class="w-16 h-16 rounded-full bg-background-warm text-secondary flex items-center justify-center mb-4">
-                                <span class="material-symbols-outlined text-[34px]">movie</span>
-                            </div>
-                            <h3 class="font-headline-sm text-headline-sm font-semibold text-text-charcoal">No Movie Records Found</h3>
-                            <p class="font-body-md text-label-sm text-secondary max-w-md mt-1 mb-5">
-                                The CINEORA Suite movie archive is currently empty. Get started by adding your first movie title.
-                            </p>
-                            <button type="button" onclick="openAddMovieModal()" class="px-4 h-[42px] bg-cinema-red hover:bg-[#BF1B29] text-on-primary font-label-md text-label-md font-medium rounded-lg shadow-sm transition-colors inline-flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[19px]">add</span>
-                                <span>Add First Movie</span>
-                            </button>
-                        </div>
-
-                        <!-- 3. Interactive Alternate State: Loading Skeleton (Hidden by default) -->
-                        <div class="hidden flex-col gap-3 py-4 w-full animate-pulse" id="viewLoading">
-                            <div class="h-10 bg-background-warm rounded-lg w-full"></div>
-                            <div class="h-16 bg-background-warm/60 rounded-lg w-full"></div>
-                            <div class="h-16 bg-background-warm/60 rounded-lg w-full"></div>
-                            <div class="h-16 bg-background-warm/60 rounded-lg w-full"></div>
-                        </div>
-
-                        <!-- 4. Interactive Alternate State: Network / Server Error (Hidden by default) -->
-                        <div class="hidden flex-col items-center justify-center py-16 px-4 text-center" id="viewError">
-                            <div class="w-16 h-16 rounded-full bg-error-container text-error flex items-center justify-center mb-4">
-                                <span class="material-symbols-outlined text-[32px]">cloud_off</span>
-                            </div>
-                            <h3 class="font-headline-sm text-headline-sm font-semibold text-text-charcoal">Failed to Load Movie Catalog</h3>
-                            <p class="font-body-md text-label-sm text-secondary max-w-md mt-1 mb-5">
-                                A connection issue occurred while connecting to the CINEORA Suites server. Please verify your connection and retry.
-                            </p>
-                            <button class="px-4 h-10 bg-cinema-red text-on-primary font-label-md text-label-md font-medium rounded-lg hover:bg-[#BF1B29] transition-colors inline-flex items-center gap-2" onclick="switchViewState('normal')" type="button">
-                                <span class="material-symbols-outlined text-[18px]">refresh</span>
-                                <span>Retry Loading Data</span>
-                            </button>
-                        </div>
                     </div>
 
                 </div>
@@ -663,35 +609,5 @@
     </div>
 
     <script th:src="@{/js/manager-movies.js}"></script>
-    <script>
-        function switchViewState(state) {
-            const states = ['normal', 'empty', 'loading', 'error'];
-            states.forEach(s => {
-                const el = document.getElementById('view' + s.charAt(0).toUpperCase() + s.slice(1));
-                if (el) {
-                    if (s === state) {
-                        el.classList.remove('hidden');
-                        if (s === 'normal') {
-                            el.classList.add('block');
-                        } else {
-                            el.classList.add('flex');
-                        }
-                    } else {
-                        el.classList.add('hidden');
-                        el.classList.remove('flex');
-                        el.classList.remove('block');
-                    }
-                }
-            });
-
-            document.querySelectorAll('[data-state-btn]').forEach(btn => {
-                if (btn.getAttribute('data-state-btn') === state) {
-                    btn.className = 'px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium transition-colors bg-cinema-red text-on-primary shadow-xs whitespace-nowrap';
-                } else {
-                    btn.className = 'px-2.5 py-1.5 rounded-md text-caption font-label-sm font-medium text-secondary hover:text-text-charcoal transition-colors whitespace-nowrap';
-                }
-            });
-        }
-    </script>
 </body>
 </html>

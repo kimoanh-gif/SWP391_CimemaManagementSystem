@@ -88,28 +88,6 @@
 
         <main class="relative pt-[68px] min-h-screen bg-background-warm p-[28px]">
             <div class="flex flex-col w-full">
-                <!-- QA State Switcher Toolbar -->
-                <div class="flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest p-space-sm px-space-md rounded-xl shadow-sm mb-space-lg">
-                    <div class="flex items-center gap-space-sm">
-                        <span class="material-symbols-outlined text-cinema-red text-[20px]">tune</span>
-                        <span class="font-label-sm text-label-sm text-text-charcoal font-semibold uppercase tracking-wider">QA Demo States:</span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5" id="qaStateContainer">
-                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-cinema-red text-on-primary shadow-sm" id="btn-state-standard" onclick="switchState('standard')" type="button">
-                            1. Standard Catalog (<span th:text="${totalCount}">8</span>)
-                        </button>
-                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-empty" onclick="switchState('empty')" type="button">
-                            2. Empty State
-                        </button>
-                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-loading" onclick="switchState('loading')" type="button">
-                            3. Loading Skeleton
-                        </button>
-                        <button class="qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red" id="btn-state-error" onclick="switchState('error')" type="button">
-                            4. Connection Error
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Header & Page Title Row -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md mb-space-lg min-h-[64px]">
                     <div class="flex flex-col min-w-0">
@@ -300,47 +278,6 @@
                             </a>
                         </div>
                     </div>
-
-                    <!-- STATE 2: EMPTY STATE (Hidden by default) -->
-                    <div class="hidden w-full flex-col items-center justify-center py-16 text-center" id="state-empty">
-                        <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-secondary mb-space-md">
-                            <span class="material-symbols-outlined text-[32px]">category</span>
-                        </div>
-                        <h3 class="font-headline-sm text-headline-sm text-text-charcoal mb-1">
-                            No Film Genres Yet
-                        </h3>
-                        <p class="font-body-md text-secondary max-w-[440px] mb-space-lg text-[13px]">
-                            The CINEORA Suites system has no active genre records. Get started by adding your first genre.
-                        </p>
-                        <button class="h-[42px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 shadow-sm transition-all" onclick="openAddGenreModal()" type="button">
-                            <span class="material-symbols-outlined text-[20px]">add</span>
-                            <span>Create First Genre</span>
-                        </button>
-                    </div>
-
-                    <!-- STATE 3: LOADING SKELETON (Hidden by default) -->
-                    <div class="hidden w-full flex-col gap-3 py-4 animate-pulse" id="state-loading">
-                        <div class="h-10 bg-background-warm rounded-lg w-full"></div>
-                        <div class="h-14 bg-background-warm/60 rounded-lg w-full"></div>
-                        <div class="h-14 bg-background-warm/60 rounded-lg w-full"></div>
-                    </div>
-
-                    <!-- STATE 4: ERROR STATE (Hidden by default) -->
-                    <div class="hidden w-full flex-col items-center justify-center py-16 text-center" id="state-error">
-                        <div class="w-16 h-16 rounded-full bg-error-container/40 flex items-center justify-center text-error mb-space-md">
-                            <span class="material-symbols-outlined text-[32px]">wifi_off</span>
-                        </div>
-                        <h3 class="font-headline-sm text-headline-sm text-text-charcoal mb-1">
-                            Cannot Connect to CINEORA Suites Server
-                        </h3>
-                        <p class="font-body-md text-secondary max-w-[440px] mb-space-lg text-[13px]">
-                            A temporary network communication error occurred while fetching genre records.
-                        </p>
-                        <button class="h-[40px] px-space-md bg-cinema-red hover:bg-[#bf1b29] text-on-primary rounded-lg font-label-md text-label-md font-medium inline-flex items-center gap-2 shadow-sm transition-all" onclick="switchState('standard')" type="button">
-                            <span class="material-symbols-outlined text-[18px]">replay</span>
-                            <span>Retry Loading</span>
-                        </button>
-                    </div>
                 </div>
 
             </div>
@@ -436,32 +373,6 @@
                 });
             }
         });
-    </script>
-    <script>
-        const allStates = ['standard', 'empty', 'loading', 'error'];
-
-        function switchState(targetState) {
-            allStates.forEach(st => {
-                const el = document.getElementById('state-' + st);
-                const btn = document.getElementById('btn-state-' + st);
-                if (el) el.classList.add('hidden');
-                if (btn) {
-                    btn.className = "qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-surface-container text-text-charcoal hover:bg-surface-peach hover:text-cinema-red";
-                }
-            });
-
-            const targetEl = document.getElementById('state-' + targetState);
-            const targetBtn = document.getElementById('btn-state-' + targetState);
-            if (targetEl) {
-                targetEl.classList.remove('hidden');
-                if (targetState === 'empty' || targetState === 'error') {
-                    targetEl.classList.add('flex');
-                }
-            }
-            if (targetBtn) {
-                targetBtn.className = "qa-state-btn px-space-sm py-1 rounded-lg font-label-sm text-label-sm font-medium transition-all duration-150 bg-cinema-red text-on-primary shadow-sm";
-            }
-        }
     </script>
 </body>
 </html>
