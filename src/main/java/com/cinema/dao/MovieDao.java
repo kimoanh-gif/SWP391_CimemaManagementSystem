@@ -408,7 +408,7 @@ public class MovieDao {
     }
 
     public List<Movie> findNowShowing(int limit) {
-        String sql = """
+        String innerSql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
                        m.PosterURL AS Poster, m.TrailerURL AS Trailer,
@@ -422,10 +422,12 @@ public class MovieDao {
                              AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
                        ))
                   AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
-                ORDER BY m.ReleaseDate DESC
                 """;
+        String sql;
         if (limit > 0) {
-            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
+            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + innerSql + ") sub ORDER BY sub.ReleaseDate DESC";
+        } else {
+            sql = innerSql + " ORDER BY m.ReleaseDate DESC";
         }
         List<Movie> list = jdbcTemplate.query(sql, movieRowMapper);
         for (Movie m : list) {
@@ -435,7 +437,7 @@ public class MovieDao {
     }
 
     public List<Movie> findComingSoon(int limit) {
-        String sql = """
+        String innerSql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
                        m.PosterURL AS Poster, m.TrailerURL AS Trailer,
@@ -443,10 +445,12 @@ public class MovieDao {
                 FROM dbo.Movie m
                 WHERE UPPER(m.[Status]) IN ('COMING_SOON', 'COMING SOON', 'UPCOMING')
                   AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
-                ORDER BY m.ReleaseDate ASC
                 """;
+        String sql;
         if (limit > 0) {
-            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
+            sql = "SELECT TOP (" + limit + ") sub.* FROM (" + innerSql + ") sub ORDER BY sub.ReleaseDate ASC";
+        } else {
+            sql = innerSql + " ORDER BY m.ReleaseDate ASC";
         }
         List<Movie> list = jdbcTemplate.query(sql, movieRowMapper);
         for (Movie m : list) {
