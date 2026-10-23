@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    Shared status messages for the public screens (Home, Movie List, Movie Details,
+    Showtime List, Promotions & News).
+    Reads: successMessage, errorMessage, infoMessage (flash or model) and loadError (model flag).
+    Assignee: Nguyễn Đức Anh (Iter2)
+-->
+<div th:fragment="alerts" class="public-alerts">
+    <div th:if="${successMessage != null}" class="public-alert public-alert-success" role="status">
+        <span class="public-alert-icon" aria-hidden="true">✓</span>
+        <span th:text="${successMessage}">Saved successfully.</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="public-alert public-alert-error" role="alert">
+        <span class="public-alert-icon" aria-hidden="true">!</span>
+        <span th:text="${errorMessage}">Something went wrong.</span>
+    </div>
+    <div th:if="${infoMessage != null}" class="public-alert public-alert-info" role="status">
+        <span class="public-alert-icon" aria-hidden="true">i</span>
+        <span th:text="${infoMessage}">Information.</span>
+    </div>
+    <div th:if="${loadError != null && loadError}" class="public-alert public-alert-error" role="alert">
+        <span class="public-alert-icon" aria-hidden="true">!</span>
+        <span>Some information could not be loaded right now.</span>
+        <a href="javascript:window.location.reload()" class="public-alert-action">Try again</a>
+    </div>
+</div>
+</body>
+</html>
