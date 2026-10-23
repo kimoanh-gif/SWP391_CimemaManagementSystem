@@ -127,7 +127,7 @@ public class StaffAccountApiController {
     /**
      * A5 - Reset Password
      * Resets account password to a secure temporary password.
-     * Admin receives the temporary password to communicate to the user.
+     * The password is emailed directly to the registered account address.
      */
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<?> resetPassword(@PathVariable int id) {
@@ -135,8 +135,7 @@ public class StaffAccountApiController {
         return result.isSuccess()
                 ? ResponseEntity.ok(Map.of(
                         "success", true,
-                        "message", result.getMessage(),
-                        "tempPassword", result.getTempPassword()
+                        "message", result.getMessage()
                 ))
                 : ResponseEntity.badRequest().body(Map.of(
                         "success", false,

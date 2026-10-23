@@ -18,11 +18,6 @@
       <div class="auth-notice success" id="activationSuccess" role="status"
            th:if="${activationSuccess}" th:text="${activationSuccess}"></div>
 
-      <!-- Fallback OTP display when email delivery fails -->
-      <div class="auth-notice warning" role="alert" th:if="${fallbackOtp}">
-        ⚠️ Gửi email thất bại — mã OTP của bạn: <strong th:text="${fallbackOtp}"></strong>
-      </div>
-
       <form th:action="@{/verify-activation-otp}" th:object="${activationForm}" method="post" novalidate>
         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
         <div class="auth-field" th:classappend="${otpError != null} ? 'has-error' : ''">

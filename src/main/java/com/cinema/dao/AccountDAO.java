@@ -104,6 +104,19 @@ public class AccountDAO {
         }
     }
 
+    /** Serializes simultaneous resets until the password update and email attempt finish. */
+    public Optional<Account> findByIdForPasswordReset(int accountId) {
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject("""
+                SELECT AccountID, RoleID, Username, Email, PasswordHash, FullName, Phone, Status,
+                       EmailVerifiedAt, CreatedAt, LastLoginAt
+                FROM dbo.Account WITH (UPDLOCK, HOLDLOCK) WHERE AccountID = ?
+                """, accountRowMapper, accountId));
+        } catch (EmptyResultDataAccessException ex) {
+            return Optional.empty();
+        }
+    }
+
     public boolean existsByEmail(String email) {
         Integer n = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM dbo.Account WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?)))",

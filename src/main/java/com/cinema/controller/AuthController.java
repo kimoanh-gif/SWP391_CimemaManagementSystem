@@ -81,10 +81,16 @@ public class AuthController {
             return "auth/register";
         }
 
-        AuthService.RegisterResult r = authService.register(
-                form.getUsername(), form.getEmail(), form.getPassword(),
-                form.getFullName(), form.getPhone());
-        String rawOtp = r.rawOtp();
+        AuthService.RegisterResult r;
+        try {
+            r = authService.register(form.getUsername(), form.getEmail(), form.getPassword(),
+                    form.getFullName(), form.getPhone());
+        } catch (AuthService.RegistrationFailure ex) {
+            r = ex.result();
+        } catch (org.springframework.dao.DataAccessException ex) {
+            model.addAttribute("formError", "Registration could not be completed. Please try again later.");
+            return "auth/register";
+        }
 
         String status = r.status();
         switch (status) {
@@ -98,17 +104,24 @@ public class AuthController {
             case "INVALID_FULLNAME"  -> { model.addAttribute("fullNameError", "Họ tên không hợp lệ (2-100 ký tự)."); return "auth/register"; }
             case "ROLE_NOT_CONFIGURED" -> { model.addAttribute("formError", "Hệ thống chưa cấu hình role CUSTOMER."); return "auth/register"; }
             case "OTP_DELIVERY_FAILED" -> {
-                // Email failed — store OTP in session so the page can display it.
                 session.setAttribute("activationEmail", form.getEmail().trim().toLowerCase());
-                session.setAttribute("fallbackOtp", rawOtp);
+                session.setAttribute("activationDeliveryFailed", true);
                 return "redirect:/verify-activation-otp";
             }
             case "OTP_LIMIT_EXCEEDED" -> {
                 // Daily send limit exceeded — show error message.
-                model.addAttribute("formError", rawOtp != null ? rawOtp : "Đã gửi tối đa mã OTP trong ngày. Vui lòng thử lại vào ngày mai.");
+                model.addAttribute("formError", r.message() != null ? r.message() : "Đã gửi tối đa mã OTP trong ngày. Vui lòng thử lại vào ngày mai.");
+                return "auth/register";
+            }
+            case "REGISTRATION_FAILED" -> {
+                model.addAttribute("formError", "Registration could not be completed. Please try again later.");
                 return "auth/register";
             }
             case "OK" -> { /* continue */ }
+            default -> {
+                model.addAttribute("formError", "Registration could not be completed. Please try again later.");
+                return "auth/register";
+            }
         }
 
         session.setAttribute("activationEmail", form.getEmail().trim().toLowerCase());
@@ -122,11 +135,10 @@ public class AuthController {
         if (email == null) return "redirect:/register";
         model.addAttribute("email", email);
         model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION));
-        // Pass fallback OTP if email delivery failed
-        String fallbackOtp = (String) session.getAttribute("fallbackOtp");
-        if (fallbackOtp != null) {
-            model.addAttribute("fallbackOtp", fallbackOtp);
-            session.removeAttribute("fallbackOtp");
+        session.removeAttribute("fallbackOtp"); // Clear legacy sessions without displaying their contents.
+        if (Boolean.TRUE.equals(session.getAttribute("activationDeliveryFailed"))) {
+            model.addAttribute("formError", "Verification email could not be delivered. Please wait, then use Resend Code.");
+            session.removeAttribute("activationDeliveryFailed");
         }
         if (!model.containsAttribute("activationForm"))
             model.addAttribute("activationForm", new OtpForm());
@@ -182,10 +194,12 @@ public class AuthController {
             model.addAttribute("formSuccess", "Đã gửi lại mã OTP. Vui lòng kiểm tra email.");
         } else if ("COOLDOWN".equals(r.code())) {
             model.addAttribute("formError", "Vui lòng chờ " + r.retryAfterSeconds() + " giây trước khi gửi lại.");
+        } else if ("OTP_LIMIT_EXCEEDED".equals(r.code())) {
+            model.addAttribute("formError", r.message());
+        } else if ("NO_PENDING_TOKEN".equals(r.code())) {
+            model.addAttribute("formError", "No verification request found. Please register again.");
         } else {
-            // Email failed — show raw OTP.
-            model.addAttribute("formError", "Gửi email thất bại. Mã OTP của bạn:");
-            model.addAttribute("fallbackOtp", r.rawOtp());
+            model.addAttribute("formError", "Verification email could not be delivered. Please try resending later.");
         }
         model.addAttribute("email", email);
         model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION));

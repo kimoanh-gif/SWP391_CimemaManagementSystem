@@ -128,7 +128,7 @@ public class CustomerAccountApiController {
                 ));
     }
 
-    // POST /api/admin/customers/{id}/reset-password → A5: Gửi OTP cho khách hàng
+    // POST /api/admin/customers/{id}/reset-password: email a new login password.
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<?> resetPassword(@PathVariable int id) {
         var result = service.resetPassword(id);

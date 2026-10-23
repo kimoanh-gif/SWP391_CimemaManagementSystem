@@ -2,6 +2,7 @@ package com.cinema.service;
 
 import com.cinema.dao.CustomerAccountDAO;
 import com.cinema.model.CustomerAccount;
+import com.cinema.util.AccountValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,13 @@ import java.util.Optional;
 public class CustomerAccountService {
 
     private final CustomerAccountDAO dao;
-    private final AuthService authService;
+    private final AdminPasswordResetService passwordResetService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
-    public CustomerAccountService(CustomerAccountDAO dao, AuthService authService) {
+    public CustomerAccountService(CustomerAccountDAO dao, AdminPasswordResetService passwordResetService) {
         this.dao = dao;
-        this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     // --- UC-36 Normal Flow ---
@@ -77,18 +78,15 @@ public class CustomerAccountService {
         if (email == null || email.trim().isEmpty()) {
             return "EMPTY_EMAIL";
         }
-        if (phone == null || phone.trim().isEmpty()) {
-            return "EMPTY_PHONE";
-        }
 
         // ── E4: Format validation ──
         String emailTrimmed = email.trim();
         if (!emailTrimmed.matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$")) {
             return "INVALID_EMAIL"; // "Invalid email format."
         }
-        String phoneTrimmed = phone.trim();
-        if (!phoneTrimmed.matches("^0[0-9]{9,10}$")) {
-            return "INVALID_PHONE_FORMAT"; // "Phone must be 10–11 digits starting with 0."
+        String phoneTrimmed = normalizePhone(phone);
+        if (phoneTrimmed != null && !AccountValidation.PHONE.matcher(phoneTrimmed).matches()) {
+            return "INVALID_PHONE_FORMAT";
         }
 
         // ── E1/E2/E3: Uniqueness (trim & case-insensitive) ──
@@ -98,7 +96,7 @@ public class CustomerAccountService {
         if (dao.existsByEmail(emailTrimmed.toLowerCase(), excludeId)) {
             return "DUPLICATE_EMAIL"; // E2
         }
-        if (dao.existsByPhone(phoneTrimmed, excludeId)) {
+        if (phoneTrimmed != null && dao.existsByPhone(phoneTrimmed, excludeId)) {
             return "DUPLICATE_PHONE"; // E3
         }
         return null; // Valid
@@ -118,7 +116,7 @@ public class CustomerAccountService {
 
         String hash = passwordEncoder.encode(password);
         int accountId = dao.insertAccount(username.trim(), email.trim().toLowerCase(),
-                                           hash, fullName.trim(), phone.trim());
+                                           hash, fullName.trim(), normalizePhone(phone));
         return accountId > 0
                 ? OperationResult.success("Account created successfully.")
                 : OperationResult.error("CREATE_FAILED", "Failed to create account.");
@@ -138,7 +136,7 @@ public class CustomerAccountService {
             return OperationResult.error(validation, getErrorMessage(validation));
         }
 
-        int updated = dao.updateAccount(accountId, fullName.trim(), phone.trim(),
+        int updated = dao.updateAccount(accountId, fullName.trim(), normalizePhone(phone),
                                         email.trim().toLowerCase(), username.trim());
         return updated > 0
                 ? OperationResult.success("Account updated successfully.")
@@ -179,21 +177,18 @@ public class CustomerAccountService {
                 : OperationResult.error("REACTIVATE_FAILED", "Failed to reactivate account.");
     }
 
-    // --- UC-36 A5: Reset Password (gửi OTP cho khách hàng) ---
-
+    // Admin reset sends a usable password to the registered address, not an OTP.
     public OperationResult resetPassword(int accountId) {
-        Optional<CustomerAccount> existing = dao.findById(accountId);
-        if (existing.isEmpty()) {
-            return OperationResult.error("NOT_FOUND", "Account not found."); // E5
+        if (dao.findById(accountId).isEmpty()) return OperationResult.error("NOT_FOUND", "Account not found.");
+        try {
+            var result=passwordResetService.reset(accountId);
+            return result.success() ? OperationResult.success(result.message())
+                    : OperationResult.error(result.code(),result.message());
+        } catch (AdminPasswordResetService.DeliveryFailure ex) {
+            return OperationResult.error("EMAIL_FAILED", "Email delivery failed. The password was not changed. Please try again later.");
+        } catch (org.springframework.dao.DataAccessException ex) {
+            return OperationResult.error("RESET_FAILED", "Password reset failed. Please try again later.");
         }
-        CustomerAccount acc = existing.get();
-        if (acc.getEmail() == null || acc.getEmail().isBlank()) {
-            return OperationResult.error("NO_EMAIL", "Account has no email address.");
-        }
-
-        // Gửi OTP reset password qua email cho khách hàng
-        authService.requestPasswordReset(acc.getEmail());
-        return OperationResult.success("A password reset OTP has been sent to the customer's email.");
     }
 
     // --- Stats ---
@@ -205,6 +200,10 @@ public class CustomerAccountService {
 
     // --- Helpers ---
 
+    private String normalizePhone(String phone) {
+        return phone == null || phone.isBlank() ? null : phone.trim();
+    }
+
     private String getErrorMessage(String code) {
         return switch (code) {
             case "EMPTY_USERNAME"          -> "Username is required.";
@@ -212,7 +211,7 @@ public class CustomerAccountService {
             case "EMPTY_EMAIL"             -> "Email is required.";
             case "INVALID_EMAIL"           -> "Invalid email format.";
             case "EMPTY_PHONE"             -> "Phone number is required.";
-            case "INVALID_PHONE_FORMAT"    -> "Phone must be 10–11 digits starting with 0.";
+            case "INVALID_PHONE_FORMAT"    -> "Phone must start with 0 or +84 followed by 9-10 digits.";
             case "DUPLICATE_USERNAME"     -> "Username already exists. Please choose another.";
             case "DUPLICATE_EMAIL"         -> "Email already exists. Please use another email.";
             case "DUPLICATE_PHONE"         -> "Phone number already exists. Please use another.";

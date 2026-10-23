@@ -22,6 +22,9 @@ public class AdminController {
     @Autowired
     private CustomerAccountService customerAccountService;
 
+    @Autowired
+    private com.cinema.service.AdminDashboardService adminDashboardService;
+
     private void addUserToModel(Model model, HttpSession session) {
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("user", user);
@@ -31,6 +34,11 @@ public class AdminController {
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
         addUserToModel(model, session);
+        try {
+            model.addAttribute("dashboard", adminDashboardService.load());
+        } catch (org.springframework.dao.DataAccessException ex) {
+            model.addAttribute("dashboardError", "Unable to load dashboard data. Please try again later.");
+        }
         return "admin/dashboard";
     }
 

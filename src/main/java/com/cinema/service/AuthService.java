@@ -79,8 +79,18 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /** Propagates out of the service transaction so partial registration is rolled back. */
+    public static class RegistrationFailure extends RuntimeException {
+        private final String status;
+        public RegistrationFailure(String status, Throwable cause) {
+            super("Registration could not be completed.", cause);
+            this.status = status;
+        }
+        public RegisterResult result() { return new RegisterResult(status, null); }
+    }
+
     // ============================================================ register
-    public record RegisterResult(String status, String rawOtp) {
+    public record RegisterResult(String status, String message) {
         public static RegisterResult ok()                         { return new RegisterResult("OK", null); }
         public static RegisterResult emailTaken()                { return new RegisterResult("EMAIL_TAKEN", null); }
         public static RegisterResult usernameTaken()             { return new RegisterResult("USERNAME_TAKEN", null); }
@@ -90,7 +100,7 @@ public class AuthService {
         public static RegisterResult invalidPhone()              { return new RegisterResult("INVALID_PHONE", null); }
         public static RegisterResult invalidPassword()           { return new RegisterResult("INVALID_PASSWORD", null); }
         public static RegisterResult invalidFullname()           { return new RegisterResult("INVALID_FULLNAME", null); }
-        public static RegisterResult otpDeliveryFailed(String o){ return new RegisterResult("OTP_DELIVERY_FAILED", o); }
+        public static RegisterResult otpDeliveryFailed() { return new RegisterResult("OTP_DELIVERY_FAILED", null); }
         public static RegisterResult roleNotConfigured()         { return new RegisterResult("ROLE_NOT_CONFIGURED", null); }
         public static RegisterResult otpLimitExceeded(String msg){ return new RegisterResult("OTP_LIMIT_EXCEEDED", msg); }
     }
@@ -114,6 +124,10 @@ public class AuthService {
         if (rawPassword == null || !PASSWORD_RE.matcher(rawPassword).matches())
             return RegisterResult.invalidPassword();
 
+        email = email.trim().toLowerCase(Locale.ROOT);
+        String limitMsg = otpService.canSendOtp(email, OtpToken.PURPOSE_ACTIVATION);
+        if (limitMsg != null) return RegisterResult.otpLimitExceeded(limitMsg);
+
         if (accountDAO.existsByEmail(email))     return RegisterResult.emailTaken();
         if (accountDAO.existsByUsername(username)) return RegisterResult.usernameTaken();
         if (phone != null && !phone.isBlank() && accountDAO.existsByPhone(phone.trim()))
@@ -135,24 +149,34 @@ public class AuthService {
         try {
             newId = accountDAO.insert(acc);
         } catch (DuplicateKeyException ex) {
-            return RegisterResult.emailTaken();
+            // Do not query a potentially aborted transaction to identify a duplicate.
+            String detail = ex.getMostSpecificCause().getMessage();
+            String constraint = detail == null ? "" : detail.toLowerCase(Locale.ROOT);
+            String status = constraint.contains("uq_account_username") ? "USERNAME_TAKEN"
+                    : constraint.contains("uq_account_email") ? "EMAIL_TAKEN"
+                    : constraint.contains("ux_account_phone") ? "PHONE_TAKEN" : "REGISTRATION_FAILED";
+            throw new RegistrationFailure(status, ex);
         }
-        if (newId == null) return RegisterResult.roleNotConfigured();
+        if (newId == null || newId <= 0) throw new RegistrationFailure("REGISTRATION_FAILED", null);
 
-        // Create matching Customer row; tolerate race / already-exists.
         try {
-            customerDAO.insert(newId);
-        } catch (DuplicateKeyException ex) {
-            // Customer already exists for this account; continue.
-        } catch (Exception ex) {
-            // Customer creation failed – log via record but don't abort registration.
+            Integer customerId = customerDAO.insert(newId);
+            if (customerId == null || customerId <= 0) {
+                throw new RegistrationFailure("REGISTRATION_FAILED", null);
+            }
+        } catch (org.springframework.dao.DataAccessException ex) {
+            throw new RegistrationFailure("REGISTRATION_FAILED", ex);
         }
 
-        // Return raw OTP code so controller can display it when email fails.
-        return dispatchOtp(newId, acc.getEmail(), OtpToken.PURPOSE_ACTIVATION);
+        RegisterResult result = dispatchOtp(newId, acc.getEmail(), OtpToken.PURPOSE_ACTIVATION);
+        if ("OTP_LIMIT_EXCEEDED".equals(result.status())) {
+            // Recheck may reject a concurrent send; roll back the account as well.
+            throw new RegistrationFailure(result.status(), null);
+        }
+        return result;
     }
 
-    /** Returns raw OTP code so caller can display it when email delivery fails. */
+    /** Plain OTP is only passed to the email service, never returned to callers. */
     private RegisterResult dispatchOtp(Integer accountId, String email, String purpose) {
         // Check daily send limit
         String limitMsg = otpService.canSendOtp(email, purpose);
@@ -181,8 +205,7 @@ public class AuthService {
         }
 
         if (!otpService.sendByEmail(email, code, purpose)) {
-            // Email failed — return the raw code so caller can show it on-screen.
-            return RegisterResult.otpDeliveryFailed(code);
+            return RegisterResult.otpDeliveryFailed();
         }
         return RegisterResult.ok();
     }
@@ -386,12 +409,11 @@ public class AuthService {
         if ("OK".equals(result.status())) {
             return new ResendResult(true, 0, null, null);
         } else {
-            // Email failed — return raw code so caller can show it.
-            return new ResendResult(false, 0, "DELIVERY_FAILED", result.rawOtp());
+            return new ResendResult(false, 0, result.status(), result.message());
         }
     }
 
-    public record ResendResult(boolean sent, int retryAfterSeconds, String code, String rawOtp) {}
+    public record ResendResult(boolean sent, int retryAfterSeconds, String code, String message) {}
 
     // =============================================================== helpers
 
