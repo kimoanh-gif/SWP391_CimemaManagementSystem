@@ -184,9 +184,9 @@ public class PublicShowtime {
     }
 
     public String getFormattedPrice() {
-        if (basePrice == null) return "0 đ";
+        if (basePrice == null) return "0 VND";
         DecimalFormat df = new DecimalFormat("###,###");
-        return df.format(basePrice) + " đ";
+        return df.format(basePrice) + " VND";
     }
 
     public boolean isSoldOut() {
@@ -194,9 +194,8 @@ public class PublicShowtime {
     }
 
     public String getSeatStatusBadge() {
-        if (availableSeats == null || availableSeats <= 0) return "Hết ghế";
-        if (availableSeats < 10) return "Còn " + availableSeats + " ghế";
-        return "Còn " + availableSeats + " ghế";
+        if (availableSeats == null || availableSeats <= 0) return "Sold out";
+        return availableSeats + " seats left";
     }
 
     public String getSeatStatusClass() {

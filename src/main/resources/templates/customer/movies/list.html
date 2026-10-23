@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/cinema-header-footer :: metaHead('Danh Sách Phim Chiếu Rạp')}">
-    <title>CineVerse - Danh Sách Phim</title>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Movies')}">
+    <title>Movies | CINEORA</title>
 </head>
-<body>
+<body class="cineora-catalog-page">
 
 <!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
@@ -12,12 +12,12 @@
     <!-- Breadcrumb & Title -->
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
-            <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
+            <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
             <span> / </span>
-            <span style="color:var(--primary-light);">Danh sách phim</span>
+            <span style="color:var(--primary-light);">Movies</span>
         </div>
-        <h1 style="font-size:2.5rem;font-weight:900;">Danh Sách Phim Chiếu Rạp</h1>
-        <p style="color:var(--text-secondary);margin-top:6px;">Khám phá các bộ phim bom tấn đỉnh cao đang và sắp được công chiếu tại cụm rạp CineVerse.</p>
+        <h1 style="font-size:2.5rem;font-weight:900;">Movies at CINEORA</h1>
+        <p style="color:var(--text-secondary);margin-top:6px;">Discover the latest movies now showing and coming soon at CINEORA.</p>
     </div>
 
     <!-- Filter Toolbar -->
@@ -27,17 +27,17 @@
             <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'all' || selectedType == null} ? 'active'">
-                Tất Cả
+                All Movies
             </a>
             <a th:href="@{/movies(type='now-showing', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'now-showing'} ? 'active'">
-                Đang Chiếu
+                Now Showing
             </a>
             <a th:href="@{/movies(type='coming-soon', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'coming-soon'} ? 'active'">
-                Sắp Chiếu
+                Coming Soon
             </a>
         </div>
         <input type="hidden" name="type" th:value="${selectedType}" />
@@ -47,34 +47,34 @@
             <!-- Search by title -->
             <div class="search-input-wrap">
                 <span class="search-icon">🔍</span>
-                <input type="text" name="q" placeholder="Tìm tên phim, đạo diễn..." th:value="${keyword}" />
+                <input type="text" name="q" placeholder="Search by title or director..." th:value="${keyword}" />
             </div>
 
             <!-- Genre Select -->
             <select name="genreId" class="filter-select" onchange="this.form.submit()">
-                <option value="">-- Tất cả thể loại --</option>
+                <option value="">All Genres</option>
                 <option th:each="g : ${genres}"
                         th:value="${g.genreId}"
                         th:text="${g.name}"
                         th:selected="${selectedGenreId == g.genreId}">
-                    Hành Động
+                    Action
                 </option>
             </select>
 
             <!-- Sort Select -->
             <select name="sort" class="filter-select" onchange="this.form.submit()">
-                <option value="newest" th:selected="${sortBy == 'newest'}">Mới nhất</option>
-                <option value="rating" th:selected="${sortBy == 'rating'}">Đánh giá cao nhất</option>
-                <option value="title" th:selected="${sortBy == 'title'}">Tên phim (A - Z)</option>
-                <option value="duration" th:selected="${sortBy == 'duration'}">Thời lượng</option>
+                <option value="newest" th:selected="${sortBy == 'newest'}">Newest</option>
+                <option value="rating" th:selected="${sortBy == 'rating'}">Highest Rated</option>
+                <option value="title" th:selected="${sortBy == 'title'}">Title (A–Z)</option>
+                <option value="duration" th:selected="${sortBy == 'duration'}">Duration</option>
             </select>
 
             <button type="submit" class="btn-card-book" style="padding:8px 16px;cursor:pointer;">
-                Lọc
+                Apply
             </button>
             <a th:if="${(keyword != null && !keyword.isEmpty()) || selectedGenreId != null || (selectedType != null && selectedType != 'all')}"
-               th:href="@{/movies}" class="btn-card-detail" style="padding:8px 12px;font-size:0.85rem;" title="Xóa bộ lọc">
-                ✕ Xóa lọc
+               th:href="@{/movies}" class="btn-card-detail" style="padding:8px 12px;font-size:0.85rem;" title="Clear filters">
+                ✕ Clear
             </a>
         </div>
     </form>
@@ -86,19 +86,19 @@
                 <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
                      onerror="this.src='/images/cinema-login-hero.png'" />
                 <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
-                <span class="badge-duration" th:text="${movie.duration + ' phút'}">118 phút</span>
+                <span class="badge-duration" th:text="${movie.duration + ' min'}">118 min</span>
 
                 <div class="movie-card-overlay">
                     <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
                             type="button"
                             class="btn-play-trailer"
                             th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                            title="Xem Trailer">
+                            title="Watch trailer">
                         ▶
                     </button>
                     <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
                        th:href="@{/movies/{id}(id=${movie.movieId})}"
-                       class="btn-play-trailer" title="Xem chi tiết">
+                       class="btn-play-trailer" title="View details">
                         ℹ️
                     </a>
                 </div>
@@ -106,9 +106,9 @@
 
             <div class="movie-card-body">
                 <h3 class="movie-card-title">
-                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Tên Bộ Phim</a>
+                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
                 </h3>
-                <div class="movie-card-genres" th:text="${movie.genres}">Hành Động, Phiêu Lưu</div>
+                <div class="movie-card-genres" th:text="${movie.genres}">Action, Adventure</div>
                 <div class="movie-card-meta">
                     <span class="movie-rating-stars">
                         ⭐ <span th:text="${movie.averageRating}">4.8</span>
@@ -117,9 +117,9 @@
                     <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
                 </div>
                 <div class="movie-card-actions">
-                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Chi Tiết</a>
-                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Mua Vé</a>
-                    <a th:if="${movie.comingSoon}" th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail" style="border-color:var(--gold);color:var(--gold);">Sắp Chiếu</a>
+                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Details</a>
+                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Book Now</a>
+                    <a th:if="${movie.comingSoon}" th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail" style="border-color:var(--gold);color:var(--gold);">Coming Soon</a>
                 </div>
             </div>
         </article>
@@ -129,12 +129,12 @@
     <div th:if="${movies == null || movies.isEmpty()}"
          style="text-align:center;padding:5rem 2rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-top:2rem;">
         <div style="font-size:3.5rem;margin-bottom:1rem;">🎞️</div>
-        <h3 style="font-size:1.5rem;margin-bottom:8px;">Không tìm thấy bộ phim phù hợp</h3>
+        <h3 style="font-size:1.5rem;margin-bottom:8px;">No matching movies found</h3>
         <p style="color:var(--text-secondary);max-width:500px;margin:0 auto 1.5rem;">
-            Rất tiếc, không có phim nào phù hợp với tiêu chí tìm kiếm hoặc bộ lọc hiện tại của bạn.
+            Try changing your search term or filters to discover more movies.
         </p>
         <a th:href="@{/movies}" class="btn-primary">
-            <span>Xem tất cả phim</span>
+            <span>View All Movies</span>
         </a>
     </div>
 </main>

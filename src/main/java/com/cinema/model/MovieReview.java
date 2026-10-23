@@ -48,7 +48,7 @@ public class MovieReview {
     }
 
     public String getCustomerName() {
-        return (customerName != null && !customerName.isBlank()) ? customerName : "Khán giả CineVerse";
+        return (customerName != null && !customerName.isBlank()) ? customerName : "CINEORA Guest";
     }
 
     public void setCustomerName(String customerName) {

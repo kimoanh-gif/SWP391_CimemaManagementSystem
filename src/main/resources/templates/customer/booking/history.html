@@ -1,1 +1,31 @@
-<!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Booking History | CINEORA</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head><body><header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Book Tickets</a><a class="active" th:href="@{/customer/booking/history}">My Tickets</a></nav></header><main class="booking-shell"><section class="hero-row compact"><div><p class="eyebrow">CINEORA ACCOUNT</p><h1>Booking &amp; Transaction History</h1><p class="lead">Track reservations, payments, and issued tickets.</p></div></section><section class="history-list" th:if="${!#lists.isEmpty(bookings)}"><article class="panel history-card" th:each="booking : ${bookings}"><div><span class="status-pill" th:text="${booking.bookingStatus}"></span><small th:text="${booking.paymentStatus}"></small></div><h2 th:text="${booking.movieTitle}"></h2><p><b th:text="${booking.bookingCode}"></b> · <span th:text="${booking.seatLabels ?: 'Seats released'}"></span></p><p th:text="${booking.roomName + ' · ' + #temporals.format(booking.startTime,'HH:mm dd/MM/yyyy')}"></p><strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"></strong><a th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button secondary" th:href="@{/customer/booking/tickets/{id}(id=${booking.bookingId})}">View Digital Tickets</a></article></section><section class="panel empty-state" th:if="${#lists.isEmpty(bookings)}"><h2>You have no booking history yet</h2><a class="button primary" th:href="@{/customer/booking}">Book Tickets Now</a></section></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Booking History | CINEORA</title>
+  <link rel="icon" type="image/png" th:href="@{/images/cineora-logo.png}">
+  <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
+</head>
+<body class="booking-history-page">
+  <div th:replace="~{fragments/cinema-header-footer :: header('profile')}"></div>
+  <main class="booking-shell history-shell">
+    <nav class="history-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/}">Home</a><span>›</span><strong>My Booking History</strong></nav>
+    <section class="hero-row compact history-heading"><div><p class="eyebrow">CINEORA ACCOUNT</p><h1>My Booking History</h1><p class="lead">Review your bookings and open the digital tickets for confirmed reservations.</p></div></section>
+    <section class="history-list" th:if="${!#lists.isEmpty(bookings)}">
+      <article class="panel history-card" th:each="booking : ${bookings}">
+        <div><span class="status-pill" th:text="${booking.bookingStatus}">CONFIRMED</span><small th:text="${booking.paymentStatus}">PAID</small></div>
+        <h2 th:text="${booking.movieTitle}">Movie Title</h2>
+        <p><b th:text="${booking.bookingCode}">BOOKING-CODE</b> · <span th:text="${booking.seatLabels ?: 'Seats released'}">A1, A2</span></p>
+        <p th:text="${booking.roomName + ' · ' + #temporals.format(booking.startTime,'HH:mm dd/MM/yyyy')}">Room 1 · 19:30 23/10/2026</p>
+        <strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong>
+        <a th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button secondary" th:href="@{/customer/booking/tickets/{id}(id=${booking.bookingId})}">View Digital Tickets</a>
+      </article>
+    </section>
+    <section class="panel empty-state" th:if="${#lists.isEmpty(bookings)}"><h2>You have no booking history yet</h2><p>Your completed bookings will appear here.</p></section>
+  </main>
+  <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+  <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+</body>
+</html>

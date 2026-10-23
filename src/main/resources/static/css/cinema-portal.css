@@ -1791,3 +1791,111 @@ button, input, select, textarea {
     .cineora-home .hero-slider-section { min-height: 530px; padding-top: 42px; }
     .cineora-home .hero-title { font-size: 2.35rem; }
 }
+
+/* Shared light theme for Movies, Movie Detail, Showtimes, Promotions and News. */
+.cineora-catalog-page {
+    --bg-dark: #fff8f0;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #fff7fb;
+    --bg-surface-glass: rgba(255,248,240,.95);
+    --primary: #d92332;
+    --primary-light: #b3001f;
+    --primary-dark: #930017;
+    --accent: #f2b84b;
+    --accent-glow: rgba(217,35,50,.2);
+    --gold: #d99a1b;
+    --text-primary: #28202a;
+    --text-secondary: #6d5a51;
+    --text-muted: #846f67;
+    --border-subtle: rgba(144,111,109,.24);
+    --border-focus: rgba(217,35,50,.55);
+    color: var(--text-primary);
+    background: radial-gradient(circle at 10% 4%,rgba(255,229,217,.65),transparent 24%),#fff8f0;
+}
+.cineora-catalog-page .cinema-header { color: var(--text-primary); border-bottom-color: rgba(144,111,109,.16); background: rgba(255,248,240,.95); box-shadow: 0 1px 8px rgba(40,32,42,.06); }
+.cineora-catalog-page .nav-link { color: #5c403e; }
+.cineora-catalog-page .nav-link:hover { color: var(--primary); background: #ffe5d9; }
+.cineora-catalog-page .nav-link.active { color: var(--primary); border-color: transparent; border-bottom: 2px solid var(--primary); border-radius: 0; background: transparent; }
+.cineora-catalog-page .user-badge { color: var(--text-primary); border-color: var(--border-subtle); background: #fff; }
+.cineora-catalog-page .user-avatar { color: #fff; background: var(--primary); }
+.cineora-catalog-page .user-name { color: var(--text-primary); }
+.cineora-catalog-page .account-dropdown-menu { border-color: var(--border-subtle); background: #fff; }
+.cineora-catalog-page .account-dropdown-menu a,.cineora-catalog-page .account-dropdown-menu button { color: var(--text-primary); }
+.cineora-catalog-page .account-dropdown-menu a:hover,.cineora-catalog-page .account-dropdown-menu button:hover { color: var(--primary); background: #fff1ec; }
+.cineora-catalog-page .section-shell { max-width: 1280px; }
+.cineora-catalog-page .filter-toolbar,.cineora-catalog-page .date-selector-bar { border-color: rgba(229,189,186,.55); background: #fff; box-shadow: 0 7px 24px rgba(40,32,42,.07); }
+.cineora-catalog-page .filter-tab { color: var(--text-secondary); }
+.cineora-catalog-page .filter-tab:hover { color: var(--primary); background: #fff1ec; }
+.cineora-catalog-page .filter-tab.active { color: #fff; background: var(--primary); }
+.cineora-catalog-page .search-input-wrap input,.cineora-catalog-page .filter-select { color: var(--text-primary); border-color: rgba(144,111,109,.3); background: #fff8f0; }
+.cineora-catalog-page .movie-card,.cineora-catalog-page .promo-card,.cineora-catalog-page .news-card,.cineora-catalog-page .showtime-movie-card { border-color: rgba(229,189,186,.5); background: #fff; box-shadow: 0 6px 22px rgba(40,32,42,.07); }
+.cineora-catalog-page .movie-card:hover,.cineora-catalog-page .promo-card:hover,.cineora-catalog-page .news-card:hover { border-color: rgba(217,35,50,.3); box-shadow: 0 14px 34px rgba(40,32,42,.12); }
+.cineora-catalog-page .movie-card-title,.cineora-catalog-page .promo-title,.cineora-catalog-page .news-title,.cineora-catalog-page .showtime-movie-info h3 a { color: var(--text-primary); }
+.cineora-catalog-page .btn-card-detail { color: var(--primary); border-color: rgba(217,35,50,.34); background: #fff; }
+.cineora-catalog-page .btn-card-book,.cineora-catalog-page .btn-primary { color: #fff; background: var(--primary); }
+.cineora-catalog-page .date-pill { color: var(--text-secondary); border-color: rgba(144,111,109,.22); background: #fff8f0; }
+.cineora-catalog-page .date-pill.active { color: #fff; border-color: var(--primary); background: var(--primary); }
+.cineora-catalog-page .showtime-room-block,.cineora-catalog-page .showtime-slot-btn { border-color: rgba(229,189,186,.55); background: #fff8f0; }
+.cineora-catalog-page .showtime-slot-btn:hover { border-color: var(--primary); background: #fff1ec; }
+.cineora-catalog-page .promo-voucher-box { border-color: rgba(242,184,75,.42); background: #fff7e6; }
+.cineora-catalog-page .cinema-footer { color: var(--text-muted); border-top-color: #e5bdba; background: #fff0e8; }
+.cineora-catalog-page .footer-col h4 { color: var(--text-primary); }
+.cineora-catalog-page .footer-links a:hover { color: var(--primary); }
+
+.movie-detail-page .movie-details-hero { background: linear-gradient(125deg,#fff1ec 0%,#fff8f0 62%,#ffe5d9 100%); }
+.movie-detail-page .movie-details-container { align-items: start; }
+.movie-detail-page .movie-details-poster-wrap { overflow: hidden; border: 1px solid rgba(229,189,186,.7); border-radius: 16px; background: #fff; box-shadow: 0 20px 48px rgba(40,32,42,.15); }
+.movie-detail-page .movie-details-poster { display: block; width: 100%; height: auto; aspect-ratio: 2/3; object-fit: cover; }
+.movie-detail-page .movie-details-title { color: var(--text-primary); }
+.movie-detail-page .meta-pill { color: var(--text-secondary); border-color: rgba(144,111,109,.28); background: #fff; }
+.movie-detail-page .movie-info-table { border-color: rgba(229,189,186,.55); }
+.movie-detail-page .info-val { color: var(--text-primary); }
+.movie-detail-page .movie-synopsis-box,.movie-detail-page .review-form-card,.movie-detail-page .review-item { color: var(--text-primary); border-color: rgba(229,189,186,.55); background: #fff; }
+.movie-detail-page .movie-synopsis-box h3 { color: var(--text-primary); }
+.movie-detail-page .review-textarea { color: var(--text-primary); border-color: rgba(144,111,109,.3); background: #fff8f0; }
+
+/* Cinematic homepage hero inspired by streaming showcases, adapted for ticket booking. */
+.cineora-home .cinematic-hero {
+    isolation: isolate;
+    min-height: clamp(610px,76vh,790px);
+    padding: 88px max(5vw,24px) 118px;
+    overflow: hidden;
+    border-bottom: 0;
+    background: #171219;
+}
+.cineora-home .cinematic-hero::before {
+    content: "";
+    position: absolute;
+    z-index: -3;
+    inset: -5%;
+    background-image: var(--hero-image);
+    background-position: 70% 30%;
+    background-size: cover;
+    filter: saturate(.88) contrast(1.04);
+    transform: scale(1.04);
+}
+.cineora-home .cinematic-hero::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    background: linear-gradient(90deg,rgba(20,14,20,.98) 0%,rgba(27,17,23,.92) 30%,rgba(24,15,21,.45) 61%,rgba(15,11,16,.2) 100%),linear-gradient(0deg,rgba(20,14,20,.96) 0%,transparent 43%,rgba(12,9,13,.25) 100%);
+}
+.cineora-home .cinematic-hero-fallback { --hero-image: url('/images/cinema-login-hero.png'); }
+.cineora-home .cinematic-hero .hero-slider-container { display: block; max-width: 1380px; min-height: auto; }
+.cineora-home .cinematic-hero .hero-content { width: min(620px,100%); gap: 18px; padding-top: 35px; }
+.cineora-home .cinematic-hero .hero-poster-wrap { display: none; }
+.cineora-home .cinematic-hero .hero-title { color: #fff; background: none; -webkit-text-fill-color: currentColor; text-shadow: 0 4px 28px rgba(0,0,0,.42); }
+.cineora-home .cinematic-hero .hero-meta { color: #eadbd5; }
+.cineora-home .cinematic-hero .hero-description { display: -webkit-box; overflow: hidden; color: #e2d5d0; font-size: 1rem; -webkit-box-orient: vertical; -webkit-line-clamp: 4; text-shadow: 0 2px 14px rgba(0,0,0,.42); }
+.cineora-home .cinematic-hero .btn-secondary { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.1); backdrop-filter: blur(10px); }
+.cineora-home .cinematic-hero .btn-secondary:hover { border-color: rgba(255,255,255,.36); background: rgba(255,255,255,.17); }
+.cineora-home .cinematic-hero + .quick-booking-bar { margin-top: -67px; }
+@media(max-width:760px){
+    .cineora-home .cinematic-hero{min-height:620px;padding-top:62px;background-position:center}
+    .cineora-home .cinematic-hero::before{background-position:center top}
+    .cineora-home .cinematic-hero::after{background:linear-gradient(90deg,rgba(20,14,20,.94),rgba(20,14,20,.58)),linear-gradient(0deg,#171219 0%,transparent 55%)}
+    .cineora-home .cinematic-hero .hero-content{padding-top:15px}
+    .cineora-home .cinematic-hero .hero-actions{align-items:stretch;flex-direction:column}
+    .cineora-home .cinematic-hero .hero-actions>*{justify-content:center;width:100%}
+}
