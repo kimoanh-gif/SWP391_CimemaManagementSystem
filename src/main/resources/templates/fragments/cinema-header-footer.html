@@ -3,7 +3,7 @@
 <head th:fragment="metaHead(pageTitle)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle != null ? pageTitle + ' | CineVerse' : 'CineVerse - Premium Cinema Experience'}">CineVerse</title>
+    <title th:text="${pageTitle != null ? pageTitle + ' | CINEORA' : 'CINEORA - Every Story Begins Here'}">CINEORA</title>
     <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
 </head>
 <body>
@@ -13,9 +13,9 @@
      ===================================================================== -->
 <header th:fragment="header(activeNav)" class="cinema-header">
     <div class="brand-container">
-        <a th:href="@{/}" class="brand-logo">
-            <div class="brand-icon">▶</div>
-            <span>CINE<span class="highlight">VERSE</span></span>
+        <a th:href="@{/}" class="brand-logo" aria-label="CINEORA home">
+            <img class="brand-image" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png" alt="CINEORA logo">
+            <span class="brand-copy"><strong>CINEORA</strong><small>Every Story Begins Here</small></span>
         </a>
     </div>
 
@@ -104,9 +104,9 @@
 <footer th:fragment="footer" class="cinema-footer">
     <div class="footer-top">
         <div class="footer-brand">
-            <a th:href="@{/}" class="brand-logo">
-                <div class="brand-icon">▶</div>
-                <span>CINE<span class="highlight">VERSE</span></span>
+            <a th:href="@{/}" class="brand-logo" aria-label="CINEORA home">
+                <img class="brand-image" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png" alt="CINEORA logo">
+                <span class="brand-copy"><strong>CINEORA</strong><small>Every Story Begins Here</small></span>
             </a>
             <p>A modern cinema experience with premium visuals, immersive sound, IMAX, and Dolby Atmos.</p>
         </div>
@@ -132,13 +132,13 @@
             <h4>Contact</h4>
             <ul class="footer-links">
                 <li><span>📞 Hotline: 1900 8888 (8:00 - 22:00)</span></li>
-                <li><span>✉️ Email: support@cineverse.vn</span></li>
+                <li><span>✉️ Email: support@cineora.vn</span></li>
                 <li><span>🏢 5th Floor, Cinema Plaza, Hanoi</span></li>
             </ul>
         </div>
     </div>
     <div class="footer-bottom">
-        <div>&copy; 2026 CineVerse Cinema Management System. All rights reserved.</div>
+        <div>&copy; 2026 CINEORA Cinema Management System. All rights reserved.</div>
         <div>Built for the SWP391 project — Customer module.</div>
     </div>
 </footer>

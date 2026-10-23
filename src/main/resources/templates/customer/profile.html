@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Profile | CineVerse</title><link rel="stylesheet" th:href="@{/css/cinema-portal.css}"><link rel="stylesheet" th:href="@{/css/customer-profile.css}"></head>
-<body>
+<body class="customer-account-page">
 <div th:replace="~{fragments/cinema-header-footer :: header('profile')}"></div>
 <main class="profile-main"><div class="profile-content">
   <div class="profile-page-heading"><div><nav class="profile-breadcrumb profile-title-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/}">Home</a><span>›</span><strong>My Profile</strong></nav><h1>My Profile</h1><p class="profile-subtitle">Manage your personal details and cinema membership information.</p></div><div class="profile-heading-actions"><a class="profile-button profile-button-primary" th:href="@{/customer/profile/edit}">Edit Profile</a><button class="profile-button" type="button" id="open-password-modal">Change Password</button></div></div>

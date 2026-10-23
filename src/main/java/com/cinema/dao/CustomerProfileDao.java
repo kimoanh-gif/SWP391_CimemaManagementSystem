@@ -5,6 +5,7 @@ import com.cinema.dto.ProfileUpdateForm;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.dao.DataAccessException;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -16,6 +17,7 @@ public class CustomerProfileDao {
 
     public CustomerProfileDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        ensureProfileSchema();
     }
 
     private final RowMapper<CustomerProfile> profileRowMapper = (rs, rowNum) -> {
@@ -36,7 +38,6 @@ public class CustomerProfileDao {
         profile.setAvailablePoints(rs.getInt("AvailablePoints"));
         profile.setTierPoints(rs.getInt("TierPoints"));
         profile.setAvatarUrl(rs.getString("AvatarUrl"));
-        profile.setGoogleLinked(rs.getBoolean("GoogleLinked"));
         profile.setPasswordSet(rs.getBoolean("PasswordSet"));
 
         return profile;
@@ -57,7 +58,6 @@ public class CustomerProfileDao {
                     c.AvailablePoints,
                     c.TierPoints
                     ,a.AvatarUrl
-                    ,CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.OAuthAccount oa WHERE oa.AccountID=a.AccountID AND oa.Provider='GOOGLE') THEN 1 ELSE 0 END AS BIT) GoogleLinked
                     ,CAST(CASE WHEN a.PasswordHash IS NOT NULL AND LTRIM(RTRIM(a.PasswordHash)) <> '' THEN 1 ELSE 0 END AS BIT) PasswordSet
                 FROM Account a
                 JOIN Customer c ON c.AccountID = a.AccountID
@@ -65,9 +65,9 @@ public class CustomerProfileDao {
                 WHERE a.AccountID = ?
                 """;
 
-        return jdbcTemplate.query(sql, profileRowMapper, accountId)
-                .stream()
-                .findFirst();
+        Optional<CustomerProfile> result = jdbcTemplate.query(sql, profileRowMapper, accountId).stream().findFirst();
+        result.ifPresent(profile -> profile.setGoogleLinked(isGoogleLinked(accountId)));
+        return result;
     }
 
     public void updateProfile(int accountId, ProfileUpdateForm form) {
@@ -108,5 +108,24 @@ public class CustomerProfileDao {
 
     private String emptyToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private boolean isGoogleLinked(int accountId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM dbo.OAuthAccount WHERE AccountID=? AND Provider='GOOGLE'",
+                    Integer.class, accountId);
+            return count != null && count > 0;
+        } catch (DataAccessException exception) {
+            return false;
+        }
+    }
+
+    private void ensureProfileSchema() {
+        try {
+            jdbcTemplate.execute("IF COL_LENGTH(N'dbo.Account', N'AvatarUrl') IS NULL ALTER TABLE dbo.Account ADD AvatarUrl NVARCHAR(500) NULL");
+        } catch (DataAccessException ignored) {
+            // The profile remains readable on restricted database users; avatar upload will report a friendly error.
+        }
     }
 }
