@@ -24,6 +24,7 @@ public class CustomerProfileDao {
         profile.setAccountId(rs.getInt("AccountID"));
         profile.setCustomerId(rs.getInt("CustomerID"));
         profile.setFullName(rs.getString("FullName"));
+        profile.setUsername(rs.getString("Username"));
         profile.setEmail(rs.getString("Email"));
         profile.setPhone(rs.getString("Phone"));
 
@@ -34,6 +35,9 @@ public class CustomerProfileDao {
         profile.setMembershipRankName(rs.getString("MembershipRankName"));
         profile.setAvailablePoints(rs.getInt("AvailablePoints"));
         profile.setTierPoints(rs.getInt("TierPoints"));
+        profile.setAvatarUrl(rs.getString("AvatarUrl"));
+        profile.setGoogleLinked(rs.getBoolean("GoogleLinked"));
+        profile.setPasswordSet(rs.getBoolean("PasswordSet"));
 
         return profile;
     };
@@ -44,6 +48,7 @@ public class CustomerProfileDao {
                     a.AccountID,
                     c.CustomerID,
                     a.FullName,
+                    a.Username,
                     a.Email,
                     a.Phone,
                     c.DateOfBirth,
@@ -51,6 +56,9 @@ public class CustomerProfileDao {
                     mr.[Name] AS MembershipRankName,
                     c.AvailablePoints,
                     c.TierPoints
+                    ,a.AvatarUrl
+                    ,CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.OAuthAccount oa WHERE oa.AccountID=a.AccountID AND oa.Provider='GOOGLE') THEN 1 ELSE 0 END AS BIT) GoogleLinked
+                    ,CAST(CASE WHEN a.PasswordHash IS NOT NULL AND LTRIM(RTRIM(a.PasswordHash)) <> '' THEN 1 ELSE 0 END AS BIT) PasswordSet
                 FROM Account a
                 JOIN Customer c ON c.AccountID = a.AccountID
                 LEFT JOIN MembershipRank mr ON mr.RankID = c.RankID
@@ -65,7 +73,7 @@ public class CustomerProfileDao {
     public void updateProfile(int accountId, ProfileUpdateForm form) {
         String updateAccountSql = """
                 UPDATE Account
-                SET FullName = ?, Phone = ?
+                SET FullName = ?
                 WHERE AccountID = ?
                 """;
 
@@ -78,7 +86,6 @@ public class CustomerProfileDao {
         jdbcTemplate.update(
                 updateAccountSql,
                 form.getFullName().trim(),
-                emptyToNull(form.getPhone()),
                 accountId
         );
 
@@ -90,12 +97,12 @@ public class CustomerProfileDao {
         );
     }
 
+    public void updateAvatar(int accountId, String avatarUrl) {
+        jdbcTemplate.update("UPDATE dbo.Account SET AvatarUrl=? WHERE AccountID=?", avatarUrl, accountId);
+    }
+
     public boolean existsByPhoneExcludingAccount(String phone, int accountId) {
-        Integer count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM dbo.Account
-                WHERE Phone = ? AND AccountID <> ?
-                """, Integer.class, phone, accountId);
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.Account WHERE Phone=? AND AccountID<>?", Integer.class, phone, accountId);
         return count != null && count > 0;
     }
 

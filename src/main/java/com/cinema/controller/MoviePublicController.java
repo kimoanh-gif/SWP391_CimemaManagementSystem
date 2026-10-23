@@ -93,7 +93,7 @@ public class MoviePublicController {
     ) {
         Optional<Movie> movieOpt = movieService.getMovieById(movieId);
         if (movieOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy phim yêu cầu.");
+            redirectAttributes.addFlashAttribute("errorMessage", "The requested movie could not be found.");
             return "redirect:/movies";
         }
         Movie movie = movieOpt.get();
@@ -129,9 +129,6 @@ public class MoviePublicController {
         return "customer/movies/details";
     }
 
-    /**
-     * Screen 23: Customer Review Submission
-     */
     @PostMapping("/{id}/reviews")
     public String submitReview(
             @PathVariable("id") int movieId,
@@ -142,15 +139,15 @@ public class MoviePublicController {
     ) {
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         if (user == null || !"CUSTOMER".equalsIgnoreCase(user.getRole())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng đăng nhập bằng tài khoản Khách hàng để đánh giá phim.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with a customer account to review this movie.");
             return "redirect:/login?redirect=/movies/" + movieId;
         }
 
         boolean success = movieService.addReview(user.getAccountId(), movieId, rating, content != null ? content.trim() : "");
         if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Cảm ơn bạn đã gửi đánh giá cho bộ phim!");
+            redirectAttributes.addFlashAttribute("successMessage", "Thank you for submitting your review.");
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể lưu đánh giá. Vui lòng thử lại sau.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Your review could not be saved. Please try again.");
         }
         return "redirect:/movies/" + movieId + "#reviews";
     }

@@ -70,7 +70,7 @@ public class OtpService {
     public String canSendOtp(String email, String purpose) {
         int todayCount = otpTokenDAO.getTodaySendCount(email, purpose);
         if (todayCount >= maxSendDaily) {
-            return "Đã gửi tối đa " + maxSendDaily + " mã OTP trong ngày. Vui lòng thử lại vào ngày mai.";
+            return "You have reached the daily limit of " + maxSendDaily + " verification codes. Please try again tomorrow.";
         }
         return null; // OK to send
     }
@@ -127,36 +127,36 @@ public class OtpService {
         String subject;
         String body;
         if (OtpToken.PURPOSE_ACTIVATION.equals(purpose)) {
-            subject = "[" + brand + "] Mã xác minh kích hoạt tài khoản";
+            subject = "[" + brand + "] Account activation code";
             body = """
-                    Xin chào,
+                    Hello,
 
-                    Mã OTP để kích hoạt tài khoản %s của bạn là:
+                    Your verification code to activate your %s account is:
 
                         %s
 
-                    Mã có hiệu lực trong %d phút (đến %s).
-                    Nếu bạn không yêu cầu đăng ký, hãy bỏ qua email này.
+                    This code is valid for %d minutes (until %s).
+                    If you did not create this account, you can ignore this email.
 
-                    Trân trọng,
-                    Đội ngũ %s
+                    Regards,
+                    The %s team
                     """.formatted(brand, code, minutes, LocalDateTime.now().plusSeconds(otpTtlSeconds).format(fmt), brand);
         } else {
-            subject = "[" + brand + "] Mã xác minh đặt lại mật khẩu";
+            subject = "[" + brand + "] Password change verification code";
             body = """
-                    Xin chào,
+                    Hello,
 
-                    Mã OTP để đặt lại mật khẩu %s của bạn là:
+                    Your verification code to change your %s password is:
 
                         %s
 
-                    Mã có hiệu lực trong %d phút (đến %s).
-                    Không chia sẻ mã này với bất kỳ ai.
+                    This code is valid for %d minutes (until %s).
+                    Do not share this code with anyone.
 
-                    Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.
+                    If you did not request this change, you can ignore this email.
 
-                    Trân trọng,
-                    Đội ngũ %s
+                    Regards,
+                    The %s team
                     """.formatted(brand, code, minutes, LocalDateTime.now().plusSeconds(otpTtlSeconds).format(fmt), brand);
         }
 

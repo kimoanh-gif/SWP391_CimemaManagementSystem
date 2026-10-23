@@ -14,10 +14,7 @@ public class ProfileUpdateForm {
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters.")
     private String fullName;
 
-    @Pattern(
-            regexp = "^(0[0-9]{9}|\\+84[0-9]{9})$",
-            message = "Enter a valid Vietnamese phone number."
-    )
+    @Pattern(regexp = "^(0[0-9]{9}|\\+84[0-9]{9})$", message = "Enter a valid Vietnamese phone number.")
     private String phone;
 
     @Past(message = "Date of birth must be in the past.")
@@ -29,7 +26,8 @@ public class ProfileUpdateForm {
     public static ProfileUpdateForm from(CustomerProfile profile) {
         ProfileUpdateForm form = new ProfileUpdateForm();
         form.setFullName(profile.getFullName());
-        form.setPhone(profile.getPhone());
+        // Retained for server-side compatibility; the edit screen never submits this locked field.
+        form.setPhone(null);
         form.setDateOfBirth(profile.getDateOfBirth());
         form.setAddress(profile.getAddress());
         return form;
@@ -43,13 +41,8 @@ public class ProfileUpdateForm {
         this.fullName = fullName == null ? null : fullName.trim();
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone == null || phone.isBlank() ? null : phone.trim();
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone == null || phone.isBlank() ? null : phone.trim(); }
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
