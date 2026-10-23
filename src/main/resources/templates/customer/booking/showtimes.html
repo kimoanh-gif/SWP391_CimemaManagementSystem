@@ -10,46 +10,11 @@
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" th:href="@{/css/cinema-portal.css}" />
     <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
   </head>
-  <body data-page="showtimes">
-    <header class="site-header">
-      <a class="brand" th:href="@{/}"
-        ><span>C</span
-        ><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a
-      >
-      <nav>
-        <a class="active" th:href="@{/customer/booking}"
-          >Movies &amp; Showtimes</a
-        ><a th:href="@{/customer/profile}">Profile</a>
-      </nav>
-      <div class="account-actions">
-        <span class="material-symbols-outlined">account_circle</span
-        ><b th:text="${session.loggedInFullName}">Customer</b>
-        <form th:action="@{/logout}" method="post">
-          <button class="link-button" type="submit">Sign out</button>
-        </form>
-      </div>
-    </header>
-    <div class="progress-wrap">
-      <div class="stepper five">
-        <div class="step active">
-          <b>1</b><span><small>STEP 1 · CURRENT</small>Showtime</span>
-        </div>
-        <div class="step">
-          <b>2</b><span><small>STEP 2</small>Seats</span>
-        </div>
-        <div class="step">
-          <b>3</b><span><small>STEP 3</small>Food</span>
-        </div>
-        <div class="step">
-          <b>4</b><span><small>STEP 4</small>Promotions</span>
-        </div>
-        <div class="step">
-          <b>5</b><span><small>STEP 5</small>Payment</span>
-        </div>
-      </div>
-    </div>
+  <body class="customer-booking-page" data-page="showtimes">
+    <div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
     <main class="booking-shell">
       <section class="hero-row">
         <div>
@@ -79,6 +44,7 @@
           </div>
         </div>
         <form id="date-filter" th:action="@{/customer/booking}" method="get">
+          <input th:if="${selectedMovieId != null}" type="hidden" name="movieId" th:value="${selectedMovieId}" />
           <label for="date">Show date</label
           ><input
             id="date"
@@ -181,8 +147,7 @@
         <span class="material-symbols-outlined">event_busy</span>
         <h2>No Showtimes Available</h2>
         <p>
-          There are no available showtimes on this date. Please select another
-          date.
+          There are no available showtimes for this movie on this date. Please select another date.
         </p>
       </section>
     </main>

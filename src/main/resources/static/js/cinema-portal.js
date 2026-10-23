@@ -4,11 +4,89 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initHomeHeader();
+    initHeroCarousel();
     initTrailerModal();
     initVoucherCopy();
     initStarRating();
     initQuickBooking();
 });
+
+function initHomeHeader() {
+    const header = document.querySelector('.cineora-home .cinema-header');
+    if (!header) return;
+    const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 48);
+    updateHeader();
+    window.addEventListener('scroll', updateHeader, { passive: true });
+}
+
+/* =====================================================================
+   FEATURED MOVIE CAROUSEL
+   ===================================================================== */
+function initHeroCarousel() {
+    const carousel = document.querySelector('[data-hero-carousel]');
+    if (!carousel) return;
+
+    const slides = Array.from(carousel.querySelectorAll('.hero-carousel-slide'));
+    const thumbnails = Array.from(carousel.querySelectorAll('.hero-carousel-thumb'));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const intervalMs = 5000;
+    let currentIndex = 0;
+    let timer = null;
+
+    if (slides.length < 2) {
+        carousel.classList.add('is-paused');
+        return;
+    }
+
+    function showSlide(index) {
+        currentIndex = (index + slides.length) % slides.length;
+        slides.forEach((slide, slideIndex) => {
+            const active = slideIndex === currentIndex;
+            slide.classList.toggle('active', active);
+            slide.setAttribute('aria-hidden', String(!active));
+        });
+        thumbnails.forEach((thumbnail, thumbnailIndex) => {
+            const active = thumbnailIndex === currentIndex;
+            thumbnail.classList.toggle('active', active);
+            thumbnail.setAttribute('aria-selected', String(active));
+        });
+    }
+
+    function startAutoplay() {
+        if (reduceMotion || document.hidden) return;
+        window.clearInterval(timer);
+        carousel.classList.remove('is-paused');
+        timer = window.setInterval(() => showSlide(currentIndex + 1), intervalMs);
+    }
+
+    function pauseAutoplay() {
+        window.clearInterval(timer);
+        timer = null;
+        carousel.classList.add('is-paused');
+    }
+
+    thumbnails.forEach((thumbnail, index) => {
+        thumbnail.addEventListener('click', () => {
+            showSlide(index);
+            startAutoplay();
+        });
+    });
+
+    carousel.addEventListener('mouseenter', pauseAutoplay);
+    carousel.addEventListener('mouseleave', startAutoplay);
+    carousel.addEventListener('focusin', pauseAutoplay);
+    carousel.addEventListener('focusout', (event) => {
+        if (!carousel.contains(event.relatedTarget)) startAutoplay();
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) pauseAutoplay();
+        else startAutoplay();
+    });
+
+    showSlide(0);
+    startAutoplay();
+}
 
 /* =====================================================================
    1. TRAILER MODAL

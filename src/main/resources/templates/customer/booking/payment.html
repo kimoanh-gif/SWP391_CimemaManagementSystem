@@ -5,10 +5,11 @@
   <title>Payment | CINEORA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
   <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
 </head>
-<body data-page="payment" th:attr="data-payment-expires=${payment != null ? payment.expiresAt : ''},data-held-until=${payment != null ? payment.heldUntil : ''}">
-<header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Movies &amp; Showtimes</a><a th:href="@{/customer/booking/history}">My Tickets</a></nav></header>
+<body class="customer-booking-page" data-page="payment" th:attr="data-payment-expires=${payment != null ? payment.expiresAt : ''},data-held-until=${payment != null ? payment.heldUntil : ''}">
+<div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
 <main class="booking-shell">
   <p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
   <div class="checkout-layout" th:if="${payment != null}">

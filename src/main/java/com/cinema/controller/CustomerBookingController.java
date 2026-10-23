@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -36,9 +37,15 @@ public class CustomerBookingController {
         this.sessionService = sessionService;
     }
 
+    @ModelAttribute
+    public void addBookingHeaderUser(HttpSession session, Model model) {
+        model.addAttribute("currentUser", sessionService.getCurrentUser(session));
+    }
+
     @GetMapping
     public String showMovieAndShowtimeSelection(
             @RequestParam(required = false) String date,
+            @RequestParam(required = false) Integer movieId,
             HttpSession session,
             Model model
     ) {
@@ -58,9 +65,32 @@ public class CustomerBookingController {
         model.addAttribute("selectedDate", selectedDate);
         model.addAttribute("today", today);
         model.addAttribute("maxDate", today.plusDays(14));
-        model.addAttribute("movies", bookingService.getMoviesAndShowtimes(selectedDate));
+        var movies = bookingService.getMoviesAndShowtimes(selectedDate);
+        if (movieId != null && movieId > 0) {
+            movies = movies.stream()
+                    .filter(movie -> movie.getMovieId() == movieId)
+                    .toList();
+            model.addAttribute("selectedMovieId", movieId);
+        }
+        model.addAttribute("movies", movies);
         model.addAttribute("activeStep", 1);
         return "customer/booking/showtimes";
+    }
+
+    @GetMapping("/change-showtime")
+    public String changeShowtime(HttpSession session, RedirectAttributes redirectAttributes) {
+        if (customerAccountId(session) == null) return "redirect:/login";
+        Integer showtimeId = (Integer) session.getAttribute(SESSION_SHOWTIME_ID);
+        if (showtimeId == null) return "redirect:/customer/booking";
+
+        try {
+            ShowtimeOption showtime = bookingService.getBookableShowtime(showtimeId);
+            return "redirect:/customer/booking?movieId=" + showtime.getMovieId()
+                    + "&date=" + showtime.getStartTime().toLocalDate();
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/customer/booking";
+        }
     }
 
     @PostMapping("/showtime")
@@ -330,6 +360,7 @@ public class CustomerBookingController {
     public String showHistory(HttpSession session, Model model) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
+        model.addAttribute("currentUser", sessionService.getCurrentUser(session));
         model.addAttribute("bookings", bookingService.getBookingHistory(accountId));
         return "customer/booking/history";
     }

@@ -876,6 +876,9 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-02')
     INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
     VALUES (N'ROOM-02', N'Phòng Chiếu 02', N'Dolby Atmos', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'18m x 10m', N'Ready', N'Phòng chiếu âm thanh Dolby Atmos');
 
+UPDATE dbo.Room SET RoomName=N'Cinema 01', [Description]=N'Standard digital auditorium' WHERE RoomCode=N'ROOM-01';
+UPDATE dbo.Room SET RoomName=N'Cinema 02', [Description]=N'Premium Dolby Atmos auditorium' WHERE RoomCode=N'ROOM-02';
+
 DECLARE @RoomID INT;
 DECLARE @RowNumber INT;
 DECLARE @SeatNumber INT;
@@ -932,6 +935,25 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Ngôi Nhà Bí Ẩn')
     INSERT dbo.Movie (Title, OriginalTitle, Duration, ReleaseDate, EndDate, [Language], Director, Actors, AgeRating, [Description], PosterURL, TrailerURL, [Status])
     VALUES (N'Ngôi Nhà Bí Ẩn', N'The Secret House', 102, DATEADD(DAY, 30, CAST(GETDATE() AS DATE)), DATEADD(DAY, 75, CAST(GETDATE() AS DATE)), N'Tiếng Việt', N'Lê Hoàng', N'Minh Anh, Quốc Huy', N'T18', N'Một gia đình phát hiện bí mật bị chôn giấu trong căn nhà mới.', N'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600', N'https://www.youtube.com/', N'Upcoming');
 
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Clayface')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Clayface',N'Clayface',108,'2026-10-30','2026-12-20',N'English',N'James Watkins',N'Tom Rhys Harries, Naomi Ackie, Eddie Marsan',N'T18',N'A rising Hollywood actor undergoes an experimental treatment that transforms his identity and humanity.',N'https://www.impawards.com/2026/posters/clayface_xlg.jpg',NULL,N'Upcoming');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Godzilla Minus Zero')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Godzilla Minus Zero',N'Godzilla Minus Zero',135,'2026-11-06','2027-01-10',N'Japanese',N'Takashi Yamazaki',N'Ryunosuke Kamiki, Minami Hamabe',N'T13',N'Two years after the war, Japan faces another devastating threat from Godzilla.',N'https://www.thepopverse.com/_next/image?q=75&url=https%3A%2F%2Fmedia.thepopverse.com%2Fmedia%2Fgodzilla-minus-zero-teaser-poster-b1eimqcqlboe3ox4e40nakhotm.png&w=1280',NULL,N'Upcoming');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Cat in the Hat')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'The Cat in the Hat',N'The Cat in the Hat',98,'2026-11-06','2026-12-31',N'English',N'Alessandro Carloni, Erica Rivinoja',N'Bill Hader',N'P',N'The Cat brings imagination, chaos, and a new adventure to two children adjusting to a new home.',N'https://image.tmdb.org/t/p/original/hXrxHQhUkffGUmrM7vs2ThpcVQL.jpg',NULL,N'Upcoming');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Ebenezer: A Christmas Carol')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Ebenezer: A Christmas Carol',N'Ebenezer: A Christmas Carol',120,'2026-11-13','2027-01-15',N'English',N'Ti West',N'Johnny Depp, Andrea Riseborough',N'T13',N'A dark cinematic retelling of the timeless Christmas story of regret and redemption.',N'https://poster.gsc.com.my/2026/260727_Ebenezer_big.jpg',NULL,N'Upcoming');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Hunger Games: Sunrise on the Reaping')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'The Hunger Games: Sunrise on the Reaping',N'The Hunger Games: Sunrise on the Reaping',145,'2026-11-20','2027-01-31',N'English',N'Francis Lawrence',N'Joseph Zada, Mckenna Grace',N'T16',N'The Second Quarter Quell begins with young Haymitch Abernathy selected to fight for District 12.',N'https://assets.gadgets360cdn.com/pricee/assets/product/202511/The_Hunger_Games_Sunrise_on_the__1764145414.jpg',NULL,N'Upcoming');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Angry Birds Movie 3')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'The Angry Birds Movie 3',N'The Angry Birds Movie 3',100,'2027-01-01','2027-02-28',N'English',N'John Rice',N'Jason Sudeikis, Josh Gad',N'P',N'Red and the flock return for a colorful new big-screen adventure.',N'https://image.tmdb.org/t/p/original/9Fd7M2LwtKXBzjMquZM64z22odQ.jpg',NULL,N'Upcoming');
+
 DECLARE @MovieGenreSeed TABLE (MovieTitle NVARCHAR(250), GenreName NVARCHAR(100));
 INSERT @MovieGenreSeed VALUES
     (N'Đường Đua Ánh Sáng', N'Action'),
@@ -941,6 +963,18 @@ INSERT @MovieGenreSeed VALUES
     (N'Chân Trời 2099', N'Sci-Fi'),
     (N'Chân Trời 2099', N'Action'),
     (N'Ngôi Nhà Bí Ẩn', N'Horror');
+
+INSERT @MovieGenreSeed VALUES
+    (N'Clayface',N'Horror'),
+    (N'Godzilla Minus Zero',N'Action'),
+    (N'Godzilla Minus Zero',N'Sci-Fi'),
+    (N'The Cat in the Hat',N'Animation'),
+    (N'The Cat in the Hat',N'Comedy'),
+    (N'Ebenezer: A Christmas Carol',N'Drama'),
+    (N'The Hunger Games: Sunrise on the Reaping',N'Action'),
+    (N'The Hunger Games: Sunrise on the Reaping',N'Adventure'),
+    (N'The Angry Birds Movie 3',N'Animation'),
+    (N'The Angry Birds Movie 3',N'Comedy');
 
 INSERT dbo.MovieGenre (MovieID, GenreID)
 SELECT m.MovieID, g.GenreID
@@ -961,6 +995,17 @@ IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'DR-COKE')
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO')
     INSERT dbo.FoodBeverageItem (ItemCode, [Name], [Description], ItemType, Price, CostPrice, ImageURL, [Status])
     VALUES (N'CB-SOLO', N'Combo Solo', N'1 bắp caramel và 1 Coca-Cola', N'Combo', 79000, 22000, N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=400', N'Active');
+
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Caramel Popcorn', [Description]=N'Freshly popped corn coated with caramel', ImageURL=N'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600' WHERE ItemCode=N'PC-CARAMEL';
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Coca-Cola', [Description]=N'Chilled 32 oz Coca-Cola', ImageURL=N'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600' WHERE ItemCode=N'DR-COKE';
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Solo Movie Combo', [Description]=N'One large caramel popcorn and one Coca-Cola', ImageURL=N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=600' WHERE ItemCode=N'CB-SOLO';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode=N'PC-CHEESE')
+    INSERT dbo.FoodBeverageItem (ItemCode,[Name],[Description],ItemType,Price,CostPrice,ImageURL,[Status]) VALUES
+    (N'PC-CHEESE',N'Cheese Popcorn',N'Large popcorn with rich cheese seasoning',N'Food',59000,17000,N'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600',N'Active');
+IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode=N'CB-COUPLE')
+    INSERT dbo.FoodBeverageItem (ItemCode,[Name],[Description],ItemType,Price,CostPrice,ImageURL,[Status]) VALUES
+    (N'CB-COUPLE',N'Couple Movie Combo',N'One large popcorn and two soft drinks',N'Combo',129000,39000,N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600',N'Active');
 
 DECLARE @ComboID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO');
 DECLARE @PopcornID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'PC-CARAMEL');
@@ -1048,6 +1093,18 @@ BEGIN
         'PUBLISHED', SYSDATETIME(), SYSDATETIME(), SYSDATETIME()
     );
 END;
+
+UPDATE dbo.News
+SET Title=N'Weekly Showtimes and Member Offers',
+    Content=N'Explore this week''s newest showtimes and enjoy exclusive benefits when booking with your CINEORA member account.'
+WHERE Title=N'Lịch chiếu và ưu đãi tuần này';
+
+IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Experience Movies with Dolby Atmos')
+    INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
+    VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),N'Experience Movies with Dolby Atmos',N'Discover immersive, multidimensional sound in our premium Dolby Atmos auditorium.',N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1000','PUBLISHED',SYSDATETIME(),SYSDATETIME(),SYSDATETIME());
+IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Five Tips for the Perfect Cinema Night')
+    INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
+    VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),N'Five Tips for the Perfect Cinema Night',N'Book early, choose your preferred seats, arrive on time, and complete the experience with your favorite cinema snacks.',N'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=1000','PUBLISHED',SYSDATETIME(),SYSDATETIME(),SYSDATETIME());
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'BOOKING_HOLD_MINUTES')

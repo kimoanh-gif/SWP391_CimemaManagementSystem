@@ -57,10 +57,10 @@
         <div th:if="${currentUser != null}" class="user-menu">
             <!-- If Staff/Manager/Admin, show portal badge -->
             <a th:if="${currentUser.role == 'ADMIN'}" th:href="@{/admin/dashboard}" class="btn-auth-login" style="margin-right:8px;font-size:0.8rem;">
-                ⚙️ System Administration
+                System Administration
             </a>
             <a th:if="${currentUser.role == 'MANAGER'}" th:href="@{/manager/dashboard}" class="btn-auth-login" style="margin-right:8px;font-size:0.8rem;">
-                ⚙️ Cinema Management
+                Cinema Management
             </a>
             <a th:if="${currentUser.role == 'STAFF'}" th:href="@{/staff/dashboard}" class="btn-auth-login" style="margin-right:8px;font-size:0.8rem;">
                 🎫 Staff Counter

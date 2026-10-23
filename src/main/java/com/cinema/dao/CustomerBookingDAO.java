@@ -472,14 +472,14 @@ public class CustomerBookingDAO {
 
     public List<BookingHistoryItem> findBookingHistory(int accountId) {
         return jdbcTemplate.query("""
-                SELECT b.BookingID,b.BookingCode,m.Title,r.RoomName,st.StartTime,b.TotalAmount,b.[Status],
+                SELECT b.BookingID,b.BookingCode,m.Title,m.PosterURL,r.RoomName,st.StartTime,b.TotalAmount,b.[Status],
                        COALESCE((SELECT TOP 1 p.[Status] FROM dbo.Payment p WHERE p.BookingID=b.BookingID ORDER BY p.PaymentID DESC),'UNPAID') PaymentStatus,
                        (SELECT STRING_AGG(CONCAT(s.RowLabel,s.SeatNumber),', ') FROM dbo.BookingSeat bs JOIN dbo.Seat s ON s.SeatID=bs.SeatID WHERE bs.BookingID=b.BookingID) SeatLabels
                 FROM dbo.Booking b JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
                 JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID JOIN dbo.Movie m ON m.MovieID=st.MovieID
                 JOIN dbo.Room r ON r.RoomID=st.RoomID WHERE c.AccountID=? ORDER BY b.BookingTime DESC
                 """, (rs,n) -> new BookingHistoryItem(rs.getInt("BookingID"),rs.getString("BookingCode"),rs.getString("Title"),
-                rs.getString("RoomName"),rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabels"),
+                rs.getString("PosterURL"),rs.getString("RoomName"),rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabels"),
                 rs.getBigDecimal("TotalAmount"),rs.getString("Status"),rs.getString("PaymentStatus")), accountId);
     }
 
