@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/></head>
+<body>
+
+<!--
+  Staff Sidebar Fragment
+  Usage: <div th:replace="~{fragments/staff-layout :: sidebar('dashboard')}"></div>
+  activeMenu values: dashboard | sales | bookings | check-in | news
+-->
+<aside th:fragment="sidebar(activeMenu)" class="staff-sidebar" id="staffSidebar">
+  <a th:href="@{/staff/dashboard}" class="sidebar-brand">
+    <img class="cineora-brand-logo" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png" alt="CINEORA">
+    <div class="brand-text">CINEORA<span>Every Story Begins Here</span></div>
+  </a>
+  <div class="sidebar-section">Operations</div>
+  <nav class="sidebar-nav">
+    <a th:href="@{/staff/dashboard}"
+       th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''"
+       class="sidebar-link">
+      <span class="link-icon">🏠</span><span>Dashboard</span>
+    </a>
+    <a th:href="@{/staff/sales}"
+       th:classappend="${activeMenu == 'sales'} ? ' active' : ''"
+       class="sidebar-link">
+      <span class="link-icon">🎟</span><span>Counter Sales</span>
+    </a>
+    <a th:href="@{/staff/bookings}"
+       th:classappend="${activeMenu == 'bookings'} ? ' active' : ''"
+       class="sidebar-link">
+      <span class="link-icon">📋</span><span>Bookings</span>
+    </a>
+    <a th:href="@{/staff/check-in}"
+       th:classappend="${activeMenu == 'check-in'} ? ' active' : ''"
+       class="sidebar-link">
+      <span class="link-icon">✅</span><span>Ticket Check-In</span>
+    </a>
+    <a th:href="@{/staff/news}"
+       th:classappend="${activeMenu == 'news'} ? ' active' : ''"
+       class="sidebar-link">
+      <span class="link-icon">✏️</span><span>News Management</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar"
+           th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'S'}">S</div>
+      <div>
+        <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Staff'}">Staff</div>
+        <div class="sidebar-user-role" th:text="${user != null ? user.role  : 'STAFF'}">STAFF</div>
+      </div>
+    </div>
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+      <button class="sidebar-logout-btn" type="submit">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- Topbar fragment -->
+<header th:fragment="topbar(pageTitle, subTitle)" class="staff-topbar">
+  <div class="page-title">Staff / <strong th:text="${pageTitle}">Page</strong></div>
+  <div class="topbar-actions">
+    <span class="profile-name" th:text="${user != null ? user.fullName : 'Staff'}">Staff</span>
+    <span class="staff-pill">STAFF</span>
+  </div>
+</header>
+
+<!-- Sidebar mobile controls (script) -->
+<th:block th:fragment="sidebar-scripts">
+<script th:inline="none">
+function openSidebar()  {
+  document.getElementById('staffSidebar').classList.add('mobile-open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('staffSidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+</script>
+</th:block>
+
+</body>
+</html>
