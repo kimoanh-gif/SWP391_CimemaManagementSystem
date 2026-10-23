@@ -1,42 +1,138 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Booking Details | CinemaSystem</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}"></head>
-<body><div class="dash-shell">
-  <header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a>
-    <div class="dash-user"><span th:text="${user.fullName}">Staff Member</span><form th:action="@{/logout}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="dash-logout">Sign Out</button></form></div>
-  </header>
-  <main class="dash-body staff-content"><a class="staff-text-link" th:href="@{/staff/bookings}">← Bookings</a>
-    <p class="staff-alert success" th:if="${successMessage}" th:text="${successMessage}"></p>
-    <div class="staff-section-heading"><div><p class="staff-eyebrow">BOOKING DETAILS</p><h1 th:text="${'Booking ' + booking.bookingCode}">Booking Details</h1></div>
-      <span class="staff-status" th:classappend="${' status-' + #strings.toLowerCase(booking.status)}" th:text="${booking.status}">PENDING</span></div>
-    <div class="staff-two-column">
-      <section class="dash-card"><h2>Showtime Information</h2>
-        <dl class="staff-details">
-          <dt>Movie</dt><dd th:text="${booking.movieTitle}"></dd>
-          <dt>Screen</dt><dd th:text="${booking.roomName}"></dd>
-          <dt>Showtime</dt><dd th:text="${#temporals.format(booking.showtime, 'dd/MM/yyyy HH:mm')}"></dd>
-          <dt>Booking Code / Type</dt><dd th:text="${booking.bookingCode + ' · ' + booking.bookingType}"></dd>
-          <dt>Customer</dt><dd th:text="${booking.customerName != null ? booking.customerName : 'Walk-in Customer'}"></dd>
-          <dt>Contact</dt><dd th:text="${booking.phone != null ? booking.phone : booking.email}"></dd>
-          <dt>Created At</dt><dd th:text="${#temporals.format(booking.bookingTime, 'dd/MM/yyyy HH:mm')}"></dd>
-        </dl>
-      </section>
-      <section class="dash-card"><h2>Payment</h2>
-        <dl class="staff-details"><dt>Subtotal</dt><dd th:text="${#numbers.formatDecimal(booking.subtotal, 0, 'COMMA', 0, 'POINT') + ' VND'}"></dd>
-          <dt>Discount</dt><dd th:text="${#numbers.formatDecimal(booking.discountAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></dd></dl>
-        <p class="staff-total">Total <strong th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></strong></p>
-      </section>
-      <section class="dash-card"><h2>Tickets / Seats</h2><div class="staff-table-wrap">
-        <table class="staff-table"><thead><tr><th>Seat</th><th>Seat Type</th><th>Price</th><th>Status</th></tr></thead>
-          <tbody><tr th:each="seat : ${booking.seats}"><td th:text="${seat.label}"></td><td th:text="${seat.seatType}"></td><td th:text="${#numbers.formatDecimal(seat.price, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td><td th:text="${seat.status}"></td></tr>
-          <tr th:if="${#lists.isEmpty(booking.seats)}"><td colspan="4">This booking has no seats.</td></tr></tbody></table></div>
-      </section>
-      <section class="dash-card"><h2>Food &amp; Beverage</h2><div class="staff-table-wrap">
-        <table class="staff-table"><thead><tr><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
-          <tbody><tr th:each="food : ${booking.foods}"><td th:text="${food.name}"></td><td th:text="${food.quantity}"></td><td th:text="${#numbers.formatDecimal(food.unitPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td><td th:text="${#numbers.formatDecimal(food.subtotal, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td></tr>
-          <tr th:if="${#lists.isEmpty(booking.foods)}"><td colspan="4">This booking has no food or beverage items.</td></tr></tbody></table></div>
-      </section>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Booking Details | CINEORA Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('bookings')}"></div>
+
+  <div class="staff-main">
+    <div th:replace="~{fragments/staff-layout :: topbar('Booking Details', '')}"></div>
+
+    <div class="staff-content">
+
+      <!-- Heading row -->
+      <div class="content-heading">
+        <div>
+          <p class="eyebrow">CINEORA / STAFF / BOOKINGS</p>
+          <h1 th:text="'Booking ' + ${booking.bookingCode}">Booking Details</h1>
+        </div>
+        <div class="heading-actions">
+          <a class="btn btn-secondary" th:href="@{/staff/bookings}">← Back to Bookings</a>
+          <span class="badge"
+                th:classappend="${'badge-' + #strings.toLowerCase(booking.status)}"
+                th:text="${booking.status}"
+                style="font-size:13px;padding:6px 14px;">STATUS</span>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}" role="status"></div>
+
+      <!-- Info grid -->
+      <div class="two-col">
+
+        <!-- Showtime info -->
+        <div class="panel">
+          <div class="panel-header"><div><h2>Showtime Information</h2></div></div>
+          <div class="panel-body">
+            <dl style="display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;font-size:13px;">
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Movie</dt>
+                   <dd th:text="${booking.movieTitle}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Screen</dt>
+                   <dd th:text="${booking.roomName}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Showtime</dt>
+                   <dd th:text="${#temporals.format(booking.showtime, 'dd/MM/yyyy HH:mm')}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Type</dt>
+                   <dd th:text="${booking.bookingCode + ' · ' + booking.bookingType}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Customer</dt>
+                   <dd th:text="${booking.customerName != null ? booking.customerName : 'Walk-in Customer'}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Contact</dt>
+                   <dd th:text="${booking.phone != null ? booking.phone : booking.email}"></dd></div>
+              <div><dt style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Created At</dt>
+                   <dd th:text="${#temporals.format(booking.bookingTime, 'dd/MM/yyyy HH:mm')}"></dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Payment summary -->
+        <div class="panel">
+          <div class="panel-header"><div><h2>Payment</h2></div></div>
+          <div class="panel-body" style="font-size:13px;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;">
+              <span>Subtotal</span>
+              <strong th:text="${#numbers.formatDecimal(booking.subtotal,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>Discount</span>
+              <strong th:text="${#numbers.formatDecimal(booking.discountAmount,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;font-size:15px;">
+              <span style="font-weight:700;">Total</span>
+              <strong style="color:var(--cineora-red);"
+                      th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Seats table -->
+      <div class="panel">
+        <div class="panel-header"><div><h2>Tickets / Seats</h2></div></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Seat</th><th>Seat Type</th><th>Price</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr th:each="seat : ${booking.seats}">
+                <td><strong th:text="${seat.label}"></strong></td>
+                <td th:text="${seat.seatType}"></td>
+                <td th:text="${#numbers.formatDecimal(seat.price,0,'COMMA',0,'POINT') + ' VND'}"></td>
+                <td><span class="badge" th:classappend="${'badge-' + #strings.toLowerCase(seat.status)}" th:text="${seat.status}"></span></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(booking.seats)}">
+                <td colspan="4"><div class="empty-state" style="padding:20px;"><div class="empty-text">No seats in this booking.</div></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- F&B table -->
+      <div class="panel">
+        <div class="panel-header"><div><h2>Food &amp; Beverage</h2></div></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+            <tbody>
+              <tr th:each="food : ${booking.foods}">
+                <td th:text="${food.name}"></td>
+                <td th:text="${food.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(food.unitPrice,0,'COMMA',0,'POINT') + ' VND'}"></td>
+                <td th:text="${#numbers.formatDecimal(food.subtotal,0,'COMMA',0,'POINT') + ' VND'}"></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(booking.foods)}">
+                <td colspan="4"><div class="empty-state" style="padding:20px;"><div class="empty-text">No food or beverage items.</div></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
-  </main>
-</div></body></html>
+  </div>
+</div>
+
+<div th:replace="~{fragments/staff-layout :: sidebar-scripts}"></div>
+</body>
+</html>

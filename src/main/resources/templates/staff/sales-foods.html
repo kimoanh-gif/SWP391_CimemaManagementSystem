@@ -1,35 +1,123 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Food &amp; Beverage | CinemaSystem</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff-workspace.css}">
-  <script th:src="@{/js/staff-sales.js}" defer></script></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Food &amp; Beverage | CINEORA Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
+  <script th:src="@{/js/staff-sales.js}" defer></script>
+</head>
 <body data-page="foods" th:attr="data-held-until=${summary.heldUntil}">
-<div class="dash-shell"><header class="dash-header"><a class="dash-brand" th:href="@{/staff/dashboard}"><span class="auth-brand-mark">▶</span><span>CINEMA SYSTEM</span></a><span>Order <strong th:text="${summary.bookingCode}"></strong></span></header>
-<main class="dash-body staff-content"><a class="staff-text-link" th:href="@{/staff/sales}">← Cancel Sales Flow</a>
-  <h1>Food &amp; Beverage</h1><p class="subtitle">Pending order · Seat hold expires in <strong id="staffHoldCountdown">10:00</strong></p>
-  <p class="staff-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
-  <p class="staff-alert success" th:if="${successMessage}" th:text="${successMessage}"></p>
-  <form th:action="@{/staff/sales/foods}" method="post" class="staff-food-layout">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <section class="staff-food-grid">
-      <article class="dash-card staff-food-card" th:each="item : ${items}">
-        <div><p class="staff-eyebrow" th:text="${item.itemType}">COMBO</p><h2 th:text="${item.name}">Combo</h2><p class="staff-muted" th:text="${item.description}"></p></div>
-        <div class="staff-food-pick"><strong th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' VND'}">0 VND</strong>
-          <input type="hidden" name="itemIds" th:value="${item.itemId}">
-          <input class="staff-control staff-quantity" name="quantities" type="number" min="0" max="20" th:value="${item.quantity}" th:attr="data-price=${item.price}" th:aria-label="${'Quantity for ' + item.name}">
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('sales')}"></div>
+
+  <div class="staff-main">
+    <!-- Topbar shows order code -->
+    <header class="staff-topbar">
+      <div class="page-title">Staff / Counter Sales / <strong>Food &amp; Beverage</strong></div>
+      <div class="topbar-actions">
+        <span class="profile-name">Order&nbsp;<strong th:text="${summary.bookingCode}"></strong></span>
+        <span class="staff-pill" id="staffHoldCountdown">10:00</span>
+      </div>
+    </header>
+
+    <div class="staff-content">
+
+      <div class="content-heading">
+        <div>
+          <p class="eyebrow">CINEORA / COUNTER SALES</p>
+          <h1>Food &amp; Beverage</h1>
+          <p>Add concessions or skip to complete the order.</p>
         </div>
-      </article>
-      <p class="staff-empty dash-card" th:if="${#lists.isEmpty(items)}">No active food and beverage items are available. You can still complete the order.</p>
-    </section>
-    <aside class="dash-card staff-order-panel">
-      <h2 th:text="${summary.movieTitle}">Movie</h2>
-      <p th:text="${summary.roomName + ' · ' + #temporals.format(summary.startTime, 'HH:mm dd/MM/yyyy')}"></p>
-      <p>Seats: <strong th:text="${summary.seatLabels}"></strong></p>
-      <p>Tickets: <strong th:text="${#numbers.formatDecimal(summary.seatTotal, 0, 'COMMA', 0, 'POINT') + ' VND'}"></strong></p>
-      <p>Food &amp; Beverage: <strong id="staffFoodTotal">0 VND</strong></p>
-      <p class="staff-total">Total: <strong id="staffGrandTotal" th:attr="data-seat-total=${summary.seatTotal}">0 VND</strong></p>
-      <button class="staff-button staff-button-primary staff-full" type="submit">Save Pending Order</button>
-    </aside>
-  </form>
-  <form th:action="@{/staff/sales/cancel}" method="post" class="staff-cancel-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="staff-button" type="submit">Cancel Order &amp; Release Seats</button></form>
-</main></div></body></html>
+        <a class="btn btn-secondary" th:href="@{/staff/sales}">← Cancel Sales Flow</a>
+      </div>
+
+      <div class="alert alert-error"   th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+      <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+      <form th:action="@{/staff/sales/foods}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start;">
+
+          <!-- F&B items grid -->
+          <div>
+            <div class="panel" th:each="item : ${items}">
+              <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                <div>
+                  <p class="eyebrow" th:text="${item.itemType}" style="margin-bottom:4px;">COMBO</p>
+                  <p style="font-size:14px;font-weight:700;" th:text="${item.name}">Item</p>
+                  <p style="font-size:12px;color:var(--text-muted);margin-top:3px;" th:text="${item.description}"></p>
+                  <p style="font-size:13px;font-weight:700;color:var(--cineora-red);margin-top:6px;"
+                     th:text="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT') + ' VND'}">0 VND</p>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+                  <input type="hidden" name="itemIds" th:value="${item.itemId}">
+                  <input class="form-control" name="quantities" type="number" min="0" max="20"
+                         th:value="${item.quantity}" th:attr="data-price=${item.price}"
+                         th:aria-label="'Quantity for ' + ${item.name}"
+                         style="width:80px;text-align:center;">
+                </div>
+              </div>
+            </div>
+            <div class="panel" th:if="${#lists.isEmpty(items)}">
+              <div class="empty-state">
+                <div class="empty-icon">🍿</div>
+                <div class="empty-text">No active food &amp; beverage items. You can skip and complete the order.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order summary -->
+          <div class="panel" style="position:sticky;top:70px;">
+            <div class="panel-header"><div><h2>Order Summary</h2></div></div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+              <div>
+                <p style="font-weight:700;font-size:14px;" th:text="${summary.movieTitle}">Movie</p>
+                <p style="color:var(--text-muted);" th:text="${summary.roomName + ' · ' + #temporals.format(summary.startTime, 'HH:mm dd/MM/yyyy')}"></p>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Seats</span><strong th:text="${summary.seatLabels}"></strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Tickets</span>
+                <strong th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Food &amp; Beverage</span><strong id="staffFoodTotal">0 VND</strong>
+              </div>
+              <hr style="border:none;border-top:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;font-size:15px;">
+                <span style="font-weight:700;">Total</span>
+                <strong id="staffGrandTotal" th:attr="data-seat-total=${summary.seatTotal}"
+                        style="color:var(--cineora-red);">
+                  <span th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' VND'}"></span>
+                </strong>
+              </div>
+              <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;margin-top:4px;">
+                Save Pending Order →
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- Cancel order -->
+      <form th:action="@{/staff/sales/cancel}" method="post" style="margin-top:12px;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn btn-secondary" type="submit">Cancel Order &amp; Release Seats</button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{fragments/staff-layout :: sidebar-scripts}"></div>
+</body>
+</html>
