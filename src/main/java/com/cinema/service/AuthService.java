@@ -343,6 +343,17 @@ public class AuthService {
         return true;
     }
 
+    @Transactional
+    public boolean setInitialGooglePassword(int accountId, String newPassword) {
+        if (newPassword == null || !PASSWORD_RE.matcher(newPassword).matches()) return false;
+        Account account = accountDAO.findById(accountId).orElse(null);
+        if (account == null || account.getPasswordHash() != null) return false;
+        boolean googleLinked = oAuthAccountDAO.findAllByAccountId(accountId).stream()
+                .anyMatch(link -> OAuthAccount.PROVIDER_GOOGLE.equalsIgnoreCase(link.getProvider()));
+        if (!googleLinked) return false;
+        return accountDAO.updatePasswordHash(accountId, passwordEncoder.encode(newPassword)) == 1;
+    }
+
     // =========================================== OTP pre-check (no consume)
     @Transactional
     public OtpResult preCheckOtp(String email, String code, String purpose) {
