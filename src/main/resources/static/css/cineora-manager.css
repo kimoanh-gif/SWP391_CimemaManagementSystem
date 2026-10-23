@@ -40,8 +40,8 @@ html, body { margin: 0; padding: 0; }
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
 }
-.cm-body a { color: inherit; text-decoration: none; }
-.cm-body h1, .cm-body h2, .cm-body h3 { margin: 0; }
+:where(.cm-body) a { color: inherit; text-decoration: none; }
+:where(.cm-body) :is(h1, h2, h3) { margin: 0; }
 
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined';

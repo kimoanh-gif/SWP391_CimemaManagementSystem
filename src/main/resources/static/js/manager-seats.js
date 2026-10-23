@@ -20,7 +20,7 @@ function openSeatModal(element) {
 
     document.getElementById('modalSeatId').value = seatId;
     document.getElementById('modalRoomId').value = roomId;
-    document.getElementById('modalSeatPos').textContent = row + num + ' (Hàng ' + row + ', Số ' + num + ')';
+    document.getElementById('modalSeatPos').textContent = row + num + ' (Row ' + row + ', Seat ' + num + ')';
 
     const typeSelect = document.getElementById('modalSeatTypeName');
     if (typeSelect) {

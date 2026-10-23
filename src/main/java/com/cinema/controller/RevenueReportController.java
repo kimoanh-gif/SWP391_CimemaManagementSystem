@@ -63,7 +63,7 @@ public class RevenueReportController {
         model.addAttribute("filterRequest", reportRequest);
         model.addAttribute("userRole", ManagerSecurityUtils.resolveRole(request));
 
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, 'ngày' dd/MM/yyyy", new Locale("vi", "VN"));
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", Locale.ENGLISH);
         model.addAttribute("currentDateStr", LocalDate.now().format(dateFormatter));
 
         return "manager/reports";
