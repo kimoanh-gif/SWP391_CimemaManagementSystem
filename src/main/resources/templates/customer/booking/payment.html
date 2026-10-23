@@ -13,16 +13,14 @@
   <p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
   <div class="checkout-layout" th:if="${payment != null}">
     <section class="panel payment-stage">
-      <p class="eyebrow">SECURE SIMULATED PAYMENT</p>
-      <h1 th:text="${payment.method == 'CASH' ? 'Pay at the Counter' : 'Scan the QR Code to Pay'}">Payment</h1>
+      <p class="eyebrow">SECURE ONLINE PAYMENT</p>
+      <h1>Scan the QR Code to Pay</h1>
+      <p class="payment-provider">Payment method: <strong th:text="${payment.method}">VNPAY</strong></p>
       <p th:if="${payment.status == 'PENDING'}">Complete the transaction before the code expires. Your seats are held for ten minutes in total.</p>
-      <div class="qr-shell" th:if="${payment.method != 'CASH' and payment.status == 'PENDING'}">
+      <div class="qr-shell" th:if="${payment.status == 'PENDING'}">
         <div class="fake-qr" aria-label="Simulated payment QR code"><span>C</span></div>
         <strong th:text="${payment.transactionRef}">PAY0001</strong>
         <small>Simulated code for internal review</small>
-      </div>
-      <div class="cash-instruction" th:if="${payment.method == 'CASH' and payment.status == 'PENDING'}">
-        <span class="material-symbols-outlined">point_of_sale</span><p>Present your booking code at the counter and confirm after payment.</p>
       </div>
       <div class="payment-clock" th:if="${payment.status == 'PENDING'}">Payment code expires in <strong id="payment-countdown">03:00</strong></div>
       <div class="alert error" id="payment-expired" th:if="${payment.status == 'EXPIRED'}">This payment code has expired. Generate a new one if your seat hold is still active.</div>

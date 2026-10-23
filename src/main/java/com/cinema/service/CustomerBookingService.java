@@ -170,7 +170,11 @@ public class CustomerBookingService {
     @Transactional
     public int startSimulatedPayment(int bookingId, int accountId, String paymentMethod) {
         BookingSummary booking = getActiveBooking(bookingId, accountId);
-        String method = "CASH".equalsIgnoreCase(paymentMethod) ? "CASH" : "QR_TRANSFER";
+        String requestedMethod = paymentMethod == null ? "VNPAY" : paymentMethod.toUpperCase();
+        String method = switch (requestedMethod) {
+            case "MOMO", "ZALOPAY", "NAPAS" -> requestedMethod;
+            default -> "VNPAY";
+        };
         LocalDateTime qrExpiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);
         if (booking.getHeldUntil().isBefore(qrExpiry)) qrExpiry = booking.getHeldUntil();
         try {

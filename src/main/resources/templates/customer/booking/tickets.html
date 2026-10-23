@@ -1,1 +1,25 @@
-<!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digital Tickets | CINEORA</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head><body><header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Book Tickets</a><a class="active" th:href="@{/customer/booking/history}">My Tickets</a></nav></header><main class="booking-shell"><section class="hero-row compact"><div><p class="eyebrow">MY DIGITAL TICKETS</p><h1>My Digital Tickets</h1><p class="lead">Present your ticket code when checking in at the cinema.</p></div></section><div class="ticket-grid"><article class="digital-ticket panel" th:each="ticket : ${tickets}"><div class="ticket-top"><span class="status-pill" th:text="${ticket.ticketStatus}"></span><b th:text="${ticket.bookingCode}"></b></div><h2 th:text="${ticket.movieTitle}"></h2><dl><div><dt>Showtime</dt><dd th:text="${#temporals.format(ticket.startTime,'HH:mm · dd/MM/yyyy')}"></dd></div><div><dt>Auditorium</dt><dd th:text="${ticket.roomName}"></dd></div><div><dt>Seat</dt><dd th:text="${ticket.seatLabel}"></dd></div></dl><div class="fake-qr ticket-qr"><span>C</span></div><code th:text="${ticket.qrCode}"></code></article></div><p><a class="button secondary" th:href="@{/customer/booking/history}">Back to Booking History</a></p></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digital Tickets | CINEORA</title><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head>
+<body class="ticket-page">
+<header class="site-header"><a class="brand" th:href="@{/}"><span>C</span><span><b>CINEORA</b><small>CINEMA SUITES</small></span></a><nav><a th:href="@{/customer/booking}">Book Tickets</a><a class="active" th:href="@{/customer/booking/history}">My Booking History</a></nav></header>
+<main class="booking-shell ticket-shell">
+  <section class="hero-row compact"><div><p class="eyebrow">ADMIT ONE</p><h1>Digital Cinema Ticket</h1><p class="lead">Present the QR code at the auditorium entrance.</p></div></section>
+  <div class="cinema-pass-list">
+    <article class="cinema-pass" th:each="ticket : ${tickets}">
+      <section class="pass-main">
+        <header class="pass-brand-row"><div class="pass-brand"><span>C</span><b>CINEORA</b><small>LUXURY CINEMA SUITES PASS</small></div><span class="pass-type">★ DIGITAL CINEMA TICKET</span></header>
+        <div class="pass-movie">
+          <div class="pass-poster"><img th:if="${ticket.posterUrl != null and !#strings.isEmpty(ticket.posterUrl)}" th:src="${ticket.posterUrl}" th:alt="${ticket.movieTitle}"><span th:unless="${ticket.posterUrl != null and !#strings.isEmpty(ticket.posterUrl)}">C</span></div>
+          <div class="pass-movie-info"><span class="status-pill" th:text="${ticket.ticketStatus}">VALID</span><h2 th:text="${ticket.movieTitle}">Movie title</h2><p class="pass-hint">Please arrive at least 15 minutes before the showtime.</p>
+            <dl class="pass-details"><div><dt>Date</dt><dd th:text="${#temporals.format(ticket.startTime,'dd/MM/yyyy')}">20/02/2026</dd></div><div><dt>Showtime</dt><dd th:text="${#temporals.format(ticket.startTime,'HH:mm')}">10:30</dd></div><div><dt>Auditorium</dt><dd th:text="${ticket.roomName}">Room 1</dd></div><div><dt>Seat</dt><dd class="seat-value" th:text="${ticket.seatLabel}">F7</dd></div></dl>
+          </div>
+        </div>
+        <footer class="pass-footer"><div><small>Booking code</small><b th:text="${ticket.bookingCode}">BK00001</b></div><div><small>Ticket number</small><b th:text="${'#' + ticket.ticketId}">#1</b></div><div><small>Admission</small><b>One person</b></div></footer>
+      </section>
+      <aside class="pass-stub"><p><b>SCAN TO ENTER</b><small>Present this code at the cinema entrance</small></p><div class="fake-qr pass-qr" aria-label="Digital ticket QR code"><span>C</span></div><em>Valid for one admission</em><div class="ticket-barcode" aria-hidden="true"></div><code th:text="${ticket.qrCode}">CINEORA-TICKET-CODE</code><div class="stub-status"><span>●</span> <b th:text="${ticket.ticketStatus}">VALID</b></div></aside>
+    </article>
+  </div>
+  <p class="ticket-back"><a class="button secondary" th:href="@{/customer/booking/history}">Back to My Booking History</a></p>
+</main>
+</body></html>

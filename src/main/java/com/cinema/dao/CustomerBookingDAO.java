@@ -458,7 +458,7 @@ public class CustomerBookingDAO {
 
     public List<CustomerTicket> findTicketsByBooking(int bookingId, int accountId) {
         return jdbcTemplate.query("""
-                SELECT t.TicketID,t.QRCode,t.TicketStatus,b.BookingCode,m.Title,r.RoomName,st.StartTime,
+                SELECT t.TicketID,t.QRCode,t.TicketStatus,b.BookingCode,m.Title,m.PosterURL,r.RoomName,st.StartTime,
                        CONCAT(s.RowLabel,s.SeatNumber) SeatLabel
                 FROM dbo.Ticket t JOIN dbo.BookingSeat bs ON bs.BookingSeatID=t.BookingSeatID
                 JOIN dbo.Booking b ON b.BookingID=bs.BookingID JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
@@ -467,7 +467,7 @@ public class CustomerBookingDAO {
                 WHERE b.BookingID=? AND c.AccountID=? ORDER BY s.GridRow,s.GridColumn
                 """, (rs,n) -> new CustomerTicket(rs.getInt("TicketID"),rs.getString("QRCode"),rs.getString("TicketStatus"),
                 rs.getString("BookingCode"),rs.getString("Title"),rs.getString("RoomName"),
-                rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabel")), bookingId, accountId);
+                rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabel"),rs.getString("PosterURL")), bookingId, accountId);
     }
 
     public List<BookingHistoryItem> findBookingHistory(int accountId) {
