@@ -9,26 +9,20 @@
 <div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
 
 <main>
-    <!-- Success/Error alert banner -->
-    <div th:if="${successMessage != null}" style="background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.4);color:#10b981;padding:12px 2rem;text-align:center;font-weight:600;">
-        <span th:text="${successMessage}">Submitted successfully.</span>
-    </div>
-    <div th:if="${errorMessage != null}" style="background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.4);color:#ef4444;padding:12px 2rem;text-align:center;font-weight:600;">
-        <span th:text="${errorMessage}">Something went wrong.</span>
+    <div class="section-shell" style="padding-top:1.5rem;padding-bottom:0;">
+        <div th:replace="~{fragments/public-alerts :: alerts}"></div>
     </div>
 
     <!-- =====================================================================
-         1. MOVIE HERO SECTION
+         1. MOVIE INFORMATION (UC02)
          ===================================================================== -->
     <section class="movie-details-hero">
         <div class="movie-details-container">
-            <!-- Use the clean database poster only; never place generated text artwork here. -->
             <div class="movie-details-poster-wrap">
                 <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-details-poster"
-                     onerror="this.src='/images/cinema-login-hero.png'" />
+                     onerror="this.onerror=null;this.src='/images/cinema-login-hero.png'" />
             </div>
 
-            <!-- Movie Info -->
             <div class="movie-details-info">
                 <div style="font-size:0.85rem;color:var(--text-muted);">
                     <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
@@ -39,26 +33,49 @@
                 </div>
 
                 <h1 class="movie-details-title" th:text="${movie.title}">Movie Title</h1>
+                <div class="movie-original-title"
+                     th:if="${movie.originalTitle != null && !#strings.isEmpty(movie.originalTitle) && movie.originalTitle != movie.title}"
+                     th:text="${movie.originalTitle}">Original Title</div>
 
                 <div class="movie-meta-pills">
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">T13</span>
+                    <span class="meta-pill" th:text="${movie.nowShowing ? 'Now Showing' : 'Coming Soon'}">Now Showing</span>
                     <span class="meta-pill" th:text="${movie.duration + ' minutes'}">118 minutes</span>
-                    <span class="meta-pill" th:text="${movie.genres}">Action, Adventure</span>
-                    <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
-                        ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5.0
+                    <span class="meta-pill" th:if="${!#strings.isEmpty(movie.genresFormatted)}" th:text="${movie.genresFormatted}">Action, Adventure</span>
+                    <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;"
+                          th:if="${movie.reviewCount != null && movie.reviewCount > 0}">
+                        ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5
                         <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ' reviews)'}">(12 reviews)</span>
                     </span>
+                    <span class="rating-new" th:unless="${movie.reviewCount != null && movie.reviewCount > 0}">No ratings yet</span>
                 </div>
 
+                <!-- Optional fields show "Not updated yet" instead of failing (A3, BR-MI-07) -->
                 <div class="movie-info-table">
                     <div class="info-label">Director:</div>
-                    <div class="info-val" th:text="${movie.director != null ? movie.director : 'To be updated'}">Director</div>
+                    <div class="info-val" th:classappend="${#strings.isEmpty(movie.director)} ? 'is-missing'"
+                         th:text="${#strings.isEmpty(movie.director) ? 'Not updated yet' : movie.director}">Director</div>
+
+                    <div class="info-label">Cast:</div>
+                    <div class="info-val" th:if="${#strings.isEmpty(movie.actors)}" th:classappend="'is-missing'">Not updated yet</div>
+                    <div class="info-val" th:unless="${#strings.isEmpty(movie.actors)}">
+                        <div class="movie-cast-list">
+                            <span class="movie-cast-chip" th:each="actor : ${#strings.arraySplit(movie.actors, ',')}"
+                                  th:text="${#strings.trim(actor)}">Actor</span>
+                        </div>
+                    </div>
+
+                    <div class="info-label">Genre:</div>
+                    <div class="info-val" th:classappend="${#strings.isEmpty(movie.genresFormatted)} ? 'is-missing'"
+                         th:text="${#strings.isEmpty(movie.genresFormatted) ? 'Not updated yet' : movie.genresFormatted}">Action</div>
 
                     <div class="info-label">Language:</div>
-                    <div class="info-val" th:text="${movie.language != null ? movie.language : 'To be updated'}">Language</div>
+                    <div class="info-val" th:classappend="${#strings.isEmpty(movie.language)} ? 'is-missing'"
+                         th:text="${#strings.isEmpty(movie.language) ? 'Not updated yet' : movie.language}">Language</div>
 
                     <div class="info-label">Release Date:</div>
-                    <div class="info-val" th:text="${movie.formattedReleaseDate}">18/10/2026</div>
+                    <div class="info-val" th:classappend="${movie.releaseDate == null} ? 'is-missing'"
+                         th:text="${movie.releaseDate == null ? 'Not updated yet' : movie.formattedReleaseDate}">18/10/2026</div>
 
                     <div class="info-label">Age Rating:</div>
                     <div class="info-val" th:text="${movie.ageRatingDescription}">T13 — Not suitable for viewers under 13</div>
@@ -66,21 +83,21 @@
 
                 <div class="hero-actions">
                     <a href="#showtimes" class="btn-primary">
-                        <span>🎟️ Book Tickets</span>
+                        <span th:text="${showtimes.isEmpty() ? '📅 View Showtimes' : '🎟️ Book Tickets'}">🎟️ Book Tickets</span>
                     </a>
-                    <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
-                            type="button"
-                            class="btn-secondary"
-                            th:attr="onclick=|openTrailer('${movie.trailerUrl}')|">
+                    <!-- BR-MI-05: the trailer button only appears when a trailer address exists -->
+                    <button th:if="${movie.trailerUrl != null && !#strings.isEmpty(movie.trailerUrl)}"
+                            type="button" class="btn-secondary"
+                            th:data-trailer="${movie.trailerUrl}"
+                            onclick="openTrailer(this.dataset.trailer)">
                         <span>▶ Watch Trailer</span>
                     </button>
                 </div>
 
-                <!-- Synopsis Box -->
                 <div class="movie-synopsis-box">
                     <h3 style="font-size:1.15rem;margin-bottom:8px;">Synopsis</h3>
-                    <p th:text="${movie.description}">
-                        Movie synopsis will be updated soon.
+                    <p th:text="${#strings.isEmpty(movie.description) ? 'The synopsis has not been updated yet.' : movie.description}">
+                        Movie synopsis.
                     </p>
                 </div>
             </div>
@@ -88,7 +105,7 @@
     </section>
 
     <!-- =====================================================================
-         2. LỊCH CHIẾU THEO PHIM (SHOWTIMES FOR THIS MOVIE)
+         2. SHOWTIMES FOR THIS MOVIE (UC03, BR-MI-06)
          ===================================================================== -->
     <section class="section-shell" id="showtimes" style="padding-top:4rem;">
         <div class="section-header">
@@ -100,53 +117,59 @@
             </div>
         </div>
 
-        <!-- Date Selector Pills -->
-        <div class="date-selector-bar">
-            <a th:each="d, stat : ${availableDates}"
-               th:href="@{/movies/{id}(id=${movie.movieId}, date=${d})} + '#showtimes'"
-               class="date-pill"
-               th:classappend="${d.equals(selectedDate)} ? 'active'">
-                <span class="date-pill-day" th:text="${#temporals.format(d, 'EEE')}">Sat</span>
-                <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
-                <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
-            </a>
+        <!-- A2: the movie has no showtimes at all -->
+        <div class="catalog-empty" th:if="${availableDates.isEmpty()}">
+            <div class="catalog-empty-icon">🎟️</div>
+            <h4>No showtimes are available yet</h4>
+            <p th:text="${movie.comingSoon ? 'Showtimes will open closer to the release date. Please check back later.' : 'New showtimes will be added soon. Please check back later.'}">
+                New showtimes will be added soon.
+            </p>
         </div>
 
-        <!-- Showtimes List for Selected Date -->
-        <div th:if="${showtimes != null && !showtimes.isEmpty()}"
-             style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2rem;">
-            
-            <div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-subtle);padding-bottom:1rem;">
-                <h3 style="font-size:1.2rem;">
-                    Showtimes for <span th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}" style="color:var(--gold);">18/10/2026</span>
-                </h3>
-                <span style="font-size:0.85rem;color:var(--text-muted);">Select a time to continue to seat selection</span>
-            </div>
-
-            <div class="showtime-slots-grid">
-                <a th:each="st : ${showtimes}"
-                   th:href="@{/customer/booking/select(showtimeId=${st.showtimeId})}"
-                   class="showtime-slot-btn"
-                   th:classappend="${st.soldOut} ? 'seat-sold-out'">
-                    <span class="room-format-badge" th:text="${st.roomType + ' · ' + st.roomName}">2D · Cinema 01</span>
-                    <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
-                    <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
-                    <span class="slot-price" th:text="${st.formattedPrice}">85,000 VND</span>
-                    <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">36 seats left</span>
+        <th:block th:unless="${availableDates.isEmpty()}">
+            <div class="date-selector-bar">
+                <a th:each="d : ${availableDates}"
+                   th:href="@{/movies/{id}(id=${movie.movieId}, date=${d})} + '#showtimes'"
+                   class="date-pill" th:classappend="${d.equals(selectedDate)} ? 'active'">
+                    <span class="date-pill-day" th:text="${#temporals.format(d, 'EEE')}">Sat</span>
+                    <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
+                    <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
                 </a>
             </div>
-        </div>
 
-        <div th:if="${showtimes == null || showtimes.isEmpty()}"
-             style="text-align:center;padding:3.5rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
-            <div style="font-size:2.5rem;margin-bottom:12px;">🎟️</div>
-            <h4 style="font-size:1.2rem;margin-bottom:6px;">No showtimes are available for this date</h4>
-            <p style="color:var(--text-muted);font-size:0.9rem;">Choose another date to view available showtimes.</p>
-        </div>
+            <div th:if="${!showtimes.isEmpty()}"
+                 style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2rem;">
+                <div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border-subtle);padding-bottom:1rem;">
+                    <h3 style="font-size:1.2rem;">
+                        Showtimes for <span th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}" style="color:var(--gold);">18/10/2026</span>
+                    </h3>
+                    <span style="font-size:0.85rem;color:var(--text-muted);">Select a time to continue to seat selection</span>
+                </div>
+
+                <div class="showtime-slots-grid">
+                    <a th:each="st : ${showtimes}"
+                       th:href="${st.soldOut} ? '#' : @{/customer/booking/select(showtimeId=${st.showtimeId})}"
+                       th:attr="aria-disabled=${st.soldOut}"
+                       class="showtime-slot-btn" th:classappend="${st.soldOut} ? 'seat-sold-out'">
+                        <span class="room-format-badge" th:text="${st.roomType + ' · ' + st.roomName}">2D · Cinema 01</span>
+                        <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
+                        <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
+                        <span class="slot-price" th:text="${st.formattedPrice}">85,000 VND</span>
+                        <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">36 seats left</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="catalog-empty" th:if="${showtimes.isEmpty()}">
+                <div class="catalog-empty-icon">🎟️</div>
+                <h4>No showtimes are available for this date</h4>
+                <p>Choose another date to view available showtimes.</p>
+            </div>
+        </th:block>
     </section>
 
     <!-- =====================================================================
-         MOVIE REVIEWS
+         3. AUDIENCE REVIEWS (UC16)
          ===================================================================== -->
     <section class="section-shell" id="reviews">
         <div class="section-header">
@@ -158,11 +181,10 @@
             </div>
         </div>
 
-        <!-- Add Review Form (If Logged In Customer) -->
-        <div th:if="${currentUser != null && currentUser.role == 'CUSTOMER'}" class="review-form-card">
+        <div th:if="${canReview}" class="review-form-card">
             <h4 style="font-size:1.15rem;margin-bottom:12px;">Write a review for this movie</h4>
             <form th:action="@{/movies/{id}/reviews(id=${movie.movieId})}" method="post">
-                <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" id="ratingValue" name="rating" value="5" />
 
                 <div style="margin-bottom:12px;">
@@ -176,7 +198,8 @@
                     </div>
                 </div>
 
-                <textarea name="content" class="review-textarea" placeholder="Share your thoughts about the story, acting, visuals, or sound..." required></textarea>
+                <textarea name="content" class="review-textarea" maxlength="1000" required
+                          placeholder="Share your thoughts about the story, acting, visuals, or sound..."></textarea>
 
                 <button type="submit" class="btn-primary" style="padding:10px 22px;">
                     <span>Submit Review</span>
@@ -184,20 +207,17 @@
             </form>
         </div>
 
-        <!-- If Not Logged In -->
-        <div th:if="${currentUser == null || currentUser.role != 'CUSTOMER'}"
+        <div th:unless="${canReview}"
              style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
             <div>
                 <h4 style="font-size:1.05rem;margin-bottom:4px;">Have you watched this movie?</h4>
                 <p style="font-size:0.88rem;color:var(--text-muted);">Sign in with your member account to share your experience.</p>
             </div>
-            <a th:href="@{/login(redirect='/movies/' + ${movie.movieId})}" class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">
-                Sign In to Review
-            </a>
+            <a th:if="${currentUser == null}" th:href="@{/login(redirect='/movies/' + ${movie.movieId})}"
+               class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">Sign In to Review</a>
         </div>
 
-        <!-- Reviews List -->
-        <div th:if="${reviews != null && !reviews.isEmpty()}">
+        <div th:if="${!reviews.isEmpty()}">
             <div class="review-item" th:each="r : ${reviews}">
                 <div class="review-item-header">
                     <div class="reviewer-profile">
@@ -211,49 +231,30 @@
                         <span th:text="${#strings.repeat('★', r.rating)}">★★★★★</span>
                     </div>
                 </div>
-                <p style="color:var(--text-secondary);font-size:0.92rem;line-height:1.6;" th:text="${r.content}">
-                    A memorable cinema experience with a compelling story and immersive sound.
-                </p>
+                <p style="color:var(--text-secondary);font-size:0.92rem;line-height:1.6;" th:text="${r.content}">Review content.</p>
             </div>
         </div>
 
-        <div th:if="${reviews == null || reviews.isEmpty()}"
-             style="text-align:center;padding:2.5rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">There are no reviews yet. Be the first to share your thoughts.</p>
+        <div class="catalog-empty" th:if="${reviews.isEmpty()}">
+            <p>There are no reviews yet. Be the first to share your thoughts.</p>
         </div>
     </section>
 
     <!-- =====================================================================
-         4. PHIM CÙNG THỂ LOẠI / GỢI Ý (RELATED MOVIES)
+         4. RELATED MOVIES
          ===================================================================== -->
-    <section class="section-shell" th:if="${relatedMovies != null && !relatedMovies.isEmpty()}" style="margin-top:2rem;">
+    <section class="section-shell" th:if="${!relatedMovies.isEmpty()}" style="margin-top:2rem;">
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">DISCOVER MORE</span>
                 <h2 class="section-title">
-                    <span class="section-title-icon">🍿</span> More Movies Now Showing
+                    <span class="section-title-icon">🍿</span> You May Also Like
                 </h2>
             </div>
         </div>
 
         <div class="movie-grid">
-            <article class="movie-card" th:each="m : ${relatedMovies}">
-                <div class="movie-poster-wrap">
-                    <img th:src="${m.posterUrl}" th:alt="${m.title}" class="movie-poster"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="badge-rating" th:classappend="${m.ageRatingBadgeClass}" th:text="${m.ageRating}">P</span>
-                </div>
-                <div class="movie-card-body">
-                    <h3 class="movie-card-title">
-                        <a th:href="@{/movies/{id}(id=${m.movieId})}" th:text="${m.title}">Movie Title</a>
-                    </h3>
-                    <div class="movie-card-genres" th:text="${m.genres}">Genres</div>
-                    <div class="movie-card-actions">
-                        <a th:href="@{/movies/{id}(id=${m.movieId})}" class="btn-card-detail">Details</a>
-                        <a th:href="@{/movies/{id}(id=${m.movieId})#showtimes}" class="btn-card-book">Book Tickets</a>
-                    </div>
-                </div>
-            </article>
+            <th:block th:each="m : ${relatedMovies}"><article th:replace="~{fragments/movie-card :: card(${m})}"></article></th:block>
         </div>
     </section>
 </main>

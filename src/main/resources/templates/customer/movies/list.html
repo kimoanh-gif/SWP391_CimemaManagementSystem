@@ -17,125 +17,104 @@
             <span style="color:var(--primary-light);">Movies</span>
         </div>
         <h1 style="font-size:2.5rem;font-weight:900;">Movies at CINEORA</h1>
-        <p style="color:var(--text-secondary);margin-top:6px;">Discover the latest movies now showing and coming soon at CINEORA.</p>
+        <p style="color:var(--text-secondary);margin-top:6px;">Discover the movies now showing and coming soon at CINEORA.</p>
     </div>
+
+    <div th:replace="~{fragments/public-alerts :: alerts}"></div>
 
     <!-- Filter Toolbar -->
     <form th:action="@{/movies}" method="get" class="filter-toolbar">
-        <!-- Tabs: All / Now Showing / Coming Soon -->
+        <!-- Movie Status: All / Now Showing / Coming Soon -->
         <div class="filter-tabs">
-            <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
-               class="filter-tab"
-               th:classappend="${selectedType == 'all' || selectedType == null} ? 'active'">
-                All Movies
-            </a>
-            <a th:href="@{/movies(type='now-showing', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
-               class="filter-tab"
-               th:classappend="${selectedType == 'now-showing'} ? 'active'">
-                Now Showing
-            </a>
-            <a th:href="@{/movies(type='coming-soon', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
-               class="filter-tab"
-               th:classappend="${selectedType == 'coming-soon'} ? 'active'">
-                Coming Soon
-            </a>
+            <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
+               class="filter-tab" th:classappend="${selectedType == 'all'} ? 'active'">All Movies</a>
+            <a th:href="@{/movies(type='now-showing', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
+               class="filter-tab" th:classappend="${selectedType == 'now-showing'} ? 'active'">Now Showing</a>
+            <a th:href="@{/movies(type='coming-soon', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
+               class="filter-tab" th:classappend="${selectedType == 'coming-soon'} ? 'active'">Coming Soon</a>
         </div>
         <input type="hidden" name="type" th:value="${selectedType}" />
 
-        <!-- Search & Filter Controls -->
-        <div class="filter-controls">
-            <!-- Search by title -->
+        <div class="filter-controls filter-controls-wrap">
             <div class="search-input-wrap">
                 <span class="search-icon">🔍</span>
-                <input type="text" name="q" placeholder="Search by title or director..." th:value="${keyword}" />
+                <input type="text" name="q" maxlength="100" placeholder="Search by title or director..."
+                       th:value="${keyword}" aria-label="Search movies" />
             </div>
 
-            <!-- Genre Select -->
-            <select name="genreId" class="filter-select" onchange="this.form.submit()">
+            <select name="genreId" class="filter-select" aria-label="Genre" onchange="this.form.submit()">
                 <option value="">All Genres</option>
-                <option th:each="g : ${genres}"
-                        th:value="${g.genreId}"
-                        th:text="${g.name}"
-                        th:selected="${selectedGenreId == g.genreId}">
-                    Action
-                </option>
+                <option th:each="g : ${genres}" th:value="${g.genreId}" th:text="${g.name}"
+                        th:selected="${selectedGenreId == g.genreId}">Action</option>
             </select>
 
-            <!-- Sort Select -->
-            <select name="sort" class="filter-select" onchange="this.form.submit()">
-                <option value="newest" th:selected="${sortBy == 'newest'}">Newest</option>
-                <option value="rating" th:selected="${sortBy == 'rating'}">Highest Rated</option>
+            <select name="ageRating" class="filter-select" aria-label="Age rating" onchange="this.form.submit()">
+                <option value="">All Age Ratings</option>
+                <option th:each="r : ${ageRatings}" th:value="${r}" th:text="${r}"
+                        th:selected="${selectedAgeRating == r}">T13</option>
+            </select>
+
+            <select name="sort" class="filter-select" aria-label="Sort by" onchange="this.form.submit()">
+                <option value="newest" th:selected="${sortBy == 'newest'}">Newest release</option>
+                <option value="oldest" th:selected="${sortBy == 'oldest'}">Oldest release</option>
+                <option value="rating" th:selected="${sortBy == 'rating'}">Highest rated</option>
+                <option value="popular" th:selected="${sortBy == 'popular'}">Most reviewed</option>
                 <option value="title" th:selected="${sortBy == 'title'}">Title (A–Z)</option>
-                <option value="duration" th:selected="${sortBy == 'duration'}">Duration</option>
+                <option value="duration" th:selected="${sortBy == 'duration'}">Longest duration</option>
             </select>
 
-            <button type="submit" class="btn-card-book" style="padding:8px 16px;cursor:pointer;">
-                Apply
-            </button>
-            <a th:if="${(keyword != null && !keyword.isEmpty()) || selectedGenreId != null || (selectedType != null && selectedType != 'all')}"
-               th:href="@{/movies}" class="btn-card-detail" style="padding:8px 12px;font-size:0.85rem;" title="Clear filters">
-                ✕ Clear
-            </a>
+            <button type="submit" class="btn-card-book" style="padding:8px 16px;cursor:pointer;">Apply</button>
+            <a th:if="${hasFilters}" th:href="@{/movies}" class="btn-card-detail"
+               style="padding:8px 12px;font-size:0.85rem;" title="Clear filters">✕ Clear</a>
         </div>
     </form>
 
-    <!-- Movie Cards Grid -->
-    <div class="movie-grid" th:if="${movies != null && !movies.isEmpty()}">
-        <article class="movie-card" th:each="movie : ${movies}">
-            <div class="movie-poster-wrap">
-                <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster"
-                     onerror="this.src='/images/cinema-login-hero.png'" />
-                <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
-                <span class="badge-duration" th:text="${movie.duration + ' min'}">118 min</span>
-
-                <div class="movie-card-overlay">
-                    <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
-                            type="button"
-                            class="btn-play-trailer"
-                            th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                            title="Watch trailer">
-                        ▶
-                    </button>
-                    <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
-                       th:href="@{/movies/{id}(id=${movie.movieId})}"
-                       class="btn-play-trailer" title="View details">
-                        ℹ️
-                    </a>
-                </div>
+    <!-- ================= ALL: grouped by category (BR-ML-02, BR-ML-04) ================= -->
+    <th:block th:if="${selectedType == 'all' && !movies.isEmpty()}">
+        <section class="catalog-group" id="now-showing">
+            <div class="catalog-group-head">
+                <h2 class="catalog-group-title">Now Showing</h2>
+                <span class="catalog-group-count" th:text="${#lists.size(nowShowingMovies) + ' movies'}">8 movies</span>
             </div>
-
-            <div class="movie-card-body">
-                <h3 class="movie-card-title">
-                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
-                </h3>
-                <div class="movie-card-genres" th:text="${movie.genres}">Action, Adventure</div>
-                <div class="movie-card-meta">
-                    <span class="movie-rating-stars">
-                        ⭐ <span th:text="${movie.averageRating}">4.8</span>
-                        <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ')'}">(12)</span>
-                    </span>
-                    <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
-                </div>
-                <div class="movie-card-actions">
-                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Details</a>
-                    <a th:if="${movie.nowShowing}" th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Book Now</a>
-                    <a th:if="${movie.comingSoon}" th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail" style="border-color:var(--gold);color:var(--gold);">Coming Soon</a>
-                </div>
+            <div class="movie-grid" th:if="${!nowShowingMovies.isEmpty()}">
+                <th:block th:each="movie : ${nowShowingMovies}"><article th:replace="~{fragments/movie-card :: card(${movie})}"></article></th:block>
             </div>
-        </article>
+            <div class="catalog-empty" th:if="${nowShowingMovies.isEmpty()}">
+                <div class="catalog-empty-icon">🎬</div>
+                <h4>No movies are showing that match your filters</h4>
+                <p>Try another genre or age rating.</p>
+            </div>
+        </section>
+
+        <section class="catalog-group" id="coming-soon">
+            <div class="catalog-group-head">
+                <h2 class="catalog-group-title">Coming Soon</h2>
+                <span class="catalog-group-count" th:text="${#lists.size(comingSoonMovies) + ' movies'}">4 movies</span>
+            </div>
+            <div class="movie-grid" th:if="${!comingSoonMovies.isEmpty()}">
+                <th:block th:each="movie : ${comingSoonMovies}"><article th:replace="~{fragments/movie-card :: card(${movie})}"></article></th:block>
+            </div>
+            <div class="catalog-empty" th:if="${comingSoonMovies.isEmpty()}">
+                <div class="catalog-empty-icon">✨</div>
+                <h4>No upcoming movies match your filters</h4>
+                <p>New titles are announced regularly — please check back later.</p>
+            </div>
+        </section>
+    </th:block>
+
+    <!-- ================= Single category ================= -->
+    <div class="movie-grid" th:if="${selectedType != 'all' && !movies.isEmpty()}">
+        <th:block th:each="movie : ${movies}"><article th:replace="~{fragments/movie-card :: card(${movie})}"></article></th:block>
     </div>
 
-    <!-- Empty State -->
-    <div th:if="${movies == null || movies.isEmpty()}"
-         style="text-align:center;padding:5rem 2rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-top:2rem;">
-        <div style="font-size:3.5rem;margin-bottom:1rem;">🎞️</div>
-        <h3 style="font-size:1.5rem;margin-bottom:8px;">No matching movies found</h3>
-        <p style="color:var(--text-secondary);max-width:500px;margin:0 auto 1.5rem;">
+    <!-- Empty State (A1) -->
+    <div class="catalog-empty" th:if="${movies.isEmpty() && (loadError == null || !loadError)}" style="margin-top:2rem;">
+        <div class="catalog-empty-icon">🎞️</div>
+        <h3 th:text="${hasFilters ? 'No matching movies found' : 'No movies are available right now'}">No matching movies found</h3>
+        <p th:text="${hasFilters ? 'Try changing your search term or filters to discover more movies.' : 'Please check back later for new releases.'}">
             Try changing your search term or filters to discover more movies.
         </p>
-        <a th:href="@{/movies}" class="btn-primary">
-            <span>View All Movies</span>
-        </a>
+        <a th:if="${hasFilters}" th:href="@{/movies}" class="btn-primary"><span>View All Movies</span></a>
     </div>
 </main>
 

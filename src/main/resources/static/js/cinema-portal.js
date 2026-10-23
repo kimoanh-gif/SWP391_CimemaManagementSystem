@@ -151,17 +151,19 @@ function initQuickBooking() {
         const movieId = movieSelect.value;
         const date = dateSelect ? dateSelect.value : '';
 
+        e.preventDefault();
+
+        // No movie selected: open the Showtime List for the chosen date (all movies).
         if (!movieId) {
-            e.preventDefault();
-            alert('Vui lòng chọn phim bạn muốn xem.');
+            window.location.href = date ? `/showtimes?date=${encodeURIComponent(date)}` : '/showtimes';
             return;
         }
 
-        // Navigate to Movie Details or Showtime List with date
-        let targetUrl = `/movies/${movieId}`;
+        // Movie selected: open its showtimes on Movie Details for the chosen date.
+        let targetUrl = `/movies/${encodeURIComponent(movieId)}`;
         if (date) {
-            targetUrl += `?date=${date}#showtimes`;
+            targetUrl += `?date=${encodeURIComponent(date)}`;
         }
-        window.location.href = targetUrl;
+        window.location.href = targetUrl + '#showtimes';
     });
 }

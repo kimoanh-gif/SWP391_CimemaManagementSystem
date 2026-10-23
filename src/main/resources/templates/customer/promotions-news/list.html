@@ -20,6 +20,8 @@
         <p style="color:var(--text-secondary);margin-top:6px;">Discover CINEORA offers, voucher updates, cinema news, and upcoming events.</p>
     </div>
 
+    <div th:replace="~{fragments/public-alerts :: alerts}"></div>
+
     <!-- Tab navigation -->
     <div class="filter-toolbar" style="margin-bottom:3rem;">
         <div class="filter-tabs">
@@ -59,7 +61,7 @@
                 <div class="promo-banner-wrap">
                     <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img"
                          onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">20% Off</span>
+                    <span class="promo-tag-badge" th:if="${!promo.vouchers.isEmpty()}" th:text="${promo.discountDisplay}">20% Off</span>
                 </div>
                 <div class="promo-body">
                     <h3 class="promo-title">
@@ -71,13 +73,14 @@
                     </div>
                     <p class="promo-desc" th:text="${promo.description}">Promotion details and applicable terms.</p>
 
-                    <div class="promo-voucher-box">
+                    <div class="promo-voucher-box" th:if="${!promo.vouchers.isEmpty()}">
                         <div>
                             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Voucher Code:</div>
                             <span class="voucher-code-pill" th:text="${promo.primaryVoucherCode}">WELCOME20</span>
                         </div>
                         <button type="button" class="btn-copy-code"
-                                th:attr="onclick=|copyVoucherCode('${promo.primaryVoucherCode}')|">
+                                th:data-code="${promo.primaryVoucherCode}"
+                                onclick="copyVoucherCode(this.dataset.code)">
                             Copy Code
                         </button>
                     </div>
@@ -92,9 +95,10 @@
             </article>
         </div>
 
-        <div th:if="${promotions == null || promotions.isEmpty()}"
-             style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">There are no new promotions at the moment. Please check back later.</p>
+        <div class="catalog-empty" th:if="${promotions == null || promotions.isEmpty()}">
+            <div class="catalog-empty-icon">🎁</div>
+            <h4>No promotions available right now</h4>
+            <p>There are no active promotions at the moment. Please check back later.</p>
         </div>
     </section>
 
@@ -135,9 +139,10 @@
             </article>
         </div>
 
-        <div th:if="${newsList == null || newsList.isEmpty()}"
-             style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">There is no new cinema news at the moment. Please check back later.</p>
+        <div class="catalog-empty" th:if="${newsList == null || newsList.isEmpty()}">
+            <div class="catalog-empty-icon">📰</div>
+            <h4>No news published yet</h4>
+            <p>There is no cinema news at the moment. Please check back later.</p>
         </div>
     </section>
 </main>

@@ -9,6 +9,10 @@
 <div th:replace="~{fragments/cinema-header-footer :: header('home')}"></div>
 
 <main>
+    <div class="section-shell" th:if="${loadError != null && loadError}" style="padding-top:1.5rem;padding-bottom:0;">
+        <div th:replace="~{fragments/public-alerts :: alerts}"></div>
+    </div>
+
     <!-- =====================================================================
          1. HERO FEATURED MOVIE SLIDER
          ===================================================================== -->
@@ -29,24 +33,25 @@
                     </div>
                     <div class="hero-meta-item">
                         <span>🎭</span>
-                        <span th:text="${hero.genres}">Action, Adventure</span>
+                        <span th:text="${#strings.isEmpty(hero.genresFormatted) ? 'Genre not updated yet' : hero.genresFormatted}">Action, Adventure</span>
                     </div>
-                    <div class="hero-meta-item">
+                    <div class="hero-meta-item" th:if="${hero.reviewCount != null && hero.reviewCount > 0}">
                         <span>⭐</span>
-                        <span th:text="${hero.averageRating + ' / 5.0'}">4.8 / 5.0</span>
+                        <span th:text="${hero.averageRating + ' / 5'}">4.8 / 5</span>
                     </div>
                 </div>
-                <p class="hero-description" th:text="${hero.description}">
+                <p class="hero-description" th:text="${#strings.isEmpty(hero.description) ? 'The synopsis has not been updated yet.' : hero.description}">
                     A spectacular cinematic adventure with breathtaking visuals and an unforgettable story.
                 </p>
                 <div class="hero-actions">
-                    <a th:href="@{/movies/{id}(id=${hero.movieId})#showtimes}" class="btn-primary">
-                        <span>Book Tickets</span>
+                    <a th:href="@{/movies/{id}(id=${hero.movieId})} + '#showtimes'" class="btn-primary">
+                        <span th:text="${hero.nowShowing ? 'Book Tickets' : 'View Showtimes'}">Book Tickets</span>
                     </a>
                     <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}"
                             type="button"
                             class="btn-secondary"
-                            th:attr="onclick=|openTrailer('${hero.trailerUrl}')|">
+                            th:data-trailer="${hero.trailerUrl}"
+                            onclick="openTrailer(this.dataset.trailer)">
                         <span>▶ Watch Trailer</span>
                     </button>
                     <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-secondary">
@@ -58,7 +63,7 @@
             <div class="hero-poster-wrap">
                 <div class="hero-poster-card">
                     <img th:src="${hero.posterUrl}" th:alt="${hero.title}" class="hero-poster-img"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
+                         onerror="this.onerror=null;this.src='/images/cinema-login-hero.png'" />
                     <div class="hero-poster-overlay">
                         <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
                     </div>
@@ -97,7 +102,7 @@
                     <span>🎬</span> 1. Select Movie
                 </label>
                 <select id="quickMovieSelect">
-                    <option value="">Select a movie</option>
+                    <option value="">All movies</option>
                     <option th:each="m : ${allMovies}"
                             th:value="${m.movieId}"
                             th:text="${m.title + ' (' + m.ageRating + ')'}">
@@ -151,58 +156,21 @@
             </a>
         </div>
 
-        <div class="movie-grid" th:if="${nowShowingMovies != null && !nowShowingMovies.isEmpty()}">
-            <article class="movie-card" th:each="movie : ${nowShowingMovies}">
-                <div class="movie-poster-wrap">
-                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
-                    <span class="badge-duration" th:text="${movie.duration + ' min'}">118 min</span>
-                    
-                    <div class="movie-card-overlay">
-                        <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
-                                type="button"
-                                class="btn-play-trailer"
-                                th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                                title="Xem Trailer">
-                            ▶
-                        </button>
-                        <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
-                           th:href="@{/movies/{id}(id=${movie.movieId})}"
-                           class="btn-play-trailer" title="View details">
-                            ℹ️
-                        </a>
-                    </div>
-                </div>
-
-                <div class="movie-card-body">
-                    <h3 class="movie-card-title">
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
-                    </h3>
-                    <div class="movie-card-genres" th:text="${movie.genres}">Action, Adventure</div>
-                    <div class="movie-card-meta">
-                        <span class="movie-rating-stars">
-                            ⭐ <span th:text="${movie.averageRating}">4.8</span>
-                        </span>
-                        <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
-                    </div>
-                    <div class="movie-card-actions">
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">Details</a>
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})#showtimes}" class="btn-card-book">Book Now</a>
-                    </div>
-                </div>
-            </article>
+        <div class="movie-grid" th:if="${!nowShowingMovies.isEmpty()}">
+            <th:block th:each="movie : ${nowShowingMovies}"><article th:replace="~{fragments/movie-card :: card(${movie})}"></article></th:block>
         </div>
 
-        <div th:if="${nowShowingMovies == null || nowShowingMovies.isEmpty()}" style="text-align:center;padding:3rem;background:var(--bg-surface);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">No movies are scheduled today. Please check back later.</p>
+        <div class="catalog-empty" th:if="${nowShowingMovies.isEmpty()}">
+            <div class="catalog-empty-icon">🎬</div>
+            <h4>No movies are showing right now</h4>
+            <p>Please check back later or browse the movies coming soon.</p>
         </div>
     </section>
 
     <!-- =====================================================================
          4. PHIM SẮP CHIẾU (COMING SOON)
          ===================================================================== -->
-    <section class="section-shell" id="coming-soon" th:if="${comingSoonMovies != null && !comingSoonMovies.isEmpty()}">
+    <section class="section-shell" id="coming-soon">
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Coming to CINEORA</span>
@@ -216,39 +184,14 @@
             </a>
         </div>
 
-        <div class="movie-grid">
-            <article class="movie-card" th:each="movie : ${comingSoonMovies}">
-                <div class="movie-poster-wrap">
-                    <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">P</span>
-                    <span class="badge-duration" th:text="${movie.duration + ' min'}">105 min</span>
+        <div class="movie-grid" th:if="${!comingSoonMovies.isEmpty()}">
+            <th:block th:each="movie : ${comingSoonMovies}"><article th:replace="~{fragments/movie-card :: card(${movie})}"></article></th:block>
+        </div>
 
-                    <div class="movie-card-overlay">
-                        <button th:if="${movie.trailerUrl != null && !movie.trailerUrl.isEmpty()}"
-                                type="button"
-                                class="btn-play-trailer"
-                                th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                                title="Xem Trailer">
-                            ▶
-                        </button>
-                    </div>
-                </div>
-
-                <div class="movie-card-body">
-                    <h3 class="movie-card-title">
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
-                    </h3>
-                    <div class="movie-card-genres" th:text="${movie.genres}">Animation, Family</div>
-                    <div class="movie-card-meta">
-                        <span>Release:</span>
-                        <strong style="color:var(--gold);" th:text="${movie.formattedReleaseDate}">25/10/2026</strong>
-                    </div>
-                    <div class="movie-card-actions" style="grid-template-columns: 1fr;">
-                        <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="btn-card-detail">View Movie Details</a>
-                    </div>
-                </div>
-            </article>
+        <div class="catalog-empty" th:if="${comingSoonMovies.isEmpty()}">
+            <div class="catalog-empty-icon">✨</div>
+            <h4>No upcoming movies announced yet</h4>
+            <p>New titles are announced regularly — please check back later.</p>
         </div>
     </section>
 
@@ -275,7 +218,7 @@
                 <div style="display:flex;gap:12px;align-items:center;">
                     <img th:src="${st.moviePosterUrl}" th:alt="${st.movieTitle}" loading="lazy" decoding="async"
                          style="width:48px;height:70px;border-radius:var(--radius-sm);object-fit:cover;"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
+                         onerror="this.onerror=null;this.src='/images/cinema-login-hero.png'" />
                     <div>
                         <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;" th:text="${st.movieTitle}">Movie Title</h4>
                         <div style="font-size:0.8rem;color:var(--text-muted);" th:text="${st.roomName + ' · ' + st.roomType}">Cinema 01 · 2D</div>
@@ -319,21 +262,22 @@
             <article class="promo-card" th:each="promo : ${promotions}">
                 <div class="promo-banner-wrap">
                     <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img" loading="lazy" decoding="async"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">20% Off</span>
+                         onerror="this.onerror=null;this.src='/images/cinema-login-hero.png'" />
+                    <span class="promo-tag-badge" th:if="${!promo.vouchers.isEmpty()}" th:text="${promo.discountDisplay}">20% Off</span>
                 </div>
                 <div class="promo-body">
                     <h3 class="promo-title">
                         <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" th:text="${promo.name}">Promotion</a>
                     </h3>
                     <p class="promo-desc" th:text="${promo.description}">Promotion details and applicable terms.</p>
-                    <div class="promo-voucher-box">
+                    <div class="promo-voucher-box" th:if="${!promo.vouchers.isEmpty()}">
                         <div>
                             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Voucher Code:</div>
                             <span class="voucher-code-pill" th:text="${promo.primaryVoucherCode}">WELCOME20</span>
                         </div>
                         <button type="button" class="btn-copy-code"
-                                th:attr="onclick=|copyVoucherCode('${promo.primaryVoucherCode}')|">
+                                th:data-code="${promo.primaryVoucherCode}"
+                                onclick="copyVoucherCode(this.dataset.code)">
                             Copy
                         </button>
                     </div>
@@ -363,7 +307,7 @@
             <article class="news-card" th:each="news : ${newsList}">
                 <div class="news-thumbnail-wrap">
                     <img th:src="${news.thumbnailUrl}" th:alt="${news.title}" class="news-thumbnail" loading="lazy" decoding="async"
-                         onerror="this.src='/images/cinema-login-hero.png'" />
+                         onerror="this.onerror=null;this.src='/images/cinema-login-hero.png'" />
                 </div>
                 <div class="news-body">
                     <div class="news-meta">

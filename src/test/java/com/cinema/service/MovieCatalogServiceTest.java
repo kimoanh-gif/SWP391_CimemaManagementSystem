@@ -2,8 +2,8 @@ package com.cinema.service;
 
 import com.cinema.dao.CustomerDAO;
 import com.cinema.dao.GenreDao;
-import com.cinema.dao.MovieDao;
 import com.cinema.dao.MovieReviewDAO;
+import com.cinema.dao.PublicMovieDAO;
 import com.cinema.model.Customer;
 import com.cinema.model.Movie;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,10 +17,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +30,7 @@ import static org.mockito.Mockito.when;
 class MovieCatalogServiceTest {
 
     @Mock
-    private MovieDao movieDAO;
+    private PublicMovieDAO publicMovieDAO;
 
     @Mock
     private GenreDao genreDAO;
@@ -43,7 +45,7 @@ class MovieCatalogServiceTest {
 
     @BeforeEach
     void setUp() {
-        movieCatalogService = new MovieCatalogService(movieDAO, genreDAO, movieReviewDAO, customerDAO);
+        movieCatalogService = new MovieCatalogService(publicMovieDAO, genreDAO, movieReviewDAO, customerDAO);
     }
 
     @Test
@@ -51,7 +53,7 @@ class MovieCatalogServiceTest {
         Movie movie = new Movie();
         movie.setMovieId(1);
         movie.setTitle("Test Movie");
-        when(movieDAO.findFeatured(5)).thenReturn(List.of(movie));
+        when(publicMovieDAO.findFeatured(5)).thenReturn(List.of(movie));
 
         List<Movie> result = movieCatalogService.getFeaturedMovies(5);
         assertEquals(1, result.size());
@@ -59,16 +61,37 @@ class MovieCatalogServiceTest {
     }
 
     @Test
-    void testGetMovieByIdFound() {
+    void testGetPublicMovieByIdFound() {
         Movie movie = new Movie();
         movie.setMovieId(10);
         movie.setTitle("Cyber Horizon");
-        when(movieDAO.findById(10)).thenReturn(Optional.of(movie));
-        when(genreDAO.findByMovieId(10)).thenReturn(List.of());
+        when(publicMovieDAO.findPublicById(10)).thenReturn(Optional.of(movie));
 
-        Optional<Movie> result = movieCatalogService.getMovieById(10);
+        Optional<Movie> result = movieCatalogService.getPublicMovieById(10);
         assertTrue(result.isPresent());
         assertEquals("Cyber Horizon", result.get().getTitle());
+    }
+
+    @Test
+    void testGetPublicMovieByInvalidIdSkipsDatabase() {
+        assertTrue(movieCatalogService.getPublicMovieById(0).isEmpty());
+        verify(publicMovieDAO, never()).findPublicById(anyInt());
+    }
+
+    @Test
+    void testSearchMoviesNormalisesInvalidFilters() {
+        when(publicMovieDAO.search("x", null, null, "all", "newest")).thenReturn(List.of());
+
+        movieCatalogService.searchMovies("x", null, "X99", "unknown", "drop table");
+
+        verify(publicMovieDAO).search("x", null, null, "all", "newest");
+    }
+
+    @Test
+    void testNormalizeAgeRating() {
+        assertEquals("T13", movieCatalogService.normalizeAgeRating(" t13 "));
+        assertNull(movieCatalogService.normalizeAgeRating("R"));
+        assertNull(movieCatalogService.normalizeAgeRating(""));
     }
 
     @Test
@@ -78,10 +101,22 @@ class MovieCatalogServiceTest {
         customer.setAccountId(1);
 
         when(customerDAO.findByAccountId(1)).thenReturn(Optional.of(customer));
+        when(publicMovieDAO.findPublicById(10)).thenReturn(Optional.of(new Movie()));
 
         boolean ok = movieCatalogService.addReview(1, 10, 5, "Great movie!");
         assertTrue(ok);
         verify(movieReviewDAO).saveOrUpdateReview(eq(99), eq(10), eq(5), eq("Great movie!"));
+    }
+
+    @Test
+    void testAddReviewFailsForNonPublicMovie() {
+        Customer customer = new Customer();
+        customer.setCustomerId(99);
+        when(customerDAO.findByAccountId(1)).thenReturn(Optional.of(customer));
+        when(publicMovieDAO.findPublicById(10)).thenReturn(Optional.empty());
+
+        assertFalse(movieCatalogService.addReview(1, 10, 5, "Nice"));
+        verify(movieReviewDAO, never()).saveOrUpdateReview(anyInt(), anyInt(), anyInt(), anyString());
     }
 
     @Test

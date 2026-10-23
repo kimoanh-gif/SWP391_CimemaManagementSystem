@@ -68,6 +68,7 @@ public class PromotionDAO {
                 SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
                 FROM dbo.Promotion p
                 WHERE UPPER(p.[Status]) = 'ACTIVE'
+                  AND p.StartDate <= SYSDATETIME()
                   AND (p.EndDate IS NULL OR p.EndDate >= SYSDATETIME())
                 ORDER BY p.StartDate DESC
                 """;
@@ -83,6 +84,7 @@ public class PromotionDAO {
                 SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
                 FROM dbo.Promotion p
                 WHERE UPPER(p.[Status]) = 'ACTIVE'
+                  AND p.StartDate <= SYSDATETIME()
                   AND (p.EndDate IS NULL OR p.EndDate >= SYSDATETIME())
                 ORDER BY p.StartDate DESC
                 """;
@@ -113,6 +115,28 @@ public class PromotionDAO {
         }
     }
 
+    /**
+     * Finds a promotion only when it can be shown publicly:
+     * ACTIVE and the current time is inside [StartDate, EndDate] (BR-PN-01, BR-PN-02, BR-PN-05).
+     */
+    public Optional<Promotion> findPublicById(int promotionId) {
+        String sql = """
+                SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
+                FROM dbo.Promotion p
+                WHERE p.PromotionID = ?
+                  AND UPPER(p.[Status]) = 'ACTIVE'
+                  AND p.StartDate <= SYSDATETIME()
+                  AND (p.EndDate IS NULL OR p.EndDate >= SYSDATETIME())
+                """;
+        List<Promotion> result = jdbcTemplate.query(sql, promoMapper, promotionId);
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+        Promotion p = result.get(0);
+        p.setVouchers(findVouchersByPromotionId(promotionId));
+        return Optional.of(p);
+    }
+
     public List<Voucher> findVouchersByPromotionId(int promotionId) {
         String sql = """
                 SELECT v.VoucherID, v.PromotionID, v.RequiredRankID, v.Code,
@@ -121,6 +145,7 @@ public class PromotionDAO {
                 FROM dbo.Voucher v
                 WHERE v.PromotionID = ?
                   AND UPPER(v.[Status]) = 'ACTIVE'
+                  AND v.ValidTo >= SYSDATETIME()
                 ORDER BY v.DiscountValue DESC
                 """;
         return jdbcTemplate.query(sql, voucherMapper, promotionId);

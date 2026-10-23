@@ -1,100 +1,85 @@
 package com.cinema.controller;
 
-import com.cinema.dao.CustomerDAO;
-import com.cinema.model.AuthenticatedUser;
-import com.cinema.model.Customer;
 import com.cinema.model.Movie;
-import com.cinema.model.NewsArticle;
-import com.cinema.model.Promotion;
-import com.cinema.model.PublicShowtime;
 import com.cinema.service.MovieCatalogService;
 import com.cinema.service.PromotionNewsService;
 import com.cinema.service.PublicShowtimeService;
-import com.cinema.service.SessionService;
+import com.cinema.util.PublicPageModelHelper;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Screen 21: Home Page
- * Functional Requirements:
- * - View Movie List (Featured carousel, Now Showing, Coming Soon)
- * - View Showtimes (Today's preview, quick booking date/movie selector)
- * - View Promotions & News (Hot discount vouchers, cinema news & events)
+ * Screen: Home Page ( / , /home )
+ * Functional requirements:
+ * - View Movie List: featured hero slider, Now Showing, Coming Soon
+ * - View Showtimes: today's showtimes preview and quick booking bar
+ * - View Promotions &amp; News: latest promotions and cinema news
  *
  * Assignee: Nguyễn Đức Anh (Iter2)
  */
 @Controller
 public class HomeController {
 
+    static final int FEATURED_LIMIT = 5;
+    static final int NOW_SHOWING_LIMIT = 8;
+    static final int COMING_SOON_LIMIT = 6;
+    static final int TODAY_SHOWTIME_LIMIT = 8;
+    static final int PROMOTION_LIMIT = 4;
+    static final int NEWS_LIMIT = 3;
+    static final int QUICK_BOOKING_DAYS = 7;
+
     private final MovieCatalogService movieService;
     private final PublicShowtimeService showtimeService;
     private final PromotionNewsService promotionNewsService;
-    private final SessionService sessionService;
-    private final CustomerDAO customerDAO;
+    private final PublicPageModelHelper pageHelper;
 
     public HomeController(MovieCatalogService movieService,
                           PublicShowtimeService showtimeService,
                           PromotionNewsService promotionNewsService,
-                          SessionService sessionService,
-                          CustomerDAO customerDAO) {
+                          PublicPageModelHelper pageHelper) {
         this.movieService = movieService;
         this.showtimeService = showtimeService;
         this.promotionNewsService = promotionNewsService;
-        this.sessionService = sessionService;
-        this.customerDAO = customerDAO;
+        this.pageHelper = pageHelper;
     }
 
     @GetMapping({"/", "/home"})
     public String home(HttpSession session, Model model) {
-        // 1. Featured movies for Hero Slider
-        List<Movie> featuredMovies = movieService.getFeaturedMovies(5);
-        if (featuredMovies.isEmpty()) {
-            featuredMovies = movieService.getNowShowingMovies(5);
+        pageHelper.populateHeader(session, model, "home");
+
+        // 1. Movies (BR-ML-02: Now Showing and Coming Soon are separate categories)
+        List<Movie> nowShowing = pageHelper.loadSafely(model,
+                () -> movieService.getNowShowingMovies(NOW_SHOWING_LIMIT), List.of());
+        List<Movie> comingSoon = pageHelper.loadSafely(model,
+                () -> movieService.getComingSoonMovies(COMING_SOON_LIMIT), List.of());
+        List<Movie> featured = pageHelper.loadSafely(model,
+                () -> movieService.getFeaturedMovies(FEATURED_LIMIT), List.of());
+        if (featured.isEmpty()) {
+            featured = comingSoon.stream().limit(FEATURED_LIMIT).toList();
         }
-        model.addAttribute("featuredMovies", featuredMovies);
-
-        // 2. Now Showing movies
-        List<Movie> nowShowing = movieService.getNowShowingMovies(8);
+        model.addAttribute("featuredMovies", featured);
         model.addAttribute("nowShowingMovies", nowShowing);
-
-        // 3. Coming Soon movies
-        List<Movie> comingSoon = movieService.getComingSoonMovies(6);
         model.addAttribute("comingSoonMovies", comingSoon);
 
-        // 4. Today's Showtimes preview
-        List<PublicShowtime> todayShowtimes = showtimeService.getTodayShowtimes(8);
-        model.addAttribute("todayShowtimes", todayShowtimes);
+        // 2. Showtimes
+        model.addAttribute("todayShowtimes", pageHelper.loadSafely(model,
+                () -> showtimeService.getTodayShowtimes(TODAY_SHOWTIME_LIMIT), List.of()));
 
-        // 5. Featured Promotions
-        List<Promotion> promotions = promotionNewsService.getLatestPromotions(4);
-        model.addAttribute("promotions", promotions);
+        // 3. Promotions & News (BR-PN-06: one empty type never hides the other)
+        model.addAttribute("promotions", pageHelper.loadSafely(model,
+                () -> promotionNewsService.getLatestPromotions(PROMOTION_LIMIT), List.of()));
+        model.addAttribute("newsList", pageHelper.loadSafely(model,
+                () -> promotionNewsService.getLatestNews(NEWS_LIMIT), List.of()));
 
-        // 6. Latest Cinema News
-        List<NewsArticle> newsList = promotionNewsService.getLatestNews(3);
-        model.addAttribute("newsList", newsList);
+        // 4. Quick booking bar: every public movie (pre-sale showtimes may exist for Coming Soon)
+        model.addAttribute("allMovies", pageHelper.loadSafely(model,
+                movieService::getAllPublicMovies, List.of()));
+        model.addAttribute("upcomingDates", showtimeService.getUpcomingDates(QUICK_BOOKING_DAYS));
 
-        // 7. Quick Booking Bar options
-        model.addAttribute("allMovies", movieService.searchMovies(null, null, "ALL", "newest"));
-        model.addAttribute("upcomingDates", showtimeService.getUpcomingDates(7));
-
-        // 8. Session user info
-        AuthenticatedUser user = sessionService.getCurrentUser(session);
-        model.addAttribute("currentUser", user);
-        if (user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())) {
-            Optional<Customer> custOpt = customerDAO.findByAccountId(user.getAccountId());
-            custOpt.ifPresent(c -> {
-                model.addAttribute("availablePoints", c.getAvailablePoints());
-                model.addAttribute("tierPoints", c.getTierPoints());
-            });
-        }
-
-        model.addAttribute("activeNav", "home");
         return "index";
     }
 }

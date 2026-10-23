@@ -64,6 +64,7 @@ public class NewsDAO {
     public List<NewsArticle> findPublishedNews(int limit) {
         String sql = BASE_NEWS_SQL + """
                 WHERE UPPER(n.[Status]) = 'PUBLISHED'
+                  AND COALESCE(n.PublishedAt, n.CreatedAt) <= SYSDATETIME()
                 ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC
                 """;
         if (limit > 0) {
@@ -75,9 +76,24 @@ public class NewsDAO {
     public List<NewsArticle> findAllPublished() {
         String sql = BASE_NEWS_SQL + """
                 WHERE UPPER(n.[Status]) = 'PUBLISHED'
+                  AND COALESCE(n.PublishedAt, n.CreatedAt) <= SYSDATETIME()
                 ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC
                 """;
         return jdbcTemplate.query(sql, rowMapper);
+    }
+
+    /**
+     * Finds an article only when it is PUBLISHED and its publication time has arrived
+     * (BR-PN-04, BR-PN-05).
+     */
+    public Optional<NewsArticle> findPublishedById(int newsId) {
+        String sql = BASE_NEWS_SQL + """
+                WHERE n.NewsID = ?
+                  AND UPPER(n.[Status]) = 'PUBLISHED'
+                  AND COALESCE(n.PublishedAt, n.CreatedAt) <= SYSDATETIME()
+                """;
+        List<NewsArticle> result = jdbcTemplate.query(sql, rowMapper, newsId);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
     public Optional<NewsArticle> findById(int newsId) {

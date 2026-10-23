@@ -1,10 +1,10 @@
 package com.cinema.controller;
 
 import com.cinema.dao.CustomerDAO;
-import com.cinema.model.NewsArticle;
 import com.cinema.model.Promotion;
 import com.cinema.service.PromotionNewsService;
 import com.cinema.service.SessionService;
+import com.cinema.util.PublicPageModelHelper;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PromotionNewsPublicControllerTest {
+class PromotionDetailsControllerTest {
 
     @Mock
     private PromotionNewsService promotionNewsService;
@@ -37,24 +37,12 @@ class PromotionNewsPublicControllerTest {
     @Mock
     private HttpSession session;
 
-    private PromotionNewsPublicController controller;
+    private PromotionDetailsController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new PromotionNewsPublicController(promotionNewsService, sessionService, customerDAO);
-    }
-
-    @Test
-    void testListPromotionsAndNews() {
-        when(promotionNewsService.getActivePromotions()).thenReturn(List.of(new Promotion()));
-        when(promotionNewsService.getPublishedNews()).thenReturn(List.of(new NewsArticle()));
-
-        Model model = new ConcurrentModel();
-        String view = controller.listPromotionsAndNews("all", session, model);
-
-        assertEquals("customer/promotions-news/list", view);
-        assertTrue(model.containsAttribute("promotions"));
-        assertTrue(model.containsAttribute("newsList"));
+        controller = new PromotionDetailsController(promotionNewsService,
+                new PublicPageModelHelper(sessionService, customerDAO));
     }
 
     @Test
@@ -64,7 +52,7 @@ class PromotionNewsPublicControllerTest {
         promo.setName("Promo 1");
 
         when(promotionNewsService.getPromotionById(1)).thenReturn(Optional.of(promo));
-        when(promotionNewsService.getLatestPromotions(3)).thenReturn(List.of());
+        when(promotionNewsService.getOtherPromotions(1, 3)).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         String view = controller.promotionDetails(1, session, model, new RedirectAttributesModelMap());
@@ -74,18 +62,13 @@ class PromotionNewsPublicControllerTest {
     }
 
     @Test
-    void testNewsDetailsFound() {
-        NewsArticle article = new NewsArticle();
-        article.setNewsId(2);
-        article.setTitle("Article 2");
+    void testExpiredPromotionRedirectsWithMessage() {
+        when(promotionNewsService.getPromotionById(9)).thenReturn(Optional.empty());
 
-        when(promotionNewsService.getNewsById(2)).thenReturn(Optional.of(article));
-        when(promotionNewsService.getLatestNews(3)).thenReturn(List.of());
+        RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
+        String view = controller.promotionDetails(9, session, new ConcurrentModel(), ra);
 
-        Model model = new ConcurrentModel();
-        String view = controller.newsDetails(2, session, model, new RedirectAttributesModelMap());
-
-        assertEquals("customer/promotions-news/news-details", view);
-        assertEquals(article, model.getAttribute("news"));
+        assertEquals("redirect:/promotions-news?tab=promotions", view);
+        assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));
     }
 }
