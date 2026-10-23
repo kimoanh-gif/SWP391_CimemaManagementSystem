@@ -1200,3 +1200,35 @@ h1 {
 .ticket-back { text-align: center; }
 @media (max-width: 800px) { .cinema-pass { grid-template-columns: 1fr; } .pass-stub::before { inset: -1px 0 auto; border-top: 2px dashed #eccbdc; border-left: 0; } .pass-details { grid-template-columns: repeat(2,1fr); gap: 16px; } .pass-details div:nth-child(3) { padding-left: 0; border-left: 0; } .pass-brand small { display: none; } }
 @media (max-width: 520px) { .pass-main { padding: 18px; } .pass-movie { grid-template-columns: 78px 1fr; gap: 14px; } .pass-poster { min-height: 115px; } .pass-movie-info h2 { font-size: 18px; } .pass-footer { grid-template-columns: 1fr; } .pass-type { display: none; } }
+
+/* My Booking History uses the standard customer header and footer. */
+.booking-history-page {
+  --bg-surface: #fff;
+  --bg-surface-glass: rgba(255,248,240,.95);
+  --primary: #d92332;
+  --primary-light: #b3001f;
+  --text-primary: #28202a;
+  --text-secondary: #6d5a51;
+  --text-muted: #846f67;
+  --border-subtle: rgba(144,111,109,.24);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.booking-history-page .cinema-header { color: var(--ink); border-bottom-color: rgba(144,111,109,.16); background: rgba(255,248,240,.95); box-shadow: 0 1px 8px rgba(40,32,42,.06); }
+.booking-history-page .nav-link { color: #5c403e; }
+.booking-history-page .nav-link:hover { color: var(--red); background: var(--peach); }
+.booking-history-page .user-badge { color: var(--ink); border-color: var(--line); background: #fff; }
+.booking-history-page .user-avatar { color: #fff; background: var(--red); }
+.booking-history-page .user-name { color: var(--ink); }
+.booking-history-page .account-dropdown-menu { border-color: var(--line); background: #fff; }
+.booking-history-page .account-dropdown-menu a,.booking-history-page .account-dropdown-menu button { color: var(--ink); }
+.booking-history-page .account-dropdown-menu a:hover,.booking-history-page .account-dropdown-menu button:hover { color: var(--red); background: #fff1ec; }
+.booking-history-page .history-shell { flex: 1; padding-top: 28px; }
+.history-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.history-breadcrumb a { color: var(--red); text-decoration: none; }
+.history-breadcrumb strong { color: var(--ink); }
+.history-heading { padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.booking-history-page .cinema-footer { color: var(--muted); border-top-color: var(--line); background: #fff0e8; }
+.booking-history-page .footer-col h4 { color: var(--ink); }
+.booking-history-page .footer-links a:hover { color: var(--red); }

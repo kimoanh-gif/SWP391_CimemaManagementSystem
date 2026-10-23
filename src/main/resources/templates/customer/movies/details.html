@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/cinema-header-footer :: metaHead(${movie.title} + ' - Movie Details')}">
-    <title>CineVerse - Movie Details</title>
+    <title>Movie Details | CINEORA</title>
 </head>
-<body>
+<body class="cineora-catalog-page movie-detail-page">
 
 <!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
@@ -22,7 +22,7 @@
          ===================================================================== -->
     <section class="movie-details-hero">
         <div class="movie-details-container">
-            <!-- Movie Poster -->
+            <!-- Use the clean database poster only; never place generated text artwork here. -->
             <div class="movie-details-poster-wrap">
                 <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-details-poster"
                      onerror="this.src='/images/cinema-login-hero.png'" />
@@ -33,7 +33,7 @@
                 <div style="font-size:0.85rem;color:var(--text-muted);">
                     <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
                     <span> / </span>
-                    <a th:href="@{/movies}" style="color:var(--text-secondary);">Phim</a>
+                    <a th:href="@{/movies}" style="color:var(--text-secondary);">Movies</a>
                     <span> / </span>
                     <span style="color:var(--primary-light);" th:text="${movie.title}">Movie Title</span>
                 </div>
@@ -43,7 +43,7 @@
                 <div class="movie-meta-pills">
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">T13</span>
                     <span class="meta-pill" th:text="${movie.duration + ' minutes'}">118 minutes</span>
-                    <span class="meta-pill" th:text="${movie.genres}">Hành Động, Phiêu Lưu</span>
+                    <span class="meta-pill" th:text="${movie.genres}">Action, Adventure</span>
                     <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
                         ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5.0
                         <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ' reviews)'}">(12 reviews)</span>
@@ -61,7 +61,7 @@
                     <div class="info-val" th:text="${movie.formattedReleaseDate}">18/10/2026</div>
 
                     <div class="info-label">Age Rating:</div>
-                    <div class="info-val" th:text="${movie.ageRatingDescription}">T13 - Phim cấm khán giả dưới 13 tuổi</div>
+                    <div class="info-val" th:text="${movie.ageRatingDescription}">T13 — Not suitable for viewers under 13</div>
                 </div>
 
                 <div class="hero-actions">
@@ -72,13 +72,13 @@
                             type="button"
                             class="btn-secondary"
                             th:attr="onclick=|openTrailer('${movie.trailerUrl}')|">
-                        <span>▶ Xem Trailer</span>
+                        <span>▶ Watch Trailer</span>
                     </button>
                 </div>
 
                 <!-- Synopsis Box -->
                 <div class="movie-synopsis-box">
-                    <h3 style="font-size:1.15rem;margin-bottom:8px;color:#fff;">Synopsis</h3>
+                    <h3 style="font-size:1.15rem;margin-bottom:8px;">Synopsis</h3>
                     <p th:text="${movie.description}">
                         Movie synopsis will be updated soon.
                     </p>
@@ -106,7 +106,7 @@
                th:href="@{/movies/{id}(id=${movie.movieId}, date=${d})} + '#showtimes'"
                class="date-pill"
                th:classappend="${d.equals(selectedDate)} ? 'active'">
-                <span class="date-pill-day" th:text="${#temporals.format(d, 'EEE')}">Thứ 7</span>
+                <span class="date-pill-day" th:text="${#temporals.format(d, 'EEE')}">Sat</span>
                 <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
                 <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
             </a>
@@ -131,8 +131,8 @@
                     <span class="room-format-badge" th:text="${st.roomType + ' · ' + st.roomName}">2D · Cinema 01</span>
                     <span class="slot-start-time" th:text="${st.formattedStartTime}">19:30</span>
                     <span class="slot-end-time" th:text="${'~ ' + st.formattedEndTime}">~ 21:30</span>
-                    <span class="slot-price" th:text="${st.formattedPrice}">85.000 đ</span>
-                    <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">Còn 36 ghế</span>
+                    <span class="slot-price" th:text="${st.formattedPrice}">85,000 VND</span>
+                    <span class="slot-seats-badge" th:classappend="${st.seatStatusClass}" th:text="${st.seatStatusBadge}">36 seats left</span>
                 </a>
             </div>
         </div>

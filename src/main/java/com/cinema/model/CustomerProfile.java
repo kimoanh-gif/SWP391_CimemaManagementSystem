@@ -11,7 +11,6 @@ public class CustomerProfile {
     private String email;
     private String phone;
     private LocalDate dateOfBirth;
-    private String address;
     private String membershipRankName;
     private int availablePoints;
     private int tierPoints;
@@ -70,14 +69,6 @@ public class CustomerProfile {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public String getMembershipRankName() {
         return membershipRankName;
     }
@@ -110,6 +101,6 @@ public class CustomerProfile {
     public void setPasswordSet(boolean passwordSet) { this.passwordSet = passwordSet; }
 
     public boolean isIncomplete() {
-        return dateOfBirth == null || address == null || address.isBlank();
+        return dateOfBirth == null;
     }
 }

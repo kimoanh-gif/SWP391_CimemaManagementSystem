@@ -33,7 +33,6 @@ public class CustomerProfileDao {
         LocalDate dateOfBirth = rs.getObject("DateOfBirth", LocalDate.class);
         profile.setDateOfBirth(dateOfBirth);
 
-        profile.setAddress(rs.getString("Address"));
         profile.setMembershipRankName(rs.getString("MembershipRankName"));
         profile.setAvailablePoints(rs.getInt("AvailablePoints"));
         profile.setTierPoints(rs.getInt("TierPoints"));
@@ -53,7 +52,6 @@ public class CustomerProfileDao {
                     a.Email,
                     a.Phone,
                     c.DateOfBirth,
-                    c.[Address] AS Address,
                     mr.[Name] AS MembershipRankName,
                     c.AvailablePoints,
                     c.TierPoints
@@ -79,7 +77,7 @@ public class CustomerProfileDao {
 
         String updateCustomerSql = """
                 UPDATE Customer
-                SET DateOfBirth = ?, [Address] = ?
+                SET DateOfBirth = ?
                 WHERE AccountID = ?
                 """;
 
@@ -91,9 +89,7 @@ public class CustomerProfileDao {
 
         jdbcTemplate.update(
                 updateCustomerSql,
-                form.getDateOfBirth(),
-                emptyToNull(form.getAddress()),
-                accountId
+                form.getDateOfBirth(), accountId
         );
     }
 
@@ -104,10 +100,6 @@ public class CustomerProfileDao {
     public boolean existsByPhoneExcludingAccount(String phone, int accountId) {
         Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.Account WHERE Phone=? AND AccountID<>?", Integer.class, phone, accountId);
         return count != null && count > 0;
-    }
-
-    private String emptyToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private boolean isGoogleLinked(int accountId) {

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/cinema-header-footer :: metaHead('Home - Premium Cinema Experience')}">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead(null)}">
     <title>CINEORA - Every Story Begins Here</title>
 </head>
 <body class="cineora-home">
@@ -12,7 +12,8 @@
     <!-- =====================================================================
          1. HERO FEATURED MOVIE SLIDER
          ===================================================================== -->
-    <section class="hero-slider-section" th:if="${featuredMovies != null && !featuredMovies.isEmpty()}">
+    <section class="hero-slider-section cinematic-hero" th:if="${featuredMovies != null && !featuredMovies.isEmpty()}"
+             th:style="|--hero-image:url('${featuredMovies[0].posterUrl}')|">
         <!-- Render first featured movie prominently with banner -->
         <div class="hero-slider-container" th:with="hero=${featuredMovies[0]}">
             <div class="hero-content">
@@ -39,7 +40,7 @@
                     A spectacular cinematic adventure with breathtaking visuals and an unforgettable story.
                 </p>
                 <div class="hero-actions">
-                    <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-primary">
+                    <a th:href="@{/movies/{id}(id=${hero.movieId})#showtimes}" class="btn-primary">
                         <span>Book Tickets</span>
                     </a>
                     <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}"
@@ -67,7 +68,7 @@
     </section>
 
     <!-- Fallback Hero when no movie is in DB yet -->
-    <section class="hero-slider-section" th:if="${featuredMovies == null || featuredMovies.isEmpty()}">
+    <section class="hero-slider-section cinematic-hero cinematic-hero-fallback" th:if="${featuredMovies == null || featuredMovies.isEmpty()}">
         <div class="hero-slider-container">
             <div class="hero-content">
                 <div class="hero-tag">Welcome to CINEORA</div>

@@ -343,14 +343,14 @@ public class Movie {
     }
 
     public String getAgeRatingDescription() {
-        if (ageRating == null) return "Phù hợp cho mọi lứa tuổi";
+        if (ageRating == null) return "Suitable for all audiences";
         return switch (ageRating.toUpperCase().trim()) {
-            case "P" -> "P - Phim dành cho mọi đối tượng khán giả";
-            case "K" -> "K - Phim dành cho khán giả dưới 13 tuổi có người bảo hộ";
-            case "T13", "C13", "13+" -> "T13 - Phim cấm phổ biến tới khán giả dưới 13 tuổi";
-            case "T16", "C16", "16+" -> "T16 - Phim cấm phổ biến tới khán giả dưới 16 tuổi";
-            case "T18", "C18", "18+" -> "T18 - Phim cấm phổ biến tới khán giả dưới 18 tuổi";
-            default -> "Phim phổ biến cho khán giả";
+            case "P" -> "P — Suitable for all audiences";
+            case "K" -> "K — Viewers under 13 require parental guidance";
+            case "T13", "C13", "13+" -> "T13 — Not suitable for viewers under 13";
+            case "T16", "C16", "16+" -> "T16 — Not suitable for viewers under 16";
+            case "T18", "C18", "18+" -> "T18 — Not suitable for viewers under 18";
+            default -> "General audience release";
         };
     }
 

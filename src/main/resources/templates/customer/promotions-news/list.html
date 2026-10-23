@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/cinema-header-footer :: metaHead('Khuyến Mãi & Tin Tức Điện Ảnh')}">
-    <title>CineVerse - Khuyến Mãi &amp; Tin Tức</title>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Promotions & News')}">
+    <title>Promotions &amp; News | CINEORA</title>
 </head>
-<body>
+<body class="cineora-catalog-page">
 
 <!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
@@ -12,12 +12,12 @@
     <!-- Breadcrumb & Title -->
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
-            <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
+            <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
             <span> / </span>
-            <span style="color:var(--primary-light);">Ưu đãi &amp; Tin tức</span>
+            <span style="color:var(--primary-light);">Promotions &amp; News</span>
         </div>
-        <h1 style="font-size:2.5rem;font-weight:900;">Khuyến Mãi &amp; Tin Tức Điện Ảnh</h1>
-        <p style="color:var(--text-secondary);margin-top:6px;">Cập nhật những ưu đãi vé xem phim hấp dẫn nhất, mã voucher giảm giá và tin tức sự kiện điện ảnh tại CineVerse.</p>
+        <h1 style="font-size:2.5rem;font-weight:900;">Promotions &amp; Cinema News</h1>
+        <p style="color:var(--text-secondary);margin-top:6px;">Discover CINEORA offers, voucher updates, cinema news, and upcoming events.</p>
     </div>
 
     <!-- Tab navigation -->
@@ -26,17 +26,17 @@
             <a th:href="@{/promotions-news(tab='all')}"
                class="filter-tab"
                th:classappend="${activeTab == 'all' || activeTab == null} ? 'active'">
-                Tất Cả
+                All
             </a>
             <a th:href="@{/promotions-news(tab='promotions')}"
                class="filter-tab"
                th:classappend="${activeTab == 'promotions'} ? 'active'">
-                🎁 Khuyến Mãi &amp; Voucher
+                🎁 Promotions &amp; Vouchers
             </a>
             <a th:href="@{/promotions-news(tab='news')}"
                class="filter-tab"
                th:classappend="${activeTab == 'news'} ? 'active'">
-                📰 Tin Tức &amp; Sự Kiện
+                📰 News &amp; Events
             </a>
         </div>
     </div>
@@ -47,9 +47,9 @@
     <section th:if="${activeTab == 'all' || activeTab == 'promotions'}" style="margin-bottom:4rem;">
         <div class="section-header">
             <div class="section-header-left">
-                <span class="section-eyebrow">Dành Riêng Cho Khách Hàng</span>
+                <span class="section-eyebrow">Exclusive Customer Offers</span>
                 <h2 class="section-title">
-                    <span class="section-title-icon">🎁</span> Các Chương Trình Khuyến Mãi
+                    <span class="section-title-icon">🎁</span> Current Promotions
                 </h2>
             </div>
         </div>
@@ -59,32 +59,32 @@
                 <div class="promo-banner-wrap">
                     <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img"
                          onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">Giảm 20%</span>
+                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">20% Off</span>
                 </div>
                 <div class="promo-body">
                     <h3 class="promo-title">
-                        <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" th:text="${promo.name}">Tên Khuyến Mãi</a>
+                        <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" th:text="${promo.name}">Promotion</a>
                     </h3>
                     <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                        <span>📅 Thời hạn:</span>
+                        <span>📅 Valid:</span>
                         <strong th:text="${promo.validityRange}">18/10/2026 - 31/12/2026</strong>
                     </div>
-                    <p class="promo-desc" th:text="${promo.description}">Nội dung tóm tắt chương trình khuyến mãi và điều kiện áp dụng.</p>
+                    <p class="promo-desc" th:text="${promo.description}">Promotion details and applicable terms.</p>
 
                     <div class="promo-voucher-box">
                         <div>
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Mã Ưu Đãi:</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Voucher Code:</div>
                             <span class="voucher-code-pill" th:text="${promo.primaryVoucherCode}">WELCOME20</span>
                         </div>
                         <button type="button" class="btn-copy-code"
                                 th:attr="onclick=|copyVoucherCode('${promo.primaryVoucherCode}')|">
-                            Sao Chép Mã
+                            Copy Code
                         </button>
                     </div>
 
                     <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;">
                         <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" class="section-link" style="font-size:0.85rem;">
-                            <span>Chi tiết thể lệ</span>
+                            <span>View Terms</span>
                             <span>➔</span>
                         </a>
                     </div>
@@ -94,7 +94,7 @@
 
         <div th:if="${promotions == null || promotions.isEmpty()}"
              style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">Hiện tại chưa có chương trình khuyến mãi mới. Vui lòng quay lại sau!</p>
+            <p style="color:var(--text-muted);">There are no new promotions at the moment. Please check back later.</p>
         </div>
     </section>
 
@@ -104,9 +104,9 @@
     <section th:if="${activeTab == 'all' || activeTab == 'news'}" style="margin-bottom:4rem;">
         <div class="section-header">
             <div class="section-header-left">
-                <span class="section-eyebrow">Thế Giới Điện Ảnh</span>
+                <span class="section-eyebrow">The World of Cinema</span>
                 <h2 class="section-title">
-                    <span class="section-title-icon">📰</span> Tin Tức Điện Ảnh &amp; Sự Kiện
+                    <span class="section-title-icon">📰</span> Cinema News &amp; Events
                 </h2>
             </div>
         </div>
@@ -119,16 +119,16 @@
                 </div>
                 <div class="news-body">
                     <div class="news-meta">
-                        <span class="news-category-tag" th:text="${news.category}">Tin Điện Ảnh</span>
+                        <span class="news-category-tag" th:text="${news.category}">Cinema News</span>
                         <span>·</span>
                         <span th:text="${news.formattedPublishedDate}">18/10/2026</span>
                     </div>
                     <h3 class="news-title">
-                        <a th:href="@{/news/{id}(id=${news.newsId})}" th:text="${news.title}">Tiêu đề bài viết</a>
+                        <a th:href="@{/news/{id}(id=${news.newsId})}" th:text="${news.title}">Article Title</a>
                     </h3>
-                    <p class="news-excerpt" th:text="${news.getExcerpt(140)}">Tóm tắt nội dung bài viết tin tức hoặc sự kiện đang diễn ra tại cụm rạp...</p>
+                    <p class="news-excerpt" th:text="${news.getExcerpt(140)}">The latest cinema news and events from CINEORA.</p>
                     <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
-                        <span>Đọc tiếp</span>
+                        <span>Read More</span>
                         <span>➔</span>
                     </a>
                 </div>
@@ -137,7 +137,7 @@
 
         <div th:if="${newsList == null || newsList.isEmpty()}"
              style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
-            <p style="color:var(--text-muted);">Hiện tại chưa có tin tức nào mới. Vui lòng quay lại sau!</p>
+            <p style="color:var(--text-muted);">There is no new cinema news at the moment. Please check back later.</p>
         </div>
     </section>
 </main>

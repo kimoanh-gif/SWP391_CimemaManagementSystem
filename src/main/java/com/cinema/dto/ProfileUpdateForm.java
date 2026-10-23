@@ -20,16 +20,12 @@ public class ProfileUpdateForm {
     @Past(message = "Date of birth must be in the past.")
     private LocalDate dateOfBirth;
 
-    @Size(max = 255, message = "Address must not exceed 255 characters.")
-    private String address;
-
     public static ProfileUpdateForm from(CustomerProfile profile) {
         ProfileUpdateForm form = new ProfileUpdateForm();
         form.setFullName(profile.getFullName());
         // Retained for server-side compatibility; the edit screen never submits this locked field.
         form.setPhone(null);
         form.setDateOfBirth(profile.getDateOfBirth());
-        form.setAddress(profile.getAddress());
         return form;
     }
 
@@ -52,11 +48,4 @@ public class ProfileUpdateForm {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address == null || address.isBlank() ? null : address.trim();
-    }
 }
