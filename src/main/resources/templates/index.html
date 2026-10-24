@@ -28,7 +28,7 @@
                     </div>
                     <p class="hero-description" th:text="${hero.description}">A spectacular cinematic experience.</p>
                     <div class="hero-actions">
-                        <a th:href="@{/movies/{id}(id=${hero.movieId})}" class="btn-primary"><span>View Movie Details</span></a>
+                        <a th:href="@{/customer/booking(movieId=${hero.movieId})}" class="btn-primary"><span>Book Tickets</span></a>
                         <button th:if="${hero.trailerUrl != null && !hero.trailerUrl.isEmpty()}" type="button"
                                 class="btn-secondary" th:attr="onclick=|openTrailer('${hero.trailerUrl}')|">
                             <span>▶ Watch Trailer</span>
@@ -139,7 +139,7 @@
                                 type="button"
                                 class="btn-play-trailer"
                                 th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                                title="Xem Trailer">
+                                title="Watch trailer">
                             ▶
                         </button>
                         <a th:if="${movie.trailerUrl == null || movie.trailerUrl.isEmpty()}"
@@ -199,7 +199,7 @@
                                 type="button"
                                 class="btn-play-trailer"
                                 th:attr="onclick=|openTrailer('${movie.trailerUrl}')|"
-                                title="Xem Trailer">
+                                title="Watch trailer">
                             ▶
                         </button>
                     </div>
