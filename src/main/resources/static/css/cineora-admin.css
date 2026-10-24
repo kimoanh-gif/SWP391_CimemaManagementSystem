@@ -45,6 +45,18 @@ body { background: var(--page-bg); color: var(--text-primary); }
 .sidebar-user-avatar { background: linear-gradient(135deg,#D92332,#B3001F); }
 .sidebar-toggle { background: var(--cineora-red); box-shadow: 0 3px 10px rgba(217,35,50,.2); }
 .sidebar-overlay, .modal-overlay, .confirm-overlay { background: rgba(40,32,42,.42); }
+/* Center dialogs in the viewport, independently of the sidebar and dialog width. */
+.modal-overlay, .confirm-overlay {
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.modal-overlay > .modal, .confirm-overlay > .confirm-box {
+  max-width: 100%;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
 .admin-topbar { background: rgba(255,248,240,.96); box-shadow: 0 1px 0 rgba(69,33,38,.03); }
 .btn-primary { background: var(--cineora-red); border-color: var(--cineora-red); box-shadow: 0 3px 10px rgba(217,35,50,.15); }
 .btn-primary:hover { background: #B3001F; border-color: #B3001F; filter: none; box-shadow: 0 5px 14px rgba(217,35,50,.2); }
