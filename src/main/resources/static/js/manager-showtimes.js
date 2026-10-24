@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formMovieId").value = "";
             document.getElementById("formRoomId").value = "";
             document.getElementById("formBaseTicketPrice").value = "85000";
-            document.getElementById("modalTitle").innerText = "Tạo Lịch Chiếu Mới (BR-07, BR-08, BR-09)";
+            document.getElementById("modalTitle").innerText = "Create new showtime";
             if (endTimeDisplay) endTimeDisplay.innerText = "--:--";
 
             // Default time to tomorrow at 10:00 AM
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const end = new Date(start.getTime() + duration * 60000);
         const endStr = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
-            " (" + duration + " phút + 15 phút dọn phòng)";
+            " (" + duration + " min + 15 min cleaning)";
         endTimeDisplay.innerText = endStr;
     }
 
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formRoomId").value = roomId;
             document.getElementById("formStartTime").value = startTime;
             document.getElementById("formBaseTicketPrice").value = price;
-            document.getElementById("modalTitle").innerText = "Chỉnh Sửa Suất Chiếu #" + id;
+            document.getElementById("modalTitle").innerText = "Edit showtime #" + id;
 
             updateEndTimePreview();
             modal.classList.add("open");

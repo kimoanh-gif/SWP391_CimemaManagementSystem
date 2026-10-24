@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Phim &amp; Thể loại – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>CINEORA — Movie Management</title>
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         /* Movie-specific extras */
         .badge-genre { background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-right: 3px; display: inline-block; }
@@ -54,29 +52,28 @@
         .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
     </style>
 </head>
-<body>
+<body class="cm-body">
 
 <!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='movies')}"></div>
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Phim & Thể loại')}"></div>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='movies')}"></aside>
 
 <!-- Main -->
-<div class="main-wrapper">
-<div class="page-shell">
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<div class="cm-main">
 
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
             <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Vận hành</a> <span>›</span> Phim &amp; Thể loại
+                <a th:href="@{/manager/dashboard}">Overview</a> <span>/</span> Movie Management
             </div>
-            <h1 class="page-title">Quản lý phim &amp; thể loại</h1>
-            <p class="page-subtitle">Quản lý danh mục phim, kiểm duyệt độ tuổi phát hành và phân bổ bản quyền tại cụm rạp.</p>
+            <h1 class="page-title">Movie Management</h1>
+            <p class="page-subtitle">Manage movie information, classification and release status in the CINEORA cinema system.</p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/manager/genres}" class="btn btn-secondary">🏷 Quản lý thể loại</a>
-            <button type="button" class="btn btn-primary" onclick="openAddMovieModal()">+ Thêm phim mới</button>
+            <a th:href="@{/manager/genres}" class="btn btn-secondary"><span class="material-symbols-outlined" style="font-size:18px">category</span> Genre Management</a>
+            <button type="button" class="btn btn-primary" onclick="openAddMovieModal()"><span class="material-symbols-outlined" style="font-size:18px">add</span> Add new movie</button>
         </div>
     </div>
 
@@ -95,24 +92,24 @@
     <!-- Stats -->
     <div class="stats-row">
         <div class="stat-card blue">
-            <div class="stat-label">Phim đang chiếu</div>
+            <div class="stat-label">Now Showing</div>
             <div class="stat-value" th:text="${nowShowingCount}">0</div>
-            <span class="stat-icon">▶</span>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">play_circle</span></span>
         </div>
         <div class="stat-card orange">
-            <div class="stat-label">Phim sắp chiếu</div>
+            <div class="stat-label">Coming Soon</div>
             <div class="stat-value" th:text="${upcomingCount}">0</div>
-            <span class="stat-icon">⏳</span>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">upcoming</span></span>
         </div>
         <div class="stat-card gray" style="--accent:#6B7280;">
-            <div class="stat-label">Đã ngừng chiếu</div>
+            <div class="stat-label">Ended / Archived</div>
             <div class="stat-value" th:text="${archivedCount}">0</div>
-            <span class="stat-icon">📁</span>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">inventory_2</span></span>
         </div>
         <div class="stat-card green">
-            <div class="stat-label">Tổng số phim</div>
+            <div class="stat-label">All movies</div>
             <div class="stat-value" th:text="${totalCount}">0</div>
-            <span class="stat-icon">🎬</span>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">movie</span></span>
         </div>
     </div>
 
@@ -120,15 +117,15 @@
     <div class="toolbar">
         <form class="toolbar-form" method="get" th:action="@{/manager/movies}">
             <div class="toolbar-search">
-                <span class="toolbar-search-icon">🔍</span>
-                <input type="text" name="keyword" placeholder="Tìm kiếm tên phim, đạo diễn, diễn viên..." th:value="${keyword}">
+                <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
+                <input type="text" name="keyword" placeholder="Search by title, director, cast..." th:value="${keyword}">
             </div>
             <select name="genreId" onchange="this.form.submit()">
-                <option value="0" th:selected="${selectedGenreId == 0}">Tất cả thể loại</option>
+                <option value="0" th:selected="${selectedGenreId == 0}">All genres</option>
                 <option th:each="g : ${allGenres}" th:value="${g.genreId}" th:text="${g.name}" th:selected="${g.genreId == selectedGenreId}"></option>
             </select>
             <select name="ageRating" onchange="this.form.submit()">
-                <option value="ALL" th:selected="${selectedAgeRating == 'ALL'}">Độ tuổi: Tất cả</option>
+                <option value="ALL" th:selected="${selectedAgeRating == 'ALL'}">Age rating: All</option>
                 <option value="P"   th:selected="${selectedAgeRating == 'P'}">P</option>
                 <option value="K"   th:selected="${selectedAgeRating == 'K'}">K</option>
                 <option value="T13" th:selected="${selectedAgeRating == 'T13'}">T13</option>
@@ -136,14 +133,14 @@
                 <option value="T18" th:selected="${selectedAgeRating == 'T18'}">T18</option>
             </select>
             <select name="status" onchange="this.form.submit()">
-                <option value="ALL"         th:selected="${selectedStatus == 'ALL'}">Trạng thái: Tất cả</option>
-                <option value="Upcoming"    th:selected="${selectedStatus == 'Upcoming'}">Sắp chiếu</option>
-                <option value="Now Showing" th:selected="${selectedStatus == 'Now Showing'}">Đang chiếu</option>
-                <option value="Ended"       th:selected="${selectedStatus == 'Ended'}">Kết thúc</option>
-                <option value="Archived"    th:selected="${selectedStatus == 'Archived'}">Lưu trữ</option>
+                <option value="ALL"         th:selected="${selectedStatus == 'ALL'}">All statuses</option>
+                <option value="Upcoming"    th:selected="${selectedStatus == 'Upcoming'}">Coming Soon</option>
+                <option value="Now Showing" th:selected="${selectedStatus == 'Now Showing'}">Now Showing</option>
+                <option value="Ended"       th:selected="${selectedStatus == 'Ended'}">Ended</option>
+                <option value="Archived"    th:selected="${selectedStatus == 'Archived'}">Archived</option>
             </select>
-            <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
-            <a th:href="@{/manager/movies}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            <a th:href="@{/manager/movies}" class="btn btn-secondary btn-sm">Clear filters</a>
         </form>
     </div>
 
@@ -151,30 +148,30 @@
     <div class="table-wrapper">
         <div class="table-header">
             <span class="table-header-title">
-                Danh sách phim hiện hữu
-                <span class="badge badge-blue" style="margin-left:6px;" th:text="${totalCount} + ' phim'">0 phim</span>
+                Movie list
+                <span class="badge badge-blue" style="margin-left:6px;" th:text="${totalCount} + ' titles'">0 titles</span>
             </span>
         </div>
 
         <!-- Empty State -->
         <div class="empty-state" th:if="${movies == null or movies.isEmpty()}">
-            <div class="empty-state-icon">🎬</div>
-            <h3>Không tìm thấy phim phù hợp</h3>
-            <p>Thử thay đổi bộ lọc hoặc thêm phim mới.</p>
-            <button type="button" class="btn btn-primary" onclick="openAddMovieModal()" style="margin-top:12px;">+ Thêm Phim Mới</button>
+            <div class="empty-state-icon"><span class="material-symbols-outlined" style="font-size:48px">movie</span></div>
+            <h3>No matching movies found</h3>
+            <p>Try changing the filters or add a new movie.</p>
+            <button type="button" class="btn btn-primary" onclick="openAddMovieModal()" style="margin-top:12px;">+ Add new movie</button>
         </div>
 
         <table class="data-table" th:if="${movies != null and !movies.isEmpty()}">
             <thead>
                 <tr>
-                    <th style="width:280px">Phim &amp; Tên gốc</th>
-                    <th>Thể loại</th>
-                    <th style="width:70px">Độ tuổi</th>
-                    <th style="width:95px">Thời lượng</th>
-                    <th style="width:105px">Khởi chiếu</th>
-                    <th style="width:120px">Trạng thái</th>
-                    <th style="width:80px;text-align:center">Suất chiếu</th>
-                    <th class="col-actions">Thao tác</th>
+                    <th style="width:280px">Movie title / Original title</th>
+                    <th>Genre</th>
+                    <th style="width:70px">Age rating</th>
+                    <th style="width:95px">Duration</th>
+                    <th style="width:105px">Release</th>
+                    <th style="width:120px">Lifecycle status</th>
+                    <th style="width:80px;text-align:center">Showtimes</th>
+                    <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -186,7 +183,7 @@
                             </div>
                             <div class="movie-poster" th:unless="${movie.poster != null and !movie.poster.trim().isEmpty()}">🎬</div>
                             <div class="movie-thumb-info">
-                                <span class="movie-thumb-title" th:text="${movie.title}">Tên phim</span>
+                                <span class="movie-thumb-title" th:text="${movie.title}">Movie title</span>
                                 <span class="movie-thumb-orig" th:if="${movie.originalTitle != null and !movie.originalTitle.isEmpty()}" th:text="${movie.originalTitle}"></span>
                             </div>
                         </div>
@@ -195,29 +192,29 @@
                         <span th:if="${movie.genres != null and !movie.genres.isEmpty()}">
                             <span class="badge-genre" th:each="g : ${movie.genres}" th:text="${g.name}">Action</span>
                         </span>
-                        <span th:unless="${movie.genres != null and !movie.genres.isEmpty()}" style="color:var(--text-400);font-size:12px;">Chưa phân loại</span>
+                        <span th:unless="${movie.genres != null and !movie.genres.isEmpty()}" style="color:var(--text-400);font-size:12px;">Unclassified</span>
                     </td>
                     <td>
                         <span class="badge-rating" th:text="${movie.ageRating != null ? movie.ageRating : 'P'}"
                               th:classappend="' ' + ${movie.ageRating}">P</span>
                     </td>
-                    <td th:text="${movie.duration} + ' phút'">120 phút</td>
+                    <td th:text="${movie.duration} + ' min'">120 min</td>
                     <td th:text="${movie.releaseDate != null ? #temporals.format(movie.releaseDate, 'dd/MM/yy') : '—'}">—</td>
                     <td>
-                        <span class="badge-upcoming"    th:if="${movie.status == 'Upcoming'}">Sắp chiếu</span>
-                        <span class="badge-showing"     th:if="${movie.status == 'Now Showing'}">Đang chiếu</span>
-                        <span class="badge-ended"       th:if="${movie.status == 'Ended'}">Kết thúc</span>
-                        <span class="badge-archived"    th:if="${movie.status == 'Archived'}">Lưu trữ</span>
+                        <span class="badge-upcoming"    th:if="${movie.status == 'Upcoming'}">Coming Soon</span>
+                        <span class="badge-showing"     th:if="${movie.status == 'Now Showing'}">Now Showing</span>
+                        <span class="badge-ended"       th:if="${movie.status == 'Ended'}">Ended</span>
+                        <span class="badge-archived"    th:if="${movie.status == 'Archived'}">Archived</span>
                     </td>
                     <td style="text-align:center;">
                         <a th:href="@{/manager/showtimes(movieId=${movie.id})}"
                            style="color:var(--primary);text-decoration:none;font-weight:700;"
-                           th:title="'Xem các suất chiếu của phim ' + ${movie.title}">
-                            <span th:text="${movie.showtimeCount}">0</span> suất
+                           th:title="'View showtimes of ' + ${movie.title}">
+                            <span th:text="${movie.showtimeCount}">0</span> shows
                         </a>
                     </td>
                     <td class="col-actions">
-                        <button type="button" class="action-btn action-btn-view" title="Chi tiết"
+                        <button type="button" class="action-btn action-btn-view" title="Details"
                                 onclick="openQuickViewModal(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}"
                                 th:data-original-title="${movie.originalTitle}"
@@ -228,7 +225,7 @@
                                 th:data-language="${movie.language}" th:data-description="${movie.description}"
                                 th:data-poster="${movie.poster}" th:data-trailer="${movie.trailer}"
                                 th:data-genres="${movie.genreNamesString}" th:data-showtimes="${movie.showtimeCount}">👁</button>
-                        <button type="button" class="action-btn action-btn-edit" title="Chỉnh sửa"
+                        <button type="button" class="action-btn action-btn-edit" title="Edit"
                                 onclick="openEditMovieModal(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}"
                                 th:data-original-title="${movie.originalTitle}"
@@ -238,12 +235,12 @@
                                 th:data-actors="${movie.actors}" th:data-language="${movie.language}"
                                 th:data-description="${movie.description}" th:data-poster="${movie.poster}"
                                 th:data-trailer="${movie.trailer}" th:data-genre-ids="${movie.genreIdsString}">✎</button>
-                        <button type="button" class="action-btn" title="Mở lại / Kích hoạt phim"
+                        <button type="button" class="action-btn" title="Reactivate movie"
                                 th:if="${movie.isArchived() or movie.status == 'Ended'}"
                                 style="color:#10B981;border-color:#10B981;background:#ECFDF5;"
                                 onclick="reactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}">▶</button>
-                        <button type="button" class="action-btn action-btn-del" title="Dừng hoạt động / Lưu trữ"
+                        <button type="button" class="action-btn action-btn-del" title="Deactivate / Archive"
                                 th:unless="${movie.isArchived() or movie.status == 'Ended'}"
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
@@ -255,7 +252,7 @@
         <!-- Pagination -->
         <div class="pagination-row" th:if="${movies != null and !movies.isEmpty()}">
             <span style="font-size: 13px; color: var(--text-500);">
-                Hiển thị 1 – <span th:text="${#lists.size(movies)}">5</span> trên <span th:text="${filteredCount}">5</span> phim phù hợp (Tổng hệ thống: <span th:text="${totalCount}">5</span> phim)
+                Showing 1 – <span th:text="${#lists.size(movies)}">5</span> of <span th:text="${filteredCount}">5</span> matching movies (system total: <span th:text="${totalCount}">5</span>)
             </span>
             <div class="pagination">
                 <button type="button" class="page-btn" disabled>&lsaquo;</button>
@@ -274,7 +271,7 @@
 <div class="modal-backdrop" id="movieModalBackdrop">
     <div class="modal">
         <div class="modal-header">
-            <h2 id="movieModalTitle">Thêm Phim Mới</h2>
+            <h2 id="movieModalTitle">Add new movie</h2>
             <button type="button" class="modal-close" onclick="closeMovieModal()">×</button>
         </div>
         <form id="movieModalForm" method="post" th:action="@{/manager/movies/save}">
@@ -283,95 +280,95 @@
                 <input type="hidden" id="movieId" name="id" value="">
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="movieTitle">Tên Phim <span class="required">*</span></label>
-                        <input type="text" id="movieTitle" name="title" class="form-control" placeholder="VD: Mai, Đào Phở và Piano" required maxlength="150">
+                        <label class="form-label" for="movieTitle">Movie title <span class="required">*</span></label>
+                        <input type="text" id="movieTitle" name="title" class="form-control" placeholder="e.g. Fantastic Aura: Eternity" required maxlength="150">
                         <div class="form-error" id="titleFeedback"></div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieOriginalTitle">Tên Gốc / Quốc Tế</label>
-                        <input type="text" id="movieOriginalTitle" name="originalTitle" class="form-control" placeholder="VD: Dune: Part Two" maxlength="150">
+                        <label class="form-label" for="movieOriginalTitle">Original / International title</label>
+                        <input type="text" id="movieOriginalTitle" name="originalTitle" class="form-control" placeholder="e.g. Dune: Part Two" maxlength="150">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Thể Loại Phim</label>
+                    <label class="form-label">Genres</label>
                     <div class="genre-checkbox-grid">
                         <label class="genre-checkbox-item" th:each="g : ${allGenres}">
                             <input type="checkbox" name="genreIds" th:value="${g.genreId}">
-                            <span th:text="${g.name}">Hành động</span>
+                            <span th:text="${g.name}">Action</span>
                         </label>
                     </div>
                 </div>
                 <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
                     <div class="form-group">
-                        <label class="form-label" for="movieDuration">Thời Lượng (phút) <span class="required">*</span></label>
+                        <label class="form-label" for="movieDuration">Duration (minutes) <span class="required">*</span></label>
                         <input type="number" id="movieDuration" name="duration" class="form-control" placeholder="120" required min="1" max="600" value="120">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieAgeRating">Độ Tuổi <span class="required">*</span></label>
+                        <label class="form-label" for="movieAgeRating">Age rating <span class="required">*</span></label>
                         <select id="movieAgeRating" name="ageRating" class="form-control">
-                            <option value="P">P – Phổ biến</option>
-                            <option value="K">K – Dưới 13 có kèm</option>
-                            <option value="T13">T13 – Từ 13 tuổi</option>
-                            <option value="T16">T16 – Từ 16 tuổi</option>
-                            <option value="T18">T18 – Từ 18 tuổi</option>
-                            <option value="C">C – Cấm phổ biến</option>
+                            <option value="P">P – General audiences</option>
+                            <option value="K">K – Under 13 with guardian</option>
+                            <option value="T13">T13 – Ages 13+</option>
+                            <option value="T16">T16 – Ages 16+</option>
+                            <option value="T18">T18 – Ages 18+</option>
+                            <option value="C">C – Banned from release</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieStatus">Trạng Thái <span class="required">*</span></label>
+                        <label class="form-label" for="movieStatus">Status <span class="required">*</span></label>
                         <select id="movieStatus" name="status" class="form-control">
-                            <option value="Upcoming">Sắp chiếu</option>
-                            <option value="Now Showing">Đang chiếu</option>
-                            <option value="Ended">Kết thúc</option>
-                            <option value="Archived">Lưu trữ</option>
+                            <option value="Upcoming">Coming Soon</option>
+                            <option value="Now Showing">Now Showing</option>
+                            <option value="Ended">Ended</option>
+                            <option value="Archived">Archived</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="movieReleaseDate">Ngày Khởi Chiếu</label>
+                        <label class="form-label" for="movieReleaseDate">Release date</label>
                         <input type="date" id="movieReleaseDate" name="releaseDate" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieEndDate">Ngày Kết Thúc Dự Kiến</label>
+                        <label class="form-label" for="movieEndDate">Expected end date</label>
                         <input type="date" id="movieEndDate" name="endDate" class="form-control">
                     </div>
                 </div>
                 <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
                     <div class="form-group">
-                        <label class="form-label" for="movieDirector">Đạo Diễn</label>
-                        <input type="text" id="movieDirector" name="director" class="form-control" placeholder="VD: Trấn Thành" maxlength="100">
+                        <label class="form-label" for="movieDirector">Director</label>
+                        <input type="text" id="movieDirector" name="director" class="form-control" placeholder="e.g. Denis Villeneuve" maxlength="100">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieActors">Diễn Viên</label>
-                        <input type="text" id="movieActors" name="actors" class="form-control" placeholder="VD: Phương Anh Đào" maxlength="255">
+                        <label class="form-label" for="movieActors">Cast</label>
+                        <input type="text" id="movieActors" name="actors" class="form-control" placeholder="e.g. Timothée Chalamet" maxlength="255">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieLanguage">Ngôn Ngữ</label>
-                        <input type="text" id="movieLanguage" name="language" class="form-control" placeholder="VD: Tiếng Việt" maxlength="50">
+                        <label class="form-label" for="movieLanguage">Language</label>
+                        <input type="text" id="movieLanguage" name="language" class="form-control" placeholder="e.g. English – Vietnamese subtitles" maxlength="50">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="moviePoster">URL Poster</label>
+                        <label class="form-label" for="moviePoster">Poster URL</label>
                         <input type="url" id="moviePoster" name="poster" class="form-control" placeholder="https://..." maxlength="500">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieTrailer">URL Trailer</label>
+                        <label class="form-label" for="movieTrailer">Trailer URL</label>
                         <input type="url" id="movieTrailer" name="trailer" class="form-control" placeholder="https://youtube.com/..." maxlength="500">
                     </div>
                 </div>
                 <div class="form-group">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <label class="form-label" for="movieDescription" style="margin:0">Tóm Tắt Nội Dung</label>
+                        <label class="form-label" for="movieDescription" style="margin:0">Synopsis</label>
                         <span class="char-counter" id="descCharCounter">0/1000</span>
                     </div>
-                    <textarea id="movieDescription" name="description" class="form-control" rows="3" placeholder="Nhập tóm tắt cốt truyện..." maxlength="1000"></textarea>
+                    <textarea id="movieDescription" name="description" class="form-control" rows="3" placeholder="Enter the plot summary..." maxlength="1000"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeMovieModal()">Hủy bỏ</button>
-                <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Lưu Thông Tin</button>
+                <button type="button" class="btn btn-secondary" onclick="closeMovieModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save movie</button>
             </div>
         </form>
     </div>
@@ -381,36 +378,36 @@
 <div class="modal-backdrop" id="movieDetailModalBackdrop">
     <div class="modal" style="max-width:620px">
         <div class="modal-header">
-            <h2>Chi Tiết Thông Tin Phim</h2>
+            <h2>Movie details</h2>
             <button type="button" class="modal-close" onclick="closeQuickViewModal()">×</button>
         </div>
         <div class="modal-body">
             <div class="quick-view-grid">
                 <div class="quick-view-poster" id="qvPoster">🎬</div>
                 <div class="quick-view-meta">
-                    <h3 id="qvTitle">Tên Phim</h3>
+                    <h3 id="qvTitle">Movie title</h3>
                     <p style="color:var(--text-400);font-size:13px;margin:0 0 8px" id="qvOriginalTitle"></p>
                     <div class="quick-view-badges">
                         <span class="badge-rating" id="qvAgeRating">P</span>
-                        <span class="badge-showing" id="qvDuration">120 phút</span>
+                        <span class="badge-showing" id="qvDuration">120 min</span>
                         <span class="badge-upcoming" id="qvStatus">Upcoming</span>
                     </div>
-                    <div class="meta-item"><b>Thể loại:</b> <span id="qvGenres">Chưa phân loại</span></div>
-                    <div class="meta-item"><b>Khởi chiếu:</b> <span id="qvReleaseDate">—</span></div>
-                    <div class="meta-item"><b>Đạo diễn:</b> <span id="qvDirector">—</span></div>
-                    <div class="meta-item"><b>Diễn viên:</b> <span id="qvActors">—</span></div>
-                    <div class="meta-item"><b>Ngôn ngữ:</b> <span id="qvLanguage">—</span></div>
-                    <div class="meta-item"><b>Suất chiếu:</b> <span id="qvShowtimes">0</span></div>
-                    <a id="qvTrailerLink" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;margin-top:8px">▶ Xem Trailer</a>
+                    <div class="meta-item"><b>Genres:</b> <span id="qvGenres">Unclassified</span></div>
+                    <div class="meta-item"><b>Release:</b> <span id="qvReleaseDate">—</span></div>
+                    <div class="meta-item"><b>Director:</b> <span id="qvDirector">—</span></div>
+                    <div class="meta-item"><b>Cast:</b> <span id="qvActors">—</span></div>
+                    <div class="meta-item"><b>Language:</b> <span id="qvLanguage">—</span></div>
+                    <div class="meta-item"><b>Showtimes:</b> <span id="qvShowtimes">0</span></div>
+                    <a id="qvTrailerLink" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;margin-top:8px">▶ Watch trailer</a>
                 </div>
             </div>
             <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-400);margin-bottom:6px">Nội dung tóm tắt</div>
-                <p id="qvDescription" style="font-size:13.5px;color:var(--text-700);line-height:1.6;white-space:pre-line;margin:0">Chưa có tóm tắt nội dung.</p>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-400);margin-bottom:6px">Synopsis</div>
+                <p id="qvDescription" style="font-size:13.5px;color:var(--text-700);line-height:1.6;white-space:pre-line;margin:0">No synopsis yet.</p>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeQuickViewModal()">Đóng</button>
+            <button type="button" class="btn btn-secondary" onclick="closeQuickViewModal()">Close</button>
         </div>
     </div>
 </div>

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Dịch Vụ Ẩm Thực &amp; Combo Bắp Nước (F&amp;B) – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>CINEORA — Food &amp; Beverage Management</title>
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         .fb-layout {
             display: grid;
@@ -65,7 +63,7 @@
             position: relative;
             width: 100%;
             height: 140px;
-            background: #E5E7EB;
+            background: #FFE5D9;
             overflow: hidden;
         }
         .fb-thumb {
@@ -88,8 +86,8 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .tag-bestseller { background: #2563EB; color: #fff; }
-        .tag-limited    { background: #DC2626; color: #fff; }
+        .tag-bestseller { background: #D92332; color: #fff; }
+        .tag-limited    { background: #BA1A1A; color: #fff; }
 
         .fb-body {
             padding: 14px 16px;
@@ -237,72 +235,69 @@
         }
     </style>
 </head>
-<body>
+<body class="cm-body">
 
 <!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='fb')}"></div>
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Bắp nước & F&B')}"></div>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='fb')}"></aside>
 
 <!-- Main Wrapper -->
-<div class="main-wrapper">
-<div class="page-shell">
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<div class="cm-main">
 
     <!-- Page Header (Image 2) -->
     <div class="page-header">
         <div class="page-header-left">
             <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Quản trị hệ thống</a>
-                <span>›</span>
-                <span>Dịch vụ ăn uống</span>
-                <span>›</span>
-                <span>Quản lý thực đơn &amp; Combo Bắp Nước (UC-32)</span>
+                <a th:href="@{/manager/dashboard}">Overview</a>
+                <span>/</span>
+                <span>Food &amp; Beverage Management</span>
             </div>
-            <h1 class="page-title">Quản Lý Dịch Vụ Ẩm Thực &amp; Combo Bắp Nước (F&amp;B)</h1>
-            <p class="page-subtitle">Quản lý danh mục bắp nước, combo phim độc quyền, định lượng nguyên liệu (BOM), thiết lập giá bán và giám sát kho thời gian thực.</p>
+            <h1 class="page-title">Food and Beverage Management</h1>
+            <p class="page-subtitle">Manage the catalog of popcorn, soft drinks, food combos and snacks served at the counter and pre-ordered online.</p>
         </div>
         <div class="page-header-actions">
-            <button id="btnCreateFB" class="btn btn-primary">+ Thêm món / Combo mới</button>
+            <button id="btnCreateFB" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:18px">add</span> Add new product</button>
         </div>
     </div>
 
     <!-- Messages -->
     <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
         <span class="alert-icon">✅</span>
-        <div class="alert-body" th:text="${successMessage}">Thao tác thành công.</div>
+        <div class="alert-body" th:text="${successMessage}">Saved successfully.</div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
     <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
         <span class="alert-icon">⚠️</span>
-        <div class="alert-body" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+        <div class="alert-body" th:text="${errorMessage}">Something went wrong.</div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
 
     <!-- 4 Stats Cards (Real Operational Data) -->
     <div class="stats-row">
-        <div class="stat-card blue">
-            <div class="stat-label">Tổng thực đơn F&amp;B</div>
+        <div class="stat-card">
+            <div class="stat-label">Total products</div>
             <div class="stat-value" th:text="${totalCount}">8</div>
-            <div class="stat-sub">Mặt hàng và gói combo niêm yết</div>
-            <span class="stat-icon">🍿</span>
+            <div class="stat-sub">Items and combos on the menu</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">fastfood</span></span>
         </div>
-        <div class="stat-card purple">
-            <div class="stat-label">Gói Combo Rạp</div>
+        <div class="stat-card">
+            <div class="stat-label">Combos</div>
             <div class="stat-value" th:text="${comboCount}">3</div>
-            <div class="stat-sub">Tiết kiệm và kèm vé xem phim</div>
-            <span class="stat-icon">🛒</span>
+            <div class="stat-sub">Value bundles</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">shopping_bag</span></span>
         </div>
-        <div class="stat-card green">
-            <div class="stat-label">Đang mở bán</div>
+        <div class="stat-card">
+            <div class="stat-label">On sale</div>
             <div class="stat-value" style="color:var(--success)" th:text="${activeCount}">6</div>
-            <div class="stat-sub">Khả dụng cho khách chọn</div>
-            <span class="stat-icon">⭐</span>
+            <div class="stat-sub">Available to customers</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">storefront</span></span>
         </div>
-        <div class="stat-card red">
-            <div class="stat-label">Tạm ngừng bán</div>
+        <div class="stat-card">
+            <div class="stat-label">Suspended</div>
             <div class="stat-value" style="color:var(--danger)" th:text="${inactiveCount}">2</div>
-            <div class="stat-sub">Đã khóa kinh doanh</div>
-            <span class="stat-icon">⏹</span>
+            <div class="stat-sub">Not available for sale</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">pause_circle</span></span>
         </div>
     </div>
 
@@ -313,27 +308,27 @@
         <div>
             <!-- Category Pills -->
             <div class="category-tabs">
-                <a th:href="@{/manager/fb}" class="cat-tab" th:classappend="${selectedCategory == 'ALL'} ? ' active' : ''">Tất cả món (<span th:text="${totalCount}">8</span>)</a>
-                <a th:href="@{/manager/fb(category='Combo')}" class="cat-tab" th:classappend="${selectedCategory == 'Combo'} ? ' active' : ''">Combo Rạp (<span th:text="${comboCount}">3</span>)</a>
-                <a th:href="@{/manager/fb(category='Food')}" class="cat-tab" th:classappend="${selectedCategory == 'Food'} ? ' active' : ''">Bắp rang bơ (<span th:text="${foodCount}">3</span>)</a>
-                <a th:href="@{/manager/fb(category='Drink')}" class="cat-tab" th:classappend="${selectedCategory == 'Drink'} ? ' active' : ''">Nước ngọt &amp; Ép (<span th:text="${drinkCount}">2</span>)</a>
-                <a th:href="@{/manager/fb(category='Snack')}" class="cat-tab" th:classappend="${selectedCategory == 'Snack'} ? ' active' : ''">Snack &amp; Hot Food</a>
+                <a th:href="@{/manager/fb}" class="cat-tab" th:classappend="${selectedCategory == 'ALL'} ? ' active' : ''">All items (<span th:text="${totalCount}">8</span>)</a>
+                <a th:href="@{/manager/fb(category='Combo')}" class="cat-tab" th:classappend="${selectedCategory == 'Combo'} ? ' active' : ''">Combos (<span th:text="${comboCount}">3</span>)</a>
+                <a th:href="@{/manager/fb(category='Food')}" class="cat-tab" th:classappend="${selectedCategory == 'Food'} ? ' active' : ''">Popcorn &amp; Food (<span th:text="${foodCount}">3</span>)</a>
+                <a th:href="@{/manager/fb(category='Drink')}" class="cat-tab" th:classappend="${selectedCategory == 'Drink'} ? ' active' : ''">Drinks (<span th:text="${drinkCount}">2</span>)</a>
+                <a th:href="@{/manager/fb(category='Snack')}" class="cat-tab" th:classappend="${selectedCategory == 'Snack'} ? ' active' : ''">Snacks</a>
             </div>
 
             <!-- Toolbar Filter -->
             <div class="toolbar">
                 <form th:action="@{/manager/fb}" method="get" class="toolbar-form">
                     <div class="toolbar-search">
-                        <span class="toolbar-search-icon">🔍</span>
-                        <input type="text" name="keyword" placeholder="Tìm tên món, mã SKU..." th:value="${keyword}">
+                        <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
+                        <input type="text" name="keyword" placeholder="Search by name or SKU..." th:value="${keyword}">
                     </div>
                     <select name="status" onchange="this.form.submit()">
-                        <option value="ALL">Tất cả trạng thái</option>
-                        <option value="Active" th:selected="${selectedStatus == 'Active'}">Đang Bán (Active)</option>
-                        <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Ngừng Bán (Inactive)</option>
+                        <option value="ALL">All statuses</option>
+                        <option value="Active" th:selected="${selectedStatus == 'Active'}">On sale</option>
+                        <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Suspended</option>
                     </select>
-                    <button type="submit" class="btn btn-primary btn-sm">🔍 Lọc</button>
-                    <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">⟲ Đặt lại</a>
+                    <button type="submit" class="btn btn-primary btn-sm">Filter data</button>
+                    <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">Reset</a>
                 </form>
             </div>
 
@@ -342,10 +337,10 @@
                 <div th:each="it : ${items}" class="fb-card">
                     <div class="fb-thumb-wrap">
                         <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
-                             alt="Ảnh sản phẩm" class="fb-thumb">
+                             alt="Product image" class="fb-thumb">
                         <div class="badge-tag-wrap">
                             <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">COMBO</span>
-                            <span class="tag-pill tag-limited" th:if="${it.combo and it.hasInactiveComponents()}" style="background:#DC2626;">THIẾU THÀNH PHẦN</span>
+                            <span class="tag-pill tag-limited" th:if="${it.combo and it.hasInactiveComponents()}" style="background:#BA1A1A;">MISSING ITEM</span>
                         </div>
                     </div>
 
@@ -353,26 +348,26 @@
                         <div class="fb-card-title-row">
                             <h3 class="fb-title" th:text="${it.itemName}">Combo Couple</h3>
                             <span class="badge" th:classappend="${it.active ? (it.combo and it.hasInactiveComponents() ? 'badge-orange' : 'badge-green') : 'badge-gray'}"
-                                  th:text="${!it.active ? 'TẠM KHÓA' : (it.combo and it.hasInactiveComponents() ? 'TẠM NGỪNG (THIẾU MÓN)' : 'ĐANG BÁN')}">ĐANG BÁN</span>
+                                  th:text="${!it.active ? 'SUSPENDED' : (it.combo and it.hasInactiveComponents() ? 'PAUSED (MISSING ITEM)' : 'ON SALE')}">ON SALE</span>
                         </div>
-                        <p class="fb-desc" th:text="${it.description}">1 Bắp lớn 2 vị + 2 Nước ngọt.</p>
+                        <p class="fb-desc" th:text="${it.description}">1 large popcorn + 2 soft drinks.</p>
 
                         <!-- Combo Components Breakdown -->
                         <div th:if="${it.combo and not #lists.isEmpty(it.comboComponents)}" style="font-size:11.5px;color:var(--text-600);background:var(--bg-body);padding:6px 10px;border-radius:6px;border:1px dashed var(--border);">
-                            <span style="font-weight:700;">Gồm: </span>
+                            <span style="font-weight:700;">Includes: </span>
                             <span th:each="comp, iter : ${it.comboComponents}">
                                 <span th:text="${comp.quantity} + 'x ' + ${comp.componentName}"></span>
-                                <span th:if="${comp.status == 'Inactive'}" style="color:var(--danger);font-weight:700;">(Tạm ngưng)</span>
+                                <span th:if="${comp.status == 'Inactive'}" style="color:var(--danger);font-weight:700;">(Suspended)</span>
                                 <span th:if="${!iter.last}"> + </span>
                             </span>
                         </div>
 
                         <div class="fb-price-row">
                             <div>
-                                <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">125.000 đ</div>
-                                <div class="fb-cost-price" th:text="'Vốn: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">Cost: 28.000 đ</div>
+                                <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">125.000 ₫</div>
+                                <div class="fb-cost-price" th:text="'Cost: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Cost: 28.000 ₫</div>
                             </div>
-                            <span class="margin-pill" th:text="'Lãi: ' + ${it.profitMarginPercent} + '%'">Lãi: 77.6%</span>
+                            <span class="margin-pill" th:text="'Margin: ' + ${it.profitMarginPercent} + '%'">Margin: 77.6%</span>
                         </div>
                     </div>
 
@@ -388,21 +383,21 @@
                                      th:data-desc="${it.description}"
                                      th:data-sellingprice="${it.sellingPrice}"
                                      th:data-costprice="${it.costPrice}"
-                                     th:data-image="${it.image}">✎ Sửa giá</button>
+                                     th:data-image="${it.image}">Edit</button>
 
                             <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
                                 <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
                                 <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;"
-                                        th:title="${it.active ? 'Tạm khóa / Ngừng bán món này' : 'Mở bán lại'}">
+                                        th:title="${it.active ? 'Suspend this item' : 'Put back on sale'}">
                                     <span th:if="${it.active}">⏹</span>
                                     <span th:unless="${it.active}">▶</span>
                                 </button>
                             </form>
 
                             <form th:action="@{'/manager/fb/' + ${it.itemId} + '/delete'}" method="post" style="display:inline;"
-                                  th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa món \\\'\' + ${it.itemName} + \'\\\' khỏi hệ thống?\');'">
-                                <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;color:#EF4444;border-color:#FCA5A5;background:#FEF2F2;"
-                                        title="Xóa món">
+                                  th:onsubmit="'return confirm(\'Are you sure you want to delete \\\'\' + ${it.itemName} + \'\\\' from the menu?\');'">
+                                <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                        title="Delete item">
                                     🗑
                                 </button>
                             </form>
@@ -413,10 +408,10 @@
 
             <!-- Empty State -->
             <div class="empty-state" th:if="${#lists.isEmpty(items)}">
-                <div class="empty-state-icon">🍿</div>
-                <h3>Không tìm thấy món ăn hoặc combo nào</h3>
-                <p>Bấm nút bên dưới để tạo mặt hàng ẩm thực hoặc gói combo mới.</p>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Thêm Món Mới</button>
+                <div class="empty-state-icon"><span class="material-symbols-outlined" style="font-size:48px">fastfood</span></div>
+                <h3>No products found</h3>
+                <p>Click the button below to add a food item or combo.</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Add new product</button>
             </div>
         </div>
 
@@ -425,22 +420,22 @@
 
             <div class="widget-card">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:16px;">📋</span>
-                    <h3 style="font-size:13.5px;font-weight:700;margin:0;">Quy Chuẩn Bán Hàng F&amp;B (UC-32)</h3>
+                    <span class="material-symbols-outlined" style="font-size:20px;color:var(--cm-red)">fact_check</span>
+                    <h3 style="font-size:13.5px;font-weight:700;margin:0;">F&amp;B sales rules (UC-32)</h3>
                 </div>
 
                 <div style="font-size:12px;color:var(--text-600);line-height:1.5;display:flex;flex-direction:column;gap:10px;">
                     <div style="border-left:3px solid var(--primary);padding-left:8px;">
-                        <strong style="color:var(--text-900);">1. Snapshot Giá Bán (BR-51):</strong>
-                        <div>Khi khách hoàn tất đặt vé và bắp nước, giá bán được lưu cố định (snapshot) vào hóa đơn. Việc điều chỉnh giá sau này không làm thay đổi doanh thu đơn cũ.</div>
+                        <strong style="color:var(--text-900);">1. Price snapshot (BR-51):</strong>
+                        <div>When a booking with F&amp;B is completed, the selling price is stored on the invoice. Later price changes do not affect past orders.</div>
                     </div>
                     <div style="border-left:3px solid var(--warning);padding-left:8px;">
-                        <strong style="color:var(--text-900);">2. Ràng Buộc Combo &amp; Thành Phần:</strong>
-                        <div>Combo chỉ được kết hợp từ các món đơn lẻ (Food, Drink, Snack). Khi một món thành phần bị ngừng bán, hệ thống tự động khóa bán gói combo liên quan để tránh phục vụ thiếu món.</div>
+                        <strong style="color:var(--text-900);">2. Combo components:</strong>
+                        <div>Combos are built only from single items (Food, Drink, Snack). When a component is suspended, related combos are paused automatically.</div>
                     </div>
                     <div style="border-left:3px solid var(--success);padding-left:8px;">
-                        <strong style="color:var(--text-900);">3. Phạm Vi Quản Lý Kho:</strong>
-                        <div>Hệ thống quản lý định lượng giá bán và trạng thái niêm yết menu rạp. Việc xuất nhập bao bắp, bình siro được quản lý thực tế theo ca tại quầy Bar POS.</div>
+                        <strong style="color:var(--text-900);">3. Inventory scope:</strong>
+                        <div>The system manages menu prices and listing status. Physical stock (popcorn bags, syrup) is handled per shift at the POS counter.</div>
                     </div>
                 </div>
             </div>
@@ -449,28 +444,28 @@
             <div class="widget-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:16px;">💡</span>
-                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">Gợi Ý Bán Kèm POS &amp; Kiosk</h3>
+                        <span class="material-symbols-outlined" style="font-size:20px;color:var(--cm-red)">lightbulb</span>
+                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">POS &amp; kiosk upsell suggestions</h3>
                     </div>
                     <span class="badge badge-blue" style="font-size:9.5px;">AI ENGINE</span>
                 </div>
 
                 <p style="font-size:11.5px;color:var(--text-500);margin:0;line-height:1.4;">
-                    Tự động xuất hiện popup gợi ý khi khách đặt vé trực tuyến hoặc tại quầy POS.
+                    Shows a suggestion popup when customers book online or at the POS counter.
                 </p>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
                     <div>
-                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Nâng Cấp Size Bắp (+15.000 đ)</div>
-                        <div style="font-size:11px;color:var(--text-400);">Gợi ý tăng từ size M lên L</div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Popcorn size upgrade (+15.000 ₫)</div>
+                        <div style="font-size:11px;color:var(--text-400);">Suggest upgrading from M to L</div>
                     </div>
                     <input type="checkbox" checked style="width:16px;height:16px;">
                 </div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
                     <div>
-                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Đổi Vị Bắp Phô Mai / Caramel</div>
-                        <div style="font-size:11px;color:var(--text-400);">Khuyến khích mix 2 vị (+10.000 đ)</div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Cheese / Caramel flavor mix</div>
+                        <div style="font-size:11px;color:var(--text-400);">Encourage a 2-flavor mix (+10.000 ₫)</div>
                     </div>
                     <input type="checkbox" checked style="width:16px;height:16px;">
                 </div>
@@ -487,59 +482,59 @@
 <div id="fbModal" class="modal-backdrop">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modalTitle">Thêm Món / Combo F&amp;B Mới</h3>
+            <h3 id="modalTitle">Add new product</h3>
             <button class="modal-close">&times;</button>
         </div>
         <form th:action="@{/manager/fb/save}" th:object="${fbForm}" method="post">
             <input type="hidden" id="formItemId" th:field="*{itemId}">
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Mã SKU <span class="req">*</span></label>
-                    <input type="text" id="formItemCode" th:field="*{itemCode}" class="form-control" placeholder="VD: CB-SOLO" required>
+                    <label class="form-label">SKU <span class="req">*</span></label>
+                    <input type="text" id="formItemCode" th:field="*{itemCode}" class="form-control" placeholder="e.g. CB-SOLO" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phân Loại <span class="req">*</span></label>
+                    <label class="form-label">Category <span class="req">*</span></label>
                     <select id="formCategory" th:field="*{category}" class="form-control">
-                        <option value="Combo">Combo Bắp Nước</option>
-                        <option value="Food">Bắp Rang Bơ / Đồ Ăn</option>
-                        <option value="Drink">Nước Uống / Nước Ngọt</option>
-                        <option value="Snack">Snack &amp; Ăn Vặt</option>
+                        <option value="Combo">Combo</option>
+                        <option value="Food">Popcorn / Food</option>
+                        <option value="Drink">Drinks</option>
+                        <option value="Snack">Snacks</option>
                     </select>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Tên Sản Phẩm / Combo <span class="req">*</span></label>
-                <input type="text" id="formItemName" th:field="*{itemName}" class="form-control" placeholder="VD: Combo Solo Bắp Nước" required>
+                <label class="form-label">Product / combo name <span class="req">*</span></label>
+                <input type="text" id="formItemName" th:field="*{itemName}" class="form-control" placeholder="e.g. Combo Solo Cine" required>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Giá Bán Lẻ (VND) <span class="req">*</span></label>
+                    <label class="form-label">Listed price (VND) <span class="req">*</span></label>
                     <input type="number" id="formSellingPrice" th:field="*{sellingPrice}" class="form-control" step="1000" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Giá Vốn COGS (VND) <span class="req">*</span></label>
+                    <label class="form-label">Cost price / COGS (VND) <span class="req">*</span></label>
                     <input type="number" id="formCostPrice" th:field="*{costPrice}" class="form-control" step="1000" min="0" required>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">URL Ảnh Minh Họa</label>
+                <label class="form-label">Image URL</label>
                 <input type="text" id="formImage" th:field="*{image}" class="form-control" placeholder="https://images.unsplash.com/...">
             </div>
             <div class="form-group">
-                <label class="form-label">Mô Tả / Thành Phần Món Ăn</label>
-                <textarea id="formDescription" th:field="*{description}" class="form-control" rows="2" placeholder="Chi tiết món ăn hoặc combo..."></textarea>
+                <label class="form-label">Description / components</label>
+                <textarea id="formDescription" th:field="*{description}" class="form-control" rows="2" placeholder="Details of the item or combo..."></textarea>
             </div>
             <!-- Dynamic Combo Component Selection -->
-            <div id="comboComponentsSection" class="form-group" style="display:none;background:#F9FAFB;padding:12px;border-radius:8px;border:1px solid var(--border);">
-                <label class="form-label" style="font-weight:700;margin-bottom:6px;">Thành phần tạo nên gói Combo (Chọn ít nhất 1 món):</label>
+            <div id="comboComponentsSection" class="form-group" style="display:none;background:#FFF8F0;padding:12px;border-radius:8px;border:1px solid var(--border);">
+                <label class="form-label" style="font-weight:700;margin-bottom:6px;">Combo components (select at least 1 item):</label>
                 <div style="display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;padding-right:4px;">
                     <div th:each="si : ${singleItems}" style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid var(--border);">
                         <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
                             <input type="checkbox" name="componentItemIds" th:value="${si.itemId}" class="combo-comp-cb">
-                            <span th:text="${si.itemName} + ' (' + ${si.category} + ')'">Bắp rang bơ</span>
+                            <span th:text="${si.itemName} + ' (' + ${si.category} + ')'">Butter popcorn</span>
                         </label>
                         <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:11.5px;color:var(--text-500);">Số lượng:</span>
+                            <span style="font-size:11.5px;color:var(--text-500);">Qty:</span>
                             <input type="number" name="componentQuantities" value="1" min="1" max="10" style="width:48px;padding:2px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;" class="combo-comp-qty">
                         </div>
                     </div>
@@ -547,12 +542,12 @@
             </div>
             <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
                 <button type="button" id="btnModalDeleteFB" class="btn btn-sm"
-                        style="display:none;background:#FEF2F2;color:#EF4444;border:1px solid #FCA5A5;padding:6px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
-                    🗑 Xóa món này
+                        style="display:none;background:#FFDAD6;color:#BA1A1A;border:1px solid #F5B5AE;padding:6px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
+                    Delete this item
                 </button>
                 <div style="display:flex;gap:10px;margin-left:auto;">
-                    <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Xác Nhận Lưu</button>
+                    <button type="button" class="btn btn-secondary btn-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save product</button>
                 </div>
             </div>
         </form>

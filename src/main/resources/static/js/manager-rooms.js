@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     openModal(data.data);
                 } else {
-                    alert('Lấy dữ liệu phòng thất bại');
+                    alert('Failed to load room data');
                 }
             } catch (err) { console.error(err); }
         });
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.deactivate-room-btn').forEach(btn => {
         btn.addEventListener('click', async e => {
             const id = btn.dataset.id;
-            if (!confirm('Bạn có chắc muốn đưa phòng vào bảo trì?')) return;
+            if (!confirm('Are you sure you want to put this room into maintenance?')) return;
             try {
                 const resp = await fetch(`/api/manager/rooms/deactivate/${id}`, { method: 'PATCH' });
                 const data = await resp.json();
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 successDiv.textContent = data.message;
                 setTimeout(() => location.reload(), 1200);
             } else {
-                errorDiv.textContent = data.message || 'Có lỗi xảy ra';
+                errorDiv.textContent = data.message || 'Something went wrong';
             }
         } catch (err) { console.error(err); errorDiv.textContent = 'Network error'; }
     });
