@@ -1,7 +1,9 @@
 package com.cinema.controller;
 
 import com.cinema.model.ManagerDashboardStats;
+import com.cinema.service.ManagerDashboardInsightsService;
 import com.cinema.service.ManagerDashboardService;
+import com.cinema.service.SessionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,12 @@ class ManagerDashboardControllerTest {
     @MockitoBean
     private ManagerDashboardService dashboardService;
 
+    @MockitoBean
+    private ManagerDashboardInsightsService insightsService;
+
+    @MockitoBean
+    private SessionService sessionService;
+
     @Test
     @DisplayName("GET /manager/dashboard: Should render dashboard view with aggregated stats")
     void testShowDashboard_Success() throws Exception {
@@ -48,6 +56,8 @@ class ManagerDashboardControllerTest {
                 .andExpect(model().attributeExists("todayShowtimes"))
                 .andExpect(model().attributeExists("activeMovies"))
                 .andExpect(model().attributeExists("rooms"))
+                .andExpect(model().attributeExists("weeklyRevenue"))
+                .andExpect(model().attributeExists("recentBookings"))
                 .andExpect(model().attribute("userRole", "MANAGER"));
     }
 

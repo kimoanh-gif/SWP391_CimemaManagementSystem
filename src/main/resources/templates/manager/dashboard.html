@@ -1,308 +1,263 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tổng quan – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
-    <style>
-        /* ---- Dashboard-specific extras ---- */
-        .nav-tiles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 14px;
-        }
-        .nav-tile {
-            background: var(--bg-white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            display: flex; align-items: flex-start; gap: 14px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.15s; cursor: pointer;
-            text-decoration: none; color: inherit;
-        }
-        .nav-tile:hover { box-shadow: var(--shadow-md); border-color: var(--primary); transform: translateY(-1px); }
-        .nav-tile.tile-disabled { opacity: 0.5; cursor: not-allowed; }
-        .nav-tile.tile-disabled:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
-        .tile-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .icon-red    { background: #FEE2E2; }
-        .icon-blue   { background: var(--primary-soft); }
-        .icon-green  { background: #D1FAE5; }
-        .icon-gold   { background: #FEF3C7; }
-        .icon-purple { background: #EDE9FE; }
-        .icon-muted  { background: #F3F4F6; color: #9CA3AF; }
-        .tile-info { flex: 1; min-width: 0; }
-        .tile-info h3 { font-size: 13px; font-weight: 700; color: var(--text-900); margin: 0 0 4px; }
-        .tile-info p  { font-size: 12px; color: var(--text-500); margin: 0; line-height: 1.5; }
-        .tile-arrow { font-size: 18px; color: var(--text-400); flex-shrink: 0; margin-top: 2px; }
-        .badge-coming-soon { background: #F3F4F6; color: #6B7280; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; }
-
-        .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .section-row h2 { font-size: 16px; font-weight: 700; margin: 0; }
-        .section-row p  { font-size: 12.5px; color: var(--text-500); margin: 2px 0 0; }
-
-        .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        @media (max-width: 900px) { .ops-grid { grid-template-columns: 1fr; } }
-
-        .room-status-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; }
-        .room-status-item:last-child { border-bottom: none; }
-        .room-status-info small { display: block; font-size: 11.5px; color: var(--text-400); margin-top: 2px; }
-        .room-status-actions { display: flex; align-items: center; gap: 8px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .status-dot.ready     { background: var(--success); }
-        .status-dot.screening { background: var(--primary); }
-        .status-dot.maint     { background: var(--warning); }
-
-        .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .ops-table th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-400); text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg-body); border-bottom: 1px solid var(--border); }
-        .ops-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-700); }
-        .ops-table tr:last-child td { border-bottom: none; }
-        .ops-table tbody tr:hover td { background: #FAFBFF; }
-        .time-code { background: var(--primary-light); color: var(--primary); padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 600; font-family: monospace; }
-    </style>
+    <title>CINEORA — Dashboard</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
 </head>
-<body>
+<body class="cm-body">
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='dashboard')}"></div>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='dashboard')}"></aside>
 
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Tổng quan')}"></div>
+<div class="cm-shell">
+    <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
 
-<!-- Main -->
-<div class="main-wrapper">
-<div class="page-shell">
+    <main class="cm-main">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="breadcrumb">Quản lý</div>
-            <h1 class="page-title">Bảng Điều Khiển Tổng Quan</h1>
-            <p class="page-subtitle">Giám sát vận hành: Phim, Phòng chiếu, Lịch chiếu, Bảng giá và Dịch vụ F&amp;B.</p>
-        </div>
-        <div class="page-header-actions">
-            <span class="badge badge-dot badge-green" th:text="${currentDateStr}">Hôm nay</span>
-            <span class="badge badge-blue">MANAGER</span>
-        </div>
-    </div>
-
-    <!-- KPI Stats Row -->
-    <div class="stats-row">
-        <a th:href="@{/manager/movies}" class="stat-card blue" style="text-decoration:none;">
-            <div class="stat-label">Phim Đang Chiếu</div>
-            <div class="stat-value" th:text="${stats.nowShowingMovies}">1</div>
-            <div class="stat-sub">Tổng <b th:text="${stats.totalMovies}">5</b> phim •
-                <span class="up" th:text="${stats.upcomingMovies} + ' sắp chiếu'">1 sắp chiếu</span>
+        <!-- Page title -->
+        <div class="cm-page-head">
+            <div class="cm-page-title">
+                <h1>Management Overview</h1>
+                <p>Monitor cinema activity and operational performance.</p>
             </div>
-            <span class="stat-icon">🎬</span>
-        </a>
-        <a th:href="@{/manager/rooms}" class="stat-card green" style="text-decoration:none;">
-            <div class="stat-label">Phòng Chiếu Hoạt Động</div>
-            <div class="stat-value" th:text="${stats.activeRooms}">3</div>
-            <div class="stat-sub">Tổng <b th:text="${stats.totalRooms}">5</b> phòng • Sẵn sàng đón khách</div>
-            <span class="stat-icon">🏟</span>
-        </a>
-        <a th:href="@{/manager/showtimes}" class="stat-card orange" style="text-decoration:none;">
-            <div class="stat-label">Suất Chiếu Hôm Nay</div>
-            <div class="stat-value" th:text="${stats.todayShowtimesCount}">0</div>
-            <div class="stat-sub">Khung giờ sáng, chiều &amp; giờ vàng tối</div>
-            <span class="stat-icon">🕐</span>
-        </a>
-        <a th:href="@{/manager/pricing}" class="stat-card purple" style="text-decoration:none;" title="Giá vé cơ sở trung bình tính từ bảng giá hiện hành">
-            <div class="stat-label">Giá Vé Cơ Sở TB (Bảng Giá)</div>
-            <div class="stat-value">
-                <span th:text="${#numbers.formatDecimal(stats.baseTicketPrice, 0, 'COMMA', 0, 'POINT')}">85.000</span>
-                <small>đ</small>
+            <div class="cm-status-pill">
+                <span class="cm-status-live">
+                    <span class="cm-dot cm-dot-pulse"></span>
+                    <span>Operating normally</span>
+                </span>
+                <span class="cm-vr"></span>
+                <span class="cm-status-date">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <strong th:text="${currentDateStr}">Thursday, 27/02/2025</strong>
+                </span>
             </div>
-            <div class="stat-sub">ATP: <b th:text="${#numbers.formatDecimal(stats.averageTicketPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">100.833đ</b> (Niêm yết)</div>
-            <span class="stat-icon">🏷</span>
-        </a>
-        <a th:href="@{/manager/fb}" class="stat-card red" style="text-decoration:none;">
-            <div class="stat-label">Dịch Vụ F&amp;B</div>
-            <div class="stat-value" th:text="${stats.activeFBItems}">8</div>
-            <div class="stat-sub" th:text="'Đang mở bán / tổng ' + ${stats.totalFBItems} + ' món'">Đang mở bán</div>
-            <span class="stat-icon">🍿</span>
-        </a>
-        <a th:href="@{/manager/seat-types}" class="stat-card blue" style="text-decoration:none;">
-            <div class="stat-label">Loại Ghế / Thể Loại</div>
-            <div class="stat-value" th:text="${stats.totalSeatTypes} + ' / ' + ${stats.totalGenres}">4 / 13</div>
-            <div class="stat-sub">Cấu hình loại ghế &amp; danh mục thể loại</div>
-            <span class="stat-icon">⚙️</span>
-        </a>
-    </div>
-
-    <!-- Real Transaction & Performance KPIs (P1-04) -->
-    <div class="card" style="margin-bottom:16px;">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-                <h2 class="card-title" style="margin:0;font-size:15px;">Hiệu Suất Vận Hành &amp; Doanh Thu Thực Tế</h2>
-                <small style="color:var(--text-400);">Dữ liệu tổng hợp từ các giao dịch vé và suất chiếu đã xác nhận</small>
-            </div>
-            <span th:if="${stats.hasTransactionData}" class="badge badge-green">Dữ liệu thực tế</span>
-            <span th:unless="${stats.hasTransactionData}" class="badge badge-gray">Chưa có dữ liệu</span>
         </div>
-        <div class="card-body">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;">
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Doanh Thu Vé Thực Tế</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
-                        <span th:text="${#numbers.formatDecimal(stats.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Chỉ tính đơn hàng 'Paid' / 'Confirmed'</small>
+
+        <!-- KPI cards -->
+        <section class="cm-kpi-grid" aria-label="Key figures">
+            <a class="cm-kpi" th:href="@{/manager/movies}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">Total movies</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">movie</span></span>
                 </div>
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Tỷ Lệ Lấp Đầy Ghế (Occupancy)</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
-                        <span th:text="${stats.seatOccupancyRate}">0.0</span>%
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData and stats.seatOccupancyRate != null}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Số vé bán / tổng ghế các suất chiếu</small>
+                <div>
+                    <div class="cm-kpi-value" th:text="${stats.totalMovies}">24</div>
+                    <div class="cm-kpi-sub"
+                         th:text="${stats.nowShowingMovies} + ' now showing • ' + ${stats.upcomingMovies} + ' coming soon'">8 now showing • 11 coming soon</div>
                 </div>
-                <div style="background:var(--bg-body);padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);">
-                    <div style="font-size:12px;color:var(--text-500);font-weight:600;text-transform:uppercase;">Số Vé Đã Đặt</div>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px;" th:if="${stats.hasTransactionData}">
-                        <span th:text="${stats.totalBookedTickets}">0</span> <small style="font-size:13px;font-weight:500;">vé</small>
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-400);margin-top:6px;" th:unless="${stats.hasTransactionData}">
-                        Chưa có dữ liệu
-                    </div>
-                    <small style="display:block;color:var(--text-400);margin-top:4px;">Vé qua quầy &amp; đặt trực tuyến</small>
+            </a>
+            <a class="cm-kpi" th:href="@{/manager/genres}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">Total genres</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">category</span></span>
                 </div>
-            </div>
-        </div>
-    </div>
+                <div>
+                    <div class="cm-kpi-value" th:text="${stats.totalGenres}">14</div>
+                    <div class="cm-kpi-sub" th:text="${stats.totalSeatTypes} + ' seat types configured'">Catalog standardized</div>
+                </div>
+            </a>
+            <a class="cm-kpi" th:href="@{/manager/showtimes}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">Today's showtimes</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">schedule</span></span>
+                </div>
+                <div>
+                    <div class="cm-kpi-value" th:text="${stats.todayShowtimesCount}">34</div>
+                    <div class="cm-kpi-sub cm-text-success"
+                         th:text="${stats.activeRooms} + ' of ' + ${stats.totalRooms} + ' rooms available'">5 of 5 rooms available</div>
+                </div>
+            </a>
+            <a class="cm-kpi" th:href="@{/manager/reports}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">Tickets sold</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">confirmation_number</span></span>
+                </div>
+                <div>
+                    <div class="cm-kpi-value" th:text="${#numbers.formatInteger(stats.totalBookedTickets, 1, 'COMMA')}">1,248</div>
+                    <div class="cm-kpi-sub" th:if="${stats.hasTransactionData and stats.seatOccupancyRate != null}"
+                         th:text="${stats.seatOccupancyRate} + '% seat occupancy'">62.4% seat occupancy</div>
+                    <div class="cm-kpi-sub" th:unless="${stats.hasTransactionData and stats.seatOccupancyRate != null}">No bookings yet</div>
+                </div>
+            </a>
+            <a class="cm-kpi" th:href="@{/manager/reports}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">Today's revenue</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">payments</span></span>
+                </div>
+                <div>
+                    <div class="cm-kpi-value cm-kpi-money"
+                         th:text="${#numbers.formatDecimal(todayRevenue, 1, 'POINT', 0, 'COMMA')} + ' ₫'">148.650.000 ₫</div>
+                    <div class="cm-kpi-sub"
+                         th:text="${#numbers.formatDecimal(weeklyRevenueTotal, 1, 'POINT', 0, 'COMMA')} + ' ₫ in 7 days'">924.500.000 ₫ in 7 days</div>
+                </div>
+            </a>
+            <a class="cm-kpi" th:href="@{/manager/fb}">
+                <div class="cm-kpi-top">
+                    <span class="cm-kpi-label">F&amp;B items on sale</span>
+                    <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">fastfood</span></span>
+                </div>
+                <div>
+                    <div class="cm-kpi-value" th:text="${stats.activeFBItems}">05</div>
+                    <div class="cm-kpi-sub" th:text="'of ' + ${stats.totalFBItems} + ' items in the menu'">of 8 items in the menu</div>
+                </div>
+            </a>
+        </section>
 
-    <!-- Quick Nav Tiles -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Chức Năng Quản Lý Hệ Thống</h2>
-            <span style="font-size:12.5px;color:var(--text-400)">Truy cập trực tiếp các phân hệ</span>
-        </div>
-        <div class="card-body">
-        <div class="nav-tiles-grid">
-            <a th:href="@{/manager/movies}" class="nav-tile">
-                <div class="tile-icon icon-red">🎬</div>
-                <div class="tile-info"><h3>Quản Lý Phim (Screen 54)</h3><p>Thêm phim mới, chỉnh sửa thông tin, định dạng và trạng thái phát hành (UC-26).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/genres}" class="nav-tile">
-                <div class="tile-icon icon-blue">🏷</div>
-                <div class="tile-info"><h3>Quản Lý Thể Loại (Screen 55)</h3><p>Thiết lập danh mục phân loại phim và trạng thái kích hoạt thể loại.</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/rooms}" class="nav-tile">
-                <div class="tile-icon icon-green">🏟</div>
-                <div class="tile-info"><h3>Quản Lý Phòng Chiếu (Screen 56)</h3><p>Cấu hình phòng Standard, IMAX, Dolby Atmos, sức chứa và kiểm soát vận hành.</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/seat-types}" class="nav-tile">
-                <div class="tile-icon icon-gold">💺</div>
-                <div class="tile-info"><h3>Quản Lý Loại Ghế (Screen 57)</h3><p>Định nghĩa ghế Standard, VIP, Couple và hệ số giá nhân vé (UC-28).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/seats}" class="nav-tile">
-                <div class="tile-icon icon-purple">🗺</div>
-                <div class="tile-info"><h3>Sơ Đồ Bố Trí Ghế (Screen 58)</h3><p>Ma trận ghế phòng chiếu, gán loại ghế và quản lý ghế bảo trì (UC-29).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/showtimes}" class="nav-tile">
-                <div class="tile-icon icon-red">🕐</div>
-                <div class="tile-info"><h3>Quản Lý Lịch Chiếu (Screen 59)</h3><p>Lập lịch suất chiếu, kiểm soát xung đột và thời gian đệm 15 phút (UC-30).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/pricing}" class="nav-tile">
-                <div class="tile-icon icon-gold">💰</div>
-                <div class="tile-info"><h3>Cấu Hình Giá Vé (Screen 60)</h3><p>Ma trận định giá theo khung giờ, loại ngày và phụ thu định dạng (UC-31).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <a th:href="@{/manager/fb}" class="nav-tile">
-                <div class="tile-icon icon-blue">🍿</div>
-                <div class="tile-info"><h3>Ẩm Thực &amp; Đồ Uống (Screen 61)</h3><p>Quản lý bắp nước, combo ưu đãi, giá bán và lịch sử hóa đơn (UC-32).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-            <div class="nav-tile tile-disabled">
-                <div class="tile-icon icon-muted">🎁</div>
-                <div class="tile-info"><h3>Khuyến Mãi &amp; Voucher</h3><p>Mã giảm giá và chương trình ưu đãi tri ân thành viên.</p></div>
-                <span class="badge-coming-soon">Sắp Ra Mắt</span>
-            </div>
-            <a th:href="@{/manager/reports}" class="nav-tile">
-                <div class="tile-icon icon-green">📈</div>
-                <div class="tile-info"><h3>Báo Cáo &amp; Xuất Doanh Thu (Screen 47 &amp; 49)</h3><p>Doanh thu phòng vé, bắp nước, lọc theo thời gian và xuất báo cáo Excel (UC-34).</p></div>
-                <span class="tile-arrow">›</span>
-            </a>
-        </div>
-        </div>
-    </div>
-
-    <!-- Live Operations: Showtimes + Rooms -->
-    <div class="ops-grid">
-        <!-- Today Showtimes -->
-        <div class="table-wrapper">
-            <div class="table-header">
-                <span class="table-header-title">Suất Chiếu Hoạt Động Hôm Nay</span>
-                <a th:href="@{/manager/showtimes}" class="btn btn-secondary btn-sm">Xem tất cả →</a>
-            </div>
-            <table class="ops-table">
-                <thead>
-                    <tr>
-                        <th>Phim</th>
-                        <th>Phòng</th>
-                        <th>Giờ Chiếu</th>
-                        <th>Trạng Thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${#lists.isEmpty(todayShowtimes)}">
-                        <td colspan="4" style="text-align:center;padding:24px;color:var(--text-400)">Hôm nay chưa có suất chiếu nào.</td>
-                    </tr>
-                    <tr th:each="st : ${todayShowtimes}">
-                        <td><strong th:text="${st.movieTitle}">Tên Phim</strong></td>
-                        <td><span class="badge badge-blue" th:text="${st.roomName}">Phòng 01</span></td>
-                        <td><span class="time-code" th:text="${#temporals.format(st.startTime, 'HH:mm')} + '–' + ${#temporals.format(st.endTime, 'HH:mm')}">14:00–16:30</span></td>
-                        <td><span class="badge" th:classappend="${st.status == 'Scheduled'} ? ' badge-green' : ' badge-gray'" th:text="${st.status}">Scheduled</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Room Status -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Tình Trạng Phòng Chiếu</span>
-                <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">Quản lý →</a>
-            </div>
-            <div class="card-body" style="padding-top:8px;padding-bottom:8px;">
-                <div th:if="${#lists.isEmpty(rooms)}" style="text-align:center;padding:24px;color:var(--text-400)">Chưa có phòng chiếu nào.</div>
-                <div th:each="r : ${rooms}" class="room-status-item">
-                    <div class="room-status-info" style="display:flex;align-items:center;gap:10px;">
-                        <span class="status-dot"
-                              th:classappend="${r.status == 'Ready'} ? ' ready' : (${r.status == 'Screening'} ? ' screening' : ' maint')"></span>
-                        <div>
-                            <strong th:text="${r.roomName}">Phòng 01</strong>
-                            <small th:text="${r.roomType + ' • ' + r.capacity + ' ghế'}">IMAX Laser • 320 ghế</small>
+        <!-- Revenue chart + today's showtimes -->
+        <section class="cm-split">
+            <div class="cm-card cm-revenue">
+                <div class="cm-card-head">
+                    <div class="cm-card-head-left">
+                        <h2>Revenue Overview</h2>
+                        <span class="cm-chip"
+                              th:text="${#numbers.formatDecimal(weeklyRevenueTotal, 1, 'POINT', 0, 'COMMA')} + ' ₫ / 7 days'">924.500.000 ₫ / week</span>
+                    </div>
+                    <a class="cm-link" th:href="@{/manager/reports}">Full report →</a>
+                </div>
+                <div class="cm-legend">
+                    <span><i class="cm-swatch cm-swatch-red"></i>Ticket revenue (<span th:text="${ticketSharePercent}">68</span>%)</span>
+                    <span><i class="cm-swatch cm-swatch-gold"></i>Popcorn &amp; Combos (<span th:text="${fbSharePercent}">32</span>%)</span>
+                </div>
+                <div class="cm-chart" role="img" aria-label="Ticket and F&amp;B revenue for the last 7 days">
+                    <div class="cm-chart-col" th:each="d : ${weeklyRevenue}" th:classappend="${d.today} ? ' is-today'"
+                         th:title="${d.label} + ': ' + ${#numbers.formatDecimal(d.totalRevenue, 1, 'POINT', 0, 'COMMA')} + ' ₫'">
+                        <div class="cm-chart-bars">
+                            <span class="cm-bar cm-bar-red" th:style="'height:' + ${d.ticketHeightPercent} + '%'"></span>
+                            <span class="cm-bar cm-bar-gold" th:style="'height:' + ${d.fbHeightPercent} + '%'"></span>
                         </div>
+                        <span class="cm-chart-label" th:text="${d.label}">Mon</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span class="badge"
-                              th:classappend="${r.status == 'Ready' or r.status == 'Screening'} ? ' badge-green' : ' badge-gray'"
-                              th:text="${r.status}">Ready</span>
-                        <a th:href="@{'/manager/seats?roomId=' + ${r.roomId}}" class="btn btn-secondary btn-sm btn-icon" title="Sơ đồ ghế">🗺</a>
+                </div>
+                <p class="cm-empty-note" th:if="${weeklyRevenueTotal.signum() == 0}">No paid bookings in the last 7 days yet.</p>
+            </div>
+
+            <div class="cm-card cm-showtimes">
+                <div class="cm-card-head cm-card-head-line">
+                    <h2>Today's showtimes</h2>
+                    <a class="cm-link" th:href="@{/manager/showtimes}">View all →</a>
+                </div>
+                <div class="cm-list">
+                    <div class="cm-empty" th:if="${#lists.isEmpty(todayShowtimes)}">
+                        <span class="material-symbols-outlined">event_busy</span>
+                        <span>No showtimes scheduled for today.</span>
+                    </div>
+                    <div class="cm-list-row" th:each="st, it : ${todayShowtimes}" th:if="${it.index < 6}">
+                        <div class="cm-list-main">
+                            <span class="cm-time" th:classappend="${it.first} ? ' is-next'"
+                                  th:text="${#temporals.format(st.startTime, 'HH:mm')}">16:30</span>
+                            <div class="cm-list-text">
+                                <div class="cm-list-title">
+                                    <span th:text="${st.movieTitle}">Fantastic Aura: Eternity</span>
+                                    <span class="cm-rating" th:if="${st.movieAgeRating != null}" th:text="${st.movieAgeRating}">T18</span>
+                                </div>
+                                <span class="cm-list-sub"
+                                      th:text="${st.roomName} + (${st.roomCapacity != null} ? ' • ' + ${st.roomCapacity} + ' seats' : '')">IMAX Studio • 220 seats</span>
+                            </div>
+                        </div>
+                        <span class="cm-badge"
+                              th:classappend="${st.status == 'Showing'} ? ' cm-badge-success' : (${st.status == 'Cancelled' or st.status == 'Stopped'} ? ' cm-badge-muted' : ' cm-badge-peach')"
+                              th:text="${st.status == 'Scheduled'} ? 'Selling tickets' : ${st.status}">Selling tickets</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-</div>
+        <!-- Recent bookings -->
+        <section class="cm-card">
+            <div class="cm-card-head">
+                <div>
+                    <h2 class="cm-h-lg">Recent bookings and transactions</h2>
+                    <span class="cm-caption">The latest paid online and counter bookings in the last 7 days.</span>
+                </div>
+                <div class="cm-actions">
+                    <a class="cm-btn-soft" th:href="@{/manager/reports(preset='last7days')}">
+                        <span class="material-symbols-outlined">filter_list</span><span>Filter data</span></a>
+                    <a class="cm-btn-soft" th:href="@{/api/manager/reports/export(preset='last7days')}">
+                        <span class="material-symbols-outlined">download</span><span>Export CSV</span></a>
+                </div>
+            </div>
+            <div class="cm-table-wrap">
+                <table class="cm-table">
+                    <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Movie</th>
+                        <th>Showtime &amp; Room</th>
+                        <th>Status</th>
+                        <th class="cm-right">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(recentBookings)}">
+                        <td colspan="6" class="cm-table-empty">No bookings in the last 7 days.</td>
+                    </tr>
+                    <tr th:each="b : ${recentBookings}">
+                        <td class="cm-code" th:text="'#' + ${b.bookingCode != null ? b.bookingCode : b.bookingId}">#BK-9842</td>
+                        <td>
+                            <div class="cm-cell-stack">
+                                <span class="cm-strong" th:text="${b.customerName}">Nguyễn Văn An</span>
+                                <span class="cm-caption" th:text="${b.phone}">0912***456</span>
+                            </div>
+                        </td>
+                        <td class="cm-truncate" th:text="${b.movieTitle}">Fantastic Aura</td>
+                        <td class="cm-muted"
+                            th:text="${#temporals.format(b.showtimeStartTime, 'HH:mm dd/MM')} + ' • ' + ${b.roomName}">16:30 • Laser Suite 01</td>
+                        <td>
+                            <span class="cm-badge"
+                                  th:classappend="${#strings.equalsIgnoreCase(b.bookingStatus, 'Completed')} ? ' cm-badge-gold' : ' cm-badge-success'">
+                                <span class="cm-dot"></span><span th:text="${b.bookingStatus}">Paid</span>
+                            </span>
+                        </td>
+                        <td class="cm-right cm-strong"
+                            th:text="${#numbers.formatDecimal(b.totalAmount, 1, 'POINT', 0, 'COMMA')} + ' ₫'">280.000 ₫</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Quick access -->
+        <section>
+            <h3 class="cm-section-title">Quick Admin Access</h3>
+            <div class="cm-quick-grid">
+                <a class="cm-quick" th:href="@{/manager/movies}">
+                    <span class="cm-quick-icon"><span class="material-symbols-outlined">movie</span></span>
+                    <span class="cm-quick-text">
+                        <strong>Movie Management</strong>
+                        <span th:text="${stats.totalMovies} + ' movies managed'">24 movies managed</span>
+                    </span>
+                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
+                </a>
+                <a class="cm-quick" th:href="@{/manager/genres}">
+                    <span class="cm-quick-icon"><span class="material-symbols-outlined">category</span></span>
+                    <span class="cm-quick-text">
+                        <strong>Movie Genre Management</strong>
+                        <span th:text="${stats.totalGenres} + ' genre categories'">14 genre categories</span>
+                    </span>
+                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
+                </a>
+                <a class="cm-quick" th:href="@{/manager/showtimes}">
+                    <span class="cm-quick-icon"><span class="material-symbols-outlined">schedule</span></span>
+                    <span class="cm-quick-text">
+                        <strong>Showtime Management</strong>
+                        <span th:text="${stats.todayShowtimesCount} + ' showtimes today'">34 showtimes today</span>
+                    </span>
+                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
+                </a>
+                <a class="cm-quick" th:href="@{/manager/reports}">
+                    <span class="cm-quick-icon"><span class="material-symbols-outlined">analytics</span></span>
+                    <span class="cm-quick-text">
+                        <strong>Reports &amp; Statistics</strong>
+                        <span>Revenue &amp; ticket report</span>
+                    </span>
+                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
+                </a>
+            </div>
+        </section>
+
+    </main>
 </div>
 
 </body>

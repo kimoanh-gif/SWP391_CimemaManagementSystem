@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Open Create Modal
     if (btnCreateSeatType) {
         btnCreateSeatType.addEventListener('click', () => {
-            document.getElementById('modalTitle').textContent = 'Thêm Loại Ghế Mới';
+            document.getElementById('modalTitle').textContent = 'Add seat type';
             document.getElementById('formSeatTypeId').value = '';
             document.getElementById('typeCode').value = '';
             document.getElementById('typeCode').readOnly = false;
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const desc = btn.getAttribute('data-description') || '';
             const status = btn.getAttribute('data-status') || 'Active';
 
-            document.getElementById('modalTitle').textContent = 'Chỉnh Sửa Loại Ghế #' + id;
+            document.getElementById('modalTitle').textContent = 'Edit seat type #' + id;
             document.getElementById('formSeatTypeId').value = id;
             document.getElementById('typeCode').value = code;
             document.getElementById('typeCode').readOnly = true;

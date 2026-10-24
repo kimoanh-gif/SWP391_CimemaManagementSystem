@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/></head>
+<body>
+
+<!--
+  CINEORA Manager shell (mockups "CINEORA_Manager_Mockups_EN").
+  Pages migrated to the new design include:
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>   (inside <head>)
+    <aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='dashboard')}"></aside>
+    <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+  Pages not migrated yet keep using fragments/manager-layout.html.
+-->
+
+<th:block th:fragment="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" th:href="@{/images/cineora-logo.png}">
+    <link rel="stylesheet" th:href="@{/css/cineora-manager.css}">
+</th:block>
+
+<!-- For pages that still use legacy manager-common.css components: load AFTER manager-common.css -->
+<th:block th:fragment="legacy-head">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/cineora-manager-legacy.css}">
+</th:block>
+
+<aside th:fragment="sidebar(activeMenu)" class="cm-sidebar">
+    <a class="cm-brand" th:href="@{/manager/dashboard}">
+        <img alt="CINEORA logo" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png">
+        <span class="cm-brand-text">
+            <span class="cm-brand-name">CINEORA</span>
+            <span class="cm-brand-tagline">Every Story Begins Here.</span>
+        </span>
+    </a>
+
+    <nav class="cm-nav" aria-label="Manager navigation">
+        <a th:href="@{/manager/dashboard}" class="cm-nav-link" th:classappend="${activeMenu == 'dashboard'} ? ' is-active'"
+           th:attr="aria-current=${activeMenu == 'dashboard'} ? 'page' : null">
+            <span class="material-symbols-outlined">dashboard</span><span>Overview</span></a>
+        <a th:href="@{/manager/movies}" class="cm-nav-link" th:classappend="${activeMenu == 'movies'} ? ' is-active'">
+            <span class="material-symbols-outlined">movie</span><span>Movie Management</span></a>
+        <a th:href="@{/manager/genres}" class="cm-nav-link" th:classappend="${activeMenu == 'genres'} ? ' is-active'">
+            <span class="material-symbols-outlined">category</span><span>Movie Genre Management</span></a>
+        <a th:href="@{/manager/rooms}" class="cm-nav-link" th:classappend="${activeMenu == 'rooms'} ? ' is-active'">
+            <span class="material-symbols-outlined">meeting_room</span><span>Screening Room Management</span></a>
+        <a th:href="@{/manager/seat-types}" class="cm-nav-link" th:classappend="${activeMenu == 'seat-types'} ? ' is-active'">
+            <span class="material-symbols-outlined">chair</span><span>Seat Type Management</span></a>
+        <a th:href="@{/manager/seats}" class="cm-nav-link" th:classappend="${activeMenu == 'seats'} ? ' is-active'">
+            <span class="material-symbols-outlined">grid_view</span><span>Seat Map Management</span></a>
+        <span class="cm-nav-link is-disabled" title="Coming soon">
+            <span class="material-symbols-outlined">newspaper</span><span>News Management</span></span>
+        <a th:href="@{/manager/showtimes}" class="cm-nav-link" th:classappend="${activeMenu == 'showtimes'} ? ' is-active'">
+            <span class="material-symbols-outlined">schedule</span><span>Showtime Management</span></a>
+        <a th:href="@{/manager/pricing}" class="cm-nav-link" th:classappend="${activeMenu == 'pricing'} ? ' is-active'">
+            <span class="material-symbols-outlined">confirmation_number</span><span>Ticket Pricing</span></a>
+        <a th:href="@{/manager/fb}" class="cm-nav-link" th:classappend="${activeMenu == 'fb'} ? ' is-active'">
+            <span class="material-symbols-outlined">fastfood</span><span>Food &amp; Beverage Management</span></a>
+        <span class="cm-nav-link is-disabled" title="Coming soon">
+            <span class="material-symbols-outlined">redeem</span><span>Promotion &amp; Voucher Management</span></span>
+        <a th:href="@{/manager/reports}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
+            <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
+    </nav>
+
+    <div class="cm-sidebar-footer">
+        <img alt="" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png">
+        <span class="cm-user-text">
+            <span class="cm-user-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</span>
+            <span class="cm-user-role" th:text="${userRole == 'ADMIN'} ? 'Administrator' : 'Cinema Manager'">Cinema Manager</span>
+        </span>
+        <form th:action="@{/logout}" method="post" class="cm-logout">
+            <button type="submit" title="Sign out" aria-label="Sign out">
+                <span class="material-symbols-outlined">logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<header th:fragment="topbar" class="cm-topbar">
+    <div class="cm-crumb">
+        <span class="material-symbols-outlined">home</span>
+        <span class="cm-crumb-sep">/</span>
+        <span>CINEORA Management System</span>
+    </div>
+    <div class="cm-topbar-right">
+        <span class="cm-pill cm-pill-success" th:if="${roomsActiveLabel != null}">
+            <span class="cm-dot"></span>
+            <span th:text="${roomsActiveLabel}">5/5 Screening rooms active</span>
+        </span>
+        <span class="cm-divider"></span>
+        <span class="cm-topbar-user">
+            <img alt="" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png">
+            <span class="cm-user-text">
+                <span class="cm-user-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</span>
+                <span class="cm-user-role">CINEORA Cinema</span>
+            </span>
+        </span>
+    </div>
+</header>
+
+</body>
+</html>
