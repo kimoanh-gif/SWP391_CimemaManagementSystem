@@ -923,21 +923,21 @@ CLOSE room_cursor;
 DEALLOCATE room_cursor;
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Đường Đua Ánh Sáng')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Light Speedway')
     INSERT dbo.Movie (Title, OriginalTitle, Duration, ReleaseDate, EndDate, [Language], Director, Actors, AgeRating, [Description], PosterURL, TrailerURL, [Status])
-    VALUES (N'Đường Đua Ánh Sáng', N'Light Speedway', 125, DATEADD(DAY, -10, CAST(GETDATE() AS DATE)), DATEADD(DAY, 40, CAST(GETDATE() AS DATE)), N'Tiếng Việt', N'Nguyễn Minh', N'An Nguyễn, Bình Trần', N'T13', N'Một tay đua trẻ theo đuổi chức vô địch trong mùa giải quyết định.', N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600', N'https://www.youtube.com/', N'Now Showing');
+    VALUES (N'Light Speedway', N'Light Speedway', 125, DATEADD(DAY, -10, CAST(GETDATE() AS DATE)), DATEADD(DAY, 40, CAST(GETDATE() AS DATE)), N'Vietnamese', N'Nguyen Minh', N'An Nguyen, Binh Tran', N'T13', N'A young racer chases the championship in the deciding season of his career.', N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600', N'https://www.youtube.com/', N'Now Showing');
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Hành Tinh Xanh')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Blue Planet')
     INSERT dbo.Movie (Title, OriginalTitle, Duration, ReleaseDate, EndDate, [Language], Director, Actors, AgeRating, [Description], PosterURL, TrailerURL, [Status])
-    VALUES (N'Hành Tinh Xanh', N'Blue Planet', 110, DATEADD(DAY, -5, CAST(GETDATE() AS DATE)), DATEADD(DAY, 45, CAST(GETDATE() AS DATE)), N'Tiếng Anh', N'Alex Morgan', N'Emma Lee, David Chen', N'P', N'Chuyến phiêu lưu khám phá một hành tinh đại dương bí ẩn.', N'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=600', N'https://www.youtube.com/', N'Now Showing');
+    VALUES (N'Blue Planet', N'Blue Planet', 110, DATEADD(DAY, -5, CAST(GETDATE() AS DATE)), DATEADD(DAY, 45, CAST(GETDATE() AS DATE)), N'English', N'Alex Morgan', N'Emma Lee, David Chen', N'P', N'An expedition explores a mysterious ocean planet.', N'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=600', N'https://www.youtube.com/', N'Now Showing');
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Chân Trời 2099')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Cyber Horizon 2099')
     INSERT dbo.Movie (Title, OriginalTitle, Duration, ReleaseDate, EndDate, [Language], Director, Actors, AgeRating, [Description], PosterURL, TrailerURL, [Status])
-    VALUES (N'Chân Trời 2099', N'Cyber Horizon 2099', 138, DATEADD(DAY, 20, CAST(GETDATE() AS DATE)), DATEADD(DAY, 70, CAST(GETDATE() AS DATE)), N'Tiếng Anh', N'Sophia Park', N'Mia Wilson, Noah Kim', N'T16', N'Một nhóm kỹ sư phải bảo vệ thành phố tương lai khỏi hệ thống AI mất kiểm soát.', N'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600', N'https://www.youtube.com/', N'Upcoming');
+    VALUES (N'Cyber Horizon 2099', N'Cyber Horizon 2099', 138, DATEADD(DAY, 20, CAST(GETDATE() AS DATE)), DATEADD(DAY, 70, CAST(GETDATE() AS DATE)), N'English', N'Sophia Park', N'Mia Wilson, Noah Kim', N'T16', N'A team of engineers must protect a futuristic city from an AI system that has escaped control.', N'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600', N'https://www.youtube.com/', N'Upcoming');
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'Ngôi Nhà Bí Ẩn')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title = N'The Secret House')
     INSERT dbo.Movie (Title, OriginalTitle, Duration, ReleaseDate, EndDate, [Language], Director, Actors, AgeRating, [Description], PosterURL, TrailerURL, [Status])
-    VALUES (N'Ngôi Nhà Bí Ẩn', N'The Secret House', 102, DATEADD(DAY, 30, CAST(GETDATE() AS DATE)), DATEADD(DAY, 75, CAST(GETDATE() AS DATE)), N'Tiếng Việt', N'Lê Hoàng', N'Minh Anh, Quốc Huy', N'T18', N'Một gia đình phát hiện bí mật bị chôn giấu trong căn nhà mới.', N'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600', N'https://www.youtube.com/', N'Upcoming');
+    VALUES (N'The Secret House', N'The Secret House', 102, DATEADD(DAY, 30, CAST(GETDATE() AS DATE)), DATEADD(DAY, 75, CAST(GETDATE() AS DATE)), N'Vietnamese', N'Le Hoang', N'Minh Anh, Quoc Huy', N'T18', N'A family discovers a buried secret inside their new home.', N'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600', N'https://www.youtube.com/', N'Upcoming');
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Clayface')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
@@ -958,37 +958,37 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Angry Birds Movie 3')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
     (N'The Angry Birds Movie 3',N'The Angry Birds Movie 3',100,'2027-01-01','2027-02-28',N'English',N'John Rice',N'Jason Sudeikis, Josh Gad',N'P',N'Red and the flock return for a colorful new big-screen adventure.',N'https://image.tmdb.org/t/p/original/9Fd7M2LwtKXBzjMquZM64z22odQ.jpg',NULL,N'Upcoming');
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Trái Tim Quái Thú')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Heart of the Beast')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Trái Tim Quái Thú',N'Heart of the Beast',101,'2026-10-02','2026-11-20',N'English',N'David Ayer',N'Brad Pitt, J.K. Simmons, Anna Lambe',N'T13',N'After a plane crash, a special forces officer and his combat dog fight to survive in the Alaskan wilderness.',N'https://cdn.moveek.com/storage/media/cache/tall/6a545e387a5bb803695755.webp',NULL,N'Now Showing');
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Án Mạng Xém Hoàn Hảo')
+    (N'Heart of the Beast',N'Heart of the Beast',101,'2026-10-02','2026-11-20',N'English',N'David Ayer',N'Brad Pitt, J.K. Simmons, Anna Lambe',N'T13',N'After a plane crash, a special forces officer and his combat dog fight to survive in the Alaskan wilderness.',N'https://cdn.moveek.com/storage/media/cache/tall/6a545e387a5bb803695755.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Almost Perfect Murder')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Án Mạng Xém Hoàn Hảo',N'The Almost Perfect Murder',124,'2026-10-09','2026-11-25',N'Vietnamese',N'Đức Nguyễn',N'Anh Tú Atus, DJ Mie, Vũ Ngọc Anh',N'T18',N'A romantic-content creator and a detective become unlikely partners while fleeing the police and uncovering a show-business mystery.',N'https://cdn.moveek.com/storage/media/cache/tall/6a8d5b41107e9384094943.webp',NULL,N'Now Showing');
+    (N'The Almost Perfect Murder',N'The Almost Perfect Murder',124,'2026-10-09','2026-11-25',N'Vietnamese',N'Đức Nguyễn',N'Anh Tú Atus, DJ Mie, Vũ Ngọc Anh',N'T18',N'A romantic-content creator and a detective become unlikely partners while fleeing the police and uncovering a show-business mystery.',N'https://cdn.moveek.com/storage/media/cache/tall/6a8d5b41107e9384094943.webp',NULL,N'Now Showing');
 IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Street Fighter')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
     (N'Street Fighter',N'Street Fighter',119,'2026-10-16','2026-12-05',N'English',N'Kitao Sakurai',N'Noah Centineo, Andrew Koji, Callina Liang',N'T16',N'Ryu and Ken reunite for the World Warrior tournament and discover a deadly conspiracy behind the competition.',N'https://cdn.moveek.com/storage/media/cache/tall/6a538ba804bfe303915257.webp',NULL,N'Now Showing');
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Cá Voi Nuốt Chửng')
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Whale Fall')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Cá Voi Nuốt Chửng',N'Whale Fall',106,'2026-10-16','2026-11-30',N'English',N'Bronte Higgs',NULL,N'T13',N'A diver searching for his father is swallowed by a giant sperm whale and has one hour to escape before his oxygen runs out.',N'https://cdn.moveek.com/storage/media/cache/tall/6a805db1ea9dd446109915.webp',NULL,N'Now Showing');
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Quỷ Ăn Tạng 4: Hổ Tinh')
+    (N'Whale Fall',N'Whale Fall',106,'2026-10-16','2026-11-30',N'English',N'Bronte Higgs',NULL,N'T13',N'A diver searching for his father is swallowed by a giant sperm whale and has one hour to escape before his oxygen runs out.',N'https://cdn.moveek.com/storage/media/cache/tall/6a805db1ea9dd446109915.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Death Whisperer: Saming the Werebeast')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Quỷ Ăn Tạng 4: Hổ Tinh',N'Death Whisperer: Saming the Werebeast',111,'2026-10-16','2026-12-05',N'Thai',N'Narit Yuvaboon',N'Nadech Kugimiya, Maylada Susri',N'T18',N'Yak and Sergeant Paphan enter a mysterious forest to find a missing unit and confront a shape-shifting tiger spirit.',N'https://cdn.moveek.com/storage/media/cache/tall/6ab49c6a59ce0852256648.webp',NULL,N'Now Showing');
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Bambi: Lãnh Địa Săn Mồi')
+    (N'Death Whisperer: Saming the Werebeast',N'Death Whisperer: Saming the Werebeast',111,'2026-10-16','2026-12-05',N'Thai',N'Narit Yuvaboon',N'Nadech Kugimiya, Maylada Susri',N'T18',N'Yak and Sergeant Paphan enter a mysterious forest to find a missing unit and confront a shape-shifting tiger spirit.',N'https://cdn.moveek.com/storage/media/cache/tall/6ab49c6a59ce0852256648.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Bambi: The Reckoning')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Bambi: Lãnh Địa Săn Mồi',N'Bambi: The Reckoning',80,'2026-10-23','2026-12-05',N'English',N'Dan Allen',N'Roxanne McKee, Tom Mulheron',N'T16',N'A mutated deer hunts the humans who enter its poisoned woodland territory.',N'https://cdn.moveek.com/storage/media/cache/tall/6accc290ae838036630540.webp',NULL,N'Now Showing');
-IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Cõi Nguyền')
+    (N'Bambi: The Reckoning',N'Bambi: The Reckoning',80,'2026-10-23','2026-12-05',N'English',N'Dan Allen',N'Roxanne McKee, Tom Mulheron',N'T16',N'A mutated deer hunts the humans who enter its poisoned woodland territory.',N'https://cdn.moveek.com/storage/media/cache/tall/6accc290ae838036630540.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Curse 2026')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
-    (N'Cõi Nguyền',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
+    (N'The Curse 2026',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
 
 DECLARE @MovieGenreSeed TABLE (MovieTitle NVARCHAR(250), GenreName NVARCHAR(100));
 INSERT @MovieGenreSeed VALUES
-    (N'Đường Đua Ánh Sáng', N'Action'),
-    (N'Đường Đua Ánh Sáng', N'Drama'),
-    (N'Hành Tinh Xanh', N'Adventure'),
-    (N'Hành Tinh Xanh', N'Animation'),
-    (N'Chân Trời 2099', N'Sci-Fi'),
-    (N'Chân Trời 2099', N'Action'),
-    (N'Ngôi Nhà Bí Ẩn', N'Horror');
+    (N'Light Speedway', N'Action'),
+    (N'Light Speedway', N'Drama'),
+    (N'Blue Planet', N'Adventure'),
+    (N'Blue Planet', N'Animation'),
+    (N'Cyber Horizon 2099', N'Sci-Fi'),
+    (N'Cyber Horizon 2099', N'Action'),
+    (N'The Secret House', N'Horror');
 
 INSERT @MovieGenreSeed VALUES
     (N'Clayface',N'Horror'),
@@ -1056,8 +1056,8 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Showtime)
 BEGIN
     DECLARE @Tomorrow DATE = DATEADD(DAY, 1, CAST(GETDATE() AS DATE));
     DECLARE @DayAfter DATE = DATEADD(DAY, 2, CAST(GETDATE() AS DATE));
-    DECLARE @Movie1 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Đường Đua Ánh Sáng');
-    DECLARE @Movie2 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Hành Tinh Xanh');
+    DECLARE @Movie1 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Light Speedway');
+    DECLARE @Movie2 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Blue Planet');
     DECLARE @Room1 INT = (SELECT RoomID FROM dbo.Room WHERE RoomCode = N'ROOM-01');
     DECLARE @Room2 INT = (SELECT RoomID FROM dbo.Room WHERE RoomCode = N'ROOM-02');
 
@@ -1075,15 +1075,15 @@ DECLARE @TodaySchedule TABLE (
     StartMinute INT, BasePrice DECIMAL(18,2)
 );
 INSERT @TodaySchedule VALUES
-    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-01', 9, 0, 85000),
-    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-02', 11, 0, 105000),
-    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-03', 13, 0, 125000),
+    (N'Bambi: The Reckoning', N'ROOM-01', 9, 0, 85000),
+    (N'Bambi: The Reckoning', N'ROOM-02', 11, 0, 105000),
+    (N'Bambi: The Reckoning', N'ROOM-03', 13, 0, 125000),
     (N'Street Fighter', N'ROOM-01', 12, 0, 95000),
     (N'Street Fighter', N'ROOM-02', 14, 30, 115000),
     (N'Street Fighter', N'ROOM-03', 17, 0, 135000),
-    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-01', 16, 0, 95000),
-    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-02', 19, 0, 115000),
-    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-03', 21, 0, 135000);
+    (N'Death Whisperer: Saming the Werebeast', N'ROOM-01', 16, 0, 95000),
+    (N'Death Whisperer: Saming the Werebeast', N'ROOM-02', 19, 0, 115000),
+    (N'Death Whisperer: Saming the Werebeast', N'ROOM-03', 21, 0, 135000);
 
 INSERT dbo.Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, [Status])
 SELECT m.MovieID, r.RoomID, times.StartTime,

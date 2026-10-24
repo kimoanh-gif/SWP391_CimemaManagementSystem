@@ -48,12 +48,12 @@ public class HomeController {
         model.addAttribute("nowShowingMovies", nowShowing);
 
         Map<String, String> heroBackdrops = Map.ofEntries(
-                Map.entry("Trái Tim Quái Thú", "https://cdn.moveek.com/storage/media/cache/large/6a538be95e054699735537.webp"),
-                Map.entry("Án Mạng Xém Hoàn Hảo", "https://cdn.moveek.com/storage/media/cache/large/6a8d5b4137e8c939819537.webp"),
+                Map.entry("Heart of the Beast", "https://cdn.moveek.com/storage/media/cache/large/6a538be95e054699735537.webp"),
+                Map.entry("The Almost Perfect Murder", "https://cdn.moveek.com/storage/media/cache/large/6a8d5b4137e8c939819537.webp"),
                 Map.entry("Street Fighter", "https://cdn.moveek.com/storage/media/cache/large/6a538ba81c7f6196807171.webp"),
-                Map.entry("Quỷ Ăn Tạng 4: Hổ Tinh", "https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp"),
-                Map.entry("Bambi: Lãnh Địa Săn Mồi", "https://cdn.moveek.com/storage/media/cache/large/6accc26017036308778097.webp"),
-                Map.entry("Cõi Nguyền", "https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp")
+                Map.entry("Death Whisperer: Saming the Werebeast", "https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp"),
+                Map.entry("Bambi: The Reckoning", "https://cdn.moveek.com/storage/media/cache/large/6accc26017036308778097.webp"),
+                Map.entry("The Curse 2026", "https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp")
         );
         nowShowing.forEach(movie -> movie.setHeroImageUrl(
                 heroBackdrops.getOrDefault(movie.getTitle(), movie.getPosterUrl())));
