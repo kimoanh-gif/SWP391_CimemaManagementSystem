@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formDayType").value = "WEEKDAY";
             document.getElementById("formTimeSlot").value = "STANDARD";
             document.getElementById("formExperienceType").value = "2D Digital";
-            document.getElementById("modalTitle").innerText = "Tạo Quy Tắc Định Giá Mới";
+            document.getElementById("modalTitle").innerText = "Add price configuration";
             modal.classList.add("open");
         });
     }
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formDayType").value = dayType;
             document.getElementById("formTimeSlot").value = timeSlot;
             document.getElementById("formExperienceType").value = expType;
-            document.getElementById("modalTitle").innerText = "Chỉnh Sửa Quy Tắc Định Giá";
+            document.getElementById("modalTitle").innerText = "Edit price configuration";
             modal.classList.add("open");
         });
     });

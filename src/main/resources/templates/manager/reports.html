@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Doanh Thu – Royally Cinema Manager</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>CINEORA — Reports &amp; Statistics</title>
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         .filter-panel {
             background: var(--bg-white);
@@ -85,18 +83,18 @@
             margin-left: auto;
         }
         .btn-export {
-            background: #10B981;
-            color: #fff;
-            border: 1px solid #059669;
+            background: #fff;
+            color: #D92332;
+            border: 1px solid #FFE5D9;
             font-weight: 600;
         }
         .btn-export:hover {
-            background: #059669;
+            background: #FFE5D9;
         }
         .btn-print {
-            background: #4B5563;
-            color: #fff;
-            border: 1px solid #374151;
+            background: #fff;
+            color: #6D5A51;
+            border: 1px solid #F1E5E0;
             font-weight: 600;
         }
         .btn-print:hover {
@@ -123,11 +121,11 @@
             left: 0; top: 0; bottom: 0;
             width: 4px;
         }
-        .kpi-card.blue::before { background: #2563EB; }
-        .kpi-card.green::before { background: #10B981; }
-        .kpi-card.gold::before { background: #F59E0B; }
-        .kpi-card.purple::before { background: #8B5CF6; }
-        .kpi-card.teal::before { background: #0D9488; }
+        .kpi-card.blue::before { background: #D92332; }
+        .kpi-card.green::before { background: #B3001F; }
+        .kpi-card.gold::before { background: #F2B84B; }
+        .kpi-card.purple::before { background: #6D5A51; }
+        .kpi-card.teal::before { background: #2E9B4E; }
         .kpi-label {
             font-size: 12px;
             font-weight: 600;
@@ -218,10 +216,10 @@
             color: #065F46;
         }
         @media print {
-            .sidebar, .topbar, .filter-panel, .btn-export, .btn-print, .breadcrumb {
+            .cm-sidebar, .cm-topbar, .filter-panel, .btn-export, .btn-print, .breadcrumb {
                 display: none !important;
             }
-            .main-wrapper, .page-shell {
+            .cm-shell, .cm-main {
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
@@ -232,33 +230,32 @@
         }
     </style>
 </head>
-<body>
+<body class="cm-body">
 
 <!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='reports')}"></div>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='reports')}"></aside>
 
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Báo cáo doanh thu')}"></div>
 
-<div class="main-wrapper">
-<div class="page-shell">
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<div class="cm-main">
 
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
-            <div class="breadcrumb">Quản lý / Báo cáo</div>
-            <h1 class="page-title">Báo Cáo &amp; Xuất Doanh Thu</h1>
-            <p class="page-subtitle">Thống kê doanh thu bán vé, dịch vụ F&amp;B, hiệu suất phim và trích xuất file Excel phục vụ kiểm toán (Screen 47 &amp; 49 / UC-34).</p>
+            <div class="breadcrumb"><a th:href="@{/manager/dashboard}">Overview</a> <span>/</span> Reports &amp; Statistics</div>
+            <h1 class="page-title">Revenue Report</h1>
+            <p class="page-subtitle">Ticket and F&amp;B revenue, movie performance and Excel (CSV) export for auditing (Screen 47 &amp; 49 / UC-34).</p>
         </div>
         <div class="page-header-actions">
-            <span class="badge badge-dot badge-green" th:text="${currentDateStr}">Hôm nay</span>
+            <span class="badge badge-dot badge-green" th:text="${currentDateStr}">Today</span>
             <span class="badge badge-blue">MANAGER</span>
         </div>
     </div>
 
     <!-- Error Alert if any -->
-    <div th:if="${errorMessage != null}" class="alert alert-danger" style="background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:500;">
-        ⚠️ <span th:text="${errorMessage}">Đã xảy ra lỗi</span>
+    <div th:if="${errorMessage != null}" class="alert alert-danger" style="background:#FFDAD6;color:#93000A;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:500;">
+        <span th:text="${errorMessage}">Something went wrong</span>
     </div>
 
     <!-- Filter & Action Panel -->
@@ -268,47 +265,47 @@
 
             <!-- Preset Tabs -->
             <div class="filter-presets">
-                <span style="font-size:12.5px;font-weight:600;color:var(--text-500);margin-right:6px;">Kỳ báo cáo:</span>
-                <button type="button" class="preset-btn" data-preset="today" th:classappend="${filterRequest.preset == 'today'} ? ' active' : ''">Hôm nay</button>
-                <button type="button" class="preset-btn" data-preset="last7days" th:classappend="${filterRequest.preset == 'last7days'} ? ' active' : ''">7 ngày qua</button>
-                <button type="button" class="preset-btn" data-preset="thismonth" th:classappend="${filterRequest.preset == 'thismonth'} ? ' active' : ''">Tháng này</button>
-                <button type="button" class="preset-btn" data-preset="thisquarter" th:classappend="${filterRequest.preset == 'thisquarter'} ? ' active' : ''">Quý này</button>
-                <button type="button" class="preset-btn" data-preset="all" th:classappend="${filterRequest.preset == 'all'} ? ' active' : ''">Tất cả</button>
+                <span style="font-size:12.5px;font-weight:600;color:var(--text-500);margin-right:6px;">Period:</span>
+                <button type="button" class="preset-btn" data-preset="today" th:classappend="${filterRequest.preset == 'today'} ? ' active' : ''">Today</button>
+                <button type="button" class="preset-btn" data-preset="last7days" th:classappend="${filterRequest.preset == 'last7days'} ? ' active' : ''">Last 7 days</button>
+                <button type="button" class="preset-btn" data-preset="thismonth" th:classappend="${filterRequest.preset == 'thismonth'} ? ' active' : ''">This month</button>
+                <button type="button" class="preset-btn" data-preset="thisquarter" th:classappend="${filterRequest.preset == 'thisquarter'} ? ' active' : ''">This quarter</button>
+                <button type="button" class="preset-btn" data-preset="all" th:classappend="${filterRequest.preset == 'all'} ? ' active' : ''">All time</button>
             </div>
 
             <!-- Inputs and Actions -->
             <div class="filter-row">
                 <div class="filter-group">
-                    <label for="startDate">Từ ngày</label>
+                    <label for="startDate">From</label>
                     <input type="date" id="startDate" name="startDate" class="filter-input"
                            th:value="${filterRequest.startDate}">
                 </div>
                 <div class="filter-group">
-                    <label for="endDate">Đến ngày</label>
+                    <label for="endDate">To</label>
                     <input type="date" id="endDate" name="endDate" class="filter-input"
                            th:value="${filterRequest.endDate}">
                 </div>
                 <div class="filter-group">
-                    <label for="reportType">Phân loại dữ liệu</label>
+                    <label for="reportType">Report type</label>
                     <select id="reportType" name="reportType" class="filter-input" style="min-width:180px;">
-                        <option value="DAILY" th:selected="${filterRequest.reportType == 'DAILY'}">Tổng quan theo ngày</option>
-                        <option value="MOVIE" th:selected="${filterRequest.reportType == 'MOVIE'}">Hiệu suất theo phim</option>
-                        <option value="TRANSACTIONS" th:selected="${filterRequest.reportType == 'TRANSACTIONS'}">Chi tiết giao dịch / Đơn hàng</option>
+                        <option value="DAILY" th:selected="${filterRequest.reportType == 'DAILY'}">Daily overview</option>
+                        <option value="MOVIE" th:selected="${filterRequest.reportType == 'MOVIE'}">Movie performance</option>
+                        <option value="TRANSACTIONS" th:selected="${filterRequest.reportType == 'TRANSACTIONS'}">Transactions / Orders</option>
                     </select>
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary" style="height:38px;padding:0 16px;">
-                        🔍 Lọc Dữ Liệu
+                        Filter data
                     </button>
                 </div>
 
                 <!-- Export & Print Actions -->
                 <div class="filter-actions">
                     <button type="button" id="btnExportCsv" class="btn btn-export" style="height:38px;padding:0 16px;">
-                        📥 Xuất Excel (CSV)
+                        <span class="material-symbols-outlined" style="font-size:18px">download</span> Export Excel (CSV)
                     </button>
                     <button type="button" id="btnPrintReport" class="btn btn-print" style="height:38px;padding:0 16px;" onclick="window.print();">
-                        🖨 In Báo Cáo
+                        <span class="material-symbols-outlined" style="font-size:18px">print</span> Print report
                     </button>
                 </div>
             </div>
@@ -318,39 +315,39 @@
     <!-- Top Summary KPI Cards (SRS Section 4.9 II) -->
     <div class="kpi-grid">
         <div class="kpi-card blue">
-            <div class="kpi-label">Tổng Doanh Thu</div>
+            <div class="kpi-label">Total revenue</div>
             <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                <span th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub">Doanh thu ghi nhận thực tế (BR-22)</div>
+            <div class="kpi-sub">Recognized revenue (BR-22)</div>
         </div>
         <div class="kpi-card green">
-            <div class="kpi-label">Doanh Thu Vé</div>
+            <div class="kpi-label">Ticket revenue</div>
             <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                <span th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub">Chiếm <span th:if="${summary.totalRevenue > 0}" th:text="${#numbers.formatDecimal((summary.ticketRevenue / summary.totalRevenue) * 100, 1, 1)}">0</span><span th:unless="${summary.totalRevenue > 0}">0</span>% cơ cấu</div>
+            <div class="kpi-sub"><span th:if="${summary.totalRevenue > 0}" th:text="${#numbers.formatDecimal((summary.ticketRevenue / summary.totalRevenue) * 100, 1, 1)}">0</span><span th:unless="${summary.totalRevenue > 0}">0</span>% of total</div>
         </div>
         <div class="kpi-card gold">
-            <div class="kpi-label">Doanh Thu F&amp;B</div>
+            <div class="kpi-label">F&amp;B revenue</div>
             <div class="kpi-value">
-                <span th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                <span th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub">Bắp nước &amp; Combo ưu đãi</div>
+            <div class="kpi-sub">Popcorn, drinks &amp; combos</div>
         </div>
         <div class="kpi-card purple">
-            <div class="kpi-label">Tổng Vé Đã Bán</div>
+            <div class="kpi-label">Tickets sold</div>
             <div class="kpi-value">
                 <span th:text="${#numbers.formatDecimal(summary.totalTickets, 0, 'COMMA', 0, 'POINT')}">0</span>
             </div>
-            <div class="kpi-sub">Ghế đã được thanh toán</div>
+            <div class="kpi-sub">Paid seats</div>
         </div>
         <div class="kpi-card teal">
-            <div class="kpi-label">Đơn Hàng Thành Công</div>
+            <div class="kpi-label">Successful orders</div>
             <div class="kpi-value">
                 <span th:text="${summary.totalPaidBookings}">0</span>
             </div>
-            <div class="kpi-sub">Giao dịch Paid / Confirmed</div>
+            <div class="kpi-sub">Paid / Confirmed transactions</div>
         </div>
     </div>
 
@@ -358,12 +355,12 @@
     <div class="table-card">
         <div class="table-header-row">
             <div class="table-header-title" id="tableTitle"
-                 th:text="${filterRequest.reportType == 'MOVIE'} ? 'Bảng Thống Kê Hiệu Suất Theo Phim' : (${filterRequest.reportType == 'TRANSACTIONS'} ? 'Danh Sách Giao Dịch Chi Tiết' : 'Bảng Doanh Thu Tổng Hợp Theo Ngày')">
-                Bảng Doanh Thu
+                 th:text="${filterRequest.reportType == 'MOVIE'} ? 'Movie performance' : (${filterRequest.reportType == 'TRANSACTIONS'} ? 'Transaction details' : 'Daily revenue summary')">
+                Revenue table
             </div>
             <div style="font-size:12.5px;color:var(--text-400);">
-                Dữ liệu từ <b th:text="${#temporals.format(filterRequest.startDate, 'dd/MM/yyyy')}">01/10/2026</b>
-                đến <b th:text="${#temporals.format(filterRequest.endDate, 'dd/MM/yyyy')}">31/10/2026</b>
+                Data from <b th:text="${#temporals.format(filterRequest.startDate, 'dd/MM/yyyy')}">01/10/2026</b>
+                to <b th:text="${#temporals.format(filterRequest.endDate, 'dd/MM/yyyy')}">31/10/2026</b>
             </div>
         </div>
 
@@ -372,13 +369,13 @@
             <table class="report-table">
                 <thead>
                 <tr>
-                    <th>Ngày</th>
-                    <th class="text-right">Doanh Thu Vé (VNĐ)</th>
-                    <th class="text-right">Doanh Thu F&amp;B (VNĐ)</th>
-                    <th class="text-right">Giảm Giá (VNĐ)</th>
-                    <th class="text-right">Tổng Doanh Thu (VNĐ)</th>
-                    <th class="text-center">Số Vé Bán</th>
-                    <th class="text-center">Số Đơn Hàng</th>
+                    <th>Date</th>
+                    <th class="text-right">Ticket revenue (VND)</th>
+                    <th class="text-right">F&amp;B revenue (VND)</th>
+                    <th class="text-right">Discount (VND)</th>
+                    <th class="text-right">Total revenue (VND)</th>
+                    <th class="text-center">Tickets sold</th>
+                    <th class="text-center">Orders</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -394,15 +391,15 @@
                 </tr>
                 <tr th:if="${#lists.isEmpty(reportData.dailyItems)}">
                     <td colspan="7" class="empty-state">
-                        <div class="empty-icon">📊</div>
-                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu doanh thu trong khoảng thời gian này</div>
-                        <div style="font-size:12px;margin-top:4px;">Vui lòng chọn khoảng thời gian khác hoặc kiểm tra lại bộ lọc.</div>
+                        <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">bar_chart</span></div>
+                        <div style="font-size:14px;font-weight:600;">No revenue data in this period</div>
+                        <div style="font-size:12px;margin-top:4px;">Choose another period or check the filters.</div>
                     </td>
                 </tr>
                 </tbody>
                 <tfoot th:if="${!#lists.isEmpty(reportData.dailyItems)}">
                 <tr>
-                    <td>TỔNG CỘNG</td>
+                    <td>TOTAL</td>
                     <td class="text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
                     <td class="text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
                     <td class="text-right" th:text="${#numbers.formatDecimal(summary.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
@@ -419,13 +416,13 @@
             <table class="report-table">
                 <thead>
                 <tr>
-                    <th>Mã Phim</th>
-                    <th>Tên Phim</th>
-                    <th class="text-center">Số Suất Chiếu</th>
-                    <th class="text-center">Số Vé Đã Bán</th>
-                    <th class="text-right">Doanh Thu Vé (VNĐ)</th>
-                    <th class="text-right">Doanh Thu F&amp;B (VNĐ)</th>
-                    <th class="text-right">Tổng Doanh Thu (VNĐ)</th>
+                    <th>Movie ID</th>
+                    <th>Movie title</th>
+                    <th class="text-center">Showtimes</th>
+                    <th class="text-center">Tickets sold</th>
+                    <th class="text-right">Ticket revenue (VND)</th>
+                    <th class="text-right">F&amp;B revenue (VND)</th>
+                    <th class="text-right">Total revenue (VND)</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -441,8 +438,8 @@
                 </tr>
                 <tr th:if="${#lists.isEmpty(reportData.movieItems)}">
                     <td colspan="7" class="empty-state">
-                        <div class="empty-icon">🎬</div>
-                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu phim trong khoảng thời gian này</div>
+                        <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">movie</span></div>
+                        <div style="font-size:14px;font-weight:600;">No movie data in this period</div>
                     </td>
                 </tr>
                 </tbody>
@@ -454,17 +451,17 @@
             <table class="report-table">
                 <thead>
                 <tr>
-                    <th>Mã Đơn</th>
-                    <th>Thời Gian</th>
-                    <th>Khách Hàng</th>
-                    <th>Phim &amp; Phòng</th>
-                    <th>Suất Chiếu</th>
-                    <th>Ghế</th>
-                    <th class="text-right">Tiền Vé</th>
-                    <th class="text-right">Tiền F&amp;B</th>
-                    <th class="text-right">Tổng Tiền</th>
-                    <th>Hình Thức</th>
-                    <th class="text-center">Trạng Thái</th>
+                    <th>Booking ID</th>
+                    <th>Time</th>
+                    <th>Customer</th>
+                    <th>Movie &amp; Room</th>
+                    <th>Showtime</th>
+                    <th>Seats</th>
+                    <th class="text-right">Tickets</th>
+                    <th class="text-right">F&amp;B</th>
+                    <th class="text-right">Total</th>
+                    <th>Payment</th>
+                    <th class="text-center">Status</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -472,7 +469,7 @@
                     <td style="font-family:monospace;font-weight:700;color:var(--primary);" th:text="${row.bookingCode}">BK-001</td>
                     <td style="font-size:12px;" th:text="${#temporals.format(row.bookingTime, 'dd/MM/yyyy HH:mm')}">19/10/2026</td>
                     <td>
-                        <div style="font-weight:600;" th:text="${row.customerName}">Nguyễn Văn A</div>
+                        <div style="font-weight:600;" th:text="${row.customerName}">Customer name</div>
                         <small style="color:var(--text-400);" th:text="${row.phone}">0912345678</small>
                     </td>
                     <td>
@@ -492,8 +489,8 @@
                 </tr>
                 <tr th:if="${#lists.isEmpty(reportData.transactionItems)}">
                     <td colspan="11" class="empty-state">
-                        <div class="empty-icon">🧾</div>
-                        <div style="font-size:14px;font-weight:600;">Không có giao dịch thành công trong khoảng thời gian này</div>
+                        <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">receipt_long</span></div>
+                        <div style="font-size:14px;font-weight:600;">No successful transactions in this period</div>
                     </td>
                 </tr>
                 </tbody>

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Danh Mục Ghế – Royally Cinema Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>CINEORA — Seat Type Management</title>
     <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         .color-dot {
             width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0;
@@ -53,73 +51,70 @@
         .modal-body small { font-size: 11.5px; color: var(--text-400); margin-top: 2px; display: block; }
     </style>
 </head>
-<body>
+<body class="cm-body">
 
 <!-- Sidebar -->
-<div th:replace="~{fragments/manager-layout :: sidebar(activeMenu='seat-types')}"></div>
-<!-- Topbar -->
-<div th:replace="~{fragments/manager-layout :: topbar(pageTitle='Quản lý Loại Ghế')}"></div>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='seat-types')}"></aside>
 
 <!-- Main Wrapper -->
-<div class="main-wrapper">
-<div class="page-shell">
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<div class="cm-main">
 
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
             <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Quản trị hệ thống</a>
-                <span>›</span>
-                <a th:href="@{/manager/rooms}">Phòng &amp; Ghế ngồi</a>
-                <span>›</span>
-                <span>Danh mục loại ghế</span>
+                <a th:href="@{/manager/dashboard}">Overview</a>
+                <span>/</span>
+                <span>Seat Type Management</span>
             </div>
-            <h1 class="page-title">Quản Lý Danh Mục Ghế</h1>
-            <p class="page-subtitle">Định nghĩa, phân loại hạng ghế và thiết lập chính sách phụ thu hệ số giá vé trên toàn hệ thống Royally Cinema.</p>
+            <h1 class="page-title">Seat Type Management</h1>
+            <p class="page-subtitle">Configure seat types and price multipliers for flexible ticket pricing by room seat map.</p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/manager/seats}" class="btn btn-secondary">🗺 Sơ đồ ghế</a>
-            <button id="btnCreateSeatType" class="btn btn-primary">+ Thêm loại ghế mới</button>
+            <a th:href="@{/manager/seats}" class="btn btn-secondary"><span class="material-symbols-outlined" style="font-size:18px">grid_view</span> Check seat map</a>
+            <button id="btnCreateSeatType" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:18px">add</span> Add seat type</button>
         </div>
     </div>
 
     <!-- Messages -->
     <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
         <span class="alert-icon">✅</span>
-        <div class="alert-body" th:text="${successMessage}">Thao tác thành công.</div>
+        <div class="alert-body" th:text="${successMessage}">Saved successfully.</div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
     <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
         <span class="alert-icon">⚠️</span>
-        <div class="alert-body" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+        <div class="alert-body" th:text="${errorMessage}">Something went wrong.</div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
 
     <!-- 4 Stats Cards (Image 3) -->
     <div class="stats-row">
-        <div class="stat-card blue">
-            <div class="stat-label">Tổng số loại ghế</div>
+        <div class="stat-card">
+            <div class="stat-label">Total seat types</div>
             <div class="stat-value" th:text="${totalCount}">4</div>
-            <div class="stat-sub"><b th:text="${activeCount}">4</b> đang hoạt động trong hệ thống</div>
-            <span class="stat-icon">💺</span>
+            <div class="stat-sub"><b th:text="${activeCount}">4</b> active in the system</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">chair</span></span>
         </div>
-        <div class="stat-card purple">
-            <div class="stat-label">Ghế tiêu chuẩn (Standard)</div>
-            <div class="stat-value">×1.00</div>
-            <div class="stat-sub">Hệ số định mức cơ sở không đổi</div>
-            <span class="stat-icon">🏷</span>
+        <div class="stat-card">
+            <div class="stat-label">Standard seat multiplier</div>
+            <div class="stat-value">1.00x</div>
+            <div class="stat-sub">Base ticket price reference</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">sell</span></span>
         </div>
-        <div class="stat-card orange">
-            <div class="stat-label">Hệ số giá cho phép</div>
+        <div class="stat-card">
+            <div class="stat-label">Average price multiplier</div>
+            <div class="stat-value" th:text="${#lists.isEmpty(seatTypes) ? '—' : #numbers.formatDecimal(#aggregates.avg(seatTypes.![priceMultiplier]), 1, 2) + 'x'}">1.25x</div>
+            <div class="stat-sub">Of the seat types listed</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">functions</span></span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Allowed multiplier range</div>
             <div class="stat-value">0.50 – 3.00</div>
-            <div class="stat-sub">Quy tắc nghiệp vụ BR-50</div>
-            <span class="stat-icon">📊</span>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-label">Cập nhật gần nhất</div>
-            <div class="stat-value" style="font-size:20px;">Hôm nay</div>
-            <div class="stat-sub">Sẵn sàng áp dụng bán vé</div>
-            <span class="stat-icon">⏱</span>
+            <div class="stat-sub">Business rule BR-50</div>
+            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">rule</span></span>
         </div>
     </div>
 
@@ -127,11 +122,11 @@
     <div class="toolbar">
         <form method="get" th:action="@{/manager/seat-types}" class="toolbar-form">
             <select name="status" onchange="this.form.submit()">
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
-                <option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động (Active)</option>
-                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Tạm ngưng (Inactive)</option>
+                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All statuses</option>
+                <option value="Active" th:selected="${selectedStatus == 'Active'}">Active</option>
+                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Suspended</option>
             </select>
-            <a th:href="@{/manager/seat-types}" class="btn btn-secondary btn-sm" th:if="${selectedStatus != 'ALL'}">⟲ Đặt lại</a>
+            <a th:href="@{/manager/seat-types}" class="btn btn-secondary btn-sm" th:if="${selectedStatus != 'ALL'}">Clear filters</a>
         </form>
     </div>
 
@@ -139,42 +134,42 @@
     <div class="table-wrapper">
         <div class="table-header">
             <span class="table-header-title">
-                Danh Sách Hạng Ghế Rạp Chiếu
-                <span class="badge badge-blue" style="margin-left:6px;" th:text="${#lists.size(seatTypes)} + ' hạng'">0 hạng</span>
+                Seat type list
+                <span class="badge badge-blue" style="margin-left:6px;" th:text="${#lists.size(seatTypes)} + ' types'">0 types</span>
             </span>
         </div>
 
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width:90px">Mã Loại</th>
-                    <th style="width:200px">Tên &amp; Nhận Diện</th>
-                    <th style="width:180px">Hệ Số Giá (Multiplier)</th>
-                    <th style="width:130px">Màu Sơ Đồ</th>
-                    <th>Mô Tả Tiện Ích Đi Kèm</th>
-                    <th style="width:120px;text-align:center">Trạng Thái</th>
-                    <th class="col-actions">Thao Tác</th>
+                    <th style="width:90px">Code</th>
+                    <th style="width:200px">Seat type name</th>
+                    <th style="width:180px">Price multiplier</th>
+                    <th style="width:130px">Seat map color</th>
+                    <th>Features &amp; amenities</th>
+                    <th style="width:120px;text-align:center">Status</th>
+                    <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:if="${#lists.isEmpty(seatTypes)}">
-                    <td colspan="7" style="text-align:center;padding:32px;color:var(--text-400)">Chưa có loại ghế nào được cấu hình.</td>
+                    <td colspan="7" style="text-align:center;padding:32px;color:var(--text-400)">No seat types configured yet.</td>
                 </tr>
                 <tr th:each="st : ${seatTypes}">
                     <td><code class="code-badge" th:text="${st.typeCode}">STD</code></td>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span class="color-dot" th:style="'background-color: ' + ${st.colorCode}"></span>
-                            <strong style="color:var(--text-900)" th:text="${st.typeName}">Ghế Tiêu Chuẩn</strong>
+                            <strong style="color:var(--text-900)" th:text="${st.typeName}">Standard Seat</strong>
                         </div>
                     </td>
                     <td>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <span class="multiplier-badge" th:text="'×' + ${st.priceMultiplier}">×1.00</span>
+                            <span class="multiplier-badge" th:text="${st.priceMultiplier} + 'x'">1.00x</span>
                             <button type="button" class="btn btn-secondary btn-sm btn-edit-multiplier"
                                     th:data-id="${st.seatTypeId}"
                                     th:data-name="${st.typeName}"
-                                    th:data-multiplier="${st.priceMultiplier}">Sửa hệ số</button>
+                                    th:data-multiplier="${st.priceMultiplier}">Edit multiplier</button>
                         </div>
                     </td>
                     <td>
@@ -183,7 +178,7 @@
                             <span style="font-family:monospace;font-size:12px;color:var(--text-500)" th:text="${st.colorCode}">#3B82F6</span>
                         </div>
                     </td>
-                    <td style="color:var(--text-500);font-size:13px;" th:text="${st.description != null ? st.description : 'Tiêu chuẩn rạp chiếu'}">Mô tả</td>
+                    <td style="color:var(--text-500);font-size:13px;" th:text="${st.description != null ? st.description : 'Standard cinema seat'}">Description</td>
                     <td style="text-align:center">
                         <span class="badge" th:classappend="${st.active ? 'badge-green' : 'badge-gray'}" th:text="${st.status}">Active</span>
                     </td>
@@ -196,11 +191,11 @@
                                 th:data-color="${st.colorCode}"
                                 th:data-description="${st.description}"
                                 th:data-status="${st.status}"
-                                title="Chỉnh sửa loại ghế">✎</button>
+                                title="Edit seat type">✎</button>
                         <form th:action="@{'/manager/seat-types/status/' + ${st.seatTypeId}}" method="post" style="display:inline;">
                             <input type="hidden" name="status" th:value="${st.active ? 'Inactive' : 'Active'}">
                             <button type="submit" class="action-btn action-btn-view"
-                                    th:title="${st.active ? 'Tạm ngưng loại ghế' : 'Kích hoạt lại'}">
+                                    th:title="${st.active ? 'Suspend seat type' : 'Reactivate'}">
                                 <span th:if="${st.active}">⏹</span>
                                 <span th:unless="${st.active}">▶</span>
                             </button>
@@ -213,7 +208,7 @@
         <!-- Pagination -->
         <div class="pagination-row" th:if="${not #lists.isEmpty(seatTypes)}">
             <span style="font-size: 13px; color: var(--text-500);">
-                Hiển thị 1 – <span th:text="${#lists.size(seatTypes)}">4</span> trong tổng số <span th:text="${totalCount}">4</span> loại ghế đã đăng ký
+                Showing 1 – <span th:text="${#lists.size(seatTypes)}">4</span> of <span th:text="${totalCount}">4</span> registered seat types
             </span>
             <div class="pagination">
                 <button type="button" class="page-btn" disabled>&lsaquo;</button>
@@ -225,9 +220,9 @@
 
     <!-- Alert Note (matching Image 3) -->
     <div class="alert alert-warning" style="margin-top:4px;">
-        <span class="alert-icon">ℹ️</span>
+        <span class="alert-icon material-symbols-outlined">info</span>
         <div class="alert-body">
-            <b>Lưu ý quản trị giá (UC-27):</b> Mức hệ số giá loại ghế được áp dụng trực tiếp theo công thức: <code>Giá vé = (Giá cơ sở + Phụ thu định dạng) × Hệ số loại ghế</code>. Thay đổi hệ số chỉ áp dụng cho các suất chiếu được tạo mới hoặc cập nhật sau thời điểm lưu.
+            <b>Pricing note (UC-27):</b> seat type multipliers apply directly in the formula <code>Ticket price = (Base price + Format surcharge) × Seat type multiplier</code>. Changes only affect showtimes created or updated after saving.
         </div>
     </div>
 
@@ -238,46 +233,46 @@
 <div id="seatTypeModal" class="modal-backdrop">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modalTitle">Thêm Loại Ghế Mới</h3>
+            <h3 id="modalTitle">Add seat type</h3>
             <button class="modal-close" onclick="closeSeatTypeModal()">&times;</button>
         </div>
         <form id="seatTypeForm" th:action="@{/manager/seat-types/save}" method="post">
             <input type="hidden" id="formSeatTypeId" name="seatTypeId">
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Mã Loại Ghế (TypeCode) <span class="req">*</span></label>
-                    <input type="text" id="typeCode" name="typeCode" class="form-control" placeholder="VD: STD, VIP, SWEETBOX" required>
-                    <small>Mã định danh duy nhất (chữ in hoa không dấu, không dấu cách).</small>
+                    <label class="form-label">Type code <span class="req">*</span></label>
+                    <input type="text" id="typeCode" name="typeCode" class="form-control" placeholder="e.g. STD, VIP, SWEETBOX" required>
+                    <small>Unique identifier (uppercase letters, no accents or spaces).</small>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Tên Loại Ghế <span class="req">*</span></label>
-                    <input type="text" id="typeName" name="typeName" class="form-control" placeholder="VD: Ghế VIP Royal Amber" required>
+                    <label class="form-label">Seat type name <span class="req">*</span></label>
+                    <input type="text" id="typeName" name="typeName" class="form-control" placeholder="e.g. VIP Suites Recliner Seat" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Hệ Số Giá (0.50 – 3.00) <span class="req">*</span></label>
+                        <label class="form-label">Price multiplier (0.50 – 3.00) <span class="req">*</span></label>
                         <input type="number" id="priceMultiplier" name="priceMultiplier" class="form-control" step="0.05" min="0.50" max="3.00" value="1.00" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Màu Nhận Diện Sơ Đồ</label>
+                        <label class="form-label">Seat map color</label>
                         <input type="color" id="colorCode" name="colorCode" class="form-control" style="height:38px;padding:2px;" value="#3B82F6">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Trạng Thái</label>
+                    <label class="form-label">Status</label>
                     <select id="status" name="status" class="form-control">
-                        <option value="Active">Hoạt động (Active)</option>
-                        <option value="Inactive">Tạm ngưng (Inactive)</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Suspended</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Mô Tả Tiện Ích Đi Kèm</label>
-                    <textarea id="description" name="description" class="form-control" rows="2" placeholder="Vị trí đắc địa, tầm nhìn hoàn hảo..."></textarea>
+                    <label class="form-label">Features &amp; amenities</label>
+                    <textarea id="description" name="description" class="form-control" rows="2" placeholder="Prime position, perfect viewing angle..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeSeatTypeModal()">Hủy bỏ</button>
-                <button type="submit" class="btn btn-primary" id="btnSubmitSeatType">Lưu Loại Ghế</button>
+                <button type="button" class="btn btn-secondary" onclick="closeSeatTypeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitSeatType">Save seat type</button>
             </div>
         </form>
     </div>
@@ -287,25 +282,25 @@
 <div id="multiplierModal" class="modal-backdrop">
     <div class="modal-content" style="max-width: 440px;">
         <div class="modal-header">
-            <h3>Cập Nhật Nhanh Hệ Số Giá</h3>
+            <h3>Quick multiplier update</h3>
             <button class="modal-close" onclick="closeMultiplierModal()">&times;</button>
         </div>
         <form th:action="@{/manager/seat-types/multiplier}" method="post">
             <input type="hidden" id="quickSeatTypeId" name="seatTypeId">
             <div class="modal-body">
                 <div>
-                    <label class="form-label">Hạng Ghế:</label>
+                    <label class="form-label">Seat type:</label>
                     <strong id="quickSeatTypeName" style="color: var(--primary); font-size: 16px;">Standard</strong>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Hệ Số Giá Mới (0.50 – 3.00) <span class="req">*</span></label>
+                    <label class="form-label">New multiplier (0.50 – 3.00) <span class="req">*</span></label>
                     <input type="number" id="quickMultiplier" name="multiplier" class="form-control" step="0.05" min="0.50" max="3.00" required>
-                    <small>Công thức BR-50: Giá vé = (Giá cơ sở + Phụ thu) × Hệ số.</small>
+                    <small>BR-50 formula: Ticket price = (Base price + Surcharge) × Multiplier.</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeMultiplierModal()">Hủy</button>
-                <button type="submit" class="btn btn-primary">Cập Nhật</button>
+                <button type="button" class="btn btn-secondary" onclick="closeMultiplierModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update</button>
             </div>
         </form>
     </div>
