@@ -875,9 +875,13 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-01')
 IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-02')
     INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
     VALUES (N'ROOM-02', N'Phòng Chiếu 02', N'Dolby Atmos', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'18m x 10m', N'Ready', N'Phòng chiếu âm thanh Dolby Atmos');
+IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-03')
+    INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
+    VALUES (N'ROOM-03', N'Cinema 03', N'VIP Recliner', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'16m x 9m', N'Ready', N'Premium VIP recliner auditorium');
 
 UPDATE dbo.Room SET RoomName=N'Cinema 01', [Description]=N'Standard digital auditorium' WHERE RoomCode=N'ROOM-01';
 UPDATE dbo.Room SET RoomName=N'Cinema 02', [Description]=N'Premium Dolby Atmos auditorium' WHERE RoomCode=N'ROOM-02';
+UPDATE dbo.Room SET RoomName=N'Cinema 03', [Description]=N'Premium VIP recliner auditorium' WHERE RoomCode=N'ROOM-03';
 
 DECLARE @RoomID INT;
 DECLARE @RowNumber INT;
@@ -886,7 +890,7 @@ DECLARE @SeatTypeID INT;
 DECLARE @SeatTypeName NVARCHAR(100);
 
 DECLARE room_cursor CURSOR LOCAL FAST_FORWARD FOR
-    SELECT RoomID FROM dbo.Room WHERE RoomCode IN (N'ROOM-01', N'ROOM-02');
+    SELECT RoomID FROM dbo.Room WHERE RoomCode IN (N'ROOM-01', N'ROOM-02', N'ROOM-03');
 OPEN room_cursor;
 FETCH NEXT FROM room_cursor INTO @RoomID;
 WHILE @@FETCH_STATUS = 0
@@ -953,6 +957,28 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Hunger Games: Sunrise o
 IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Angry Birds Movie 3')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
     (N'The Angry Birds Movie 3',N'The Angry Birds Movie 3',100,'2027-01-01','2027-02-28',N'English',N'John Rice',N'Jason Sudeikis, Josh Gad',N'P',N'Red and the flock return for a colorful new big-screen adventure.',N'https://image.tmdb.org/t/p/original/9Fd7M2LwtKXBzjMquZM64z22odQ.jpg',NULL,N'Upcoming');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Trái Tim Quái Thú')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Trái Tim Quái Thú',N'Heart of the Beast',101,'2026-10-02','2026-11-20',N'English',N'David Ayer',N'Brad Pitt, J.K. Simmons, Anna Lambe',N'T13',N'After a plane crash, a special forces officer and his combat dog fight to survive in the Alaskan wilderness.',N'https://cdn.moveek.com/storage/media/cache/tall/6a545e387a5bb803695755.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Án Mạng Xém Hoàn Hảo')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Án Mạng Xém Hoàn Hảo',N'The Almost Perfect Murder',124,'2026-10-09','2026-11-25',N'Vietnamese',N'Đức Nguyễn',N'Anh Tú Atus, DJ Mie, Vũ Ngọc Anh',N'T18',N'A romantic-content creator and a detective become unlikely partners while fleeing the police and uncovering a show-business mystery.',N'https://cdn.moveek.com/storage/media/cache/tall/6a8d5b41107e9384094943.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Street Fighter')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Street Fighter',N'Street Fighter',119,'2026-10-16','2026-12-05',N'English',N'Kitao Sakurai',N'Noah Centineo, Andrew Koji, Callina Liang',N'T16',N'Ryu and Ken reunite for the World Warrior tournament and discover a deadly conspiracy behind the competition.',N'https://cdn.moveek.com/storage/media/cache/tall/6a538ba804bfe303915257.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Cá Voi Nuốt Chửng')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Cá Voi Nuốt Chửng',N'Whale Fall',106,'2026-10-16','2026-11-30',N'English',N'Bronte Higgs',NULL,N'T13',N'A diver searching for his father is swallowed by a giant sperm whale and has one hour to escape before his oxygen runs out.',N'https://cdn.moveek.com/storage/media/cache/tall/6a805db1ea9dd446109915.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Quỷ Ăn Tạng 4: Hổ Tinh')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Quỷ Ăn Tạng 4: Hổ Tinh',N'Death Whisperer: Saming the Werebeast',111,'2026-10-16','2026-12-05',N'Thai',N'Narit Yuvaboon',N'Nadech Kugimiya, Maylada Susri',N'T18',N'Yak and Sergeant Paphan enter a mysterious forest to find a missing unit and confront a shape-shifting tiger spirit.',N'https://cdn.moveek.com/storage/media/cache/tall/6ab49c6a59ce0852256648.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Bambi: Lãnh Địa Săn Mồi')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Bambi: Lãnh Địa Săn Mồi',N'Bambi: The Reckoning',80,'2026-10-23','2026-12-05',N'English',N'Dan Allen',N'Roxanne McKee, Tom Mulheron',N'T16',N'A mutated deer hunts the humans who enter its poisoned woodland territory.',N'https://cdn.moveek.com/storage/media/cache/tall/6accc290ae838036630540.webp',NULL,N'Now Showing');
+IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Cõi Nguyền')
+    INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
+    (N'Cõi Nguyền',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
 
 DECLARE @MovieGenreSeed TABLE (MovieTitle NVARCHAR(250), GenreName NVARCHAR(100));
 INSERT @MovieGenreSeed VALUES
@@ -1041,6 +1067,38 @@ BEGIN
         (@Movie1, @Room2, DATEADD(HOUR, 19, CAST(@DayAfter AS DATETIME2)), DATEADD(MINUTE, 125, DATEADD(HOUR, 19, CAST(@DayAfter AS DATETIME2))), 110000, N'Scheduled'),
         (@Movie2, @Room1, DATEADD(HOUR, 20, CAST(@DayAfter AS DATETIME2)), DATEADD(MINUTE, 110, DATEADD(HOUR, 20, CAST(@DayAfter AS DATETIME2))), 95000, N'Scheduled');
 END;
+GO
+
+DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+DECLARE @TodaySchedule TABLE (
+    MovieTitle NVARCHAR(250), RoomCode NVARCHAR(50), StartHour INT,
+    StartMinute INT, BasePrice DECIMAL(18,2)
+);
+INSERT @TodaySchedule VALUES
+    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-01', 9, 0, 85000),
+    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-02', 11, 0, 105000),
+    (N'Bambi: Lãnh Địa Săn Mồi', N'ROOM-03', 13, 0, 125000),
+    (N'Street Fighter', N'ROOM-01', 12, 0, 95000),
+    (N'Street Fighter', N'ROOM-02', 14, 30, 115000),
+    (N'Street Fighter', N'ROOM-03', 17, 0, 135000),
+    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-01', 16, 0, 95000),
+    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-02', 19, 0, 115000),
+    (N'Quỷ Ăn Tạng 4: Hổ Tinh', N'ROOM-03', 21, 0, 135000);
+
+INSERT dbo.Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, [Status])
+SELECT m.MovieID, r.RoomID, times.StartTime,
+       DATEADD(MINUTE, m.Duration, times.StartTime), s.BasePrice, N'Scheduled'
+FROM @TodaySchedule s
+JOIN dbo.Movie m ON m.Title = s.MovieTitle
+JOIN dbo.Room r ON r.RoomCode = s.RoomCode
+CROSS APPLY (SELECT DATEADD(MINUTE, s.StartMinute,
+                    DATEADD(HOUR, s.StartHour, CAST(@Today AS DATETIME2))) AS StartTime) times
+WHERE NOT EXISTS (
+    SELECT 1 FROM dbo.Showtime existing
+    WHERE existing.MovieID = m.MovieID
+      AND existing.RoomID = r.RoomID
+      AND existing.StartTime = times.StartTime
+);
 GO
 
 /* Demo accounts with BCrypt strength-10 password hashes. */

@@ -18,17 +18,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-/**
- * Screen 21: Home Page
- * Functional Requirements:
- * - View Movie List (Featured carousel, Now Showing, Coming Soon)
- * - View Showtimes (Today's preview, quick booking date/movie selector)
- * - View Promotions & News (Hot discount vouchers, cinema news & events)
- *
- * Assignee: Nguyễn Đức Anh (Iter2)
- */
 @Controller
 public class HomeController {
 
@@ -52,32 +44,36 @@ public class HomeController {
 
     @GetMapping({"/", "/home"})
     public String home(HttpSession session, Model model) {
-        // Homepage catalog sections.
         List<Movie> nowShowing = movieService.getNowShowingMovies(8);
         model.addAttribute("nowShowingMovies", nowShowing);
 
-        // The hero exclusively promotes upcoming releases.
-        List<Movie> comingSoon = movieService.getComingSoonMovies(15);
-        model.addAttribute("featuredMovies", comingSoon);
-        model.addAttribute("comingSoonMovies", comingSoon);
+        Map<String, String> heroBackdrops = Map.ofEntries(
+                Map.entry("Trái Tim Quái Thú", "https://cdn.moveek.com/storage/media/cache/large/6a538be95e054699735537.webp"),
+                Map.entry("Án Mạng Xém Hoàn Hảo", "https://cdn.moveek.com/storage/media/cache/large/6a8d5b4137e8c939819537.webp"),
+                Map.entry("Street Fighter", "https://cdn.moveek.com/storage/media/cache/large/6a538ba81c7f6196807171.webp"),
+                Map.entry("Quỷ Ăn Tạng 4: Hổ Tinh", "https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp"),
+                Map.entry("Bambi: Lãnh Địa Săn Mồi", "https://cdn.moveek.com/storage/media/cache/large/6accc26017036308778097.webp"),
+                Map.entry("Cõi Nguyền", "https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp")
+        );
+        nowShowing.forEach(movie -> movie.setHeroImageUrl(
+                heroBackdrops.getOrDefault(movie.getTitle(), movie.getPosterUrl())));
+        model.addAttribute("featuredMovies", nowShowing);
 
-        // 3. Today's Showtimes preview
+        List<Movie> upcomingMovies = movieService.getUpcomingMovies(15);
+        model.addAttribute("upcomingMovies", upcomingMovies);
+
         List<PublicShowtime> todayShowtimes = showtimeService.getTodayShowtimes(8);
         model.addAttribute("todayShowtimes", todayShowtimes);
 
-        // 4. Featured Promotions
         List<Promotion> promotions = promotionNewsService.getLatestPromotions(4);
         model.addAttribute("promotions", promotions);
 
-        // 5. Latest Cinema News
         List<NewsArticle> newsList = promotionNewsService.getLatestNews(3);
         model.addAttribute("newsList", newsList);
 
-        // 6. Quick Booking Bar options
         model.addAttribute("allMovies", movieService.searchMovies(null, null, "ALL", "newest"));
         model.addAttribute("upcomingDates", showtimeService.getUpcomingDates(7));
 
-        // 7. Session user info
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("currentUser", user);
         if (user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())) {

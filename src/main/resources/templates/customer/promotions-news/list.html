@@ -4,12 +4,9 @@
     <title>Promotions &amp; News | CINEORA</title>
 </head>
 <body class="cineora-catalog-page">
-
-<!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
 
 <main class="section-shell" style="padding-top:2.5rem;">
-    <!-- Breadcrumb & Title -->
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
             <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
@@ -19,8 +16,6 @@
         <h1 style="font-size:2.5rem;font-weight:900;">Promotions &amp; Cinema News</h1>
         <p style="color:var(--text-secondary);margin-top:6px;">Discover CINEORA offers, voucher updates, cinema news, and upcoming events.</p>
     </div>
-
-    <!-- Tab navigation -->
     <div class="filter-toolbar" style="margin-bottom:3rem;">
         <div class="filter-tabs">
             <a th:href="@{/promotions-news(tab='all')}"
@@ -40,10 +35,6 @@
             </a>
         </div>
     </div>
-
-    <!-- =====================================================================
-         1. KHUYẾN MÃI & VOUCHER SECTION
-         ===================================================================== -->
     <section th:if="${activeTab == 'all' || activeTab == 'promotions'}" style="margin-bottom:4rem;">
         <div class="section-header">
             <div class="section-header-left">
@@ -97,10 +88,6 @@
             <p style="color:var(--text-muted);">There are no new promotions at the moment. Please check back later.</p>
         </div>
     </section>
-
-    <!-- =====================================================================
-         2. TIN TỨC & SỰ KIỆN SECTION
-         ===================================================================== -->
     <section th:if="${activeTab == 'all' || activeTab == 'news'}" style="margin-bottom:4rem;">
         <div class="section-header">
             <div class="section-header-left">
@@ -141,15 +128,9 @@
         </div>
     </section>
 </main>
-
-<!-- Trailer Modal & Toast -->
 <div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
-
-<!-- Footer -->
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
-
-<!-- Scripts -->
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
 
 </body>

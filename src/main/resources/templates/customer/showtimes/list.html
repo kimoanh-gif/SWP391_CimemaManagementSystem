@@ -4,12 +4,9 @@
     <title>Showtimes | CINEORA</title>
 </head>
 <body class="cineora-catalog-page">
-
-<!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('showtimes')}"></div>
 
 <main class="section-shell" style="padding-top:2.5rem;">
-    <!-- Breadcrumb & Title -->
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
             <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
@@ -19,8 +16,6 @@
         <h1 style="font-size:2.5rem;font-weight:900;">Movie Showtimes</h1>
         <p style="color:var(--text-secondary);margin-top:6px;">Browse showtimes by date, movie, and auditorium, then continue to seat selection.</p>
     </div>
-
-    <!-- Date Selector Bar (14 Days) -->
     <div class="date-selector-bar">
         <a th:each="d, stat : ${upcomingDates}"
            th:href="@{/showtimes(date=${d}, movieId=${selectedMovieId}, roomType=${selectedRoomType}, timeSlot=${selectedTimeSlot})}"
@@ -31,8 +26,6 @@
             <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
         </a>
     </div>
-
-    <!-- Filter Toolbar -->
     <form th:action="@{/showtimes}" method="get" class="filter-toolbar">
         <input type="hidden" name="date" th:value="${selectedDate}" />
 
@@ -41,7 +34,6 @@
         </div>
 
         <div class="filter-controls">
-            <!-- Filter by Movie -->
             <select name="movieId" class="filter-select" onchange="this.form.submit()">
                 <option value="">All Movies</option>
                 <option th:each="m : ${allMovies}"
@@ -51,16 +43,12 @@
                     Light Speedway
                 </option>
             </select>
-
-            <!-- Filter by Room Format -->
             <select name="roomType" class="filter-select" onchange="this.form.submit()">
                 <option value="ALL" th:selected="${selectedRoomType == 'ALL'}">All Formats</option>
                 <option value="2D" th:selected="${selectedRoomType == '2D'}">2D Standard</option>
                 <option value="3D" th:selected="${selectedRoomType == '3D'}">3D Laser</option>
                 <option value="VIP" th:selected="${selectedRoomType == 'VIP'}">VIP Recliner</option>
             </select>
-
-            <!-- Filter by Time Slot -->
             <select name="timeSlot" class="filter-select" onchange="this.form.submit()">
                 <option value="ALL" th:selected="${selectedTimeSlot == 'ALL'}">All Times</option>
                 <option value="morning" th:selected="${selectedTimeSlot == 'morning'}">Morning (Before 12:00)</option>
@@ -77,17 +65,12 @@
             </a>
         </div>
     </form>
-
-    <!-- Showtimes Grouped by Movie -->
     <div th:if="${groupedShowtimes != null && !groupedShowtimes.isEmpty()}">
         <div class="showtime-movie-card" th:each="entry : ${groupedShowtimes}" th:with="movieShowtimes=${entry.value}, firstShowtime=${entry.value[0]}">
-            <!-- Movie Poster Thumbnail -->
             <div>
                 <img th:src="${firstShowtime.moviePosterUrl}" th:alt="${firstShowtime.movieTitle}" class="showtime-movie-poster"
                      onerror="this.src='/images/cinema-login-hero.png'" />
             </div>
-
-            <!-- Movie & Showtimes Info -->
             <div class="showtime-movie-info">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
                     <span class="badge-rating" th:classappend="${firstShowtime.movieAgeRating == 'T18' ? 'badge-t18' : (firstShowtime.movieAgeRating == 'T16' ? 'badge-t16' : (firstShowtime.movieAgeRating == 'T13' ? 'badge-t13' : 'badge-p'))}"
@@ -100,8 +83,6 @@
                 <h3>
                     <a th:href="@{/movies/{id}(id=${firstShowtime.movieId})}" th:text="${firstShowtime.movieTitle}">Movie Title</a>
                 </h3>
-
-                <!-- Room and Slots -->
                 <div class="showtime-room-block">
                     <div class="room-block-title">
                         <span>🏛️ CINEORA Cinema</span>
@@ -124,8 +105,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Empty State -->
     <div th:if="${groupedShowtimes == null || groupedShowtimes.isEmpty()}"
          style="text-align:center;padding:5rem 2rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
         <div style="font-size:3.5rem;margin-bottom:1rem;">📅</div>
@@ -138,15 +117,9 @@
         </a>
     </div>
 </main>
-
-<!-- Trailer Modal & Toast -->
 <div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
-
-<!-- Footer -->
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
-
-<!-- Scripts -->
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
 
 </body>
