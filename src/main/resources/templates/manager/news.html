@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEORA — News Management &amp; Approval</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/manager-news.css}">
+</head>
+<body class="cm-body">
+
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='news')}"></aside>
+
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<main class="cm-main">
+
+    <!-- Header & top actions -->
+    <div class="cm-page-head">
+        <div class="cm-page-title">
+            <span class="mn-module-pill">Module M07 • News approval permission</span>
+            <h1>News Management</h1>
+            <p>Check quality and approve cinema announcements, promotions and operational events submitted by Staff.</p>
+        </div>
+        <div class="cm-actions">
+            <button type="button" class="mn-btn mn-btn-ghost" data-open="history-drawer">
+                <span class="material-symbols-outlined">history</span>
+                <span>View news review history</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="mn-alert mn-alert-success" role="status" th:if="${successMessage != null}">
+        <span class="material-symbols-outlined">done</span><span th:text="${successMessage}">Done</span>
+    </div>
+    <div class="mn-alert mn-alert-error" role="alert" th:if="${errorMessage != null}">
+        <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
+    </div>
+    <div class="mn-alert mn-alert-error" role="alert" th:if="${loadError}">
+        <span class="material-symbols-outlined">error</span>
+        <span>News data could not be loaded. <a th:href="@{/manager/news}">Try again</a></span>
+    </div>
+
+    <!-- Status metric cards -->
+    <section class="mn-kpi-grid" aria-label="News status">
+        <a class="mn-kpi" th:href="@{/manager/news(status='ALL')}">
+            <div class="mn-kpi-top"><span>Total news</span><span class="mn-kpi-icon"><span class="material-symbols-outlined">article</span></span></div>
+            <div class="mn-kpi-bottom"><strong th:text="${stats.total()}">48</strong><small>All articles</small></div>
+            <i class="mn-kpi-bar"></i>
+        </a>
+        <a class="mn-kpi mn-kpi-pending" th:href="@{/manager/news(status='PENDING')}">
+            <div class="mn-kpi-top"><span>Pending</span><span class="mn-attention" th:if="${stats.pending() > 0}"><i></i>Needs attention</span></div>
+            <div class="mn-kpi-bottom"><strong th:text="${stats.pending()}">04</strong>
+                <small th:if="${stats.urgentPending() > 0}"><span class="material-symbols-outlined">hourglass_top</span><th:block th:text="${stats.urgentPending() + ' waiting over 24h'}">2 urgent</th:block></small></div>
+            <i class="mn-kpi-bar"></i>
+        </a>
+        <a class="mn-kpi mn-kpi-approved" th:href="@{/manager/news(status='APPROVED')}">
+            <div class="mn-kpi-top"><span>Approved</span><span class="mn-kpi-icon"><span class="material-symbols-outlined">check_circle</span></span></div>
+            <div class="mn-kpi-bottom"><strong th:text="${stats.approved()}">32</strong><small>Scheduled to publish</small></div>
+            <i class="mn-kpi-bar"></i>
+        </a>
+        <a class="mn-kpi mn-kpi-rejected" th:href="@{/manager/news(status='REJECTED')}">
+            <div class="mn-kpi-top"><span>Rejected</span><span class="mn-kpi-icon"><span class="material-symbols-outlined">cancel</span></span></div>
+            <div class="mn-kpi-bottom"><strong th:text="${stats.rejected()}">05</strong><small>Needs revision</small></div>
+            <i class="mn-kpi-bar"></i>
+        </a>
+        <a class="mn-kpi mn-kpi-live" th:href="@{/manager/news(status='PUBLISHED')}">
+            <div class="mn-kpi-top"><span>Publishing</span><span class="mn-kpi-icon"><span class="material-symbols-outlined">public</span></span></div>
+            <div class="mn-kpi-bottom"><strong th:text="${stats.publishing()}">27</strong><small>Online App/Web</small></div>
+            <i class="mn-kpi-bar"></i>
+        </a>
+    </section>
+
+    <!-- Filter & search bar -->
+    <form class="mn-filter" method="get" th:action="@{/manager/news}">
+        <label class="mn-search">
+            <span class="material-symbols-outlined">search</span>
+            <input type="text" name="keyword" maxlength="100" th:value="${filter.keyword()}"
+                   placeholder="Search by title, author or #NEWS-ID...">
+        </label>
+        <select name="status" aria-label="Status">
+            <option value="ALL" th:selected="${filter.status() == 'ALL'}" th:text="${'All statuses (' + stats.total() + ')'}">All statuses</option>
+            <option value="PENDING" th:selected="${filter.status() == 'PENDING'}" th:text="${'Pending (' + stats.pending() + ')'}">Pending</option>
+            <option value="APPROVED" th:selected="${filter.status() == 'APPROVED'}" th:text="${'Approved (' + stats.approved() + ')'}">Approved</option>
+            <option value="REJECTED" th:selected="${filter.status() == 'REJECTED'}" th:text="${'Rejected (' + stats.rejected() + ')'}">Rejected</option>
+            <option value="PUBLISHED" th:selected="${filter.status() == 'PUBLISHED'}" th:text="${'Published (' + stats.publishing() + ')'}">Published</option>
+            <option value="DRAFT" th:selected="${filter.status() == 'DRAFT'}" th:text="${'Drafts (' + stats.drafts() + ')'}">Drafts</option>
+            <option value="ARCHIVED" th:selected="${filter.status() == 'ARCHIVED'}" th:text="${'Archived (' + stats.archived() + ')'}">Archived</option>
+        </select>
+        <select name="period" aria-label="Created date">
+            <option value="ALL" th:selected="${filter.period() == 'ALL'}">Any time</option>
+            <option value="30DAYS" th:selected="${filter.period() == '30DAYS'}">Last 30 days</option>
+            <option value="WEEK" th:selected="${filter.period() == 'WEEK'}">Last 7 days</option>
+            <option value="MONTH" th:selected="${filter.period() == 'MONTH'}">This month</option>
+        </select>
+        <input type="hidden" name="size" th:value="${filter.size()}">
+        <button type="submit" class="mn-btn mn-btn-dark"><span class="material-symbols-outlined">filter_alt</span>Filter</button>
+        <a class="mn-btn mn-btn-ghost" th:href="@{/manager/news(status='ALL')}"><span class="material-symbols-outlined">restart_alt</span>Reset</a>
+    </form>
+
+    <!-- News table -->
+    <section class="cm-card mn-table-card">
+        <div class="cm-table-wrap" th:if="${!newsPage.items().isEmpty()}">
+            <table class="cm-table mn-table">
+                <thead>
+                <tr>
+                    <th style="width:84px">Image</th>
+                    <th>News title</th>
+                    <th style="width:190px">Created by</th>
+                    <th style="width:150px">Time</th>
+                    <th style="width:130px">Status</th>
+                    <th style="width:220px" class="mn-right">Review actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="n : ${newsPage.items()}">
+                    <td>
+                        <img class="mn-thumb" th:if="${n.thumbnailUrl != null and !#strings.isEmpty(n.thumbnailUrl)}"
+                             th:src="${n.thumbnailUrl}" alt="" onerror="this.replaceWith(document.createElement('span'))">
+                        <span class="mn-thumb mn-thumb-empty" th:unless="${n.thumbnailUrl != null and !#strings.isEmpty(n.thumbnailUrl)}">
+                            <span class="material-symbols-outlined">image</span></span>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <span class="cm-code" th:text="${n.code}">#NEWS-088</span>
+                            <a class="mn-title" th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},page=${newsPage.page()},size=${filter.size()},view=${n.newsId})}"
+                               th:text="${n.title}">Title</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="mn-author">
+                            <span class="mn-avatar" th:text="${n.authorInitials}">TD</span>
+                            <span class="cm-cell-stack"><span class="cm-strong" th:text="${n.authorName}">Name</span>
+                                <span class="cm-muted" th:text="${n.authorPosition}">Staff</span></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <span class="cm-strong" th:text="${n.createdDisplay}">14/10/2024 10:20</span>
+                            <span class="cm-muted" th:text="${n.timelineDisplay}">Updated</span>
+                        </div>
+                    </td>
+                    <td><span class="mn-status" th:classappend="${'mn-status-' + #strings.toLowerCase(n.displayStatus)}"
+                              th:text="${n.displayStatusLabel}">Pending</span></td>
+                    <td class="mn-right">
+                        <div class="mn-row-actions">
+                            <th:block th:if="${n.pending}">
+                                <button type="button" class="mn-btn mn-btn-approve" data-open="approve-modal"
+                                        th:attr="data-id=${n.newsId},data-code=${n.code},data-title=${n.title},data-author=${n.authorName}">
+                                    <span class="material-symbols-outlined">check</span>Approve</button>
+                                <button type="button" class="mn-btn mn-btn-reject" data-open="reject-modal"
+                                        th:attr="data-id=${n.newsId},data-code=${n.code}">
+                                    <span class="material-symbols-outlined">close</span>Reject</button>
+                            </th:block>
+                            <form th:if="${n.scheduled}" method="post" th:action="@{/manager/news/{id}/publish-now(id=${n.newsId})}">
+                                <input type="hidden" name="returnQuery" class="mn-return-query">
+                                <button type="submit" class="mn-btn mn-btn-approve"><span class="material-symbols-outlined">send</span>Publish</button>
+                            </form>
+                            <form th:if="${n.live or n.scheduled}" method="post" th:action="@{/manager/news/{id}/archive(id=${n.newsId})}"
+                                  data-confirm="Archive this article? It will be removed from the App/Web.">
+                                <input type="hidden" name="returnQuery" class="mn-return-query">
+                                <button type="submit" class="mn-icon-btn" title="Archive (unpublish)" aria-label="Archive">
+                                    <span class="material-symbols-outlined">unpublished</span></button>
+                            </form>
+                            <a class="mn-icon-btn" title="View details" aria-label="View details"
+                               th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},page=${newsPage.page()},size=${filter.size()},view=${n.newsId})}">
+                                <span class="material-symbols-outlined">visibility</span></a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty list -->
+        <div class="mn-empty" th:if="${newsPage.items().isEmpty()}">
+            <span class="material-symbols-outlined">newspaper</span>
+            <h3>No articles found</h3>
+            <p>There is currently no news matching the search criteria or filtered status. Please try again with a different keyword.</p>
+            <a class="mn-btn mn-btn-ghost" th:href="@{/manager/news(status='ALL')}">Reset all filters</a>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mn-pagination" th:if="${newsPage.totalItems() > 0}">
+            <span>Display <b th:text="${newsPage.fromItem() + ' - ' + newsPage.toItem()}">1 - 5</b>
+                out of total <b th:text="${newsPage.totalItems()}">48</b> news</span>
+            <form method="get" th:action="@{/manager/news}" class="mn-size-form">
+                <input type="hidden" name="keyword" th:value="${filter.keyword()}">
+                <input type="hidden" name="status" th:value="${filter.status()}">
+                <input type="hidden" name="period" th:value="${filter.period()}">
+                <select name="size" onchange="this.form.submit()" aria-label="Rows per page">
+                    <option th:each="s : ${pageSizes}" th:value="${s}"
+                            th:selected="${s == filter.size()}" th:text="${s + ' per page'}">10 per page</option>
+                </select>
+            </form>
+            <nav class="mn-pages" aria-label="Pages">
+                <a th:classappend="${newsPage.page() <= 1} ? 'is-disabled'"
+                   th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},size=${filter.size()},page=${newsPage.page() - 1})}">
+                    <span class="material-symbols-outlined">chevron_left</span></a>
+                <a th:each="p : ${#numbers.sequence(1, newsPage.totalPages())}"
+                   th:if="${p == 1 or p == newsPage.totalPages() or (p >= newsPage.page() - 2 and p <= newsPage.page() + 2)}"
+                   th:classappend="${p == newsPage.page()} ? 'is-active'"
+                   th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},size=${filter.size()},page=${p})}"
+                   th:text="${p}">1</a>
+                <a th:classappend="${newsPage.page() >= newsPage.totalPages()} ? 'is-disabled'"
+                   th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},size=${filter.size()},page=${newsPage.page() + 1})}">
+                    <span class="material-symbols-outlined">chevron_right</span></a>
+            </nav>
+        </div>
+    </section>
+</main>
+</div>
+
+<!-- ================= Approve dialog ================= -->
+<div class="mn-backdrop" id="approve-modal" role="dialog" aria-modal="true" aria-labelledby="approve-title" hidden>
+    <form class="mn-modal" method="post" id="approve-form" th:action="@{/manager/news/0/approve}"
+          th:attr="data-action-template=@{/manager/news/__ID__/approve}">
+        <input type="hidden" name="returnQuery" class="mn-return-query">
+        <div class="mn-modal-head mn-head-approve">
+            <span class="material-symbols-outlined">verified</span>
+            <div><h2 id="approve-title">Confirm news approval</h2><small data-fill="code">#NEWS-000</small></div>
+            <button type="button" class="mn-close" data-close aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="mn-modal-body">
+            <dl class="mn-summary">
+                <dt>Article title:</dt><dd data-fill="title">Title</dd>
+                <dt>Author:</dt><dd data-fill="author">Author</dd>
+            </dl>
+            <label class="mn-option">
+                <input type="radio" name="publishMode" value="NOW" checked>
+                <span><b>Publish immediately</b><small>Publicly displayed to customers on the News page right away.</small></span>
+            </label>
+            <label class="mn-option">
+                <input type="radio" name="publishMode" value="SCHEDULE">
+                <span><b>Approve and schedule</b><small>Keep the article approved; it is published automatically at the chosen time.</small>
+                    <input type="datetime-local" name="publishAt" class="mn-input" aria-label="Scheduled publish time"></span>
+            </label>
+        </div>
+        <div class="mn-modal-foot">
+            <button type="button" class="mn-btn mn-btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="mn-btn mn-btn-approve"><span class="material-symbols-outlined">task_alt</span>Confirm news approval</button>
+        </div>
+    </form>
+</div>
+
+<!-- ================= Reject dialog ================= -->
+<div class="mn-backdrop" id="reject-modal" role="dialog" aria-modal="true" aria-labelledby="reject-title" hidden>
+    <form class="mn-modal" method="post" id="reject-form" th:action="@{/manager/news/0/reject}"
+          th:attr="data-action-template=@{/manager/news/__ID__/reject}">
+        <input type="hidden" name="returnQuery" class="mn-return-query">
+        <div class="mn-modal-head mn-head-reject">
+            <span class="material-symbols-outlined">assignment_late</span>
+            <div><h2 id="reject-title">Reject news</h2><small data-fill="code">#NEWS-000</small></div>
+            <button type="button" class="mn-close" data-close aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="mn-modal-body">
+            <p>Please provide a rejection reason so the author knows what to adjust or add:</p>
+            <div class="mn-quick-reasons">
+                <span>Quick reasons:</span>
+                <button type="button" data-reason="Image does not meet standards">Image does not meet standards</button>
+                <button type="button" data-reason="Incorrect program information">Incorrect program information</button>
+                <button type="button" data-reason="Missing detailed terms">Missing detailed terms</button>
+                <button type="button" data-reason="Duplicate content">Duplicate content</button>
+            </div>
+            <label class="mn-label" for="reject-reason">Specific rejection reason <em>(*)</em></label>
+            <textarea id="reject-reason" name="reason" class="mn-input" rows="4" required
+                      th:attr="maxlength=${maxReasonLength}"></textarea>
+            <div class="mn-reason-meta">
+                <span class="mn-reason-error" hidden>Please enter a rejection reason before confirming.</span>
+                <span><b id="reason-count">0</b>/<th:block th:text="${maxReasonLength}">300</th:block> characters</span>
+            </div>
+        </div>
+        <div class="mn-modal-foot">
+            <button type="button" class="mn-btn mn-btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="mn-btn mn-btn-reject-solid"><span class="material-symbols-outlined">cancel</span>Confirm rejection</button>
+        </div>
+    </form>
+</div>
+
+<!-- ================= Detail dialog (760px) ================= -->
+<div class="mn-backdrop is-open" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"
+     th:if="${selectedNews != null}">
+    <div class="mn-modal mn-modal-wide" th:with="n=${selectedNews}">
+        <div class="mn-modal-head">
+            <div class="mn-detail-tags">
+                <span class="cm-code" th:text="${n.code}">#NEWS-088</span>
+                <span class="mn-status" th:classappend="${'mn-status-' + #strings.toLowerCase(n.displayStatus)}" th:text="${n.displayStatusLabel}">Pending</span>
+            </div>
+            <a class="mn-close" aria-label="Close"
+               th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},page=${newsPage.page()},size=${filter.size()})}">
+                <span class="material-symbols-outlined">close</span></a>
+        </div>
+        <div class="mn-modal-body">
+            <div class="mn-detail-cover">
+                <img th:if="${n.thumbnailUrl != null and !#strings.isEmpty(n.thumbnailUrl)}" th:src="${n.thumbnailUrl}" alt="">
+                <span th:unless="${n.thumbnailUrl != null and !#strings.isEmpty(n.thumbnailUrl)}"><span class="material-symbols-outlined">photo_camera</span>No cover image</span>
+            </div>
+            <div class="mn-detail-meta">
+                <span><span class="material-symbols-outlined">person</span>Author: <b th:text="${n.authorName + ' (' + n.authorPosition + ')'}">Author</b></span>
+                <span><span class="material-symbols-outlined">schedule</span>Created at: <b th:text="${n.createdDisplay}">14/10/2024 10:20</b></span>
+                <span th:if="${n.timelineDisplay != ''}"><span class="material-symbols-outlined">event</span><b th:text="${n.timelineDisplay}">Published</b></span>
+                <span th:if="${n.reviewerName != null}"><span class="material-symbols-outlined">verified_user</span>Reviewed by: <b th:text="${n.reviewerName}">Manager</b></span>
+            </div>
+            <h2 id="detail-title" class="mn-detail-title" th:text="${n.title}">Title</h2>
+            <div class="mn-reason-box" th:if="${n.rejected and n.rejectionReason != null}">
+                <span class="material-symbols-outlined">error</span>
+                <div><b>Rejection reason from Manager:</b><p th:text="${n.rejectionReason}">Reason</p></div>
+            </div>
+            <div class="mn-detail-content" th:text="${n.content}">Content</div>
+        </div>
+        <div class="mn-modal-foot">
+            <a class="mn-btn mn-btn-ghost"
+               th:href="@{/manager/news(keyword=${filter.keyword()},status=${filter.status()},period=${filter.period()},page=${newsPage.page()},size=${filter.size()})}">Close</a>
+            <th:block th:if="${n.pending}">
+                <button type="button" class="mn-btn mn-btn-reject" data-open="reject-modal"
+                        th:attr="data-id=${n.newsId},data-code=${n.code}"><span class="material-symbols-outlined">close</span>Reject</button>
+                <button type="button" class="mn-btn mn-btn-approve" data-open="approve-modal"
+                        th:attr="data-id=${n.newsId},data-code=${n.code},data-title=${n.title},data-author=${n.authorName}">
+                    <span class="material-symbols-outlined">check_circle</span>Approve this article</button>
+            </th:block>
+        </div>
+    </div>
+</div>
+
+<!-- ================= Review history drawer ================= -->
+<div class="mn-backdrop mn-backdrop-drawer" id="history-drawer" role="dialog" aria-modal="true" aria-labelledby="history-title" hidden>
+    <aside class="mn-drawer">
+        <div class="mn-modal-head">
+            <span class="material-symbols-outlined">history</span>
+            <div><h2 id="history-title">News review history</h2><small>Latest Manager actions</small></div>
+            <button type="button" class="mn-close" data-close aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <ol class="mn-history" th:if="${!history.isEmpty()}">
+            <li th:each="h : ${history}" th:classappend="${'mn-h-' + #strings.toLowerCase(h.displayStatus)}">
+                <time th:text="${#temporals.format(h.reviewedAt, 'dd/MM/yyyy • HH:mm')}">14/10/2024 • 11:30</time>
+                <b th:text="${(h.reviewerName != null ? h.reviewerName : 'Manager') + ' '
+                        + (h.rejected ? 'rejected ' : (h.displayStatus == 'ARCHIVED' ? 'archived ' : 'approved ')) + h.code}">Manager approved #NEWS-080</b>
+                <span th:text="${h.rejected and h.rejectionReason != null ? 'Reason: ' + h.rejectionReason : h.title}">Title</span>
+            </li>
+        </ol>
+        <p class="mn-history-empty" th:if="${history.isEmpty()}">No review actions yet.</p>
+    </aside>
+</div>
+
+<script th:src="@{/js/manager-news.js}"></script>
+</body>
+</html>
