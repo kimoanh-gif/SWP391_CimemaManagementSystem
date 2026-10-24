@@ -10,7 +10,7 @@
 function openAddGenreModal() {
     resetGenreModalForm();
     var title = document.getElementById("genreModalTitle");
-    if (title) title.textContent = "Thêm Thể Loại Mới";
+    if (title) title.textContent = "Add genre";
 
     var status = document.getElementById("genreStatus");
     if (status) status.value = "ACTIVE";
@@ -30,7 +30,7 @@ function openEditGenreModal(button) {
     var status = button.getAttribute("data-status") || "ACTIVE";
 
     var title = document.getElementById("genreModalTitle");
-    if (title) title.textContent = "Chỉnh Sửa Thể Loại: " + name;
+    if (title) title.textContent = "Edit genre: " + name;
 
     var idInput = document.getElementById("genreId");
     if (idInput) idInput.value = id;
@@ -110,8 +110,8 @@ async function toggleGenreStatus(button) {
 
     if (currentStatus === "ACTIVE" && movieCount > 0) {
         var confirmDeactivate = confirm(
-            "Thể loại '" + name + "' hiện đang được gán cho " + movieCount + " phim.\n" +
-            "Hủy kích hoạt sẽ ẩn thể loại này khỏi danh sách chọn phim mới. Bạn có chắc chắn muốn hủy kích hoạt?"
+            "Genre '" + name + "' is currently assigned to " + movieCount + " movie(s).\n" +
+            "Deactivating hides this genre when assigning genres to new movies. Are you sure you want to deactivate it?"
         );
         if (!confirmDeactivate) return;
     }
@@ -133,12 +133,12 @@ async function toggleGenreStatus(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể thay đổi trạng thái: " + (result.message || "Lỗi không xác định"));
+            alert("Could not change the status: " + (result.message || "Unknown error"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Lỗi kết nối: " + err.message);
+        alert("Connection error: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -154,7 +154,7 @@ async function viewAssociatedMovies(genreId, genreName) {
 
     var container = document.getElementById("moviesListContainer");
     if (container) {
-        container.innerHTML = '<div style="text-align:center; padding: 2rem;"><span class="spinner"></span> Đang tải danh sách phim...</div>';
+        container.innerHTML = '<div style="text-align:center; padding: 2rem;"><span class="spinner"></span> Loading movies...</div>';
     }
 
     var backdrop = document.getElementById("moviesModalBackdrop");
@@ -169,28 +169,28 @@ async function viewAssociatedMovies(genreId, genreName) {
         if (response.ok && result.success) {
             var movies = result.data || [];
             if (movies.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">Chưa có phim nào liên kết với thể loại này.</p>';
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">No movies are linked to this genre yet.</p>';
             } else {
                 container.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
                     movies.map(function (m) {
-                        var statusBadge = m.status === 'Now Showing' ? '<span class="badge badge-green" style="font-size:11px;padding:3px 8px;">Đang chiếu</span>' :
-                            (m.status === 'Upcoming' ? '<span class="badge badge-orange" style="font-size:11px;padding:3px 8px;">Sắp chiếu</span>' :
-                            '<span class="badge badge-gray" style="font-size:11px;padding:3px 8px;">' + escapeHtml(m.status || 'Chưa mở') + '</span>');
+                        var statusBadge = m.status === 'Now Showing' ? '<span class="badge badge-green" style="font-size:11px;padding:3px 8px;">Now Showing</span>' :
+                            (m.status === 'Upcoming' ? '<span class="badge badge-orange" style="font-size:11px;padding:3px 8px;">Coming Soon</span>' :
+                            '<span class="badge badge-gray" style="font-size:11px;padding:3px 8px;">' + escapeHtml(m.status || 'Not released') + '</span>');
                         return '<div class="movie-chip-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">' +
-                            '<span class="movie-chip-title" style="font-weight:700;color:var(--text-900);">🎬 ' + escapeHtml(m.title) + '</span>' +
+                            '<span class="movie-chip-title" style="font-weight:700;color:var(--text-900);">' + escapeHtml(m.title) + '</span>' +
                             statusBadge +
                             '</div>';
                     }).join("") +
                     '</div>' +
                     '<div style="margin-top:16px;text-align:center;">' +
-                    '<a href="/manager/movies?genreId=' + genreId + '" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;">🔍 Đi tới Màn Hình Quản Lý Phim (Lọc theo thể loại này) ➔</a>' +
+                    '<a href="/manager/movies?genreId=' + genreId + '" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;">View these movies in Movie Management →</a>' +
                     '</div>';
             }
         } else {
-            container.innerHTML = '<p style="color: var(--danger); text-align: center;">' + escapeHtml(result.message || "Không thể tải danh sách phim.") + '</p>';
+            container.innerHTML = '<p style="color: var(--danger); text-align: center;">' + escapeHtml(result.message || "Could not load the movie list.") + '</p>';
         }
     } catch (err) {
-        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Lỗi tải dữ liệu: ' + escapeHtml(err.message) + '</p>';
+        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Failed to load data: ' + escapeHtml(err.message) + '</p>';
     }
 }
 window.viewAssociatedMovies = viewAssociatedMovies;
@@ -242,17 +242,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var hasError = false;
             if (!name) {
-                showInputError(genreNameInput, nameFeedback, "Tên thể loại không được để trống.");
+                showInputError(genreNameInput, nameFeedback, "Genre name is required.");
                 hasError = true;
             } else if (name.length < 2 || name.length > 100) {
-                showInputError(genreNameInput, nameFeedback, "Tên thể loại phải có độ dài từ 2 đến 100 ký tự.");
+                showInputError(genreNameInput, nameFeedback, "Genre name must be 2 to 100 characters long.");
                 hasError = true;
             } else {
                 clearInputError(genreNameInput, nameFeedback);
             }
 
             if (desc.length > 500) {
-                showInputError(genreDescInput, descFeedback, "Mô tả không được vượt quá 500 ký tự.");
+                showInputError(genreDescInput, descFeedback, "Description must not exceed 500 characters.");
                 hasError = true;
             } else {
                 clearInputError(genreDescInput, descFeedback);
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     closeGenreModal();
                     window.location.reload();
                 } else {
-                    var message = result.message || (result.errors ? result.errors.join(", ") : "Đã xảy ra lỗi");
+                    var message = result.message || (result.errors ? result.errors.join(", ") : "Something went wrong");
                     showModalAlert(message);
                 }
             } catch (err) {
@@ -317,8 +317,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("submit", function (e) {
         var deleteForm = e.target.closest(".delete-genre-form");
         if (deleteForm) {
-            var name = deleteForm.getAttribute("data-name") || "thể loại này";
-            if (!confirm("Bạn có chắc chắn muốn xóa thể loại '" + name + "'?")) {
+            var name = deleteForm.getAttribute("data-name") || "this genre";
+            if (!confirm("Are you sure you want to delete the genre '" + name + "'?")) {
                 e.preventDefault();
             }
         }
@@ -353,7 +353,7 @@ document.addEventListener("DOMContentLoaded", function () {
         button.disabled = isLoading;
         if (isLoading) {
             button.setAttribute("data-orig-text", button.innerHTML);
-            button.innerHTML = '<span class="spinner"></span> Đang lưu...';
+            button.innerHTML = '<span class="spinner"></span> Saving...';
         } else {
             var orig = button.getAttribute("data-orig-text");
             if (orig) button.innerHTML = orig;
