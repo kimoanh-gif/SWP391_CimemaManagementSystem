@@ -1,8 +1,3 @@
-/**
- * CineVerse Customer Portal JavaScript
- * Author: Nguyễn Đức Anh (Iter2)
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     initHomeHeader();
     initHeroCarousel();
@@ -14,15 +9,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initHomeHeader() {
     const header = document.querySelector('.cineora-home .cinema-header');
+    const hero = document.querySelector('.cineora-home .hero-slider-section');
     if (!header) return;
-    const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 48);
+    const updateHeader = () => {
+        const heroBottom = hero ? hero.getBoundingClientRect().bottom : 0;
+        header.classList.toggle('is-scrolled', heroBottom <= header.offsetHeight);
+    };
     updateHeader();
     window.addEventListener('scroll', updateHeader, { passive: true });
+    window.addEventListener('resize', updateHeader, { passive: true });
 }
 
-/* =====================================================================
-   FEATURED MOVIE CAROUSEL
-   ===================================================================== */
 function initHeroCarousel() {
     const carousel = document.querySelector('[data-hero-carousel]');
     if (!carousel) return;
@@ -88,9 +85,6 @@ function initHeroCarousel() {
     startAutoplay();
 }
 
-/* =====================================================================
-   1. TRAILER MODAL
-   ===================================================================== */
 function initTrailerModal() {
     const modal = document.getElementById('trailerModal');
     const iframe = document.getElementById('trailerIframe');
@@ -138,9 +132,6 @@ function initTrailerModal() {
     });
 }
 
-/* =====================================================================
-   2. VOUCHER COPY TO CLIPBOARD & TOAST
-   ===================================================================== */
 function initVoucherCopy() {
     const toast = document.getElementById('cinemaToast');
     const toastMsg = document.getElementById('cinemaToastMsg');
@@ -164,9 +155,6 @@ function initVoucherCopy() {
     }
 }
 
-/* =====================================================================
-   3. STAR RATING PICKER
-   ===================================================================== */
 function initStarRating() {
     const starContainer = document.getElementById('starRatingInput');
     const ratingHiddenInput = document.getElementById('ratingValue');
@@ -215,9 +203,6 @@ function initStarRating() {
     }
 }
 
-/* =====================================================================
-   4. QUICK BOOKING BAR
-   ===================================================================== */
 function initQuickBooking() {
     const movieSelect = document.getElementById('quickMovieSelect');
     const dateSelect = document.getElementById('quickDateSelect');
@@ -234,8 +219,6 @@ function initQuickBooking() {
             alert('Vui lòng chọn phim bạn muốn xem.');
             return;
         }
-
-        // Navigate to Movie Details or Showtime List with date
         let targetUrl = `/movies/${movieId}`;
         if (date) {
             targetUrl += `?date=${date}#showtimes`;

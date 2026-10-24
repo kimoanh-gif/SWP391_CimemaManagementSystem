@@ -455,6 +455,27 @@ public class MovieDao {
         return list;
     }
 
+    public List<Movie> findUpcomingByReleaseDate(int limit) {
+        String sql = """
+                SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
+                       m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
+                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
+                FROM dbo.Movie m
+                WHERE m.ReleaseDate > CAST(SYSDATETIME() AS DATE)
+                  AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
+                ORDER BY m.ReleaseDate ASC, m.Title ASC
+                """;
+        if (limit > 0) {
+            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
+        }
+        List<Movie> list = jdbcTemplate.query(sql, movieRowMapper);
+        for (Movie m : list) {
+            m.setGenres(findGenresByMovieId(m.getMovieId()));
+        }
+        return list;
+    }
+
     public List<Movie> findFeatured(int limit) {
         return findNowShowing(limit);
     }
@@ -487,8 +508,10 @@ public class MovieDao {
             if ("NOW_SHOWING".equalsIgnoreCase(status) || "now-showing".equalsIgnoreCase(status)) {
                 sql.append(" AND (UPPER(m.[Status]) IN ('NOW_SHOWING', 'NOW SHOWING', 'ACTIVE') ");
                 sql.append("      OR EXISTS (SELECT 1 FROM dbo.Showtime st WHERE st.MovieID = m.MovieID AND st.StartTime > SYSDATETIME() AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE'))) ");
-            } else if ("COMING_SOON".equalsIgnoreCase(status) || "coming-soon".equalsIgnoreCase(status)) {
-                sql.append(" AND UPPER(m.[Status]) IN ('COMING_SOON', 'COMING SOON', 'UPCOMING') ");
+            } else if ("COMING_SOON".equalsIgnoreCase(status)
+                    || "coming-soon".equalsIgnoreCase(status)
+                    || "upcoming".equalsIgnoreCase(status)) {
+                sql.append(" AND m.ReleaseDate > CAST(SYSDATETIME() AS DATE) ");
             }
         }
 

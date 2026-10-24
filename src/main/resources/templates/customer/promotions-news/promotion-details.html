@@ -4,12 +4,9 @@
     <title>CineVerse - Chi Tiết Khuyến Mãi</title>
 </head>
 <body>
-
-<!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
 
 <main class="section-shell" style="padding-top:2.5rem;max-width:960px;">
-    <!-- Breadcrumb -->
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
             <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
@@ -25,15 +22,11 @@
             <strong style="color:var(--gold);" th:text="${promotion.validityRange}">18/10/2026 - 31/12/2026</strong>
         </div>
     </div>
-
-    <!-- Banner -->
     <div style="width:100%;height:320px;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:2.5rem;box-shadow:var(--shadow-md);border:1px solid var(--border-subtle);">
         <img th:src="${promotion.bannerUrl}" th:alt="${promotion.name}"
              style="width:100%;height:100%;object-fit:cover;"
              onerror="this.src='/images/cinema-login-hero.png'" />
     </div>
-
-    <!-- Voucher Codes Box -->
     <div th:if="${promotion.vouchers != null && !promotion.vouchers.isEmpty()}"
          style="background:var(--bg-surface-elevated);border:1px solid var(--border-focus);border-radius:var(--radius-md);padding:1.75rem;margin-bottom:2.5rem;box-shadow:var(--shadow-glow);">
         <h3 style="font-size:1.25rem;margin-bottom:12px;color:#fff;">Mã Ưu Đãi Áp Dụng:</h3>
@@ -52,8 +45,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Full Content & Terms -->
     <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2.5rem;line-height:1.8;color:var(--text-secondary);font-size:1rem;margin-bottom:3rem;">
         <h3 style="color:#fff;font-size:1.35rem;margin-bottom:1rem;">Thể Lệ &amp; Điều Kiện Áp Dụng</h3>
         <div style="white-space:pre-line;" th:text="${promotion.description}">
@@ -78,15 +69,9 @@
         </a>
     </div>
 </main>
-
-<!-- Trailer Modal & Toast -->
 <div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
-
-<!-- Footer -->
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
-
-<!-- Scripts -->
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
 
 </body>

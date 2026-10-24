@@ -24,6 +24,7 @@ public class Movie {
     private String ageRating; // 'P', 'K', 'T13', 'T16', 'T18'
     private String description;
     private String poster;
+    private String heroImageUrl;
     private String trailer;
     private String status; // 'Upcoming', 'Now Showing', 'Ended', 'Archived'
     private LocalDateTime createdAt;
@@ -170,6 +171,14 @@ public class Movie {
 
     public void setPosterUrl(String posterUrl) {
         this.poster = posterUrl;
+    }
+
+    public String getHeroImageUrl() {
+        return heroImageUrl == null || heroImageUrl.isBlank() ? poster : heroImageUrl;
+    }
+
+    public void setHeroImageUrl(String heroImageUrl) {
+        this.heroImageUrl = heroImageUrl;
     }
 
     public String getTrailer() {

@@ -4,35 +4,25 @@
     <title>Movie Details | CINEORA</title>
 </head>
 <body class="cineora-catalog-page movie-detail-page">
-
-<!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
 
 <main>
-    <!-- Success/Error alert banner -->
     <div th:if="${successMessage != null}" style="background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.4);color:#10b981;padding:12px 2rem;text-align:center;font-weight:600;">
         <span th:text="${successMessage}">Submitted successfully.</span>
     </div>
     <div th:if="${errorMessage != null}" style="background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.4);color:#ef4444;padding:12px 2rem;text-align:center;font-weight:600;">
         <span th:text="${errorMessage}">Something went wrong.</span>
     </div>
-
-    <!-- =====================================================================
-         1. MOVIE HERO SECTION
-         ===================================================================== -->
     <section class="movie-details-hero">
         <div class="movie-details-backdrop"
              th:if="${movie.posterUrl != null && !movie.posterUrl.isEmpty()}"
              th:style="|background-image: url('${movie.posterUrl}')|"></div>
         <div class="movie-details-scrim"></div>
         <div class="movie-details-container">
-            <!-- Use the clean database poster only; never place generated text artwork here. -->
             <div class="movie-details-poster-wrap">
                 <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-details-poster"
                      onerror="this.src='/images/cinema-login-hero.png'" />
             </div>
-
-            <!-- Movie Info -->
             <div class="movie-details-info">
                 <div style="font-size:0.85rem;color:var(--text-muted);">
                     <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
@@ -85,8 +75,6 @@
                         <span>▶ Watch Trailer</span>
                     </button>
                 </div>
-
-                <!-- Synopsis Box -->
                 <div class="movie-synopsis-box">
                     <h3 style="font-size:1.15rem;margin-bottom:8px;">Synopsis</h3>
                     <p th:text="${movie.description}">
@@ -96,10 +84,6 @@
             </div>
         </div>
     </section>
-
-    <!-- =====================================================================
-         2. LỊCH CHIẾU THEO PHIM (SHOWTIMES FOR THIS MOVIE)
-         ===================================================================== -->
     <section class="section-shell" id="showtimes" style="padding-top:4rem;">
         <div class="section-header">
             <div class="section-header-left">
@@ -109,8 +93,6 @@
                 </h2>
             </div>
         </div>
-
-        <!-- Date Selector Pills -->
         <div class="date-selector-bar">
             <a th:each="d, stat : ${availableDates}"
                th:href="@{/movies/{id}(id=${movie.movieId}, date=${d})} + '#showtimes'"
@@ -121,8 +103,6 @@
                 <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
             </a>
         </div>
-
-        <!-- Showtimes List for Selected Date -->
         <div th:if="${showtimes != null && !showtimes.isEmpty()}"
              style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2rem;">
             
@@ -171,10 +151,6 @@
                     allowfullscreen></iframe>
         </div>
     </section>
-
-    <!-- =====================================================================
-         MOVIE REVIEWS
-         ===================================================================== -->
     <section class="section-shell" id="reviews">
         <div class="section-header">
             <div class="section-header-left">
@@ -184,8 +160,6 @@
                 </h2>
             </div>
         </div>
-
-        <!-- Add Review Form (If Logged In Customer) -->
         <div th:if="${currentUser != null && currentUser.role == 'CUSTOMER'}" class="review-form-card">
             <h4 style="font-size:1.15rem;margin-bottom:12px;">Write a review for this movie</h4>
             <form th:action="@{/movies/{id}/reviews(id=${movie.movieId})}" method="post">
@@ -210,8 +184,6 @@
                 </button>
             </form>
         </div>
-
-        <!-- If Not Logged In -->
         <div th:if="${currentUser == null || currentUser.role != 'CUSTOMER'}"
              style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
             <div>
@@ -222,8 +194,6 @@
                 Sign In to Review
             </a>
         </div>
-
-        <!-- Reviews List -->
         <div th:if="${reviews != null && !reviews.isEmpty()}">
             <div class="review-item" th:each="r : ${reviews}">
                 <div class="review-item-header">
@@ -249,10 +219,6 @@
             <p style="color:var(--text-muted);">There are no reviews yet. Be the first to share your thoughts.</p>
         </div>
     </section>
-
-    <!-- =====================================================================
-         4. PHIM CÙNG THỂ LOẠI / GỢI Ý (RELATED MOVIES)
-         ===================================================================== -->
     <section class="section-shell" th:if="${relatedMovies != null && !relatedMovies.isEmpty()}" style="margin-top:2rem;">
         <div class="section-header">
             <div class="section-header-left">
@@ -284,15 +250,9 @@
         </div>
     </section>
 </main>
-
-<!-- Trailer Modal & Toast -->
 <div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
-
-<!-- Footer -->
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
-
-<!-- Scripts -->
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
 
 </body>

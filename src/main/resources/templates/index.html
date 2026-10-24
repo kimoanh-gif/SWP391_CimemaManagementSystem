@@ -5,20 +5,16 @@
 </head>
 <body class="cineora-home">
 
-<!-- Header -->
 <div th:replace="~{fragments/cinema-header-footer :: header('home')}"></div>
 
 <main>
-    <!-- =====================================================================
-         1. HERO FEATURED MOVIE SLIDER
-         ===================================================================== -->
     <section class="hero-slider-section cinematic-hero hero-carousel" data-hero-carousel
              th:if="${featuredMovies != null && !featuredMovies.isEmpty()}"
              aria-roledescription="carousel" aria-label="Featured movies">
         <article class="hero-carousel-slide"
                  th:each="hero, stat : ${featuredMovies}"
                  th:classappend="${stat.first} ? ' active'"
-                 th:style="|--hero-image:url('${hero.posterUrl}')|"
+                 th:style="|--hero-image:url('${hero.heroImageUrl}')|"
                  th:attr="aria-hidden=${!stat.first},data-slide-index=${stat.index}">
             <div class="hero-slider-container">
                 <div class="hero-content">
@@ -55,7 +51,6 @@
         </div>
     </section>
 
-    <!-- Fallback Hero when no movie is in DB yet -->
     <section class="hero-slider-section cinematic-hero cinematic-hero-fallback" th:if="${featuredMovies == null || featuredMovies.isEmpty()}">
         <div class="hero-slider-container">
             <div class="hero-content">
@@ -75,9 +70,6 @@
         </div>
     </section>
 
-    <!-- =====================================================================
-         2. QUICK BOOKING BAR
-         ===================================================================== -->
     <div class="quick-booking-bar">
         <div class="quick-booking-inner">
             <div class="quick-booking-field">
@@ -122,9 +114,6 @@
         </div>
     </div>
 
-    <!-- =====================================================================
-         3. PHIM ĐANG CHIẾU (NOW SHOWING)
-         ===================================================================== -->
     <section class="section-shell" id="now-showing">
         <div class="section-header">
             <div class="section-header-left">
@@ -185,23 +174,20 @@
         </div>
     </section>
 
-    <!-- =====================================================================
-         4. PHIM SẮP CHIẾU (COMING SOON)
-         ===================================================================== -->
-    <section class="section-shell" id="coming-soon">
+    <section class="section-shell" id="upcoming-releases">
         <div class="section-header">
             <div class="section-header-left">
                 <span class="section-eyebrow">Coming to CINEORA</span>
                 <h2 class="section-title">Coming Soon</h2>
             </div>
-            <a th:href="@{/movies?type=coming-soon}" class="section-link">
+            <a th:href="@{/movies?type=upcoming}" class="section-link">
                 <span>View Coming Soon</span>
                 <span>→</span>
             </a>
         </div>
 
         <div class="movie-grid">
-            <article class="movie-card" th:each="movie : ${comingSoonMovies}">
+            <article class="movie-card" th:each="movie : ${upcomingMovies}">
                 <div class="movie-poster-wrap">
                     <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
@@ -234,12 +220,9 @@
                 </div>
             </article>
         </div>
-        <div class="home-empty-state" th:if="${comingSoonMovies == null || comingSoonMovies.isEmpty()}">Upcoming releases will be announced soon.</div>
+        <div class="home-empty-state" th:if="${upcomingMovies == null || upcomingMovies.isEmpty()}">Upcoming releases will be announced soon.</div>
     </section>
 
-    <!-- =====================================================================
-         5. SUẤT CHIẾU HÔM NAY (TODAY'S SHOWTIMES PREVIEW)
-         ===================================================================== -->
     <section class="section-shell">
         <div class="section-header">
             <div class="section-header-left">
@@ -282,9 +265,6 @@
         <div class="home-empty-state" th:if="${todayShowtimes == null || todayShowtimes.isEmpty()}">There are no scheduled screenings today.</div>
     </section>
 
-    <!-- =====================================================================
-         6. ƯU ĐÃI & KHUYẾN MÃI NỔI BẬT (PROMOTIONS)
-         ===================================================================== -->
     <section class="section-shell" th:if="${promotions != null && !promotions.isEmpty()}">
         <div class="section-header">
             <div class="section-header-left">
@@ -324,9 +304,6 @@
         </div>
     </section>
 
-    <!-- =====================================================================
-         7. TIN TỨC ĐIỆN ẢNH & SỰ KIỆN (NEWS)
-         ===================================================================== -->
     <section class="section-shell" th:if="${newsList != null && !newsList.isEmpty()}">
         <div class="section-header">
             <div class="section-header-left">
@@ -364,9 +341,6 @@
         </div>
     </section>
 
-    <!-- =====================================================================
-         8. TẠI SAO CHỌN CINEVERSE (CINEMA HIGHLIGHTS)
-         ===================================================================== -->
     <section class="section-shell">
         <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:3rem 2.5rem;text-align:center;">
             <span class="section-eyebrow">Technology &amp; Experience</span>
@@ -401,14 +375,11 @@
     </section>
 </main>
 
-<!-- Trailer Modal & Toast -->
 <div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
 
-<!-- Footer -->
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
 
-<!-- Scripts -->
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
 
 </body>
