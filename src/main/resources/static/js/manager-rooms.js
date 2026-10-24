@@ -85,6 +85,24 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const formData = new FormData(form);
             const json = Object.fromEntries(formData.entries());
+
+            // Validate capacity vs matrix rows x cols
+            const capacity = parseInt(json.capacity, 10);
+            const totalRows = parseInt(json.totalRows, 10);
+            const seatsPerRow = parseInt(json.seatsPerRow, 10);
+
+            if (totalRows > 0 && seatsPerRow > 0 && capacity > 0) {
+                const maxSeats = totalRows * seatsPerRow;
+                if (capacity > maxSeats) {
+                    if (errorDiv) {
+                        errorDiv.textContent = `Sức chứa phòng (${capacity} ghế) không được vượt quá số ghế tối đa theo ma trận ${totalRows} hàng x ${seatsPerRow} ghế (${maxSeats} ghế).`;
+                        errorDiv.style.display = 'block';
+                    }
+                    if (successDiv) successDiv.style.display = 'none';
+                    return;
+                }
+            }
+
             const method = json.roomId ? 'PUT' : 'POST';
             const url = json.roomId ? `/api/manager/rooms/${json.roomId}` : '/api/manager/rooms';
             try {
@@ -93,25 +111,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(json)
                 });
-                const data = await resp.json();
-                if (data.success) {
+                let data = null;
+                try {
+                    data = await resp.json();
+                } catch (parseErr) {}
+
+                if (resp.ok && data && data.success) {
+                    if (errorDiv) errorDiv.style.display = 'none';
                     if (successDiv) {
-                        successDiv.textContent = data.message || 'Saved successfully!';
+                        successDiv.textContent = data.message || 'Lưu thông tin phòng thành công!';
                         successDiv.style.display = 'block';
                     }
                     setTimeout(() => location.reload(), 1000);
                 } else {
+                    const message = (data && data.message) ? data.message : 'Đã xảy ra lỗi khi lưu phòng chiếu.';
                     if (errorDiv) {
-                        errorDiv.textContent = data.message || 'An error occurred while saving the room.';
+                        errorDiv.textContent = message;
                         errorDiv.style.display = 'block';
                     }
+                    if (successDiv) successDiv.style.display = 'none';
                 }
             } catch (err) {
                 console.error(err);
                 if (errorDiv) {
-                    errorDiv.textContent = 'Network communication error. Please try again.';
+                    errorDiv.textContent = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
                     errorDiv.style.display = 'block';
                 }
+                if (successDiv) successDiv.style.display = 'none';
             }
         });
     }

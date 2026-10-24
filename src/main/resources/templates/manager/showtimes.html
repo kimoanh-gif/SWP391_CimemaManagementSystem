@@ -345,10 +345,15 @@
                     <select id="formRoomId" th:field="*{roomId}" required
                             class="w-full h-10 px-3 rounded-lg bg-background-warm/60 border border-[#EFE0D5] focus:border-cinema-red focus:outline-none text-sm cursor-pointer">
                         <option value="">-- Select Room --</option>
-                        <option th:each="r : ${eligibleRooms}"
+                        <option th:each="r : ${allRooms}"
                                 th:value="${r.roomId}"
-                                th:text="${r.roomName} + ' [' + ${r.roomType} + ' - ' + ${r.capacity} + ' seats]' ">Room</option>
+                                th:disabled="${!r.activeForShowtimes}"
+                                th:text="${r.roomName} + ' [' + ${r.roomType} + ' - ' + ${r.capacity} + ' seats]' + (${r.activeForShowtimes} ? '' : ' (' + ${r.status} + ' - Không khả dụng)')">Room</option>
                     </select>
+                    <p class="text-[11px] text-secondary mt-1">
+                        <span class="material-symbols-outlined text-[13px] align-middle text-amber-600">info</span>
+                        Quy định BR-08: Chỉ phòng chiếu ở trạng thái <strong>Ready</strong> mới được xếp lịch. Phòng đang <strong>Maintenance</strong> sẽ bị vô hiệu hóa.
+                    </p>
                 </div>
 
                 <div>

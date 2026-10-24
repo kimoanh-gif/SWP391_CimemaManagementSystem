@@ -118,11 +118,13 @@ public class ShowtimeController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
+        String targetDateParam = (form.getStartTime() != null) ? "?date=" + form.getStartTime().toLocalDate() : "";
+
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.showtimeForm", bindingResult);
             redirectAttributes.addFlashAttribute("showtimeForm", form);
             redirectAttributes.addFlashAttribute("errorMessage", "Thông tin suất chiếu không hợp lệ. Vui lòng kiểm tra lại.");
-            return "redirect:/manager/showtimes";
+            return "redirect:/manager/showtimes" + targetDateParam;
         }
 
         try {
@@ -141,7 +143,7 @@ public class ShowtimeController {
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         }
 
-        return "redirect:/manager/showtimes";
+        return "redirect:/manager/showtimes" + targetDateParam;
     }
 
     @PostMapping("/{id}/stop")

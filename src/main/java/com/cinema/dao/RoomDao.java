@@ -127,6 +127,15 @@ public class RoomDao {
         return jdbcTemplate.update(sql, roomId);
     }
 
+    public boolean existsByRoomCode(String roomCode, Integer excludeRoomId) {
+        if (roomCode == null || roomCode.trim().isEmpty()) {
+            return false;
+        }
+        String sql = "SELECT COUNT(*) FROM Room WHERE LOWER(LTRIM(RTRIM(RoomCode))) = LOWER(LTRIM(RTRIM(?))) AND (? IS NULL OR RoomID <> ?)";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, roomCode.trim(), excludeRoomId, excludeRoomId);
+        return count != null && count > 0;
+    }
+
     /**
      * Checks whether a room has any upcoming (future) showtimes.
      * Used for BR-52 validation before deactivation.

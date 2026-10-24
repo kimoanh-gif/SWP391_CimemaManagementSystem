@@ -34,7 +34,7 @@ public class RoomService {
 
     @Transactional
     public void create(RoomForm form) {
-        // Additional business checks could be added here (e.g., unique code/name)
+        validateRoomForm(form, null);
         roomDao.insert(form);
     }
 
@@ -42,7 +42,26 @@ public class RoomService {
     public void update(RoomForm form) {
         // Ensure room exists
         getById(form.getRoomId());
+        validateRoomForm(form, form.getRoomId());
         roomDao.update(form);
+    }
+
+    private void validateRoomForm(RoomForm form, Integer currentRoomId) {
+        if (form.getRoomCode() != null && roomDao.existsByRoomCode(form.getRoomCode(), currentRoomId)) {
+            throw new IllegalArgumentException("Mã phòng chiếu '" + form.getRoomCode().trim() + "' đã tồn tại trong hệ thống. Vui lòng chọn mã khác.");
+        }
+        if (form.getCapacity() == null || form.getCapacity() <= 0) {
+            throw new IllegalArgumentException("Sức chứa phòng phải lớn hơn 0.");
+        }
+        if (form.getTotalRows() != null && form.getTotalRows() > 0 
+                && form.getSeatsPerRow() != null && form.getSeatsPerRow() > 0) {
+            int maxSeats = form.getTotalRows() * form.getSeatsPerRow();
+            if (form.getCapacity() > maxSeats) {
+                throw new IllegalArgumentException("Sức chứa phòng (" + form.getCapacity() 
+                        + " ghế) không được vượt quá số ghế tối đa theo ma trận " 
+                        + form.getTotalRows() + " hàng x " + form.getSeatsPerRow() + " ghế/hàng (" + maxSeats + " ghế).");
+            }
+        }
     }
 
     @Transactional
