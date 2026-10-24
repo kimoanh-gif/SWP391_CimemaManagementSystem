@@ -679,8 +679,9 @@ function closeConfirm() {
 }
 
 async function executeConfirm() {
+  const callback = confirmCallback;
   closeConfirm();
-  if (confirmCallback) await confirmCallback();
+  if (callback) await callback();
 }
 
 async function doSuspend(accountId) {
