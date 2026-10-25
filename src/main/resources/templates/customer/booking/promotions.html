@@ -12,6 +12,27 @@
     />
     <link rel="stylesheet" th:href="@{/css/cinema-portal.css}" />
     <link rel="stylesheet" th:href="@{/css/customer-booking.css}" />
+    <style>
+      /* Voucher / Promotion Selection – screen-specific styles */
+      .voucher-list { display: grid; gap: 12px; margin: 14px 0 22px; }
+      .voucher-card { display: flex; gap: 14px; align-items: center; justify-content: space-between;
+        padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--cream); }
+      .voucher-card.applied { border-color: var(--green); background: #eaf8f1; }
+      .voucher-card.disabled { opacity: .6; }
+      .voucher-card .voucher-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+      .voucher-card .voucher-code { font-weight: 800; letter-spacing: .04em; }
+      .voucher-card small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .voucher-card .voucher-reason { color: var(--danger); }
+      .voucher-status { display: inline-flex; width: fit-content; padding: 3px 9px; border-radius: 999px;
+        font-size: 10px; font-weight: 800; background: #fff; border: 1px solid var(--line); }
+      .voucher-status.AVAILABLE { color: var(--red); }
+      .voucher-status.APPLIED { color: var(--green); border-color: #b2dccb; }
+      .voucher-status.INVALID, .voucher-status.EXPIRED { color: var(--muted); }
+      .voucher-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .voucher-actions form { flex: 1; }
+      .order-card .discount dd { color: var(--green); font-weight: 700; }
+      @media (max-width: 720px) { .voucher-card { flex-direction: column; align-items: stretch; } }
+    </style>
   </head>
   <body class="customer-booking-page"
     data-page="promotions"
@@ -44,8 +65,7 @@
           <p class="eyebrow">MEMBER BENEFITS</p>
           <h1>Promotions &amp; Vouchers</h1>
           <p class="lead">
-            Apply a personal voucher, event gift code, or partner promotion
-            before payment.
+            Apply one eligible voucher to this booking, or skip this step.
           </p>
         </div>
         <div class="hold-timer">
@@ -55,72 +75,98 @@
           >
         </div>
       </section>
+
+      <div class="alert error" th:if="${errorMessage != null}" th:text="${errorMessage}">Error</div>
+      <div class="alert success" th:if="${successMessage != null}" th:text="${successMessage}">Success</div>
+
       <div class="checkout-layout">
         <section class="checkout-main">
-          <form
-            class="panel voucher-panel"
-            th:action="@{/customer/booking/promotions}"
-            method="post"
-          >
+          <div class="panel voucher-panel">
             <div class="section-heading">
               <span class="section-number">4</span>
               <div>
-                <h2>My Vouchers</h2>
-                <p>Select a voucher assigned to your account or enter the code printed on a physical voucher.</p>
+                <h2>Voucher Code</h2>
+                <p>Enter the code printed on your voucher or choose one from the list below. Only one voucher can be used per booking.</p>
               </div>
             </div>
-            <div class="promotion-options">
+
+            <!-- Voucher Code + Apply -->
+            <form th:action="@{/customer/booking/promotions/apply}" method="post">
+              <label class="field-label" for="voucherCode">Enter a voucher code</label>
+              <div class="voucher-entry">
+                <input id="voucherCode" name="voucherCode" maxlength="50" autocomplete="off"
+                       placeholder="For example: WELCOME10"
+                       th:value="${enteredCode}" required />
+                <button class="button secondary" type="submit">Apply</button>
+              </div>
+            </form>
+
+            <!-- Applied voucher -->
+            <div th:if="${appliedVoucher != null}" class="voucher-card applied" style="margin-top:16px;">
+              <div class="voucher-info">
+                <span class="voucher-status APPLIED">APPLIED</span>
+                <span class="voucher-code" th:text="${appliedVoucher.code}">CODE</span>
+                <small th:text="${appliedVoucher.promotionName}">Promotion</small>
+                <small th:text="${'Discount: −' + #numbers.formatDecimal(appliedVoucher.discountAmount,0,'COMMA',0,'POINT') + ' ₫'}">Discount</small>
+              </div>
+              <form th:action="@{/customer/booking/promotions/remove}" method="post">
+                <button class="button secondary" type="submit">Remove</button>
+              </form>
+            </div>
+
+            <!-- Available Vouchers -->
+            <p class="field-label">Available vouchers</p>
+            <div class="voucher-list" th:if="${vouchers != null and !vouchers.isEmpty()}">
+              <article class="voucher-card" th:each="v : ${vouchers}"
+                       th:classappend="${v.applied} ? 'applied' : (${!v.selectable} ? 'disabled' : '')">
+                <div class="voucher-info">
+                  <span class="voucher-status" th:classappend="${v.status}" th:text="${v.status}">AVAILABLE</span>
+                  <span class="voucher-code" th:text="${v.code}">CODE</span>
+                  <small th:text="${v.promotionName}">Promotion name</small>
+                  <small>
+                    Discount: <b th:text="${v.discountValueDisplay}">10%</b>
+                    <th:block th:if="${v.minBookingAmount != null}">
+                      · Min. booking <b th:text="${#numbers.formatDecimal(v.minBookingAmount,0,'COMMA',0,'POINT') + ' ₫'}">100,000 ₫</b>
+                    </th:block>
+                  </small>
+                  <small>
+                    Valid: <span th:text="${v.validityDisplay}">01/01/2026 - 31/12/2026</span>
+                    <th:block th:if="${v.requiredRankName != null}">
+                      · Rank: <b th:text="${v.requiredRankName}">Gold</b>
+                    </th:block>
+                  </small>
+                  <small class="voucher-reason" th:if="${v.reason != null}" th:text="${v.reason}">Reason</small>
+                  <small th:if="${v.selectable}"
+                         th:text="${'You save ' + #numbers.formatDecimal(v.discountAmount,0,'COMMA',0,'POINT') + ' ₫'}">You save</small>
+                </div>
+                <form th:if="${v.selectable and !v.applied}"
+                      th:action="@{/customer/booking/promotions/apply}" method="post">
+                  <input type="hidden" name="voucherCode" th:value="${v.code}" />
+                  <button class="button secondary" type="submit">Use</button>
+                </form>
+              </article>
+            </div>
+            <div class="promotion-options" th:if="${vouchers == null or vouchers.isEmpty()}">
               <article>
                 <span class="material-symbols-outlined">confirmation_number</span>
-                <div><b>No personal vouchers are currently available</b><small>Vouchers assigned to your account will appear here.</small></div>
+                <div><b>No vouchers are available right now</b><small>You can still enter a voucher code above, or skip this step.</small></div>
               </article>
             </div>
-            <label class="field-label" for="voucherCode">Enter a voucher code</label>
-            <div class="voucher-entry">
-              <input
-                id="voucherCode"
-                name="voucherCode"
-                autocomplete="off"
-                placeholder="For example: WELCOME10"
-              /><button
-                class="button secondary"
-                type="button"
-                id="preview-voucher"
-              >
-                Check Code
-              </button>
+
+            <div class="voucher-actions">
+              <form th:action="@{/customer/booking/promotions/skip}" method="post">
+                <button class="button secondary full" type="submit">Skip</button>
+              </form>
+              <form th:action="@{/customer/booking/promotions/continue}" method="post">
+                <button class="button primary full" type="submit">
+                  Continue
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+              </form>
             </div>
-            <p class="voucher-note" id="voucher-message">
-              The code is saved with this booking session. Discount calculation will be enabled after Manager voucher configuration is available.
-            </p>
-            <div class="promotion-options">
-              <article>
-                <span class="material-symbols-outlined">loyalty</span>
-                <div>
-                  <b>CINEORA Member Benefits</b
-                  ><small
-                    >Membership benefits are automatically associated with your
-                    account.</small
-                  >
-                </div>
-              </article>
-              <article>
-                <span class="material-symbols-outlined">redeem</span>
-                <div>
-                  <b>Physical &amp; Partner Vouchers</b
-                  ><small
-                    >Use the code printed on your voucher or digital gift
-                    card.</small
-                  >
-                </div>
-              </article>
-            </div>
-            <button class="button primary full" type="submit">
-              Continue to Payment
-              <span class="material-symbols-outlined">arrow_forward</span>
-            </button>
-          </form>
+          </div>
         </section>
+
         <aside class="panel order-card sticky">
           <p class="eyebrow">BOOKING SUMMARY</p>
           <h2 th:text="${summary.movieTitle}">Movie title</h2>
@@ -128,9 +174,7 @@
           <dl>
             <div>
               <dt>Showtime</dt>
-              <dd
-                th:text="${#temporals.format(summary.startTime,'HH:mm · MMM d, yyyy')}"
-              ></dd>
+              <dd th:text="${#temporals.format(summary.startTime,'HH:mm · MMM d, yyyy')}"></dd>
             </div>
             <div>
               <dt>Auditorium</dt>
@@ -142,21 +186,21 @@
             </div>
             <div>
               <dt>Tickets</dt>
-              <dd
-                th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' ₫'}"
-              ></dd>
+              <dd th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' ₫'}"></dd>
             </div>
             <div>
               <dt>Food &amp; drinks</dt>
-              <dd
-                th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' ₫'}"
-              ></dd>
+              <dd th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' ₫'}"></dd>
+            </div>
+            <div class="discount" th:if="${pricing != null and pricing.hasVoucher()}">
+              <dt th:text="${'Voucher ' + pricing.voucherCode()}">Voucher</dt>
+              <dd th:text="${'−' + #numbers.formatDecimal(pricing.discountAmount(),0,'COMMA',0,'POINT') + ' ₫'}"></dd>
             </div>
           </dl>
           <div class="total-row">
-            <span>Total</span
+            <span>Updated total</span
             ><strong
-              th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
+              th:text="${#numbers.formatDecimal(pricing != null ? pricing.totalAmount() : summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
             ></strong>
           </div>
         </aside>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Cinema News')}">
+    <title>Cinema News | CINEORA</title>
+</head>
+<body class="cineora-catalog-page">
+<div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
+
+<main class="section-shell" style="padding-top:2.5rem;">
+    <div th:replace="~{customer/promotions-news/fragments :: pageHeading('news')}"></div>
+
+    <section style="margin-bottom:4rem;">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">The World of Cinema</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">📰</span> Cinema News &amp; Events
+                </h2>
+            </div>
+        </div>
+
+        <th:block th:if="${loadError}">
+            <div th:replace="~{customer/promotions-news/fragments :: loadError(@{/news})}"></div>
+        </th:block>
+
+        <div class="news-grid" th:if="${!loadError and !newsList.isEmpty()}">
+            <article class="news-card" th:each="news : ${newsList}">
+                <div class="news-thumbnail-wrap">
+                    <img th:src="${news.thumbnailUrl}" th:alt="${news.title}" class="news-thumbnail"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                </div>
+                <div class="news-body">
+                    <div class="news-meta">
+                        <span class="news-category-tag" th:text="${news.category}">Cinema News</span>
+                        <span>·</span>
+                        <span th:text="${news.formattedPublishedDate}">18/10/2026</span>
+                    </div>
+                    <h3 class="news-title">
+                        <a th:href="@{/news/{id}(id=${news.newsId})}" th:text="${news.title}">Article Title</a>
+                    </h3>
+                    <p class="news-excerpt" th:text="${news.getExcerpt(140)}">The latest cinema news and events from CINEORA.</p>
+                    <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
+                        <span>Read More</span>
+                        <span>➔</span>
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <th:block th:if="${!loadError and newsList.isEmpty()}">
+            <div th:replace="~{customer/promotions-news/fragments :: emptyState('There is no published cinema news at the moment. Please check back later.')}"></div>
+        </th:block>
+    </section>
+</main>
+<div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+<th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+</body>
+</html>
