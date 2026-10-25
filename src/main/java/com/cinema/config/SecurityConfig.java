@@ -104,7 +104,7 @@ public class SecurityConfig {
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/error", "/favicon.ico",
                         "/oauth2/**", "/login/oauth2/**",
-                        "/api/auth/**"
+                        "/api/auth/**", "/customer/booking/payment/vnpay/return"
                 ).permitAll();
 
                 // Form POSTs are also public (we do our own validation/rate-limit).

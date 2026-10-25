@@ -69,7 +69,8 @@
                   type="checkbox"
                   name="seatIds"
                   th:value="${seat.seatId}"
-                  th:disabled="${!seat.available}"
+                  th:checked="${#lists.contains(selectedSeatIds, seat.seatId)}"
+                  th:disabled="${!seat.available and !#lists.contains(selectedSeatIds, seat.seatId)}"
                   th:attr="data-price=${seat.price}"
                 /><span th:text="${seat.label}">A1</span></label
               >

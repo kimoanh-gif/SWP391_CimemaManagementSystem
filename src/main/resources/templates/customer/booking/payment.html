@@ -8,24 +8,31 @@
   <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
   <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
 </head>
-<body class="customer-booking-page" data-page="payment" th:attr="data-payment-expires=${payment != null ? payment.expiresAt : ''},data-held-until=${payment != null ? payment.heldUntil : ''}">
+<body class="customer-booking-page" data-page="payment" th:attr="data-payment-expires=${payment != null ? payment.expiresAt : ''},data-held-until=${payment != null ? payment.heldUntil : ''},data-payment-status-url=${payment != null ? '/customer/booking/payment/' + payment.paymentId + '/status' : ''},data-payment-success-url=${payment != null ? '/customer/booking/success/' + payment.bookingId : ''}">
 <div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
 <main class="booking-shell">
   <p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
   <div class="checkout-layout" th:if="${payment != null}">
     <section class="panel payment-stage">
       <p class="eyebrow">SECURE ONLINE PAYMENT</p>
-      <h1>Scan the QR Code to Pay</h1>
+      <h1 th:text="${gatewayUrl != null ? 'Complete Payment with VNPay' : 'Scan the QR Code to Pay'}">Complete Payment with VNPay</h1>
       <p class="payment-provider">Payment method: <strong th:text="${payment.method}">VNPAY</strong></p>
       <p th:if="${payment.status == 'PENDING'}">Complete the transaction before the code expires. Your seats are held for ten minutes in total.</p>
-      <div class="qr-shell" th:if="${payment.status == 'PENDING'}">
+      <div class="qr-shell" th:if="${payment.status == 'PENDING' and gatewayUrl == null}">
         <div class="fake-qr" aria-label="Simulated payment QR code"><span>C</span></div>
         <strong th:text="${payment.transactionRef}">PAY0001</strong>
         <small>Simulated code for internal review</small>
       </div>
+      <div class="qr-shell" th:if="${payment.status == 'PENDING' and gatewayUrl != null}">
+        <div class="fake-qr" aria-hidden="true"><span>V</span></div>
+        <strong th:text="${payment.transactionRef}">PAY0001</strong>
+        <small>VNPay opens separately so this booking page stays available.</small>
+        <a id="open-vnpay" class="button primary full" th:href="${gatewayUrl}" target="vnpay-payment">Open VNPay Sandbox</a>
+        <small id="gateway-status">Waiting for VNPay confirmation…</small>
+      </div>
       <div class="payment-clock" th:if="${payment.status == 'PENDING'}">Payment code expires in <strong id="payment-countdown">03:00</strong></div>
       <div class="alert error" id="payment-expired" th:if="${payment.status == 'EXPIRED'}">This payment code has expired. Generate a new one if your seat hold is still active.</div>
-      <form th:if="${payment.status == 'PENDING'}" th:action="@{/customer/booking/payment/{id}/confirm(id=${payment.paymentId})}" method="post">
+      <form th:if="${payment.status == 'PENDING' and gatewayUrl == null}" th:action="@{/customer/booking/payment/{id}/confirm(id=${payment.paymentId})}" method="post">
         <button class="button primary full" type="submit"><span class="material-symbols-outlined">verified</span>I Have Completed the Transfer</button>
       </form>
       <form th:if="${payment.status == 'EXPIRED'}" th:action="@{/customer/booking/payment/{id}/regenerate(id=${payment.paymentId})}" method="post">
