@@ -96,7 +96,8 @@ public class StaffWorkspaceController {
 
     @GetMapping("/sales/seats")
     public String seats(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        if (staffAccountId(session) == null) return "redirect:/login";
+        Integer accountId = staffAccountId(session);
+        if (accountId == null) return "redirect:/login";
         Integer showtimeId = (Integer) session.getAttribute(SESSION_SHOWTIME_ID);
         if (showtimeId == null) return "redirect:/staff/sales";
         try {
@@ -104,6 +105,7 @@ public class StaffWorkspaceController {
             model.addAttribute("showtime", counterSalesService.showtime(showtimeId));
             model.addAttribute("seats", counterSalesService.seats(showtimeId));
             model.addAttribute("maxSeats", 10);
+            model.addAttribute("canSell", counterSalesService.canSell(accountId));
             return "staff/sales-seats";
         } catch (CustomerBookingService.BookingException | ResponseStatusException exception) {
             session.removeAttribute(SESSION_SHOWTIME_ID);

@@ -9,50 +9,91 @@
   <script th:src="@{/js/staff-sales.js}" defer></script>
   <script th:src="@{/js/staff-member-lookup.js}" defer></script>
   <style>
-    /* Seat grid specific */
-    .auditorium-wrap {
-      overflow-x: auto;
-      padding: 16px 0;
-    }
-    .screen-bar {
-      background: linear-gradient(90deg, #D92332, #F2B84B);
-      border-radius: 4px;
-      height: 6px;
-      margin: 0 auto 24px;
-      max-width: 80%;
-      opacity: .7;
-      position: relative;
-    }
-    .screen-bar::after {
-      content: 'SCREEN';
-      position: absolute;
-      top: 10px; left: 50%; transform: translateX(-50%);
-      font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    /* Seat map – same look as the customer booking seat map (customer-booking.css) */
+    .auditorium-wrap { overflow-x: auto; padding: 28px; min-height: 480px; }
+    .screen {
+      width: 72%;
+      height: 60px;
+      margin: 0 auto 50px;
       color: var(--text-muted);
+      text-align: center;
+      perspective: 320px;
     }
+    .screen::before {
+      display: block;
+      height: 13px;
+      content: "";
+      border-radius: 50% 50% 8px 8px;
+      background: linear-gradient(#d7b6b4, #fff);
+      box-shadow: 0 15px 28px rgba(179, 0, 31, .16);
+      transform: rotateX(-30deg);
+    }
+    .screen span { display: block; margin-top: 12px; font-size: 9px; font-weight: 800; letter-spacing: 4px; }
     .staff-seat-grid {
       display: grid;
-      gap: 5px;
-      margin-top: 32px;
-      width: fit-content;
-      margin-left: auto; margin-right: auto;
+      grid-auto-columns: 43px;
+      grid-auto-rows: 42px;
+      justify-content: center;
+      gap: 9px;
+      min-width: max-content;
     }
-    .seat-legend { display: flex; gap: 16px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
-    .seat-legend span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
-    .seat-legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
-    .leg-std      { background: var(--surface); border: 1px solid var(--border); }
-    .leg-vip      { background: #FEF3C7; border: 1px solid #FCD34D; }
-    .leg-couple   { background: #EDE9FE; border: 1px solid #C4B5FD; }
-    .leg-selected { background: var(--cineora-red); }
-    .leg-taken    { background: var(--surface-muted); }
-    /* Seat type colours */
-    label.staff-seat { display: contents; }
-    label.staff-seat input { display: none; }
-    label.staff-seat .seat-btn { cursor: pointer; }
-    label.staff-seat.unavailable .seat-btn { background: var(--surface-muted); color: var(--text-muted); cursor: not-allowed; }
-    label.staff-seat.vip    .seat-btn { background: #FFFBEB; border-color: #FCD34D; color: #92400E; }
-    label.staff-seat.couple .seat-btn { background: #F5F3FF; border-color: #C4B5FD; color: #5B21B6; }
-    label.staff-seat input:checked + .seat-btn { background: var(--cineora-red); border-color: var(--cineora-red); color: #fff; }
+    label.staff-seat { position: relative; }
+    label.staff-seat input { position: absolute; opacity: 0; pointer-events: none; }
+    label.staff-seat .seat-btn {
+      display: grid;
+      width: 43px;
+      height: 37px;
+      place-items: center;
+      color: #6c5b62;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2px solid #bdaead;
+      border-radius: 8px 8px 12px 12px;
+      background: #fff;
+      box-shadow: inset 0 -4px 0 #ede4e3;
+      transition: .15s;
+    }
+    label.staff-seat .seat-btn:hover { border-color: var(--cineora-red-dk); }
+    label.staff-seat.vip .seat-btn    { color: #805600; border-color: #dcaa3d; background: #fff7dc; }
+    label.staff-seat.couple .seat-btn { width: 52px; color: #9b315c; border-color: #df7eaa; background: #fff0f5; }
+    label.staff-seat input:checked + .seat-btn {
+      color: #fff;
+      border-color: var(--cineora-red-dk);
+      background: var(--cineora-red-dk);
+      box-shadow: inset 0 -4px 0 #860017, 0 7px 13px rgba(179, 0, 31, .2);
+      transform: translateY(-2px);
+    }
+    label.staff-seat input:focus-visible + .seat-btn { outline: 2px solid var(--cineora-red); outline-offset: 2px; }
+    label.staff-seat.unavailable .seat-btn {
+      color: #b4a9ac;
+      cursor: not-allowed;
+      border-color: #ded7d9;
+      background: #e8e4e5;
+      box-shadow: none;
+      text-decoration: line-through;
+    }
+    .seat-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 17px;
+      margin-top: 43px;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .seat-legend span { display: flex; align-items: center; gap: 6px; }
+    .seat-legend i { display: inline-block; width: 18px; height: 15px; border: 2px solid #bdaead; border-radius: 5px; background: #fff; }
+    .seat-legend i.vip         { border-color: #dcaa3d; background: #fff7dc; }
+    .seat-legend i.couple      { border-color: #df7eaa; background: #fff0f5; }
+    .seat-legend i.selected    { border-color: var(--cineora-red-dk); background: var(--cineora-red-dk); }
+    .seat-legend i.unavailable { border-color: #ded7d9; background: #e8e4e5; }
+    @media (max-width: 720px) {
+      .auditorium-wrap { padding: 24px 12px; }
+      .staff-seat-grid { grid-auto-columns: 36px; grid-auto-rows: 38px; gap: 6px; }
+      label.staff-seat .seat-btn { width: 36px; height: 34px; }
+      label.staff-seat.couple .seat-btn { width: 43px; }
+    }
   </style>
 </head>
 <body data-page="seats" th:attr="data-max-seats=${maxSeats}">
@@ -82,6 +123,10 @@
       </div>
 
       <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+      <div class="alert alert-info" th:if="${canSell == false}">
+        This account has no active staff profile, so it can view the seat map but cannot sell tickets.
+        Sign in with a staff account to create counter orders.
+      </div>
 
       <form th:action="@{/staff/sales/seats}" method="post" id="staffSeatForm">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -94,9 +139,8 @@
               <div><h2>Auditorium</h2><p>Click seats to select (max <span th:text="${maxSeats}">10</span>)</p></div>
             </div>
             <div class="panel-body auditorium-wrap">
-              <div class="screen-bar"></div>
-              <div class="staff-seat-grid" th:if="${!#lists.isEmpty(seats)}"
-                   th:style="${'grid-template-columns: repeat(' + maxCol + ', 36px);'}">
+              <div class="screen"><span>SCREEN</span></div>
+              <div class="staff-seat-grid" th:if="${!#lists.isEmpty(seats)}">
                 <label class="staff-seat" th:each="seat : ${seats}"
                        th:classappend="${!seat.available ? ' unavailable' : ' ' + #strings.toLowerCase(seat.typeName)}"
                        th:style="'grid-row:' + ${seat.gridRow} + ';grid-column:' + ${seat.gridColumn} + ';'">
@@ -107,11 +151,11 @@
                 </label>
               </div>
               <div class="seat-legend">
-                <span><i class="leg-std"></i>Standard</span>
-                <span><i class="leg-vip"></i>VIP</span>
-                <span><i class="leg-couple"></i>Couple</span>
-                <span><i class="leg-selected"></i>Selected</span>
-                <span><i class="leg-taken"></i>Taken</span>
+                <span><i class="standard"></i>Standard</span>
+                <span><i class="vip"></i>VIP</span>
+                <span><i class="couple"></i>Couple</span>
+                <span><i class="selected"></i>Selected</span>
+                <span><i class="unavailable"></i>Unavailable</span>
               </div>
             </div>
           </div>
@@ -150,12 +194,15 @@
                 </p>
               </div>
 
+              <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}" style="margin-bottom:0;"></p>
+
               <button class="btn btn-primary" id="holdSeatsButton" type="submit" disabled
+                      th:attr="data-can-sell=${canSell}"
                       style="width:100%;justify-content:center;">
                 Hold Seats &amp; Continue →
               </button>
-              <p style="font-size:11px;color:var(--text-muted);text-align:center;">
-                Seats held for 10 minutes.
+              <p id="holdSeatsHint" style="font-size:11px;color:var(--text-muted);text-align:center;">
+                Select at least one seat to continue.
               </p>
             </div>
           </div>
@@ -177,12 +224,15 @@
              background:var(--surface);cursor:pointer;font-size:1rem;display:grid;place-items:center;">×</button>
   </div>
   <div style="padding:20px;">
+    <p style="color:var(--text-muted);font-size:12.5px;margin-bottom:12px;">Enter the customer's phone number or email to look up their points and vouchers.</p>
     <form class="inline-form" id="memberLookupForm" style="margin-bottom:12px;">
-      <input class="form-control" id="memberLookupValue" type="text" autocomplete="off"
-             placeholder="Phone or email…" required style="flex:1;">
+      <div class="form-group" style="flex:1;margin-bottom:0;">
+        <input class="form-control" id="memberLookupValue" type="text" autocomplete="off"
+               placeholder="Phone number or email..." aria-label="Search member" required>
+      </div>
       <button class="btn btn-primary" type="submit">Search</button>
     </form>
-    <p id="memberLookupMessage" role="status" aria-live="polite" style="color:var(--text-muted);font-size:12.5px;"></p>
+    <p id="memberLookupMessage" class="member-message" role="status" aria-live="polite"></p>
     <div id="memberLookupResult"></div>
   </div>
 </dialog>
