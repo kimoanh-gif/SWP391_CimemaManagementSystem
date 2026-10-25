@@ -107,8 +107,8 @@ public class ManagerVoucherService {
     public ManagerVoucherRow delete(int voucherId) {
         ManagerVoucherRow current = get(voucherId);
         if (current.isLocked()) {
-            throw new PromotionAdminException("Voucher " + current.getCode() + " was used in " + current.getReferenceCount()
-                    + " bookings and cannot be deleted. Stop it instead to keep the accounting history.");
+            throw new PromotionAdminException("Voucher " + current.getCode() + " was used in " + current.getBookingCountText()
+                    + " and cannot be deleted. Stop it instead to keep the accounting history.");
         }
         if (voucherDAO.deleteIfUnused(voucherId) != 1) {
             throw new PromotionAdminException("This voucher was used by a booking just now and cannot be deleted.");
@@ -176,7 +176,7 @@ public class ManagerVoucherService {
             errors.put("perAccountLimit", "The per-customer limit cannot be greater than the total limit.");
         }
         if (current != null && f.getTotalUsageLimit() != null && f.getTotalUsageLimit() < current.getUsageCount()) {
-            errors.put("totalUsageLimit", "The voucher is already used " + current.getUsageCount() + " times.");
+            errors.put("totalUsageLimit", "The voucher is already used " + ManagerPromotionRow.count(current.getUsageCount(), "time", "times") + ".");
         }
 
         if (f.getRequiredRankId() != null && getRanks().stream().noneMatch(r -> f.getRequiredRankId().equals(r.getRankId()))) {

@@ -99,9 +99,9 @@ public class ManagerVoucherRow {
                 ? new DecimalFormat("#,###").format(minBookingAmount) + " ₫" : "No minimum";
     }
 
-    public String getTotalLimitDisplay() { return totalUsageLimit != null ? totalUsageLimit + " uses" : "Unlimited"; }
+    public String getTotalLimitDisplay() { return totalUsageLimit != null ? ManagerPromotionRow.count(totalUsageLimit, "use", "uses") : "Unlimited"; }
 
-    public String getPerAccountDisplay() { return perAccountLimit != null ? perAccountLimit + " per customer" : "Unlimited"; }
+    public String getPerAccountDisplay() { return perAccountLimit != null ? String.format(java.util.Locale.US, "%,d per customer", perAccountLimit) : "Unlimited"; }
 
     public String getRankDisplay() { return requiredRankName != null ? requiredRankName + " or higher" : "All members"; }
 
@@ -128,6 +128,8 @@ public class ManagerVoucherRow {
 
     public String getValidFromDisplay() { return validFrom != null ? validFrom.format(DATE_TIME) : ""; }
     public String getValidToDisplay() { return validTo != null ? validTo.format(DATE_TIME) : ""; }
+
+    public String getBookingCountText() { return ManagerPromotionRow.count(referenceCount, "booking", "bookings"); }
 
     public boolean isLocked() { return referenceCount > 0; }
 

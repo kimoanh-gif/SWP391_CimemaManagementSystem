@@ -105,8 +105,8 @@ public class ManagerPromotionService {
     public ManagerPromotionRow delete(int promotionId) {
         ManagerPromotionRow current = get(promotionId);
         if (current.isLocked()) {
-            throw new PromotionAdminException("This promotion already has " + current.getReferenceCount()
-                    + " bookings and cannot be deleted. Stop it instead to keep the accounting history.");
+            throw new PromotionAdminException("This promotion already has " + current.getBookingCountText()
+                    + " and cannot be deleted. Stop it instead to keep the accounting history.");
         }
         if (promotionDAO.deleteIfUnused(promotionId) != 1) {
             throw new PromotionAdminException("This promotion was used by a booking just now and cannot be deleted.");

@@ -131,6 +131,16 @@ class ManagerPromotionServiceTest {
         assertEquals(1, page.items().get(0).getPromotionId());
     }
 
+    @Test
+    void countTextsUseSingularPluralAndThousandsSeparator() {
+        ManagerPromotionRow r = row(1, "ACTIVE", 1);
+        r.setVoucherCount(2);
+        assertEquals("1 booking", r.getBookingCountText());
+        assertEquals("2 codes", r.getVoucherCountText());
+        assertEquals("+1 more code", r.getMoreCodesText());
+        assertEquals("1,840 bookings", ManagerPromotionRow.count(1840, "booking", "bookings"));
+    }
+
     private static PromotionForm form(String name, LocalDateTime start, LocalDateTime end) {
         PromotionForm f = new PromotionForm();
         f.setName(name);
