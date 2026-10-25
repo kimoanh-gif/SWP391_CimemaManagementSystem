@@ -109,7 +109,7 @@ function validateMovieDates() {
     // Validate Release Date: cannot be in past for new movie or if modified
     if (releaseDate) {
         if (releaseDate < todayStr && (isNew || releaseDate !== origReleaseDate)) {
-            showError("movieReleaseDate", "releaseDateFeedback", "Ngày khởi chiếu phải từ hôm nay trở đi, không được ở quá khứ.");
+            showError("movieReleaseDate", "releaseDateFeedback", "Release date must be from today onwards, cannot be in the past.");
             isValid = false;
         } else {
             clearError("movieReleaseDate", "releaseDateFeedback");
@@ -127,10 +127,10 @@ function validateMovieDates() {
     // Validate Expected End Date: cannot be in past or before release date
     if (endDate) {
         if (endDate < todayStr && (isNew || endDate !== origEndDate)) {
-            showError("movieEndDate", "dateFeedback", "Ngày kết thúc dự kiến phải từ hôm nay trở đi, không được ở quá khứ.");
+            showError("movieEndDate", "dateFeedback", "Expected end date must be from today onwards, cannot be in the past.");
             isValid = false;
         } else if (releaseDate && endDate < releaseDate) {
-            showError("movieEndDate", "dateFeedback", "Ngày kết thúc không được diễn ra trước ngày khởi chiếu.");
+            showError("movieEndDate", "dateFeedback", "Expected end date cannot be earlier than release date.");
             isValid = false;
         } else {
             clearError("movieEndDate", "dateFeedback");
@@ -361,10 +361,10 @@ async function deactivateMovie(button) {
     var title = button.getAttribute("data-title");
     var showtimes = parseInt(button.getAttribute("data-showtimes") || "0", 10);
 
-    var confirmMsg = "Bạn có chắc chắn muốn dừng chiếu và lưu trữ phim '" + title + "' không?\n" +
-        "Phim sẽ được chuyển sang trạng thái Đã lưu trữ (Archived) và không thể tạo thêm suất chiếu mới.";
+    var confirmMsg = "Are you sure you want to stop screening and archive movie '" + title + "'?\n" +
+        "The movie will be marked as Archived and no new showtimes can be created.";
     if (showtimes > 0) {
-        confirmMsg += "\n\n(Lưu ý: Phim hiện có " + showtimes + " suất chiếu trong hệ thống. Nếu có suất chiếu sắp diễn ra, hệ thống sẽ từ chối để bảo toàn lịch chiếu).";
+        confirmMsg += "\n\n(Note: This movie currently has " + showtimes + " showtimes in the system. If there are upcoming showtimes, the system will prevent deactivation to protect scheduled bookings).";
     }
 
     if (!confirm(confirmMsg)) {
@@ -390,13 +390,13 @@ async function deactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            var errorMsg = (result && result.message) ? result.message : "Không thể dừng chiếu phim.";
-            alert("Ràng buộc hệ thống:\n" + errorMsg);
+            var errorMsg = (result && result.message) ? result.message : "Unable to stop movie screening.";
+            alert("System constraint:\n" + errorMsg);
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Lỗi kết nối hoặc xử lý: " + err.message);
+        alert("Connection or processing error: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -409,8 +409,8 @@ async function reactivateMovie(button) {
     var id = button.getAttribute("data-id");
     var title = button.getAttribute("data-title");
 
-    var confirmMsg = "Bạn có chắc chắn muốn kích hoạt lại phim '" + title + "' không?\n" +
-        "Phim sẽ chuyển về trạng thái hoạt động và có thể xếp lịch chiếu mới.";
+    var confirmMsg = "Are you sure you want to reactivate movie '" + title + "'?\n" +
+        "The movie will return to active status and can be scheduled for new showtimes.";
 
     if (!confirm(confirmMsg)) {
         return;
@@ -435,12 +435,12 @@ async function reactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Không thể kích hoạt lại phim: " + (result.message || "Lỗi không xác định"));
+            alert("Unable to reactivate movie: " + (result.message || "Unknown error"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Lỗi kết nối: " + err.message);
+        alert("Connection error: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -646,14 +646,14 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("submit", function (e) {
         var deleteForm = e.target.closest(".delete-movie-form");
         if (deleteForm) {
-            var title = deleteForm.getAttribute("data-title") || "phim này";
+            var title = deleteForm.getAttribute("data-title") || "this movie";
             var showtimes = parseInt(deleteForm.getAttribute("data-showtimes") || "0", 10);
             if (showtimes > 0) {
                 e.preventDefault();
-                alert("Ràng buộc dữ liệu không cho phép xóa:\n\nPhim '" + title + "' đang có " + showtimes + " suất chiếu liên kết trong hệ thống.\n\nĐể đảm bảo toàn vẹn dữ liệu vé và lịch chiếu, không thể xóa phim này. Bạn có thể sử dụng nút 'Dừng chiếu' (⏹) để lưu trữ phim.");
+                alert("Data constraint prevents deletion:\n\nMovie '" + title + "' has " + showtimes + " linked showtimes in the system.\n\nTo ensure ticket and scheduling integrity, this movie cannot be deleted. You can use the 'Stop' button (⏹) to archive the movie.");
                 return;
             }
-            if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn phim '" + title + "' không?\nThao tác này sẽ xóa phim khỏi cơ sở dữ liệu và không thể hoàn tác.")) {
+            if (!confirm("Are you sure you want to permanently delete movie '" + title + "'?\nThis will remove the movie from the database and cannot be undone.")) {
                 e.preventDefault();
             }
         }

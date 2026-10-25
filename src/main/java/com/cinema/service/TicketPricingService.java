@@ -21,7 +21,8 @@ import java.util.Map;
 
 /**
  * Service for Ticket Pricing Management (Screen 60 / UC-31)
- * Enforces BR-50 (Formula: Unit Price = (BasePrice + Surcharge) * Multiplier, rounded to nearest 1,000 VND)
+ * Enforces BR-50 (Formula: Unit Price = (BasePrice + Surcharge) * Multiplier,
+ * rounded to nearest 1,000 VND)
  * and BR-51 (Snapshot pricing integrity).
  */
 @Service
@@ -41,7 +42,7 @@ public class TicketPricingService {
 
     public TicketPricing getPricingById(int id) {
         return ticketPricingDao.findById(id)
-                .orElseThrow(() -> new TicketPricingNotFoundException("Không tìm thấy quy tắc giá vé với ID: " + id));
+                .orElseThrow(() -> new TicketPricingNotFoundException("Ticket pricing rule not found with ID: " + id));
     }
 
     public List<SeatType> getAllSeatTypes(String status) {
@@ -50,7 +51,7 @@ public class TicketPricingService {
 
     public SeatType getSeatTypeById(int id) {
         return seatTypeDao.findById(id)
-                .orElseThrow(() -> new SeatTypeNotFoundException("Không tìm thấy loại ghế với ID: " + id));
+                .orElseThrow(() -> new SeatTypeNotFoundException("Seat type not found with ID: " + id));
     }
 
     @Transactional
@@ -58,7 +59,7 @@ public class TicketPricingService {
         validatePricingForm(form, null);
         ticketPricingDao.insert(form);
         return ticketPricingDao.findByCode(form.getPricingCode().trim())
-                .orElseThrow(() -> new IllegalStateException("Lỗi lưu trữ cấu hình giá vé"));
+                .orElseThrow(() -> new IllegalStateException("Failed to save ticket pricing configuration"));
     }
 
     @Transactional
@@ -72,7 +73,7 @@ public class TicketPricingService {
     @Transactional
     public TicketPricing updateBasePrice(int id, BigDecimal basePrice) {
         if (basePrice == null || basePrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPricingConfigurationException("Giá vé cơ sở không được để trống hoặc là số âm");
+            throw new InvalidPricingConfigurationException("Base ticket price cannot be empty or negative");
         }
         TicketPricing existing = getPricingById(id);
         ticketPricingDao.updateBasePrice(id, basePrice);
@@ -83,14 +84,16 @@ public class TicketPricingService {
     public TicketPricing updatePricingStatus(int id, String status) {
         TicketPricing existing = getPricingById(id);
         if ("Active".equalsIgnoreCase(status)) {
-            ticketPricingDao.findActiveConflict(existing.getDayType(), existing.getTimeSlot(), existing.getExperienceType(), id)
+            ticketPricingDao
+                    .findActiveConflict(existing.getDayType(), existing.getTimeSlot(), existing.getExperienceType(), id)
                     .ifPresent(conflict -> {
                         throw new DuplicatePricingRuleException(
-                                "Đã tồn tại quy tắc giá đang kích hoạt '" + conflict.getRuleName() +
-                                "' (Mã: " + conflict.getPricingCode() + ") cho tổ hợp DayType=" + existing.getDayType() +
-                                ", TimeSlot=" + existing.getTimeSlot() + ", ExperienceType=" + existing.getExperienceType() +
-                                ". Vui lòng vô hiệu hóa quy tắc cũ trước khi kích hoạt quy tắc này."
-                        );
+                                "An active pricing rule already exists: '" + conflict.getRuleName() +
+                                        "' (Code: " + conflict.getPricingCode() + ") for combination DayType="
+                                        + existing.getDayType() +
+                                        ", TimeSlot=" + existing.getTimeSlot() + ", ExperienceType="
+                                        + existing.getExperienceType() +
+                                        ". Please deactivate the existing rule before activating this one (Vui lòng vô hiệu hóa quy tắc cũ trước khi kích hoạt quy tắc này).");
                     });
         }
         ticketPricingDao.updateStatus(id, status);
@@ -99,8 +102,9 @@ public class TicketPricingService {
 
     @Transactional
     public SeatType updateSeatTypeMultiplier(int seatTypeId, BigDecimal multiplier) {
-        if (multiplier == null || multiplier.compareTo(new BigDecimal("0.50")) < 0 || multiplier.compareTo(new BigDecimal("3.00")) > 0) {
-            throw new InvalidPricingConfigurationException("Hệ số giá ghế phải nằm trong khoảng từ 0.50 đến 3.00");
+        if (multiplier == null || multiplier.compareTo(new BigDecimal("0.50")) < 0
+                || multiplier.compareTo(new BigDecimal("3.00")) > 0) {
+            throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00");
         }
         SeatType existing = getSeatTypeById(seatTypeId);
         seatTypeDao.updateMultiplier(seatTypeId, multiplier);
@@ -110,30 +114,35 @@ public class TicketPricingService {
     @Transactional
     public SeatType createSeatType(SeatTypeForm form) {
         seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
-            throw new InvalidPricingConfigurationException("Mã loại ghế '" + form.getTypeCode() + "' đã tồn tại trong hệ thống");
+            throw new InvalidPricingConfigurationException(
+                    "Seat type code '" + form.getTypeCode() + "' already exists in the system");
         });
         seatTypeDao.findByName(form.getTypeName().trim()).ifPresent(s -> {
-            throw new InvalidPricingConfigurationException("Tên loại ghế '" + form.getTypeName() + "' đã tồn tại trong hệ thống");
+            throw new InvalidPricingConfigurationException(
+                    "Seat type name '" + form.getTypeName() + "' already exists in the system");
         });
         seatTypeDao.insert(form);
         return seatTypeDao.findByCode(form.getTypeCode().trim())
-                .orElseThrow(() -> new IllegalStateException("Lỗi tạo loại ghế mới"));
+                .orElseThrow(() -> new IllegalStateException("Failed to create new seat type"));
     }
 
     @Transactional
     public SeatType updateSeatType(int id, SeatTypeForm form) {
         SeatType existing = getSeatTypeById(id);
-        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) {
-            throw new InvalidPricingConfigurationException("Hệ số giá ghế phải nằm trong khoảng từ 0.50 đến 3.00");
+        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0
+                || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) {
+            throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00");
         }
         seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
             if (!s.getSeatTypeId().equals(id)) {
-                throw new InvalidPricingConfigurationException("Mã loại ghế '" + form.getTypeCode() + "' đã được sử dụng");
+                throw new InvalidPricingConfigurationException(
+                        "Seat type code '" + form.getTypeCode() + "' is already in use");
             }
         });
         seatTypeDao.findByName(form.getTypeName().trim()).ifPresent(s -> {
             if (!s.getSeatTypeId().equals(id)) {
-                throw new InvalidPricingConfigurationException("Tên loại ghế '" + form.getTypeName() + "' đã được sử dụng");
+                throw new InvalidPricingConfigurationException(
+                        "Seat type name '" + form.getTypeName() + "' is already in use");
             }
         });
         seatTypeDao.update(id, form);
@@ -152,8 +161,8 @@ public class TicketPricingService {
         SeatType st = getSeatTypeById(id);
         if (seatTypeDao.isReferencedBySeats(id)) {
             throw new InvalidPricingConfigurationException(
-                    "Không thể xóa loại ghế '" + st.getTypeName() + "' vì đã có ghế trong phòng chiếu đang áp dụng loại ghế này."
-            );
+                    "Cannot delete seat type '" + st.getTypeName()
+                            + "' because existing seats in screening rooms are using this seat type.");
         }
         seatTypeDao.delete(id);
     }
@@ -165,7 +174,7 @@ public class TicketPricingService {
      */
     public BigDecimal calculateTicketUnitPrice(BigDecimal basePrice, BigDecimal multiplier) {
         if (basePrice == null || basePrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPricingConfigurationException("Giá vé cơ sở không hợp lệ: " + basePrice);
+            throw new InvalidPricingConfigurationException("Invalid base ticket price: " + basePrice);
         }
         if (multiplier == null || multiplier.compareTo(BigDecimal.ZERO) <= 0) {
             multiplier = BigDecimal.ONE;
@@ -176,7 +185,8 @@ public class TicketPricingService {
     }
 
     /**
-     * Generates a matrix map of pricing calculations for all active pricing rules against all active seat types.
+     * Generates a matrix map of pricing calculations for all active pricing rules
+     * against all active seat types.
      * Matrix: Map<PricingID, Map<SeatTypeID, CalculatedPrice>>
      */
     public Map<Integer, Map<Integer, BigDecimal>> generatePricingMatrix() {
@@ -206,7 +216,8 @@ public class TicketPricingService {
      * - GOLDEN_HOUR: >= 17:00
      */
     public String determineTimeSlot(java.time.LocalTime time) {
-        if (time == null) return "STANDARD";
+        if (time == null)
+            return "STANDARD";
         if (time.isBefore(java.time.LocalTime.of(12, 0))) {
             return "MORNING";
         } else if (time.isBefore(java.time.LocalTime.of(17, 0))) {
@@ -217,7 +228,8 @@ public class TicketPricingService {
     }
 
     /**
-     * Calculates ticket price for a seat by SeatTypeID, with fallback to SeatTypeName per P1-02.
+     * Calculates ticket price for a seat by SeatTypeID, with fallback to
+     * SeatTypeName per P1-02.
      */
     public BigDecimal calculatePriceForSeat(BigDecimal basePrice, Integer seatTypeId, String seatTypeName) {
         BigDecimal multiplier = BigDecimal.ONE;
@@ -242,35 +254,40 @@ public class TicketPricingService {
 
     private void validatePricingForm(TicketPricingForm form, Integer currentId) {
         if (form.getBasePrice() == null || form.getBasePrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPricingConfigurationException("Giá vé cơ sở không được để trống hoặc là số âm");
+            throw new InvalidPricingConfigurationException("Base ticket price cannot be empty or negative");
         }
         if (form.getFormatSurcharge() == null || form.getFormatSurcharge().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPricingConfigurationException("Phụ thu định dạng không được để trống hoặc là số âm");
+            throw new InvalidPricingConfigurationException("Format surcharge cannot be empty or negative");
         }
 
         ticketPricingDao.findByCode(form.getPricingCode().trim()).ifPresent(tp -> {
             if (currentId == null || !tp.getPricingId().equals(currentId)) {
-                throw new InvalidPricingConfigurationException("Mã cấu hình giá '" + form.getPricingCode() + "' đã tồn tại trong hệ thống");
+                throw new InvalidPricingConfigurationException(
+                        "Pricing code '" + form.getPricingCode() + "' already exists in the system");
             }
         });
 
         if (form.getDayType() == null || form.getDayType().isBlank()) {
-            throw new InvalidPricingConfigurationException("Loại ngày không được để trống");
+            throw new InvalidPricingConfigurationException("Day type cannot be empty");
         }
         if (form.getTimeSlot() == null || form.getTimeSlot().isBlank()) {
-            throw new InvalidPricingConfigurationException("Khung giờ chiếu không được để trống");
+            throw new InvalidPricingConfigurationException("Time slot cannot be empty");
         }
 
         // P1-03: Collision check for active pricing rules
         boolean isActive = form.getStatus() == null || "Active".equalsIgnoreCase(form.getStatus().trim());
         if (isActive) {
-            ticketPricingDao.findActiveConflict(form.getDayType().trim(), form.getTimeSlot().trim(), form.getExperienceType(), currentId)
+            ticketPricingDao
+                    .findActiveConflict(form.getDayType().trim(), form.getTimeSlot().trim(), form.getExperienceType(),
+                            currentId)
                     .ifPresent(conflict -> {
                         throw new DuplicatePricingRuleException(
-                                "Đã tồn tại quy tắc giá đang kích hoạt '" + conflict.getRuleName() +
-                                "' (Mã: " + conflict.getPricingCode() + ") cho tổ hợp DayType=" + form.getDayType() +
-                                ", TimeSlot=" + form.getTimeSlot() + ", ExperienceType=" + form.getExperienceType() + "."
-                        );
+                                "An active pricing rule already exists (Đã tồn tại quy tắc giá đang kích hoạt): '"
+                                        + conflict.getRuleName() +
+                                        "' (Code: " + conflict.getPricingCode() + ") for combination DayType="
+                                        + form.getDayType() +
+                                        ", TimeSlot=" + form.getTimeSlot() + ", ExperienceType="
+                                        + form.getExperienceType() + ".");
                     });
         }
     }

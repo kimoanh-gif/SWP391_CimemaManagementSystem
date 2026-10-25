@@ -787,26 +787,26 @@ GO
    ================================================================ */
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE [Name] = N'CUSTOMER')
-    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'CUSTOMER', N'Khách hàng');
+    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'CUSTOMER', N'Customer');
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE [Name] = N'STAFF')
-    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'STAFF', N'Nhân viên');
+    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'STAFF', N'Staff');
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE [Name] = N'MANAGER')
-    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'MANAGER', N'Quản lý rạp');
+    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'MANAGER', N'Cinema Manager');
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE [Name] = N'ADMIN')
-    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'ADMIN', N'Quản trị hệ thống');
+    INSERT dbo.[Role] ([Name], [Description]) VALUES (N'ADMIN', N'System Administrator');
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'movie:read')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'movie:read', N'Xem phim và suất chiếu');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'movie:read', N'View movies and showtimes');
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'booking:create')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'booking:create', N'Tạo đặt vé');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'booking:create', N'Create ticket booking');
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'ticket:checkin')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'ticket:checkin', N'Kiểm tra vé');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'ticket:checkin', N'Ticket check-in');
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'showtime:manage')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'showtime:manage', N'Quản lý suất chiếu');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'showtime:manage', N'Manage showtimes');
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'account:manage')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'account:manage', N'Quản lý tài khoản');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'account:manage', N'Manage accounts');
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'report:view')
-    INSERT dbo.Permission ([Name], [Description]) VALUES (N'report:view', N'Xem báo cáo');
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'report:view', N'View business reports');
 
 INSERT dbo.RolePermission (RoleID, PermissionID)
 SELECT r.RoleID, p.PermissionID
@@ -834,39 +834,42 @@ GO
 
 DECLARE @Genres TABLE ([Name] NVARCHAR(100), [Description] NVARCHAR(500));
 INSERT @Genres VALUES
-    (N'Action', N'Phim hành động'),
-    (N'Adventure', N'Phim phiêu lưu'),
-    (N'Animation', N'Phim hoạt hình'),
-    (N'Comedy', N'Phim hài'),
-    (N'Drama', N'Phim tâm lý'),
-    (N'Horror', N'Phim kinh dị'),
-    (N'Romance', N'Phim lãng mạn'),
-    (N'Sci-Fi', N'Phim khoa học viễn tưởng');
+    (N'Action', N'Action-packed thriller, chases, and intense combat'),
+    (N'Adventure', N'Epic adventures and exploration of uncharted worlds'),
+    (N'Animation', N'2D and 3D animated movies for all ages'),
+    (N'Comedy', N'Witty humor, lighthearted fun, and laughter'),
+    (N'Drama', N'Deep emotions, dramatic stories, and inspiring journeys'),
+    (N'Horror', N'Chilling horror, supernatural thrillers, and jump scares'),
+    (N'Romance', N'Romantic, heartwarming, and sweet love stories'),
+    (N'Sci-Fi', N'Science fiction, futuristic technology, and space exploration');
 
 INSERT dbo.Genre ([Name], [Description], [Status])
 SELECT g.[Name], g.[Description], N'ACTIVE'
 FROM @Genres g
 WHERE NOT EXISTS (SELECT 1 FROM dbo.Genre x WHERE x.[Name] = g.[Name]);
 
+IF NOT EXISTS (SELECT 1 FROM dbo.SeatType WHERE TypeCode = N'FRONT')
+    INSERT dbo.SeatType (TypeCode, TypeName, [Description], PriceMultiplier, ColorCode, [Status])
+    VALUES (N'FRONT', N'Front Row Seat (Front)', N'Front-row seats close to screen with budget-friendly pricing', 0.95, N'#b74a10', N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.SeatType WHERE TypeCode = N'STD')
     INSERT dbo.SeatType (TypeCode, TypeName, [Description], PriceMultiplier, ColorCode, [Status])
-    VALUES (N'STD', N'Standard', N'Ghế tiêu chuẩn', 1.00, N'#3B82F6', N'Active');
+    VALUES (N'STD', N'Standard Seat (Standard)', N'Standard seats with full panoramic screen view', 1.00, N'#3B82F6', N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.SeatType WHERE TypeCode = N'VIP')
     INSERT dbo.SeatType (TypeCode, TypeName, [Description], PriceMultiplier, ColorCode, [Status])
-    VALUES (N'VIP', N'VIP', N'Ghế VIP', 1.25, N'#F59E0B', N'Active');
+    VALUES (N'VIP', N'VIP Royal Amber', N'Premium cushioned seats in center rows with optimal viewing angles', 1.25, N'#F59E0B', N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.SeatType WHERE TypeCode = N'COUPLE')
     INSERT dbo.SeatType (TypeCode, TypeName, [Description], PriceMultiplier, ColorCode, [Status])
-    VALUES (N'COUPLE', N'Couple', N'Ghế đôi', 1.80, N'#EC4899', N'Active');
+    VALUES (N'COUPLE', N'Sweetbox Couple Seat (Couple)', N'Couple seats with private partition for 2 persons in the back row', 1.80, N'#EC4899', N'Active');
 
 IF NOT EXISTS (SELECT 1 FROM dbo.TicketPricing WHERE PricingCode = N'PRICE-WD-MORN')
     INSERT dbo.TicketPricing (PricingCode, RuleName, DayType, TimeSlot, BasePrice, FormatSurcharge, ExperienceType, [Status], [Description])
-    VALUES (N'PRICE-WD-MORN', N'Ngày thường - Buổi sáng', N'WEEKDAY', N'MORNING', 65000, 0, N'2D Digital', N'Active', N'Suất trước 12:00');
+    VALUES (N'PRICE-WD-MORN', N'Weekday - Early Morning (< 12:00)', N'WEEKDAY', N'MORNING', 65000, 0, N'2D Digital', N'Active', N'Morning discount screening before 12:00');
 IF NOT EXISTS (SELECT 1 FROM dbo.TicketPricing WHERE PricingCode = N'PRICE-WD-STD')
     INSERT dbo.TicketPricing (PricingCode, RuleName, DayType, TimeSlot, BasePrice, FormatSurcharge, ExperienceType, [Status], [Description])
-    VALUES (N'PRICE-WD-STD', N'Ngày thường - Tiêu chuẩn', N'WEEKDAY', N'STANDARD', 85000, 0, N'2D Digital', N'Active', N'Suất từ 12:00 đến 17:00');
+    VALUES (N'PRICE-WD-STD', N'Weekday - Standard Hours (12:00 - 17:00)', N'WEEKDAY', N'STANDARD', 85000, 0, N'2D Digital', N'Active', N'Standard weekday afternoon slot from 12:00 to 17:00');
 IF NOT EXISTS (SELECT 1 FROM dbo.TicketPricing WHERE PricingCode = N'PRICE-WE-ALL')
     INSERT dbo.TicketPricing (PricingCode, RuleName, DayType, TimeSlot, BasePrice, FormatSurcharge, ExperienceType, [Status], [Description])
-    VALUES (N'PRICE-WE-ALL', N'Cuối tuần', N'WEEKEND', N'ALL_DAY', 110000, 0, N'2D Digital', N'Active', N'Giá vé cuối tuần');
+    VALUES (N'PRICE-WE-ALL', N'Weekend & Holidays (Sat, Sun)', N'WEEKEND', N'ALL_DAY', 110000, 0, N'2D Digital', N'Active', N'Base ticket price for weekends and public holidays');
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-01')
@@ -1014,13 +1017,13 @@ GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'PC-CARAMEL')
     INSERT dbo.FoodBeverageItem (ItemCode, [Name], [Description], ItemType, Price, CostPrice, ImageURL, [Status])
-    VALUES (N'PC-CARAMEL', N'Bắp rang caramel', N'Bắp rang vị caramel cỡ lớn', N'Food', 55000, 15000, N'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400', N'Active');
+    VALUES (N'PC-CARAMEL', N'Large Caramel Popcorn', N'Freshly popped corn coated with rich golden caramel', N'Food', 55000, 15000, N'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400', N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'DR-COKE')
     INSERT dbo.FoodBeverageItem (ItemCode, [Name], [Description], ItemType, Price, CostPrice, ImageURL, [Status])
-    VALUES (N'DR-COKE', N'Coca-Cola cỡ lớn', N'Nước ngọt có ga 32oz', N'Drink', 32000, 8000, N'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400', N'Active');
+    VALUES (N'DR-COKE', N'Fresh Coca-Cola 32oz (Large)', N'Refreshing, ice-cold carbonated soft drink', N'Drink', 32000, 8000, N'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400', N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO')
     INSERT dbo.FoodBeverageItem (ItemCode, [Name], [Description], ItemType, Price, CostPrice, ImageURL, [Status])
-    VALUES (N'CB-SOLO', N'Combo Solo', N'1 bắp caramel và 1 Coca-Cola', N'Combo', 79000, 22000, N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=400', N'Active');
+    VALUES (N'CB-SOLO', N'Solo Cine Combo', N'1 Sweet popcorn 24oz and 1 Carbonated drink 22oz', N'Combo', 79000, 22000, N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=400', N'Active');
 
 UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Caramel Popcorn', [Description]=N'Freshly popped corn coated with caramel', ImageURL=N'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600' WHERE ItemCode=N'PC-CARAMEL';
 UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Coca-Cola', [Description]=N'Chilled 32 oz Coca-Cola', ImageURL=N'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600' WHERE ItemCode=N'DR-COKE';
@@ -1042,11 +1045,11 @@ IF @ComboID IS NOT NULL AND @DrinkID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM d
     INSERT dbo.ComboItem (ComboID, ComponentItemID, Quantity) VALUES (@ComboID, @DrinkID, 1);
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Promotion WHERE [Name] = N'Ưu đãi thành viên mới')
+IF NOT EXISTS (SELECT 1 FROM dbo.Promotion WHERE [Name] = N'New Member Offer')
     INSERT dbo.Promotion ([Name], [Description], StartDate, EndDate, [Status])
-    VALUES (N'Ưu đãi thành viên mới', N'Giảm giá cho lần đặt vé đầu tiên', DATEADD(DAY, -30, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 'ACTIVE');
+    VALUES (N'New Member Offer', N'Special discount for your first ticket booking', DATEADD(DAY, -30, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 'ACTIVE');
 
-DECLARE @PromotionID INT = (SELECT PromotionID FROM dbo.Promotion WHERE [Name] = N'Ưu đãi thành viên mới');
+DECLARE @PromotionID INT = (SELECT PromotionID FROM dbo.Promotion WHERE [Name] = N'New Member Offer');
 IF @PromotionID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Voucher WHERE Code = 'WELCOME10')
     INSERT dbo.Voucher (PromotionID, RequiredRankID, Code, DiscountType, DiscountValue, MaxDiscountAmount, MinBookingAmount, ValidFrom, ValidTo, TotalUsageLimit, PerAccountLimit, [Status])
     VALUES (@PromotionID, NULL, 'WELCOME10', 'PERCENT', 10, 50000, 100000, DATEADD(DAY, -30, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 1000, 1, 'ACTIVE');
@@ -1107,10 +1110,10 @@ DECLARE @DemoAccounts TABLE (
     PasswordHash VARCHAR(255), FullName NVARCHAR(100), Phone VARCHAR(15)
 );
 INSERT @DemoAccounts VALUES
-    (N'ADMIN', 'admin', 'admin@cinema.com', '$2a$10$bNY00N78MMHSkzCtHRAbXO8ZJyvkvKHE5fk/qkg5ugT71qHFqIlh2', N'Quản trị viên', '0900000001'),
-    (N'MANAGER', 'manager', 'manager@cinema.com', '$2a$10$QmlR80DeTgUduxI8NUUZGO4Ir5C7er7aq.2.RvAi2txns3mVlL9yq', N'Quản lý rạp', '0900000002'),
-    (N'STAFF', 'staff', 'staff@cinema.com', '$2a$10$bBKI/YJyY065Ra.SQoaaxOE2MqGL7pvAvkrVHjjIwaiUOj2HNgte6', N'Nhân viên bán vé', '0900000003'),
-    (N'CUSTOMER', 'customer', 'customer@cinema.com', '$2a$10$nya.sfK50SAuM6gNW27SCemCJsk/4tRDbKsp/8sV29Cg8NJnq/7Z2', N'Khách hàng mẫu', '0900000004');
+    (N'ADMIN', 'admin', 'admin@cinema.com', '$2a$10$bNY00N78MMHSkzCtHRAbXO8ZJyvkvKHE5fk/qkg5ugT71qHFqIlh2', N'System Administrator', '0900000001'),
+    (N'MANAGER', 'manager', 'manager@cinema.com', '$2a$10$QmlR80DeTgUduxI8NUUZGO4Ir5C7er7aq.2.RvAi2txns3mVlL9yq', N'Cinema Manager', '0900000002'),
+    (N'STAFF', 'staff', 'staff@cinema.com', '$2a$10$bBKI/YJyY065Ra.SQoaaxOE2MqGL7pvAvkrVHjjIwaiUOj2HNgte6', N'Box Office Staff', '0900000003'),
+    (N'CUSTOMER', 'customer', 'customer@cinema.com', '$2a$10$nya.sfK50SAuM6gNW27SCemCJsk/4tRDbKsp/8sV29Cg8NJnq/7Z2', N'Sample Customer', '0900000004');
 
 INSERT dbo.Account (RoleID, Username, Email, PasswordHash, FullName, Phone, [Status], EmailVerifiedAt)
 SELECT r.RoleID, d.Username, d.Email, d.PasswordHash, d.FullName, d.Phone, 'ACTIVE', SYSDATETIME()
@@ -1121,11 +1124,11 @@ WHERE NOT EXISTS (SELECT 1 FROM dbo.Account a WHERE a.Email = d.Email);
 DECLARE @CustomerAccountID INT = (SELECT AccountID FROM dbo.Account WHERE Email = 'customer@cinema.com');
 IF @CustomerAccountID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Customer WHERE AccountID = @CustomerAccountID)
     INSERT dbo.Customer (AccountID, RankID, DateOfBirth, [Address], AvailablePoints, TierPoints, ReceivePromotionEmail)
-    VALUES (@CustomerAccountID, (SELECT RankID FROM dbo.MembershipRank WHERE [Name] = N'STANDARD'), '2000-01-01', N'Thành phố Hồ Chí Minh', 100, 100, 1);
+    VALUES (@CustomerAccountID, (SELECT RankID FROM dbo.MembershipRank WHERE [Name] = N'STANDARD'), '2000-01-01', N'Ho Chi Minh City', 100, 100, 1);
 
 DECLARE @StaffAccountID INT = (SELECT AccountID FROM dbo.Account WHERE Email = 'staff@cinema.com');
 IF @StaffAccountID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Staff WHERE AccountID = @StaffAccountID)
-    INSERT dbo.Staff (AccountID, Position, [Status]) VALUES (@StaffAccountID, N'Nhân viên bán vé', 'ACTIVE');
+    INSERT dbo.Staff (AccountID, Position, [Status]) VALUES (@StaffAccountID, N'Box Office Staff', 'ACTIVE');
 GO
 
 DECLARE @DemoNewsStaffID INT = (
@@ -1168,7 +1171,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'BOOKING_HOLD_MINUTES')
     INSERT dbo.SystemSetting
         (SettingKey, Value, [Description], SettingName, Category, ValueType, DefaultValue, ValidationRules, IsActive)
-    VALUES ('BOOKING_HOLD_MINUTES', N'10', N'Thời gian giữ ghế chưa thanh toán',
+    VALUES ('BOOKING_HOLD_MINUTES', N'10', N'Unpaid seat hold time limit',
             N'Seat Hold Time', N'BOOKING', N'NUMBER', N'10', N'min:1,max:60', 1);
 
 /* ================================================================

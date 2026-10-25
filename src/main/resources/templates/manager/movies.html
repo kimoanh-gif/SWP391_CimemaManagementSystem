@@ -279,7 +279,7 @@
                                 style="color:#10B981;border-color:#10B981;background:#ECFDF5;"
                                 onclick="reactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}">▶</button>
-                        <button type="button" class="action-btn" title="Dừng chiếu / Lưu trữ"
+                        <button type="button" class="action-btn" title="Stop screening / Archive"
                                 th:unless="${movie.isArchived() or movie.status == 'Ended'}"
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
@@ -287,7 +287,7 @@
                               method="post" style="display: inline;" class="delete-movie-form"
                               th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">
                             <button type="submit" class="action-btn action-btn-del"
-                                    th:title="${movie.showtimeCount > 0 ? 'Phim đang có ràng buộc ' + movie.showtimeCount + ' suất chiếu' : 'Xóa phim'}">
+                                    th:title="${movie.showtimeCount > 0 ? 'Movie is linked to ' + movie.showtimeCount + ' showtimes' : 'Delete movie'}">
                                 🗑
                             </button>
                         </form>

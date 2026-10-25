@@ -58,7 +58,7 @@ public class ShowtimeService {
 
     public Showtime getShowtimeById(int id) {
         return showtimeDao.findById(id)
-                .orElseThrow(() -> new ShowtimeNotFoundException("Không tìm thấy suất chiếu với ID: " + id));
+                .orElseThrow(() -> new ShowtimeNotFoundException("Showtime not found with ID: " + id));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -99,7 +99,7 @@ public class ShowtimeService {
             if (!existing.getMovieId().equals(form.getMovieId())
                     || !existing.getRoomId().equals(form.getRoomId())
                     || !existing.getStartTime().equals(form.getStartTime())) {
-                throw new InvalidShowtimeException("Suất chiếu đã có vé đặt, không được phép thay đổi Phim, Phòng chiếu hoặc Thời gian bắt đầu (BR-54).");
+                throw new InvalidShowtimeException("Showtime already has bookings; cannot change Movie, Screening Room, or Start Time (BR-54).");
             }
         }
 
@@ -115,7 +115,7 @@ public class ShowtimeService {
 
         // BR-54: cannot stop if there are active bookings
         if (showtimeDao.hasActiveBookings(id)) {
-            throw new InvalidShowtimeException("Suất chiếu đã có vé đặt, không thể hủy hoặc dừng chiếu (BR-54).");
+            throw new InvalidShowtimeException("Showtime already has bookings; cannot cancel or stop showtime (BR-54).");
         }
 
         showtimeDao.updateStatus(id, "Stopped");
@@ -127,7 +127,7 @@ public class ShowtimeService {
         Showtime existing = getShowtimeById(id);
 
         if (showtimeDao.hasActiveBookings(id)) {
-            throw new InvalidShowtimeException("Suất chiếu đã có vé đặt, không thể hủy lịch chiếu (BR-54).");
+            throw new InvalidShowtimeException("Showtime already has bookings; cannot cancel schedule (BR-54).");
         }
 
         showtimeDao.updateStatus(id, "Cancelled");
@@ -139,10 +139,10 @@ public class ShowtimeService {
         Showtime existing = getShowtimeById(id);
 
         if (showtimeDao.hasActiveBookings(id)) {
-            throw new InvalidShowtimeException("Suất chiếu đã có vé đặt, không thể xóa (BR-54).");
+            throw new InvalidShowtimeException("Showtime already has bookings; cannot delete (BR-54).");
         }
         if (showtimeDao.countTotalBookings(id) > 0) {
-            throw new InvalidShowtimeException("Suất chiếu đã từng phát sinh đơn đặt vé. Vui lòng dừng suất chiếu thay vì xóa vật lý.");
+            throw new InvalidShowtimeException("Showtime has prior booking transactions. Please stop the showtime instead of deleting it permanently.");
         }
 
         showtimeDao.delete(id);
@@ -153,45 +153,45 @@ public class ShowtimeService {
      */
     public void validateShowtime(ShowtimeForm form, Integer currentShowtimeId) {
         if (form.getMovieId() == null || form.getMovieId() <= 0) {
-            throw new InvalidShowtimeException("Vui lòng chọn phim hợp lệ.");
+            throw new InvalidShowtimeException("Please select a valid movie.");
         }
         if (form.getRoomId() == null || form.getRoomId() <= 0) {
-            throw new InvalidShowtimeException("Vui lòng chọn phòng chiếu hợp lệ.");
+            throw new InvalidShowtimeException("Please select a valid screening room.");
         }
         if (form.getStartTime() == null) {
-            throw new InvalidShowtimeException("Vui lòng chọn thời gian bắt đầu.");
+            throw new InvalidShowtimeException("Please select a start time.");
         }
         if (form.getBaseTicketPrice() == null || form.getBaseTicketPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidShowtimeException("Giá vé cơ sở không được âm.");
+            throw new InvalidShowtimeException("Base ticket price cannot be negative.");
         }
 
         // BR-55: A new showtime must start in the future (for new showtimes)
         if (currentShowtimeId == null && form.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new InvalidShowtimeException("Thời gian bắt đầu suất chiếu mới phải ở tương lai (BR-55).");
+            throw new InvalidShowtimeException("Start time of a new showtime must be in the future (BR-55).");
         }
 
         // Validate Movie & BR-07
         Movie movie = movieDao.findById(form.getMovieId())
-                .orElseThrow(() -> new InvalidShowtimeException("Phim được chọn không tồn tại trong hệ thống."));
+                .orElseThrow(() -> new InvalidShowtimeException("Selected movie does not exist in the system."));
 
         if (!movie.isActiveForShowtimes()) {
-            throw new InvalidShowtimeException("Chỉ những phim ở trạng thái 'Đang chiếu' (Now Showing) hoặc 'Sắp chiếu' (Upcoming) mới được xếp lịch chiếu (BR-07). Phim '"
-                    + movie.getTitle() + "' đang ở trạng thái: " + movie.getStatus());
+            throw new InvalidShowtimeException("Only movies with status 'Now Showing' or 'Upcoming' can be scheduled for showtimes (BR-07). Movie '"
+                    + movie.getTitle() + "' is currently: " + movie.getStatus());
         }
 
         // Validate Room & BR-08
         Room room = roomDao.findById(form.getRoomId())
-                .orElseThrow(() -> new InvalidShowtimeException("Phòng chiếu được chọn không tồn tại trong hệ thống."));
+                .orElseThrow(() -> new InvalidShowtimeException("Selected screening room does not exist in the system."));
 
         if (!room.isActiveForShowtimes()) {
-            throw new InvalidShowtimeException("Phòng chiếu '" + room.getRoomName() + "' không ở trạng thái sẵn sàng đón khách (BR-08). Trạng thái hiện tại: " + room.getStatus());
+            throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' is not ready for guests (BR-08). Current status: " + room.getStatus());
         }
 
         // P1-01: Room readiness and seat availability validation (AC01, AC02)
         if (seatDao != null) {
             int usableSeats = seatDao.countActiveSeatsByRoomId(form.getRoomId());
             if (usableSeats <= 0) {
-                throw new InvalidShowtimeException("Phòng chiếu '" + room.getRoomName() + "' chưa có sơ đồ ghế khả dụng. Vui lòng thiết lập sơ đồ ghế trước khi tạo suất chiếu.");
+                throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' does not have a valid seat layout (chưa có sơ đồ ghế khả dụng). Please configure seat layout before creating showtimes.");
             }
         }
 
@@ -211,11 +211,11 @@ public class ShowtimeService {
             Showtime conflict = conflicts.get(0);
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
             throw new ShowtimeConflictException(
-                    "Trùng lịch chiếu hoặc thời gian dọn phòng (BR-09)! Phòng '" + room.getRoomName() +
-                            "' đã có suất chiếu phim '" + conflict.getMovieTitle() +
-                            "' từ " + conflict.getStartTime().format(dtf) +
-                            " đến " + conflict.getEndTime().format(dtf) +
-                            " (kèm 15 phút dọn dẹp)."
+                    "Schedule conflict or cleaning time overlap (BR-09)! Room '" + room.getRoomName() +
+                            "' already has showtime for movie '" + conflict.getMovieTitle() +
+                            "' from " + conflict.getStartTime().format(dtf) +
+                            " to " + conflict.getEndTime().format(dtf) +
+                            " (including 15-minute cleaning time)."
             );
         }
     }

@@ -477,16 +477,16 @@
                     <form th:action="@{'/manager/rooms/delete/' + ${room.roomId}}" method="post" style="display:inline;">
                         <button type="submit" class="action-btn action-btn-del"
                                 th:if="${room.showtimeCount == 0}"
-                                onclick="return confirm('Bạn có chắc chắn muốn xóa phòng chiếu này? Thao tác này sẽ xóa vĩnh viễn cấu hình phòng và sơ đồ ghế.');"
-                                title="Xóa phòng chiếu">
+                                onclick="return confirm('Are you sure you want to delete this screening room? This will permanently remove the room configuration and seat map.');"
+                                title="Delete screening room">
                             🗑
                         </button>
                         <button type="button" class="action-btn action-btn-del"
                                 th:if="${room.showtimeCount > 0}"
                                 th:data-name="${room.roomName}"
                                 th:data-count="${room.showtimeCount}"
-                                onclick="alert('⚠️ Không thể xóa phòng chiếu \'' + this.dataset.name + '\'!\n\nLý do: Phòng đã có lịch sử ' + this.dataset.count + ' suất chiếu trong hệ thống.\n\n👉 Để ngừng sử dụng phòng này, bạn vui lòng bấm nút [⏹] để chuyển phòng sang trạng thái \'Bảo trì\'.');"
-                                th:title="'Phòng đã có ' + ${room.showtimeCount} + ' suất chiếu - Bấm để xem lý do không thể xóa'">
+                                onclick="alert('⚠️ Cannot delete screening room \'' + this.dataset.name + '\'!\n\nReason: This room has a history of ' + this.dataset.count + ' showtimes in the system.\n\n👉 To stop using this room, please click the [⏹] button to set room status to \'Maintenance\'.');"
+                                th:title="'Room has ' + ${room.showtimeCount} + ' showtimes - Click to see why it cannot be deleted'">
                             🗑
                         </button>
                     </form>
@@ -600,7 +600,7 @@
                     </div>
                     <div id="capacity-calc-hint" style="margin-top: 8px; font-size: 13px; color: var(--text-500); display: flex; align-items: center; gap: 6px;">
                         <span class="material-symbols-outlined" style="font-size:18px;color:#e11d48;">calculate</span>
-                        <span id="capacityCalcText">Quy tắc: <strong>Tổng số ghế cả phòng = Hàng dọc × Hàng ngang</strong></span>
+                        <span id="capacityCalcText">Rule: <strong>Total room capacity = Vertical rows × Horizontal seats</strong></span>
                     </div>
                 </div>
 

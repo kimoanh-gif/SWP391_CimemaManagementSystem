@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"/></head>
 <body>
 
@@ -27,85 +27,85 @@
         </div>
     </a>
 
-    <!-- Navigation (Đầy đủ 9 chức năng độc lập) -->
+    <!-- Navigation -->
     <nav class="sidebar-nav">
 
-        <span class="sidebar-section-label">Vận Hành</span>
+        <span class="sidebar-section-label">Operations</span>
 
         <!-- 1. Dashboard -->
         <a th:href="@{/manager/dashboard}"
            th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">📊</span> Tổng quan
+            <span class="nav-icon">📊</span> Dashboard
         </a>
 
         <!-- 2. Movies -->
         <a th:href="@{/manager/movies}"
            th:classappend="${activeMenu == 'movies'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🎬</span> Phim chiếu rạp
+            <span class="nav-icon">🎬</span> Movies
         </a>
 
         <!-- 3. Genres -->
         <a th:href="@{/manager/genres}"
            th:classappend="${activeMenu == 'genres'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🏷</span> Thể loại phim
+            <span class="nav-icon">🏷</span> Genres
         </a>
 
         <!-- 4. Rooms -->
         <a th:href="@{/manager/rooms}"
            th:classappend="${activeMenu == 'rooms'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🏟</span> Phòng chiếu
+            <span class="nav-icon">🏟</span> Screening Rooms
         </a>
 
         <!-- 5. Seat Types -->
         <a th:href="@{/manager/seat-types}"
            th:classappend="${activeMenu == 'seat-types'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">💺</span> Danh mục loại ghế
+            <span class="nav-icon">💺</span> Seat Types
         </a>
 
         <!-- 6. Seats Layout -->
         <a th:href="@{/manager/seats}"
            th:classappend="${activeMenu == 'seats'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🗺</span> Sơ đồ bố trí ghế
+            <span class="nav-icon">🗺</span> Seat Layout
         </a>
 
         <!-- 7. Showtimes -->
         <a th:href="@{/manager/showtimes}"
            th:classappend="${activeMenu == 'showtimes'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🕐</span> Lịch &amp; Suất chiếu
+            <span class="nav-icon">🕐</span> Showtimes
         </a>
 
-        <span class="sidebar-section-label">Hệ Thống &amp; Dịch Vụ</span>
+        <span class="sidebar-section-label">System &amp; Services</span>
 
         <!-- 8. Pricing -->
         <a th:href="@{/manager/pricing}"
            th:classappend="${activeMenu == 'pricing'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">💳</span> Bảng giá vé
+            <span class="nav-icon">💳</span> Ticket Pricing
         </a>
 
         <!-- 9. F&B -->
         <a th:href="@{/manager/fb}"
            th:classappend="${activeMenu == 'fb'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">🍿</span> Bắp nước &amp; F&amp;B
+            <span class="nav-icon">🍿</span> Concessions &amp; F&amp;B
         </a>
 
-        <a href="#" class="sidebar-link nav-disabled" title="Phân hệ giai đoạn mở rộng">
-            <span class="nav-icon">🎁</span> Khuyến mãi &amp; Voucher
+        <a href="#" class="sidebar-link nav-disabled" title="Extended modules">
+            <span class="nav-icon">🎁</span> Promotions &amp; Vouchers
         </a>
 
         <!-- 10. Revenue Reports & Export (Screens 47 & 49) -->
         <a th:href="@{/manager/reports}"
            th:classappend="${activeMenu == 'reports'} ? ' active' : ''"
            class="sidebar-link">
-            <span class="nav-icon">📈</span> Báo cáo doanh thu
+            <span class="nav-icon">📈</span> Revenue Reports
         </a>
     </nav>
 
@@ -113,10 +113,10 @@
     <div class="sidebar-footer">
         <div class="avatar">M</div>
         <div class="sidebar-footer-info">
-            <div class="sidebar-footer-name" th:text="${userName != null} ? ${userName} : 'Minh Anh'">Minh Anh</div>
-            <div class="sidebar-footer-role" th:text="${userRole != null} ? ${userRole} : 'Quản trị viên / Manager'">Quản trị viên / Manager</div>
+            <div class="sidebar-footer-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</div>
+            <div class="sidebar-footer-role" th:text="${userRole != null} ? ${userRole} : 'Administrator / Manager'">Administrator / Manager</div>
         </div>
-        <div class="sidebar-status-dot" title="Hệ thống hoạt động tốt"></div>
+        <div class="sidebar-status-dot" title="System operational"></div>
     </div>
 
     <!-- Logout -->
@@ -146,14 +146,14 @@
         .topbar-logout-btn:hover { background: var(--danger-light); color: var(--danger); border-color: #FECACA; }
     </style>
     <form th:action="@{/logout}" method="post" class="sidebar-logout-form">
-        <button type="submit" class="sidebar-logout-btn" title="Đăng xuất">
+        <button type="submit" class="sidebar-logout-btn" title="Logout">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            Đăng xuất
+            Logout
         </button>
     </form>
 
@@ -165,10 +165,10 @@
     <div class="topbar-spacer"></div>
 
     <div class="topbar-date">
-        📅 <span th:text="${currentDateStr != null} ? ${currentDateStr} : 'Hôm nay'">Hôm nay</span>
+        📅 <span th:text="${currentDateStr != null} ? ${currentDateStr} : 'Today'">Today</span>
     </div>
 
-    <div class="topbar-icon-btn" title="Thông báo">
+    <div class="topbar-icon-btn" title="Notifications">
         🔔
         <span class="topbar-notif-badge">3</span>
     </div>
@@ -176,13 +176,13 @@
     <div class="topbar-user">
         <div class="avatar">M</div>
         <div class="topbar-user-info">
-            <span class="topbar-user-name" th:text="${userName != null} ? ${userName} : 'Minh Anh'">Minh Anh</span>
+            <span class="topbar-user-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</span>
             <span class="topbar-user-role">Manager</span>
         </div>
     </div>
 
     <form th:action="@{/logout}" method="post" class="topbar-logout-form">
-        <button type="submit" class="topbar-logout-btn" title="Đăng xuất">
+        <button type="submit" class="topbar-logout-btn" title="Logout">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

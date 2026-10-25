@@ -6,6 +6,6 @@ package com.cinema.exception;
  */
 public class RoomHasActiveShowtimesException extends RuntimeException {
     public RoomHasActiveShowtimesException(int roomId) {
-        super("Phòng chiếu (ID: " + roomId + ") đang có các suất chiếu sắp diễn ra hoặc chưa kết thúc nên không thể xóa.");
+        super("Screening room (ID: " + roomId + ") has ongoing or upcoming showtimes and cannot be deleted.");
     }
 }
