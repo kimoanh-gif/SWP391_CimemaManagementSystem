@@ -32,11 +32,11 @@
         <div class="mp-hero-tags">
             <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.displayStatusLabel}">Active</span>
             <span class="mp-tag-gold" th:if="${p.locked}"><span class="material-symbols-outlined">receipt_long</span>
-                <th:block th:text="${#numbers.formatInteger(p.referenceCount, 1, 'COMMA') + ' bookings'}">1,840 bookings</th:block></span>
+                <th:block th:text="${p.bookingCountText}">1,840 bookings</th:block></span>
         </div>
         <h1 th:text="${p.name}">Wednesday Student Deal</h1>
         <div class="mp-hero-stats">
-            <div><small>Vouchers</small><strong th:text="${p.voucherCount + ' codes'}">3 codes</strong></div>
+            <div><small>Vouchers</small><strong th:text="${p.voucherCountText}">3 codes</strong></div>
             <div><small>Main discount</small><strong class="mp-red" th:text="${p.primaryCode != null ? p.primaryValueDisplay : '—'}">15%</strong></div>
             <div><small>Period</small><strong th:text="${p.timeHint}">290 days left</strong></div>
             <div><small>Times used</small><strong th:text="${#numbers.formatInteger(p.usageCount, 1, 'COMMA')}">1,840</strong></div>
@@ -100,7 +100,7 @@
         <div class="mp-lock-box" th:if="${p.locked}">
             <span class="material-symbols-outlined">lock</span>
             <div><strong>Accounting history is protected (locked from deletion)</strong>
-                <p>This promotion has <b class="mp-red" th:text="${p.referenceCount + ' bookings'}">1,840 bookings</b>. It cannot be deleted permanently.
+                <p>This promotion has <b class="mp-red" th:text="${p.bookingCountText}">1,840 bookings</b>. It cannot be deleted permanently.
                     Use <b>Pause</b> or <b>Stop</b> when the campaign ends.</p></div>
         </div>
     </section>
@@ -148,14 +148,14 @@
             <div class="mp-lock-box" th:if="${p.locked}">
                 <span class="material-symbols-outlined">shield_lock</span>
                 <div><strong>Financial records must be kept</strong>
-                    <p>This promotion was used in <b class="mp-red" th:text="${p.referenceCount + ' bookings'}">1,840 bookings</b>
+                    <p>This promotion was used in <b class="mp-red" th:text="${p.bookingCountText}">1,840 bookings</b>
                         (<th:block th:text="${#numbers.formatDecimal(p.revenue, 1, 'COMMA', 0, 'POINT') + ' ₫'}">82,800,000 ₫</th:block> revenue).
                         It <b class="mp-red">cannot be deleted permanently</b>.</p>
                     <p><b>Suggested:</b> <i>Stop</i> it to disable all its vouchers at once.</p></div>
             </div>
             <div class="mp-warn-box" th:unless="${p.locked}">
                 <span class="material-symbols-outlined">warning</span>
-                <p>No booking has used this promotion. Deleting it also deletes its <b th:text="${p.voucherCount + ' voucher codes'}">3 voucher codes</b>.
+                <p>No booking has used this promotion. Deleting it also deletes its <b th:text="${p.voucherCodesText}">3 voucher codes</b>.
                     <b>This cannot be undone.</b></p>
             </div>
         </div>

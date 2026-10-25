@@ -31,7 +31,7 @@
         <div class="mp-hero-tags">
             <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span>
             <span class="mp-tag-gold" th:if="${v.locked}"><span class="material-symbols-outlined">receipt_long</span>
-                <th:block th:text="${#numbers.formatInteger(v.referenceCount, 1, 'COMMA') + ' bookings'}">342 bookings</th:block></span>
+                <th:block th:text="${v.bookingCountText}">342 bookings</th:block></span>
         </div>
         <h1>Voucher <span class="mp-mono mp-red" th:text="${v.code}">CINE-WED-45K</span>
             <button type="button" class="mp-btn mp-btn-soft mp-btn-sm" th:attr="data-copy=${v.code}"><span class="material-symbols-outlined">content_copy</span>Copy</button></h1>
@@ -84,7 +84,7 @@
         <div class="mp-lock-box" th:if="${v.locked}">
             <span class="material-symbols-outlined">lock</span>
             <div><strong>Accounting history is protected (locked from deletion)</strong>
-                <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.referenceCount + ' bookings'}">342 bookings</b>.
+                <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.bookingCountText}">342 bookings</b>.
                     Its code and discount can no longer be changed and it cannot be deleted. Use <b>Pause</b> or <b>Stop</b>.</p></div>
         </div>
     </section>
@@ -130,7 +130,7 @@
             <div class="mp-lock-box" th:if="${v.locked}">
                 <span class="material-symbols-outlined">shield_lock</span>
                 <div><strong>Financial records must be kept</strong>
-                    <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.referenceCount + ' bookings'}">342 bookings</b>.
+                    <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.bookingCountText}">342 bookings</b>.
                         It <b class="mp-red">cannot be deleted permanently</b>.</p>
                     <p><b>Suggested:</b> <i>Stop</i> it so customers can no longer apply it.</p></div>
             </div>

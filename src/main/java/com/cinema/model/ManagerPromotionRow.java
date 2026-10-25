@@ -89,6 +89,16 @@ public class ManagerPromotionRow {
         return VoucherDiscounts.isPercentage(primaryDiscountType) ? "Percentage" : "Fixed amount";
     }
 
+    /** "1 code", "1,840 bookings" – number with thousands separator and singular/plural word. */
+    public static String count(long n, String singular, String plural) {
+        return String.format(java.util.Locale.US, "%,d %s", n, n == 1 ? singular : plural);
+    }
+
+    public String getVoucherCountText() { return count(voucherCount, "code", "codes"); }
+    public String getVoucherCodesText() { return count(voucherCount, "voucher code", "voucher codes"); }
+    public String getMoreCodesText() { return "+" + count(voucherCount - 1L, "more code", "more codes"); }
+    public String getBookingCountText() { return count(referenceCount, "booking", "bookings"); }
+
     /** Audit rule from the mockup: anything already used in a booking cannot be hard-deleted. */
     public boolean isLocked() { return referenceCount > 0; }
 
