@@ -35,11 +35,11 @@ class AdminDashboardViewTest {
     }
     @Test void dashboardRendersRealValuesAndEmptyStates() throws Exception {
         Map<String,Object> d=new HashMap<>();
-        for(String key:List.of("revenue","tickets","pending","activeCustomers","newCustomers","customers","staff","roles","locked","weekTotal"))d.put(key,0);
-        d.put("revenue",new BigDecimal("1234567"));
+        for(String key:List.of("revenue","tickets","pending","activeCustomers","newCustomers","customers","staff","roles","locked","chartTotal"))d.put(key,0);
+        d.put("period","day"); d.put("chartDescription","7 ngày gần nhất"); d.put("revenue",new BigDecimal("1234567"));
         d.put("updatedAt",LocalDateTime.of(2026,10,23,18,0));
-        d.put("today",LocalDate.of(2026,10,23));d.put("startDate",LocalDate.of(2026,10,17));
-        d.put("days",List.of(Map.of("day",LocalDate.of(2026,10,23),"height",BigDecimal.ZERO,"amount",BigDecimal.ZERO,"peak",false)));
+        d.put("chartEnd",LocalDate.of(2026,10,23));d.put("chartStart",LocalDate.of(2026,10,17));
+        d.put("chartBars",List.of(Map.of("label","23/10","start",LocalDate.of(2026,10,23),"end",LocalDate.of(2026,10,23),"height",BigDecimal.ZERO,"amount",BigDecimal.ZERO,"peak",false)));
         d.put("topMovies",List.of());d.put("recent",List.of());d.put("upcoming",List.of());
         String html=render(new HashMap<>(Map.of("dashboard",d)));
         assertTrue(html.contains("1.234.567"));
@@ -63,9 +63,9 @@ class AdminDashboardViewTest {
         AdminDashboardService service=mock(AdminDashboardService.class);
         ReflectionTestUtils.setField(controller,"adminDashboardService",service);
         ReflectionTestUtils.setField(controller,"sessionService",mock(SessionService.class));
-        when(service.load()).thenThrow(new org.springframework.dao.DataAccessResourceFailureException("offline"));
+        when(service.load("day",null,null)).thenThrow(new org.springframework.dao.DataAccessResourceFailureException("offline"));
         var model=new ExtendedModelMap();
-        assertEquals("admin/dashboard",controller.dashboard(model,new MockHttpSession()));
+        assertEquals("admin/dashboard",controller.dashboard(model,new MockHttpSession(),"day",null,null));
         assertTrue(model.containsAttribute("dashboardError"));
         assertFalse(model.containsAttribute("dashboard"));
         String html=render(new HashMap<>(model));
