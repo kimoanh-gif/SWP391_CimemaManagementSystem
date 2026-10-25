@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
@@ -32,10 +33,18 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model, HttpSession session) {
+    public String dashboard(Model model, HttpSession session,
+                            @RequestParam(defaultValue = "day") String period,
+                            @RequestParam(required = false) String from,
+                            @RequestParam(required = false) String to) {
         addUserToModel(model, session);
         try {
-            model.addAttribute("dashboard", adminDashboardService.load());
+            try {
+                model.addAttribute("dashboard", adminDashboardService.load(period, from, to));
+            } catch (IllegalArgumentException ex) {
+                model.addAttribute("revenueFilterError", ex.getMessage());
+                model.addAttribute("dashboard", adminDashboardService.load(period));
+            }
         } catch (org.springframework.dao.DataAccessException ex) {
             model.addAttribute("dashboardError", "Unable to load dashboard data. Please try again later.");
         }
