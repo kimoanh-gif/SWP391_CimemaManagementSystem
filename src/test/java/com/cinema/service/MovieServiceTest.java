@@ -249,15 +249,15 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("deleteMovie: Should deactivate movie when it has past showtimes but 0 upcoming")
+    @DisplayName("deleteMovie: Should throw exception when it has showtimes in system")
     void testDeleteMovie_PastShowtimes() {
         when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
         when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(0);
         when(movieDao.countShowtimesByMovieId(1)).thenReturn(2);
 
-        movieService.deleteMovie(1);
-
-        verify(movieDao).updateStatus(1, "Archived");
+        assertThatThrownBy(() -> movieService.deleteMovie(1))
+                .isInstanceOf(MovieHasActiveShowtimesException.class)
+                .hasMessageContaining("ràng buộc dữ liệu");
         verify(movieDao, never()).delete(1);
     }
 }
