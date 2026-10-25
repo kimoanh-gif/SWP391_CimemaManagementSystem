@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${editing ? 'CINEORA — Edit ' : 'CINEORA — Add '} + ${kind == 'voucher' ? 'voucher' : 'promotion'}">CINEORA — Add promotion</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/manager-promotions.css}">
+</head>
+<!-- M11.1 Add / M11.3 Edit promotion or voucher. Assignee: Nguyễn Đức Anh (Iter3) -->
+<body class="cm-body" th:with="isVoucher=${kind == 'voucher'}, locked=${current != null and current.locked}">
+
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='promotions')}"></aside>
+
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<main class="cm-main">
+
+    <div class="cm-page-head">
+        <div class="cm-page-title">
+            <span class="mp-module-pill"><i></i><th:block th:text="${editing} ? 'Module M11.3 • Edit' : 'Module M11.1 • Create a discount'">Module</th:block></span>
+            <h1 th:if="${!editing}">Add promotion or voucher</h1>
+            <h1 th:if="${editing}" th:text="${isVoucher} ? 'Edit voucher ' + ${current.code} : 'Edit promotion: ' + ${current.name}">Edit</h1>
+            <p th:if="${!editing}">Set up a discount campaign, or issue a voucher code that customers enter when booking.</p>
+            <p th:if="${editing}">Update the rules. Changes apply to new bookings only; bookings already made keep their price.</p>
+        </div>
+        <div class="cm-actions">
+            <a class="mp-btn mp-btn-ghost" th:href="@{${listUrl}}">
+                <span class="material-symbols-outlined">arrow_back</span>Back to list</a>
+        </div>
+    </div>
+
+    <div class="mp-alert mp-alert-error" role="alert" th:if="${errorMessage != null}">
+        <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <form class="mp-form-card" method="post" novalidate
+          th:action="@{${formAction}}"
+          th:object="${form}">
+
+        <!-- 1. Type -->
+        <div class="mp-field">
+            <span class="mp-label">1. Type <em>*</em></span>
+            <div class="mp-type-grid">
+                <a class="mp-type" th:classappend="${!isVoucher} ? 'is-selected'"
+                   th:href="${editing} ? null : @{/manager/promotions/new}" th:attr="aria-disabled=${editing and isVoucher}">
+                    <span class="mp-type-icon"><span class="material-symbols-outlined">campaign</span></span>
+                    <span class="mp-type-check material-symbols-outlined">check_circle</span>
+                    <strong>Promotion campaign</strong>
+                    <small>Groups vouchers under one name and one period. Pausing or stopping it pauses all its vouchers.</small>
+                    <span class="mp-chips"><span>Period &amp; status</span><span>Holds vouchers</span></span>
+                </a>
+                <a class="mp-type mp-type-violet" th:classappend="${isVoucher} ? 'is-selected'"
+                   th:href="${editing} ? null : @{/manager/vouchers/new}" th:attr="aria-disabled=${editing and !isVoucher}">
+                    <span class="mp-type-icon"><span class="material-symbols-outlined">confirmation_number</span></span>
+                    <span class="mp-type-check material-symbols-outlined">check_circle</span>
+                    <strong>Voucher / Coupon</strong>
+                    <small>A unique code customers or the cashier enter to get the discount on a booking.</small>
+                    <span class="mp-chips"><span>Enter code</span><span>Usage limits</span></span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ================= Promotion fields ================= -->
+        <th:block th:if="${!isVoucher}">
+            <div class="mp-field" th:classappend="${fieldErrors['name'] != null} ? 'has-error'">
+                <label class="mp-label" for="name">2. Promotion name <em>*</em><span class="mp-counter" data-counter-for="name">max 150 characters</span></label>
+                <input class="mp-input" id="name" name="name" maxlength="150" th:value="*{name}" placeholder="e.g. Wednesday Student Deal" required>
+                <p class="mp-error" th:if="${fieldErrors['name'] != null}" th:text="${fieldErrors['name']}">Error</p>
+            </div>
+            <div class="mp-field" th:classappend="${fieldErrors['description'] != null} ? 'has-error'">
+                <label class="mp-label" for="description">3. Benefits &amp; target customers</label>
+                <textarea class="mp-input" id="description" name="description" rows="3" maxlength="500" th:text="*{description}"
+                          placeholder="Who can use it and what they get"></textarea>
+                <p class="mp-error" th:if="${fieldErrors['description'] != null}" th:text="${fieldErrors['description']}">Error</p>
+            </div>
+            <div class="mp-field">
+                <span class="mp-label">4. Campaign period <em>*</em></span>
+                <div class="mp-grid-2">
+                    <div th:classappend="${fieldErrors['startDate'] != null} ? 'has-error'">
+                        <label class="mp-sub" for="startDate">Start</label>
+                        <input class="mp-input" type="datetime-local" id="startDate" name="startDate" th:value="*{startDateInput}" required>
+                        <p class="mp-error" th:if="${fieldErrors['startDate'] != null}" th:text="${fieldErrors['startDate']}">Error</p>
+                    </div>
+                    <div th:classappend="${fieldErrors['endDate'] != null} ? 'has-error'">
+                        <label class="mp-sub" for="endDate">End</label>
+                        <input class="mp-input" type="datetime-local" id="endDate" name="endDate" th:value="*{endDateInput}" required>
+                        <p class="mp-error" th:if="${fieldErrors['endDate'] != null}" th:text="${fieldErrors['endDate']}">Error</p>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+        <!-- ================= Voucher fields ================= -->
+        <th:block th:if="${isVoucher}">
+            <div class="mp-field" th:classappend="${fieldErrors['promotionId'] != null} ? 'has-error'">
+                <label class="mp-label" for="promotionId">2. Promotion campaign <em>*</em></label>
+                <select class="mp-input" id="promotionId" name="promotionId" required>
+                    <option value="">Choose a promotion</option>
+                    <option th:each="p : ${promotions}" th:value="${p.promotionId}" th:selected="${p.promotionId == form.promotionId}"
+                            th:text="${p.name + ' (' + p.periodDisplay + ')'}">Promotion</option>
+                </select>
+                <p class="mp-hint-text" th:if="${promotions.isEmpty()}">There is no promotion yet. <a th:href="@{/manager/promotions/new}">Create a promotion first</a>.</p>
+                <p class="mp-error" th:if="${fieldErrors['promotionId'] != null}" th:text="${fieldErrors['promotionId']}">Error</p>
+            </div>
+            <div class="mp-field" th:classappend="${fieldErrors['code'] != null} ? 'has-error'">
+                <label class="mp-label" for="code">3. Voucher code <em>*</em><span class="mp-counter">3–50 characters: A–Z 0–9 - _</span></label>
+                <input class="mp-input mp-mono" id="code" name="code" maxlength="50" th:value="*{code}" placeholder="e.g. CINE-WED-45K"
+                       data-uppercase th:readonly="${locked}" required>
+                <p class="mp-hint-text" th:if="${locked}"><span class="material-symbols-outlined">lock</span>Locked: this voucher already has bookings.</p>
+                <p class="mp-error" th:if="${fieldErrors['code'] != null}" th:text="${fieldErrors['code']}">Error</p>
+            </div>
+            <div class="mp-grid-2">
+                <div class="mp-field" th:classappend="${fieldErrors['discountType'] != null} ? 'has-error'">
+                    <label class="mp-label" for="discountType">4. Discount type <em>*</em></label>
+                    <select class="mp-input" id="discountType" th:name="${locked} ? null : 'discountType'" th:disabled="${locked}" data-discount-type>
+                        <option value="PERCENT" th:selected="*{discountType == 'PERCENT'}">Percentage of the booking (%)</option>
+                        <option value="FIXED" th:selected="*{discountType != 'PERCENT'}">Fixed amount off (VND)</option>
+                    </select>
+                    <input type="hidden" name="discountType" th:if="${locked}" th:value="*{discountType}">
+                    <p class="mp-error" th:if="${fieldErrors['discountType'] != null}" th:text="${fieldErrors['discountType']}">Error</p>
+                </div>
+                <div class="mp-field" th:classappend="${fieldErrors['discountValue'] != null} ? 'has-error'">
+                    <label class="mp-label" for="discountValue">5. Discount value <em>*</em></label>
+                    <div class="mp-affix">
+                        <input class="mp-input" type="number" id="discountValue" name="discountValue" min="1" step="any"
+                               th:value="*{discountValueInput}" th:readonly="${locked}" required>
+                        <span data-unit th:text="*{discountType == 'PERCENT'} ? '%' : 'VND'">%</span>
+                    </div>
+                    <p class="mp-error" th:if="${fieldErrors['discountValue'] != null}" th:text="${fieldErrors['discountValue']}">Error</p>
+                </div>
+            </div>
+            <div class="mp-field" data-percent-only th:classappend="${fieldErrors['maxDiscountAmount'] != null} ? 'has-error'">
+                <label class="mp-label" for="maxDiscountAmount">Maximum discount per booking</label>
+                <div class="mp-affix">
+                    <input class="mp-input" type="number" id="maxDiscountAmount" name="maxDiscountAmount" min="0" step="1000"
+                           th:value="*{maxDiscountInput}" placeholder="No cap">
+                    <span>VND</span>
+                </div>
+                <p class="mp-hint-text">Only for percentage vouchers. Leave empty for no cap.</p>
+                <p class="mp-error" th:if="${fieldErrors['maxDiscountAmount'] != null}" th:text="${fieldErrors['maxDiscountAmount']}">Error</p>
+            </div>
+            <div class="mp-field">
+                <span class="mp-label">6. Valid period <em>*</em></span>
+                <div class="mp-grid-2">
+                    <div th:classappend="${fieldErrors['validFrom'] != null} ? 'has-error'">
+                        <label class="mp-sub" for="validFrom">Start</label>
+                        <input class="mp-input" type="datetime-local" id="validFrom" name="validFrom" th:value="*{validFromInput}" required>
+                        <p class="mp-error" th:if="${fieldErrors['validFrom'] != null}" th:text="${fieldErrors['validFrom']}">Error</p>
+                    </div>
+                    <div th:classappend="${fieldErrors['validTo'] != null} ? 'has-error'">
+                        <label class="mp-sub" for="validTo">End</label>
+                        <input class="mp-input" type="datetime-local" id="validTo" name="validTo" th:value="*{validToInput}" required>
+                        <p class="mp-error" th:if="${fieldErrors['validTo'] != null}" th:text="${fieldErrors['validTo']}">Error</p>
+                    </div>
+                </div>
+                <p class="mp-hint-text">Must be inside the period of the selected promotion.</p>
+            </div>
+            <div class="mp-field">
+                <span class="mp-label">7. Usage limits &amp; conditions</span>
+                <div class="mp-limit-grid">
+                    <div class="mp-limit" th:classappend="${fieldErrors['totalUsageLimit'] != null} ? 'has-error'">
+                        <label for="totalUsageLimit">Total uses</label>
+                        <input class="mp-input" type="number" id="totalUsageLimit" name="totalUsageLimit" min="1" th:value="*{totalUsageLimit}" placeholder="Unlimited">
+                        <small>Leave empty for unlimited</small>
+                        <p class="mp-error" th:if="${fieldErrors['totalUsageLimit'] != null}" th:text="${fieldErrors['totalUsageLimit']}">Error</p>
+                    </div>
+                    <div class="mp-limit" th:classappend="${fieldErrors['perAccountLimit'] != null} ? 'has-error'">
+                        <label for="perAccountLimit">Uses per customer</label>
+                        <input class="mp-input" type="number" id="perAccountLimit" name="perAccountLimit" min="1" th:value="*{perAccountLimit}" placeholder="Unlimited">
+                        <small>Counted per member account</small>
+                        <p class="mp-error" th:if="${fieldErrors['perAccountLimit'] != null}" th:text="${fieldErrors['perAccountLimit']}">Error</p>
+                    </div>
+                    <div class="mp-limit" th:classappend="${fieldErrors['minBookingAmount'] != null} ? 'has-error'">
+                        <label for="minBookingAmount">Minimum booking</label>
+                        <div class="mp-affix"><input class="mp-input" type="number" id="minBookingAmount" name="minBookingAmount" min="0" step="1000" th:value="*{minBookingInput}" placeholder="0"><span>VND</span></div>
+                        <small>0 or empty = no minimum</small>
+                        <p class="mp-error" th:if="${fieldErrors['minBookingAmount'] != null}" th:text="${fieldErrors['minBookingAmount']}">Error</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mp-field" th:classappend="${fieldErrors['requiredRankId'] != null} ? 'has-error'">
+                <label class="mp-label" for="requiredRankId">8. Membership rank required</label>
+                <select class="mp-input" id="requiredRankId" name="requiredRankId">
+                    <option value="">All customers</option>
+                    <option th:each="r : ${ranks}" th:value="${r.rankId}" th:selected="${r.rankId == form.requiredRankId}"
+                            th:text="${r.displayName + ' and above'}">Gold</option>
+                </select>
+                <p class="mp-error" th:if="${fieldErrors['requiredRankId'] != null}" th:text="${fieldErrors['requiredRankId']}">Error</p>
+            </div>
+        </th:block>
+
+        <!-- Status -->
+        <div class="mp-field">
+            <span class="mp-label" th:text="${editing} ? 'Status' : 'Status when created'">Status</span>
+            <div class="mp-radio-grid" th:if="${!editing or current.status == 'DRAFT'}">
+                <label class="mp-radio"><input type="radio" name="status" value="ACTIVE" th:checked="*{status != 'DRAFT'}">
+                    <span><strong>Activate</strong><small>Usable from the start date</small></span></label>
+                <label class="mp-radio"><input type="radio" name="status" value="DRAFT" th:checked="*{status == 'DRAFT'}">
+                    <span><strong>Save as draft</strong><small>Not visible to customers yet</small></span></label>
+            </div>
+            <div class="mp-radio-grid mp-radio-3" th:if="${editing and current.status != 'DRAFT'}">
+                <label class="mp-radio"><input type="radio" name="status" value="ACTIVE" th:checked="*{status == 'ACTIVE' or status == 'EXPIRED'}">
+                    <span><strong>Active</strong><small>Customers can use it</small></span></label>
+                <label class="mp-radio"><input type="radio" name="status" value="PAUSED" th:checked="*{status == 'PAUSED'}">
+                    <span><strong>Paused</strong><small>Temporarily not usable</small></span></label>
+                <label class="mp-radio mp-radio-danger"><input type="radio" name="status" value="INACTIVE">
+                    <span><strong>Stop permanently</strong><small>Cannot be reactivated</small></span></label>
+            </div>
+        </div>
+
+        <div class="mp-audit mp-audit-inline">
+            <span class="mp-audit-icon"><span class="material-symbols-outlined">account_balance</span></span>
+            <div>
+                <h3>Financial audit note</h3>
+                <p>As soon as this item is used in its <b>first booking</b>, it is <b class="mp-red">locked from deletion</b> and its
+                    <th:block th:text="${isVoucher} ? 'code and discount' : 'vouchers'">code</th:block> can no longer be changed.
+                    You can then only <b>Pause</b> or <b>Stop</b> it.</p>
+            </div>
+        </div>
+
+        <div class="mp-form-foot">
+            <a class="mp-btn mp-btn-soft" th:href="@{${cancelUrl}}">
+                <span class="material-symbols-outlined">close</span>Cancel</a>
+            <button type="submit" class="mp-btn mp-btn-primary"><span class="material-symbols-outlined">check_circle</span>
+                <th:block th:text="${editing} ? 'Save changes' : 'Save'">Save</th:block></button>
+        </div>
+    </form>
+</main>
+</div>
+<script th:src="@{/js/manager-promotions.js}"></script>
+</body>
+</html>

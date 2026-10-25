@@ -58,8 +58,8 @@
             <span class="material-symbols-outlined">confirmation_number</span><span>Ticket Pricing</span></a>
         <a th:href="@{/manager/fb}" class="cm-nav-link" th:classappend="${activeMenu == 'fb'} ? ' is-active'">
             <span class="material-symbols-outlined">fastfood</span><span>Food &amp; Beverage Management</span></a>
-        <span class="cm-nav-link is-disabled" title="Coming soon">
-            <span class="material-symbols-outlined">redeem</span><span>Promotion &amp; Voucher Management</span></span>
+        <a th:href="@{/manager/promotions}" class="cm-nav-link" th:classappend="${activeMenu == 'promotions'} ? ' is-active'">
+            <span class="material-symbols-outlined">redeem</span><span>Promotion &amp; Voucher Management</span></a>
         <a th:href="@{/manager/reports}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
             <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
     </nav>
