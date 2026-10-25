@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'CINEORA — ' + ${promotion.name}">CINEORA — Promotion</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/manager-promotions.css}">
+</head>
+<!-- M11.2 Promotion detail + M11.4 delete confirmation. Assignee: Nguyễn Đức Anh (Iter3) -->
+<body class="cm-body" th:with="p=${promotion}">
+
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='promotions')}"></aside>
+
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<main class="cm-main mp-detail">
+
+    <div class="mp-alert mp-alert-success" role="status" th:if="${successMessage != null}">
+        <span class="material-symbols-outlined">done</span><span th:text="${successMessage}">Done</span>
+    </div>
+    <div class="mp-alert mp-alert-error" role="alert" th:if="${errorMessage != null}">
+        <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <!-- Header -->
+    <section class="cm-card mp-hero">
+        <div class="mp-hero-tags">
+            <span class="mp-tag-soft"><span class="material-symbols-outlined">campaign</span>Promotion campaign</span>
+            <span class="mp-code-sm" th:text="${p.code}">#PRM-001</span>
+        </div>
+        <div class="mp-hero-tags">
+            <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.displayStatusLabel}">Active</span>
+            <span class="mp-tag-gold" th:if="${p.locked}"><span class="material-symbols-outlined">receipt_long</span>
+                <th:block th:text="${#numbers.formatInteger(p.referenceCount, 1, 'COMMA') + ' bookings'}">1,840 bookings</th:block></span>
+        </div>
+        <h1 th:text="${p.name}">Wednesday Student Deal</h1>
+        <div class="mp-hero-stats">
+            <div><small>Vouchers</small><strong th:text="${p.voucherCount + ' codes'}">3 codes</strong></div>
+            <div><small>Main discount</small><strong class="mp-red" th:text="${p.primaryCode != null ? p.primaryValueDisplay : '—'}">15%</strong></div>
+            <div><small>Period</small><strong th:text="${p.timeHint}">290 days left</strong></div>
+            <div><small>Times used</small><strong th:text="${#numbers.formatInteger(p.usageCount, 1, 'COMMA')}">1,840</strong></div>
+        </div>
+    </section>
+
+    <!-- Group 1 -->
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">tag</span>Identity &amp; description</h2>
+        <div class="mp-info-grid">
+            <div class="mp-info"><small>Type</small><strong>Promotion campaign (holds vouchers)</strong></div>
+            <div class="mp-info"><small>System code</small><strong class="mp-mono mp-red" th:text="${p.code}">#PRM-001</strong></div>
+            <div class="mp-info mp-span-2"><small>Description &amp; target customers</small>
+                <p th:text="${p.description != null ? p.description : 'No description.'}">Description</p></div>
+        </div>
+    </section>
+
+    <!-- Group 2 -->
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">schedule</span>Campaign period
+            <span class="mp-group-note" th:text="${p.displayStatusLabel}">Active</span></h2>
+        <div class="mp-info-grid">
+            <div class="mp-info"><small>Start</small><strong class="mp-mono" th:text="${p.startDisplay}">01/01/2025 00:00</strong></div>
+            <div class="mp-info"><small>End</small><strong class="mp-mono" th:text="${p.endDisplay}">31/12/2025 23:59</strong>
+                <span class="mp-hint" th:classappend="${'mp-hint-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.timeHint}">290 days left</span></div>
+        </div>
+    </section>
+
+    <!-- Group 3: vouchers -->
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">confirmation_number</span>Voucher codes in this promotion
+            <a class="mp-btn mp-btn-soft mp-btn-sm" th:unless="${p.stopped}" th:href="@{/manager/vouchers/new(promotionId=${p.promotionId})}">
+                <span class="material-symbols-outlined">add</span>Add voucher</a></h2>
+        <div class="cm-table-wrap" th:if="${!vouchers.isEmpty()}">
+            <table class="cm-table mp-table mp-table-compact">
+                <thead><tr><th>Code</th><th>Discount</th><th>Valid</th><th class="mp-right">Used / Limit</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="v : ${vouchers}">
+                    <td><span class="mp-code"><b>#</b><th:block th:text="${v.code}">CODE</th:block></span></td>
+                    <td><span class="cm-strong" th:text="${v.valueDisplay}">15%</span> <span class="cm-muted" th:text="${v.typeLabel}">Percentage</span></td>
+                    <td th:text="${v.validityDisplay}">01/01 - 31/12</td>
+                    <td class="mp-right" th:text="${v.usageCount + ' / ' + v.totalLimitDisplay}">0 / 100</td>
+                    <td><span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span></td>
+                    <td class="mp-right"><a class="mp-icon-btn" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" title="View voucher"><span class="material-symbols-outlined">chevron_right</span></a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="cm-muted" th:if="${vouchers.isEmpty()}">This promotion has no voucher code yet. Customers can only use it after you add a voucher.</p>
+    </section>
+
+    <!-- Group 4: performance -->
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">query_stats</span>Performance &amp; accounting records
+            <span class="mp-group-note mp-gold-note">From confirmed bookings</span></h2>
+        <div class="mp-stat-grid">
+            <div class="mp-stat"><small>Bookings with this promotion</small><strong th:text="${#numbers.formatInteger(p.usageCount, 1, 'COMMA')}">1,840</strong><span class="mp-green">confirmed</span></div>
+            <div class="mp-stat"><small>Revenue after discount</small><strong th:text="${#numbers.formatDecimal(p.revenue, 1, 'COMMA', 0, 'POINT') + ' ₫'}">82,800,000 ₫</strong></div>
+            <div class="mp-stat"><small>Total discount given</small><strong th:text="${#numbers.formatDecimal(p.discountTotal, 1, 'COMMA', 0, 'POINT') + ' ₫'}">12,000,000 ₫</strong></div>
+        </div>
+        <div class="mp-lock-box" th:if="${p.locked}">
+            <span class="material-symbols-outlined">lock</span>
+            <div><strong>Accounting history is protected (locked from deletion)</strong>
+                <p>This promotion has <b class="mp-red" th:text="${p.referenceCount + ' bookings'}">1,840 bookings</b>. It cannot be deleted permanently.
+                    Use <b>Pause</b> or <b>Stop</b> when the campaign ends.</p></div>
+        </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="cm-card mp-detail-actions">
+        <a class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
+        <div class="mp-detail-actions-right">
+            <form method="post" th:if="${p.status == 'ACTIVE' and p.displayStatus != 'EXPIRED'}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
+                <input type="hidden" name="status" value="PAUSED">
+                <button type="submit" class="mp-btn mp-btn-warn"><span class="material-symbols-outlined">pause_circle</span>Pause</button>
+            </form>
+            <form method="post" th:if="${(p.status == 'PAUSED' or p.status == 'DRAFT') and p.displayStatus != 'EXPIRED'}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
+                <input type="hidden" name="status" value="ACTIVE">
+                <button type="submit" class="mp-btn mp-btn-success"><span class="material-symbols-outlined">play_circle</span>
+                    <th:block th:text="${p.status == 'DRAFT'} ? 'Activate' : 'Resume'">Resume</th:block></button>
+            </form>
+            <a class="mp-btn mp-btn-soft" th:href="@{/manager/promotions/{id}(id=${p.promotionId},confirmDelete=1)}">
+                <span class="material-symbols-outlined" th:text="${p.locked} ? 'lock' : 'delete'">delete</span>Delete (M11.4)</a>
+            <a class="mp-btn mp-btn-primary" th:unless="${p.stopped}" th:href="@{/manager/promotions/{id}/edit(id=${p.promotionId})}">
+                <span class="material-symbols-outlined">edit</span>Edit (M11.3)</a>
+        </div>
+    </section>
+</main>
+</div>
+
+<!-- M11.4 delete confirmation -->
+<div class="mp-backdrop" id="delete-dialog" th:hidden="${!confirmDelete}" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <div class="mp-modal">
+        <div class="mp-modal-head">
+            <span class="mp-modal-icon material-symbols-outlined">gavel</span>
+            <div><small>Manager action M11.4</small><h2 id="delete-title">Delete promotion</h2></div>
+            <a class="mp-close" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
+        </div>
+        <div class="mp-modal-body">
+            <div class="mp-target">
+                <div class="mp-target-top"><small>ITEM TO DELETE</small>
+                    <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.displayStatusLabel}">Active</span></div>
+                <div class="mp-target-name"><span class="mp-code" th:text="${p.code}">#PRM-001</span><strong class="cm-truncate" th:text="${p.name}">Name</strong></div>
+                <div class="mp-target-meta">
+                    <span>Vouchers: <b th:text="${p.voucherCount}">3</b></span>
+                    <span>Period: <b th:text="${p.periodDisplay}">01/01/2025 - 31/12/2025</b></span>
+                </div>
+            </div>
+            <div class="mp-lock-box" th:if="${p.locked}">
+                <span class="material-symbols-outlined">shield_lock</span>
+                <div><strong>Financial records must be kept</strong>
+                    <p>This promotion was used in <b class="mp-red" th:text="${p.referenceCount + ' bookings'}">1,840 bookings</b>
+                        (<th:block th:text="${#numbers.formatDecimal(p.revenue, 1, 'COMMA', 0, 'POINT') + ' ₫'}">82,800,000 ₫</th:block> revenue).
+                        It <b class="mp-red">cannot be deleted permanently</b>.</p>
+                    <p><b>Suggested:</b> <i>Stop</i> it to disable all its vouchers at once.</p></div>
+            </div>
+            <div class="mp-warn-box" th:unless="${p.locked}">
+                <span class="material-symbols-outlined">warning</span>
+                <p>No booking has used this promotion. Deleting it also deletes its <b th:text="${p.voucherCount + ' voucher codes'}">3 voucher codes</b>.
+                    <b>This cannot be undone.</b></p>
+            </div>
+        </div>
+        <div class="mp-modal-foot">
+            <a class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}">Cancel</a>
+            <form method="post" th:if="${p.locked and !p.stopped}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
+                <input type="hidden" name="status" value="INACTIVE">
+                <button type="submit" class="mp-btn mp-btn-outline-red"><span class="material-symbols-outlined">block</span>Stop promotion</button>
+            </form>
+            <button type="button" class="mp-btn mp-btn-disabled" th:if="${p.locked}" disabled><span class="material-symbols-outlined">lock</span>Delete</button>
+            <form method="post" th:unless="${p.locked}" th:action="@{/manager/promotions/{id}/delete(id=${p.promotionId})}">
+                <button type="submit" class="mp-btn mp-btn-danger"><span class="material-symbols-outlined">delete_forever</span>Delete permanently</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/manager-promotions.js}"></script>
+</body>
+</html>

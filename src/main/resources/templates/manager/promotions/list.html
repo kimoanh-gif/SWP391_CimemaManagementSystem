@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEORA — Promotion &amp; Voucher Management</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/manager-promotions.css}">
+</head>
+<!-- M11 Promotion & Voucher Management – list. Assignee: Nguyễn Đức Anh (Iter3) -->
+<body class="cm-body" th:with="base=${tab == 'vouchers'} ? '/manager/vouchers' : '/manager/promotions'">
+
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='promotions')}"></aside>
+
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<main class="cm-main">
+
+    <div class="cm-page-head">
+        <div class="cm-page-title">
+            <span class="mp-module-pill"><i></i>Module M11 • Promotions &amp; discount codes</span>
+            <h1>Promotion &amp; Voucher Management</h1>
+            <p>Set up promotion campaigns and issue voucher codes that customers apply when booking tickets online or at the counter.</p>
+        </div>
+        <div class="cm-actions">
+            <div class="mp-add">
+                <button type="button" class="mp-btn mp-btn-primary" data-toggle-menu="add-menu" aria-haspopup="true" aria-expanded="false">
+                    <span class="material-symbols-outlined">add_circle</span><span>Add new</span>
+                    <span class="material-symbols-outlined">expand_more</span>
+                </button>
+                <div class="mp-menu" id="add-menu" hidden>
+                    <a th:href="@{/manager/promotions/new}"><span class="material-symbols-outlined">campaign</span>
+                        <span><strong>Promotion campaign</strong><small>Group of vouchers with one period</small></span></a>
+                    <a th:href="@{/manager/vouchers/new}"><span class="material-symbols-outlined">confirmation_number</span>
+                        <span><strong>Voucher / Coupon</strong><small>Code customers enter when booking</small></span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mp-alert mp-alert-success" role="status" th:if="${successMessage != null}">
+        <span class="material-symbols-outlined">done</span><span th:text="${successMessage}">Done</span>
+    </div>
+    <div class="mp-alert mp-alert-error" role="alert" th:if="${errorMessage != null}">
+        <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
+    </div>
+    <div class="mp-alert mp-alert-error" role="alert" th:if="${loadError}">
+        <span class="material-symbols-outlined">error</span>
+        <span>Promotion data could not be loaded. <a th:href="@{${base}}">Try again</a></span>
+    </div>
+
+    <!-- KPI -->
+    <section class="mp-kpi-grid" aria-label="Promotion overview">
+        <div class="mp-kpi">
+            <div class="mp-kpi-top"><span>Running promotions</span><span class="mp-kpi-icon mp-ic-red"><span class="material-symbols-outlined">campaign</span></span></div>
+            <div class="mp-kpi-value"><strong th:text="${stats.runningPromotions()}">4</strong><small>campaigns</small></div>
+            <div class="mp-kpi-foot"><span>Total: <b th:text="${stats.totalPromotions()}">6</b></span></div>
+        </div>
+        <div class="mp-kpi">
+            <div class="mp-kpi-top"><span>Live vouchers</span><span class="mp-kpi-icon mp-ic-gold"><span class="material-symbols-outlined">sell</span></span></div>
+            <div class="mp-kpi-value"><strong th:text="${stats.liveVouchers()}">8</strong><small>codes</small></div>
+            <div class="mp-kpi-foot"><span>Issued: <b th:text="${stats.totalVouchers()}">12</b></span><span>Used: <b class="mp-red" th:text="${stats.voucherUses()}">342</b></span></div>
+        </div>
+        <div class="mp-kpi">
+            <div class="mp-kpi-top"><span>Revenue with promotions</span><span class="mp-kpi-icon mp-ic-green"><span class="material-symbols-outlined">trending_up</span></span></div>
+            <div class="mp-kpi-value"><strong th:text="${#numbers.formatDecimal(stats.revenueThisMonth(), 1, 'COMMA', 0, 'POINT')}">86,420,000</strong><small>VND</small></div>
+            <div class="mp-kpi-foot">
+                <span th:if="${stats.revenueChangePercent != null}" th:classappend="${stats.revenueChangePercent >= 0} ? 'mp-green' : 'mp-red'"
+                      th:text="${(stats.revenueChangePercent >= 0 ? '+' : '') + stats.revenueChangePercent + '%'}">+18%</span>
+                <span>this month vs last month</span>
+            </div>
+        </div>
+        <div class="mp-kpi">
+            <div class="mp-kpi-top"><span>Ending in 7 days</span><span class="mp-kpi-icon mp-ic-red"><span class="material-symbols-outlined">alarm</span></span></div>
+            <div class="mp-kpi-value"><strong class="mp-red" th:text="${stats.endingSoon()}">2</strong><small>campaigns</small></div>
+            <div class="mp-kpi-foot"><span class="cm-truncate" th:text="${stats.endingSoonText}" th:title="${stats.endingSoonText}">Names</span></div>
+        </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="mp-tabs-row">
+        <nav class="mp-tabs" aria-label="Promotion type">
+            <a th:href="@{/manager/promotions}" th:classappend="${tab == 'promotions'} ? 'is-active'">
+                <span class="material-symbols-outlined">campaign</span>Promotion campaigns<b th:text="${promotionCount}">6</b></a>
+            <a th:href="@{/manager/vouchers}" th:classappend="${tab == 'vouchers'} ? 'is-active'">
+                <span class="material-symbols-outlined">confirmation_number</span>Vouchers / Coupons<b th:text="${voucherCount}">12</b></a>
+        </nav>
+        <span class="mp-lock-note"><span class="material-symbols-outlined">lock</span>Items used in a booking are locked from deletion</span>
+    </div>
+
+    <!-- Filter -->
+    <form class="mp-filter" method="get" th:action="@{${base}}">
+        <label class="mp-search">
+            <span class="material-symbols-outlined">search</span>
+            <input type="search" name="keyword" maxlength="100" th:value="${filter.keyword()}"
+                   th:placeholder="${tab == 'vouchers'} ? 'Search by voucher code or promotion name' : 'Search by promotion name or code'">
+        </label>
+        <select name="type" aria-label="Discount type">
+            <option value="ALL" th:selected="${filter.type() == 'ALL'}">Type: All</option>
+            <option value="PERCENT" th:selected="${filter.type() == 'PERCENT'}">Percentage (%)</option>
+            <option value="FIXED" th:selected="${filter.type() == 'FIXED'}">Fixed amount (VND)</option>
+        </select>
+        <select name="status" aria-label="Status">
+            <option value="ALL" th:selected="${filter.status() == 'ALL'}">Status: All</option>
+            <option value="ACTIVE" th:selected="${filter.status() == 'ACTIVE'}">Active</option>
+            <option value="UPCOMING" th:selected="${filter.status() == 'UPCOMING'}">Upcoming</option>
+            <option value="PAUSED" th:selected="${filter.status() == 'PAUSED'}">Paused</option>
+            <option value="DRAFT" th:selected="${filter.status() == 'DRAFT'}">Draft</option>
+            <option value="EXPIRED" th:selected="${filter.status() == 'EXPIRED'}">Expired</option>
+            <option value="INACTIVE" th:selected="${filter.status() == 'INACTIVE'}">Stopped</option>
+        </select>
+        <input type="hidden" name="size" th:value="${filter.size()}">
+        <button type="submit" class="mp-btn mp-btn-primary"><span class="material-symbols-outlined">filter_alt</span>Filter</button>
+        <a class="mp-icon-btn mp-reset" th:href="@{${base}}" title="Reset filters" aria-label="Reset filters"><span class="material-symbols-outlined">restart_alt</span></a>
+    </form>
+
+    <!-- ===================== Promotions table ===================== -->
+    <section class="cm-card mp-table-card" th:if="${tab == 'promotions'}">
+        <div class="cm-table-wrap" th:if="${!promotionPage.items().isEmpty()}">
+            <table class="cm-table mp-table">
+                <thead>
+                <tr>
+                    <th>Promotion</th>
+                    <th style="width:150px">Main code</th>
+                    <th style="width:140px">Discount</th>
+                    <th style="width:170px">Period</th>
+                    <th style="width:110px" class="mp-right">Uses</th>
+                    <th style="width:120px">Status</th>
+                    <th style="width:140px" class="mp-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${promotionPage.items()}">
+                    <td>
+                        <div class="mp-name">
+                            <span class="mp-name-icon"><span class="material-symbols-outlined">campaign</span></span>
+                            <span class="cm-cell-stack">
+                                <a class="mp-title" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}" th:text="${p.name}">Name</a>
+                                <span class="cm-muted mp-clamp" th:text="${p.description != null ? p.description : p.code}">Description</span>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="mp-code" th:if="${p.primaryCode != null}"><b>#</b><th:block th:text="${p.primaryCode}">CODE</th:block></span>
+                        <span class="cm-muted" th:if="${p.primaryCode == null}">No voucher yet</span>
+                        <small class="cm-muted mp-block" th:if="${p.voucherCount > 1}" th:text="${'+' + (p.voucherCount - 1) + ' more codes'}">+2</small>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack" th:if="${p.primaryCode != null}">
+                            <span class="cm-strong" th:text="${p.primaryValueDisplay}">15%</span>
+                            <span class="cm-muted" th:text="${p.primaryTypeLabel}">Percentage</span>
+                        </div>
+                        <span class="cm-muted" th:if="${p.primaryCode == null}">—</span>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <span th:text="${p.periodDisplay}">01/01/2025 - 31/12/2025</span>
+                            <span class="mp-hint" th:classappend="${'mp-hint-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.timeHint}">290 days left</span>
+                        </div>
+                    </td>
+                    <td class="mp-right">
+                        <div class="cm-cell-stack">
+                            <span class="cm-strong" th:text="${#numbers.formatInteger(p.usageCount, 1, 'COMMA')}">1,840</span>
+                            <span class="mp-small-red" th:if="${p.locked}">bookings</span>
+                            <span class="cm-muted" th:unless="${p.locked}">no bookings</span>
+                        </div>
+                    </td>
+                    <td><span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(p.displayStatus)}" th:text="${p.displayStatusLabel}">Active</span></td>
+                    <td class="mp-right">
+                        <div class="mp-row-actions">
+                            <a class="mp-icon-btn" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}" title="View details" aria-label="View details"><span class="material-symbols-outlined">visibility</span></a>
+                            <a class="mp-icon-btn" th:unless="${p.stopped}" th:href="@{/manager/promotions/{id}/edit(id=${p.promotionId})}" title="Edit" aria-label="Edit"><span class="material-symbols-outlined">edit_square</span></a>
+                            <form method="post" th:if="${p.status == 'ACTIVE' and p.displayStatus != 'EXPIRED'}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
+                                <input type="hidden" name="status" value="PAUSED"><input type="hidden" name="returnTo" value="list">
+                                <button type="submit" class="mp-icon-btn mp-gold" title="Pause" aria-label="Pause"><span class="material-symbols-outlined">pause_circle</span></button>
+                            </form>
+                            <form method="post" th:if="${(p.status == 'PAUSED' or p.status == 'DRAFT') and p.displayStatus != 'EXPIRED'}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
+                                <input type="hidden" name="status" value="ACTIVE"><input type="hidden" name="returnTo" value="list">
+                                <button type="submit" class="mp-icon-btn mp-green" th:title="${p.status == 'DRAFT'} ? 'Activate' : 'Resume'" aria-label="Activate"><span class="material-symbols-outlined">play_circle</span></button>
+                            </form>
+                            <a class="mp-icon-btn mp-red" th:unless="${p.locked}" th:href="@{/manager/promotions/{id}(id=${p.promotionId},confirmDelete=1)}" title="Delete" aria-label="Delete"><span class="material-symbols-outlined">delete</span></a>
+                            <span class="mp-icon-btn is-locked" th:if="${p.locked}" title="Locked: already used in bookings"><span class="material-symbols-outlined">lock</span></span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${promotionPage.items().isEmpty()}">
+            <div class="mp-empty" th:if="${!filter.keyword().isEmpty() or filter.status() != 'ALL' or filter.type() != 'ALL'}">
+                <span class="material-symbols-outlined">search_off</span>
+                <h3>No matching promotions</h3>
+                <p>Try another keyword or clear the filters.</p>
+                <a class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions}">Clear filters</a>
+            </div>
+            <div class="mp-empty" th:unless="${!filter.keyword().isEmpty() or filter.status() != 'ALL' or filter.type() != 'ALL'}">
+                <span class="material-symbols-outlined">campaign</span>
+                <h3>No promotions yet</h3>
+                <p>Create your first promotion campaign, then add voucher codes to it.</p>
+                <a class="mp-btn mp-btn-primary" th:href="@{/manager/promotions/new}"><span class="material-symbols-outlined">add</span>Add promotion</a>
+            </div>
+        </th:block>
+        <th:block th:if="${!promotionPage.items().isEmpty()}">
+            <div th:replace="~{manager/promotions/list :: pager(pageData=${promotionPage}, label='promotions')}"></div>
+        </th:block>
+    </section>
+
+    <!-- ===================== Vouchers table ===================== -->
+    <section class="cm-card mp-table-card" th:if="${tab == 'vouchers'}">
+        <div class="cm-table-wrap" th:if="${!voucherPage.items().isEmpty()}">
+            <table class="cm-table mp-table">
+                <thead>
+                <tr>
+                    <th style="width:170px">Voucher code</th>
+                    <th>Promotion</th>
+                    <th style="width:150px">Discount</th>
+                    <th style="width:170px">Valid</th>
+                    <th style="width:120px" class="mp-right">Used / Limit</th>
+                    <th style="width:120px">Status</th>
+                    <th style="width:140px" class="mp-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${voucherPage.items()}">
+                    <td><a class="mp-code mp-code-link" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}"><b>#</b><th:block th:text="${v.code}">CODE</th:block></a></td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <a class="mp-title" th:href="@{/manager/promotions/{id}(id=${v.promotionId})}" th:text="${v.promotionName}">Promotion</a>
+                            <span class="cm-muted" th:text="${v.rankDisplay}">All members</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <span class="cm-strong" th:text="${v.valueDisplay}">15%</span>
+                            <span class="cm-muted" th:text="${v.percentage ? 'Max ' + v.maxDiscountDisplay : 'Min order ' + v.minBookingDisplay}">Max</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cm-cell-stack">
+                            <span th:text="${v.validityDisplay}">01/01 - 31/12</span>
+                            <span class="mp-hint" th:classappend="${'mp-hint-' + #strings.toLowerCase(v.displayStatus)}"
+                                  th:text="${v.timeHint}">30 days left</span>
+                        </div>
+                    </td>
+                    <td class="mp-right">
+                        <div class="cm-cell-stack">
+                            <span class="cm-strong" th:text="${#numbers.formatInteger(v.usageCount, 1, 'COMMA')}">342</span>
+                            <span class="cm-muted" th:text="${'of ' + v.totalLimitDisplay}">of 1,000</span>
+                        </div>
+                    </td>
+                    <td><span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span></td>
+                    <td class="mp-right">
+                        <div class="mp-row-actions">
+                            <a class="mp-icon-btn" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" title="View details" aria-label="View details"><span class="material-symbols-outlined">visibility</span></a>
+                            <a class="mp-icon-btn" th:unless="${v.stopped}" th:href="@{/manager/vouchers/{id}/edit(id=${v.voucherId})}" title="Edit" aria-label="Edit"><span class="material-symbols-outlined">edit_square</span></a>
+                            <form method="post" th:if="${v.status == 'ACTIVE' and v.displayStatus != 'EXPIRED'}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
+                                <input type="hidden" name="status" value="PAUSED"><input type="hidden" name="returnTo" value="list">
+                                <button type="submit" class="mp-icon-btn mp-gold" title="Pause" aria-label="Pause"><span class="material-symbols-outlined">pause_circle</span></button>
+                            </form>
+                            <form method="post" th:if="${(v.status == 'PAUSED' or v.status == 'DRAFT') and v.displayStatus != 'EXPIRED'}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
+                                <input type="hidden" name="status" value="ACTIVE"><input type="hidden" name="returnTo" value="list">
+                                <button type="submit" class="mp-icon-btn mp-green" th:title="${v.status == 'DRAFT'} ? 'Activate' : 'Resume'" aria-label="Activate"><span class="material-symbols-outlined">play_circle</span></button>
+                            </form>
+                            <a class="mp-icon-btn mp-red" th:unless="${v.locked}" th:href="@{/manager/vouchers/{id}(id=${v.voucherId},confirmDelete=1)}" title="Delete" aria-label="Delete"><span class="material-symbols-outlined">delete</span></a>
+                            <span class="mp-icon-btn is-locked" th:if="${v.locked}" title="Locked: already used in bookings"><span class="material-symbols-outlined">lock</span></span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${voucherPage.items().isEmpty()}">
+            <div class="mp-empty" th:if="${!filter.keyword().isEmpty() or filter.status() != 'ALL' or filter.type() != 'ALL'}">
+                <span class="material-symbols-outlined">search_off</span>
+                <h3>No matching vouchers</h3>
+                <p>Try another code or clear the filters.</p>
+                <a class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers}">Clear filters</a>
+            </div>
+            <div class="mp-empty" th:unless="${!filter.keyword().isEmpty() or filter.status() != 'ALL' or filter.type() != 'ALL'}">
+                <span class="material-symbols-outlined">confirmation_number</span>
+                <h3>No vouchers yet</h3>
+                <p>Issue a voucher code under one of your promotion campaigns.</p>
+                <a class="mp-btn mp-btn-primary" th:href="@{/manager/vouchers/new}"><span class="material-symbols-outlined">add</span>Add voucher</a>
+            </div>
+        </th:block>
+        <th:block th:if="${!voucherPage.items().isEmpty()}">
+            <div th:replace="~{manager/promotions/list :: pager(pageData=${voucherPage}, label='vouchers')}"></div>
+        </th:block>
+    </section>
+
+    <!-- Audit rule -->
+    <section class="mp-audit">
+        <span class="mp-audit-icon"><span class="material-symbols-outlined">shield_lock</span></span>
+        <div>
+            <h3>Financial audit rule <span class="mp-tag">Required</span></h3>
+            <p>Once a promotion or voucher has been used in <b>at least one booking</b>, it is <b class="mp-red">locked from deletion</b>
+                to keep the booking and invoice history. The only way to end it is to <b>Pause</b> or <b>Stop</b> it.
+                Items with <i>0 bookings</i> (for example drafts) can be deleted permanently (M11.4).</p>
+        </div>
+    </section>
+</main>
+</div>
+
+<!-- Pagination fragment (keeps filters); the wrapper only stops it rendering here -->
+<th:block th:if="${false}">
+<div th:fragment="pager(pageData, label)" class="mp-pagination">
+    <span>Showing <b th:text="${pageData.fromItem()}">1</b> – <b th:text="${pageData.toItem()}">6</b>
+        of <b th:text="${pageData.totalItems()}">18</b> <th:block th:text="${label}">items</th:block></span>
+    <form class="mp-size-form" method="get" th:action="@{${base}}">
+        <input type="hidden" name="keyword" th:value="${filter.keyword()}">
+        <input type="hidden" name="status" th:value="${filter.status()}">
+        <input type="hidden" name="type" th:value="${filter.type()}">
+        <label>Rows
+            <select name="size" data-autosubmit>
+                <option th:each="s : ${pageSizes}" th:value="${s}" th:text="${s}" th:selected="${s == filter.size()}">6</option>
+            </select>
+        </label>
+    </form>
+    <nav class="mp-pages" aria-label="Pages">
+        <a th:href="@{${base}(keyword=${filter.keyword()},status=${filter.status()},type=${filter.type()},size=${filter.size()},page=${pageData.page() - 1})}"
+           th:classappend="${pageData.page() <= 1} ? 'is-disabled'" aria-label="Previous page"><span class="material-symbols-outlined">chevron_left</span></a>
+        <a th:each="i : ${#numbers.sequence(1, pageData.totalPages())}"
+           th:href="@{${base}(keyword=${filter.keyword()},status=${filter.status()},type=${filter.type()},size=${filter.size()},page=${i})}"
+           th:classappend="${i == pageData.page()} ? 'is-active'" th:text="${i}">1</a>
+        <a th:href="@{${base}(keyword=${filter.keyword()},status=${filter.status()},type=${filter.type()},size=${filter.size()},page=${pageData.page() + 1})}"
+           th:classappend="${pageData.page() >= pageData.totalPages()} ? 'is-disabled'" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></a>
+    </nav>
+</div>
+</th:block>
+
+<script th:src="@{/js/manager-promotions.js}"></script>
+</body>
+</html>

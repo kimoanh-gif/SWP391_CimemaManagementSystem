@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'CINEORA — Voucher ' + ${voucher.code}">CINEORA — Voucher</title>
+    <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/manager-promotions.css}">
+</head>
+<!-- M11.2 Voucher detail + M11.4 delete confirmation. Assignee: Nguyễn Đức Anh (Iter3) -->
+<body class="cm-body" th:with="v=${voucher}">
+
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='promotions')}"></aside>
+
+<div class="cm-shell">
+<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+<main class="cm-main mp-detail">
+
+    <div class="mp-alert mp-alert-success" role="status" th:if="${successMessage != null}">
+        <span class="material-symbols-outlined">done</span><span th:text="${successMessage}">Done</span>
+    </div>
+    <div class="mp-alert mp-alert-error" role="alert" th:if="${errorMessage != null}">
+        <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <section class="cm-card mp-hero">
+        <div class="mp-hero-tags">
+            <span class="mp-tag-soft mp-tag-violet"><span class="material-symbols-outlined">confirmation_number</span>Voucher / Coupon</span>
+            <a class="mp-code-sm" th:href="@{/manager/promotions/{id}(id=${v.promotionId})}" th:text="${v.promotionName}">Promotion</a>
+        </div>
+        <div class="mp-hero-tags">
+            <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span>
+            <span class="mp-tag-gold" th:if="${v.locked}"><span class="material-symbols-outlined">receipt_long</span>
+                <th:block th:text="${#numbers.formatInteger(v.referenceCount, 1, 'COMMA') + ' bookings'}">342 bookings</th:block></span>
+        </div>
+        <h1>Voucher <span class="mp-mono mp-red" th:text="${v.code}">CINE-WED-45K</span>
+            <button type="button" class="mp-btn mp-btn-soft mp-btn-sm" th:attr="data-copy=${v.code}"><span class="material-symbols-outlined">content_copy</span>Copy</button></h1>
+        <div class="mp-hero-stats">
+            <div><small>Discount</small><strong class="mp-red" th:text="${v.valueDisplay}">15%</strong></div>
+            <div><small>Type</small><strong th:text="${v.typeLabel}">Percentage</strong></div>
+            <div><small>Period</small><strong th:text="${v.timeHint}">30 days left</strong></div>
+            <div><small>Used</small><strong th:text="${v.usageCount + ' / ' + v.totalLimitDisplay}">342 / 1,000</strong></div>
+        </div>
+    </section>
+
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">sell</span>Benefit &amp; discount</h2>
+        <div class="mp-info-grid mp-info-3">
+            <div class="mp-info"><small>Discount type</small><strong th:text="${v.typeLabel}">Percentage</strong></div>
+            <div class="mp-info"><small>Value</small><strong class="mp-red mp-big" th:text="${v.valueDisplay}">15%</strong></div>
+            <div class="mp-info"><small>Maximum discount</small><strong th:text="${v.percentage ? v.maxDiscountDisplay : 'Not applicable'}">50,000 ₫</strong></div>
+        </div>
+    </section>
+
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">schedule</span>Valid period
+            <span class="mp-group-note" th:text="${v.displayStatusLabel}">Active</span></h2>
+        <div class="mp-info-grid mp-info-3">
+            <div class="mp-info"><small>Start</small><strong class="mp-mono" th:text="${v.validFromDisplay}">01/01/2025 00:00</strong></div>
+            <div class="mp-info"><small>End</small><strong class="mp-mono" th:text="${v.validToDisplay}">31/12/2025 23:59</strong>
+                <span class="mp-hint" th:classappend="${'mp-hint-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.timeHint}">30 days left</span></div>
+            <div class="mp-info"><small>Promotion</small><strong th:text="${v.promotionName}">Promotion</strong></div>
+        </div>
+    </section>
+
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">rule</span>Conditions &amp; usage limits</h2>
+        <div class="mp-info-grid">
+            <div class="mp-info"><small>Uses per customer</small><strong th:text="${v.perAccountDisplay}">1</strong></div>
+            <div class="mp-info"><small>Total uses</small><strong th:text="${v.totalLimitDisplay}">1,000</strong></div>
+            <div class="mp-info"><small>Minimum booking</small><strong th:text="${v.minBookingDisplay}">No minimum</strong></div>
+            <div class="mp-info"><small>Membership rank</small><strong th:text="${v.rankDisplay}">All customers</strong></div>
+        </div>
+    </section>
+
+    <section class="cm-card mp-group">
+        <h2><span class="mp-group-icon material-symbols-outlined">query_stats</span>Performance &amp; accounting records
+            <span class="mp-group-note mp-gold-note">From confirmed bookings</span></h2>
+        <div class="mp-stat-grid">
+            <div class="mp-stat"><small>Bookings with this code</small><strong th:text="${#numbers.formatInteger(v.usageCount, 1, 'COMMA')}">342</strong><span class="mp-green">confirmed</span></div>
+            <div class="mp-stat"><small>Revenue after discount</small><strong th:text="${#numbers.formatDecimal(v.revenue, 1, 'COMMA', 0, 'POINT') + ' ₫'}">0 ₫</strong></div>
+            <div class="mp-stat"><small>Total discount given</small><strong th:text="${#numbers.formatDecimal(v.discountTotal, 1, 'COMMA', 0, 'POINT') + ' ₫'}">0 ₫</strong></div>
+        </div>
+        <div class="mp-lock-box" th:if="${v.locked}">
+            <span class="material-symbols-outlined">lock</span>
+            <div><strong>Accounting history is protected (locked from deletion)</strong>
+                <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.referenceCount + ' bookings'}">342 bookings</b>.
+                    Its code and discount can no longer be changed and it cannot be deleted. Use <b>Pause</b> or <b>Stop</b>.</p></div>
+        </div>
+    </section>
+
+    <section class="cm-card mp-detail-actions">
+        <a class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
+        <div class="mp-detail-actions-right">
+            <form method="post" th:if="${v.status == 'ACTIVE' and v.displayStatus != 'EXPIRED'}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
+                <input type="hidden" name="status" value="PAUSED">
+                <button type="submit" class="mp-btn mp-btn-warn"><span class="material-symbols-outlined">pause_circle</span>Pause</button>
+            </form>
+            <form method="post" th:if="${(v.status == 'PAUSED' or v.status == 'DRAFT') and v.displayStatus != 'EXPIRED'}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
+                <input type="hidden" name="status" value="ACTIVE">
+                <button type="submit" class="mp-btn mp-btn-success"><span class="material-symbols-outlined">play_circle</span>
+                    <th:block th:text="${v.status == 'DRAFT'} ? 'Activate' : 'Resume'">Resume</th:block></button>
+            </form>
+            <a class="mp-btn mp-btn-soft" th:href="@{/manager/vouchers/{id}(id=${v.voucherId},confirmDelete=1)}">
+                <span class="material-symbols-outlined" th:text="${v.locked} ? 'lock' : 'delete'">delete</span>Delete (M11.4)</a>
+            <a class="mp-btn mp-btn-primary" th:unless="${v.stopped}" th:href="@{/manager/vouchers/{id}/edit(id=${v.voucherId})}">
+                <span class="material-symbols-outlined">edit</span>Edit (M11.3)</a>
+        </div>
+    </section>
+</main>
+</div>
+
+<div class="mp-backdrop" id="delete-dialog" th:hidden="${!confirmDelete}" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <div class="mp-modal">
+        <div class="mp-modal-head">
+            <span class="mp-modal-icon material-symbols-outlined">gavel</span>
+            <div><small>Manager action M11.4</small><h2 id="delete-title">Delete voucher</h2></div>
+            <a class="mp-close" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
+        </div>
+        <div class="mp-modal-body">
+            <div class="mp-target">
+                <div class="mp-target-top"><small>ITEM TO DELETE</small>
+                    <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span></div>
+                <div class="mp-target-name"><span class="mp-code" th:text="${v.code}">CODE</span><strong class="cm-truncate" th:text="${v.promotionName}">Promotion</strong></div>
+                <div class="mp-target-meta">
+                    <span>Discount: <b th:text="${v.valueDisplay}">15%</b></span>
+                    <span>Valid: <b th:text="${v.validityDisplay}">01/01/2025 - 31/12/2025</b></span>
+                </div>
+            </div>
+            <div class="mp-lock-box" th:if="${v.locked}">
+                <span class="material-symbols-outlined">shield_lock</span>
+                <div><strong>Financial records must be kept</strong>
+                    <p>Voucher <b th:text="${v.code}">CODE</b> was used in <b class="mp-red" th:text="${v.referenceCount + ' bookings'}">342 bookings</b>.
+                        It <b class="mp-red">cannot be deleted permanently</b>.</p>
+                    <p><b>Suggested:</b> <i>Stop</i> it so customers can no longer apply it.</p></div>
+            </div>
+            <div class="mp-warn-box" th:unless="${v.locked}">
+                <span class="material-symbols-outlined">warning</span>
+                <p>No booking has used this voucher. <b>Deleting it cannot be undone.</b></p>
+            </div>
+        </div>
+        <div class="mp-modal-foot">
+            <a class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}">Cancel</a>
+            <form method="post" th:if="${v.locked and !v.stopped}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
+                <input type="hidden" name="status" value="INACTIVE">
+                <button type="submit" class="mp-btn mp-btn-outline-red"><span class="material-symbols-outlined">block</span>Stop voucher</button>
+            </form>
+            <button type="button" class="mp-btn mp-btn-disabled" th:if="${v.locked}" disabled><span class="material-symbols-outlined">lock</span>Delete</button>
+            <form method="post" th:unless="${v.locked}" th:action="@{/manager/vouchers/{id}/delete(id=${v.voucherId})}">
+                <button type="submit" class="mp-btn mp-btn-danger"><span class="material-symbols-outlined">delete_forever</span>Delete permanently</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/manager-promotions.js}"></script>
+</body>
+</html>
