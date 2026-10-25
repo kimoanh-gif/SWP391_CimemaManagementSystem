@@ -3,7 +3,8 @@ package com.cinema.controller;
 import com.cinema.dao.CustomerDAO;
 import com.cinema.model.Movie;
 import com.cinema.service.MovieCatalogService;
-import com.cinema.service.PromotionNewsService;
+import com.cinema.service.NewsPublicService;
+import com.cinema.service.PromotionPublicService;
 import com.cinema.service.PublicShowtimeService;
 import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpSession;
@@ -32,7 +33,10 @@ class HomeControllerTest {
     private PublicShowtimeService showtimeService;
 
     @Mock
-    private PromotionNewsService promotionNewsService;
+    private PromotionPublicService promotionService;
+
+    @Mock
+    private NewsPublicService newsService;
 
     @Mock
     private SessionService sessionService;
@@ -47,7 +51,7 @@ class HomeControllerTest {
 
     @BeforeEach
     void setUp() {
-        homeController = new HomeController(movieService, showtimeService, promotionNewsService, sessionService, customerDAO);
+        homeController = new HomeController(movieService, showtimeService, promotionService, newsService, sessionService, customerDAO);
     }
 
     @Test
@@ -59,8 +63,8 @@ class HomeControllerTest {
         when(movieService.getNowShowingMovies(8)).thenReturn(List.of(movie));
         when(movieService.getUpcomingMovies(15)).thenReturn(List.of());
         when(showtimeService.getTodayShowtimes(8)).thenReturn(List.of());
-        when(promotionNewsService.getLatestPromotions(4)).thenReturn(List.of());
-        when(promotionNewsService.getLatestNews(3)).thenReturn(List.of());
+        when(promotionService.getLatestPromotions(4)).thenReturn(List.of());
+        when(newsService.getLatestNews(3)).thenReturn(List.of());
         when(showtimeService.getUpcomingDates(7)).thenReturn(List.of());
         when(movieService.searchMovies(null, null, "ALL", "newest")).thenReturn(List.of(movie));
 
