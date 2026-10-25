@@ -8,7 +8,8 @@ import com.cinema.model.NewsArticle;
 import com.cinema.model.Promotion;
 import com.cinema.model.PublicShowtime;
 import com.cinema.service.MovieCatalogService;
-import com.cinema.service.PromotionNewsService;
+import com.cinema.service.NewsPublicService;
+import com.cinema.service.PromotionPublicService;
 import com.cinema.service.PublicShowtimeService;
 import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpSession;
@@ -26,18 +27,21 @@ public class HomeController {
 
     private final MovieCatalogService movieService;
     private final PublicShowtimeService showtimeService;
-    private final PromotionNewsService promotionNewsService;
+    private final PromotionPublicService promotionService;
+    private final NewsPublicService newsService;
     private final SessionService sessionService;
     private final CustomerDAO customerDAO;
 
     public HomeController(MovieCatalogService movieService,
                           PublicShowtimeService showtimeService,
-                          PromotionNewsService promotionNewsService,
+                          PromotionPublicService promotionService,
+                          NewsPublicService newsService,
                           SessionService sessionService,
                           CustomerDAO customerDAO) {
         this.movieService = movieService;
         this.showtimeService = showtimeService;
-        this.promotionNewsService = promotionNewsService;
+        this.promotionService = promotionService;
+        this.newsService = newsService;
         this.sessionService = sessionService;
         this.customerDAO = customerDAO;
     }
@@ -65,10 +69,10 @@ public class HomeController {
         List<PublicShowtime> todayShowtimes = showtimeService.getTodayShowtimes(8);
         model.addAttribute("todayShowtimes", todayShowtimes);
 
-        List<Promotion> promotions = promotionNewsService.getLatestPromotions(4);
+        List<Promotion> promotions = promotionService.getLatestPromotions(4);
         model.addAttribute("promotions", promotions);
 
-        List<NewsArticle> newsList = promotionNewsService.getLatestNews(3);
+        List<NewsArticle> newsList = newsService.getLatestNews(3);
         model.addAttribute("newsList", newsList);
 
         model.addAttribute("allMovies", movieService.searchMovies(null, null, "ALL", "newest"));
