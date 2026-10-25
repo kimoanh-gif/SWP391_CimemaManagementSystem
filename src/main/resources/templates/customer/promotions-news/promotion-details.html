@@ -60,8 +60,22 @@
         </div>
     </div>
 
+    <div th:if="${otherPromotions != null && !otherPromotions.isEmpty()}" style="margin-bottom:3rem;">
+        <h3 style="font-size:1.4rem;margin-bottom:1.5rem;color:#fff;">Khuyến Mãi Khác</h3>
+        <div class="promo-grid">
+            <article class="promo-card" th:each="item : ${otherPromotions}">
+                <div class="promo-body">
+                    <h4 class="promo-title">
+                        <a th:href="@{/promotions/{id}(id=${item.promotionId})}" th:text="${item.name}">Promotion</a>
+                    </h4>
+                    <span style="font-size:0.8rem;color:var(--text-muted);" th:text="${item.validityRange}">01/01 - 31/12</span>
+                </div>
+            </article>
+        </div>
+    </div>
+
     <div style="display:flex;justify-content:space-between;align-items:center;">
-        <a th:href="@{/promotions-news(tab='promotions')}" class="btn-secondary">
+        <a th:href="@{/promotions}" class="btn-secondary">
             <span>➔ Quay Lại Danh Sách</span>
         </a>
         <a th:href="@{/movies}" class="btn-primary">

@@ -13,8 +13,27 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO for public Promotion data (UC04 – View Promotions &amp; News).
+ *
+ * Business rules applied in SQL:
+ *  BR-PN-01  only ACTIVE promotions are public
+ *  BR-PN-02  StartDate &lt;= now &lt;= EndDate (server time zone)
+ *  BR-PN-05  inactive / expired / upcoming promotions are never returned
+ */
 @Repository
 public class PromotionDAO {
+
+    private static final String PROMOTION_COLUMNS = """
+            SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
+            FROM dbo.Promotion p
+            """;
+
+    private static final String PUBLIC_PROMOTION_FILTER = """
+            WHERE UPPER(p.[Status]) = 'ACTIVE'
+              AND p.StartDate <= SYSDATETIME()
+              AND p.EndDate >= SYSDATETIME()
+            """;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -59,49 +78,39 @@ public class PromotionDAO {
         Timestamp vt = rs.getTimestamp("ValidTo");
         v.setValidTo(vt != null ? vt.toLocalDateTime() : null);
 
+        int totalLimit = rs.getInt("TotalUsageLimit");
+        if (!rs.wasNull()) v.setTotalUsageLimit(totalLimit);
+        int perAccount = rs.getInt("PerAccountLimit");
+        if (!rs.wasNull()) v.setPerAccountLimit(perAccount);
+
         v.setStatus(rs.getString("Status"));
         return v;
     }
 
+    /** All promotions that are currently public, newest first. */
     public List<Promotion> findActivePromotions() {
-        String sql = """
-                SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
-                FROM dbo.Promotion p
-                WHERE UPPER(p.[Status]) = 'ACTIVE'
-                  AND (p.EndDate IS NULL OR p.EndDate >= SYSDATETIME())
-                ORDER BY p.StartDate DESC
-                """;
-        List<Promotion> promotions = jdbcTemplate.query(sql, promoMapper);
-        for (Promotion p : promotions) {
-            p.setVouchers(findVouchersByPromotionId(p.getPromotionId()));
-        }
-        return promotions;
+        String sql = PROMOTION_COLUMNS + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
+        return attachVouchers(jdbcTemplate.query(sql, promoMapper));
     }
 
+    /** The newest public promotions (used by the Home Page). */
     public List<Promotion> findLatestPromotions(int limit) {
+        if (limit <= 0) {
+            return findActivePromotions();
+        }
         String sql = """
-                SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
+                SELECT TOP (?) p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
                 FROM dbo.Promotion p
-                WHERE UPPER(p.[Status]) = 'ACTIVE'
-                  AND (p.EndDate IS NULL OR p.EndDate >= SYSDATETIME())
-                ORDER BY p.StartDate DESC
-                """;
-        if (limit > 0) {
-            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
-        }
-        List<Promotion> promotions = jdbcTemplate.query(sql, promoMapper);
-        for (Promotion p : promotions) {
-            p.setVouchers(findVouchersByPromotionId(p.getPromotionId()));
-        }
-        return promotions;
+                """ + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
+        return attachVouchers(jdbcTemplate.query(sql, promoMapper, limit));
     }
 
-    public Optional<Promotion> findById(int promotionId) {
-        String sql = """
-                SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
-                FROM dbo.Promotion p
-                WHERE p.PromotionID = ?
-                """;
+    /**
+     * A single promotion only if it is currently public.
+     * Expired / inactive promotions cannot be opened by typing the ID in the URL (BR-PN-05).
+     */
+    public Optional<Promotion> findPublicById(int promotionId) {
+        String sql = PROMOTION_COLUMNS + PUBLIC_PROMOTION_FILTER + " AND p.PromotionID = ?";
         try {
             Promotion p = jdbcTemplate.queryForObject(sql, promoMapper, promotionId);
             if (p != null) {
@@ -113,6 +122,21 @@ public class PromotionDAO {
         }
     }
 
+    /** Any promotion by ID regardless of status (kept for back-office use). */
+    public Optional<Promotion> findById(int promotionId) {
+        String sql = PROMOTION_COLUMNS + " WHERE p.PromotionID = ?";
+        try {
+            Promotion p = jdbcTemplate.queryForObject(sql, promoMapper, promotionId);
+            if (p != null) {
+                p.setVouchers(findVouchersByPromotionId(promotionId));
+            }
+            return Optional.ofNullable(p);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Active vouchers of a promotion that are still inside their validity window. */
     public List<Voucher> findVouchersByPromotionId(int promotionId) {
         String sql = """
                 SELECT v.VoucherID, v.PromotionID, v.RequiredRankID, v.Code,
@@ -121,8 +145,16 @@ public class PromotionDAO {
                 FROM dbo.Voucher v
                 WHERE v.PromotionID = ?
                   AND UPPER(v.[Status]) = 'ACTIVE'
+                  AND v.ValidTo >= SYSDATETIME()
                 ORDER BY v.DiscountValue DESC
                 """;
         return jdbcTemplate.query(sql, voucherMapper, promotionId);
+    }
+
+    private List<Promotion> attachVouchers(List<Promotion> promotions) {
+        for (Promotion p : promotions) {
+            p.setVouchers(findVouchersByPromotionId(p.getPromotionId()));
+        }
+        return promotions;
     }
 }

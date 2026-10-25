@@ -12,6 +12,13 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO for public News data (UC04 – View Promotions &amp; News).
+ *
+ * Business rules applied in SQL:
+ *  BR-PN-04 / BR-47  only PUBLISHED news whose publication time is not in the future
+ *  BR-PN-05          Draft / Pending / Rejected / Archived news is never returned
+ */
 @Repository
 public class NewsDAO {
 
@@ -42,49 +49,65 @@ public class NewsDAO {
         Timestamp published = rs.getTimestamp("PublishedAt");
         article.setPublishedAt(published != null ? published.toLocalDateTime() : article.getCreatedAt());
 
-        try {
-            String author = rs.getString("AuthorName");
-            if (author != null && !author.isBlank()) article.setAuthorName(author);
-        } catch (SQLException ignored) {
-        }
+        String author = rs.getString("AuthorName");
+        if (author != null && !author.isBlank()) article.setAuthorName(author);
 
         return article;
     }
 
-    private static final String BASE_NEWS_SQL = """
-            SELECT n.NewsID, n.CreatedByStaffID, n.ReviewedByAccountID,
-                   n.Title, n.Content, n.ThumbnailURL, n.[Status],
-                   n.CreatedAt, n.PublishedAt,
-                   COALESCE(acc.FullName, N'Ban Biên Tập CineVerse') AS AuthorName
+    private static final String NEWS_COLUMNS = """
+            n.NewsID, n.CreatedByStaffID, n.ReviewedByAccountID,
+            n.Title, n.Content, n.ThumbnailURL, n.[Status],
+            n.CreatedAt, n.PublishedAt,
+            COALESCE(acc.FullName, N'CINEORA Editorial Team') AS AuthorName
+            """;
+
+    private static final String NEWS_FROM = """
             FROM dbo.News n
             LEFT JOIN dbo.Staff s ON s.StaffID = n.CreatedByStaffID
             LEFT JOIN dbo.Account acc ON acc.AccountID = s.AccountID
             """;
 
-    public List<NewsArticle> findPublishedNews(int limit) {
-        String sql = BASE_NEWS_SQL + """
-                WHERE UPPER(n.[Status]) = 'PUBLISHED'
-                ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC
-                """;
-        if (limit > 0) {
-            sql = sql.replaceFirst("SELECT ", "SELECT TOP (" + limit + ") ");
-        }
-        return jdbcTemplate.query(sql, rowMapper);
-    }
+    private static final String PUBLISHED_FILTER = """
+            WHERE UPPER(n.[Status]) = 'PUBLISHED'
+              AND COALESCE(n.PublishedAt, n.CreatedAt) <= SYSDATETIME()
+            """;
 
+    private static final String NEWEST_FIRST = " ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC";
+
+    /** All published news, newest first. */
     public List<NewsArticle> findAllPublished() {
-        String sql = BASE_NEWS_SQL + """
-                WHERE UPPER(n.[Status]) = 'PUBLISHED'
-                ORDER BY COALESCE(n.PublishedAt, n.CreatedAt) DESC
-                """;
+        String sql = "SELECT " + NEWS_COLUMNS + NEWS_FROM + PUBLISHED_FILTER + NEWEST_FIRST;
         return jdbcTemplate.query(sql, rowMapper);
     }
 
-    public Optional<NewsArticle> findById(int newsId) {
-        String sql = BASE_NEWS_SQL + " WHERE n.NewsID = ?";
+    /** The newest published news (Home Page + "other news" block). */
+    public List<NewsArticle> findPublishedNews(int limit) {
+        if (limit <= 0) {
+            return findAllPublished();
+        }
+        String sql = "SELECT TOP (?) " + NEWS_COLUMNS + NEWS_FROM + PUBLISHED_FILTER + NEWEST_FIRST;
+        return jdbcTemplate.query(sql, rowMapper, limit);
+    }
+
+    /**
+     * One article only if it is published – unpublished news cannot be opened
+     * by typing its ID in the URL (BR-47).
+     */
+    public Optional<NewsArticle> findPublishedById(int newsId) {
+        String sql = "SELECT " + NEWS_COLUMNS + NEWS_FROM + PUBLISHED_FILTER + " AND n.NewsID = ?";
         try {
-            NewsArticle article = jdbcTemplate.queryForObject(sql, rowMapper, newsId);
-            return Optional.ofNullable(article);
+            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, rowMapper, newsId));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Any article by ID regardless of status (kept for back-office use). */
+    public Optional<NewsArticle> findById(int newsId) {
+        String sql = "SELECT " + NEWS_COLUMNS + NEWS_FROM + " WHERE n.NewsID = ?";
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, rowMapper, newsId));
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
