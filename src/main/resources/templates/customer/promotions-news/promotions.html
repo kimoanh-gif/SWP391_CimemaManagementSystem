@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead('Promotions')}">
+    <title>Promotions | CINEORA</title>
+</head>
+<body class="cineora-catalog-page">
+<div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
+
+<main class="section-shell" style="padding-top:2.5rem;">
+    <div th:replace="~{customer/promotions-news/fragments :: pageHeading('promotions')}"></div>
+
+    <section style="margin-bottom:4rem;">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Exclusive Customer Offers</span>
+                <h2 class="section-title">
+                    <span class="section-title-icon">🎁</span> Current Promotions
+                </h2>
+            </div>
+        </div>
+
+        <th:block th:if="${loadError}">
+            <div th:replace="~{customer/promotions-news/fragments :: loadError(@{/promotions})}"></div>
+        </th:block>
+
+        <div class="promo-grid" th:if="${!loadError and !promotions.isEmpty()}">
+            <article class="promo-card" th:each="promo : ${promotions}">
+                <div class="promo-banner-wrap">
+                    <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img"
+                         onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">20% Off</span>
+                </div>
+                <div class="promo-body">
+                    <h3 class="promo-title">
+                        <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" th:text="${promo.name}">Promotion</a>
+                    </h3>
+                    <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                        <span>📅 Valid:</span>
+                        <strong th:text="${promo.validityRange}">18/10/2026 - 31/12/2026</strong>
+                    </div>
+                    <p class="promo-desc" th:text="${promo.description}">Promotion details and applicable terms.</p>
+
+                    <div class="promo-voucher-box" th:if="${!promo.vouchers.isEmpty()}">
+                        <div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Voucher Code:</div>
+                            <span class="voucher-code-pill" th:text="${promo.primaryVoucherCode}">WELCOME20</span>
+                        </div>
+                        <button type="button" class="btn-copy-code"
+                                th:data-code="${promo.primaryVoucherCode}"
+                                onclick="copyVoucherCode(this.dataset.code)">
+                            Copy Code
+                        </button>
+                    </div>
+
+                    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;">
+                        <a th:href="@{/promotions/{id}(id=${promo.promotionId})}" class="section-link" style="font-size:0.85rem;">
+                            <span>View Terms</span>
+                            <span>➔</span>
+                        </a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <th:block th:if="${!loadError and promotions.isEmpty()}">
+            <div th:replace="~{customer/promotions-news/fragments :: emptyState('There are no promotions available at the moment. Please check back later.')}"></div>
+        </th:block>
+    </section>
+</main>
+<div th:replace="~{fragments/cinema-header-footer :: trailerModal}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
+<th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+</body>
+</html>
