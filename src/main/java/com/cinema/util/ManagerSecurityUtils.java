@@ -22,8 +22,8 @@ public final class ManagerSecurityUtils {
         if (role != null && !role.trim().isEmpty()) {
             if (!"MANAGER".equalsIgnoreCase(role.trim()) && !"ADMIN".equalsIgnoreCase(role.trim())) {
                 throw new UnauthorizedManagerException(
-                        "Truy cập bị từ chối: Tài khoản với vai trò '" + role
-                                + "' không có quyền thực hiện thao tác quản lý thể loại phim."
+                        "Access denied: Account with role '" + role
+                                + "' does not have permission to perform movie genre management operations."
                 );
             }
         }

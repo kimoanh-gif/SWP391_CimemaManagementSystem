@@ -35,37 +35,163 @@
 
         .matrix-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
         }
         .matrix-table th {
-            padding: 12px 14px;
-            text-align: left;
+            padding: 8px 6px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-400);
-            background: var(--bg-body);
+            letter-spacing: 0.3px;
+            color: var(--text-500);
+            background: #FAF7F5;
             border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            box-sizing: border-box;
+            white-space: nowrap;
         }
         .matrix-table td {
-            padding: 14px;
+            padding: 8px 6px;
             border-bottom: 1px solid var(--border);
-            font-size: 13.5px;
+            font-size: 12px;
             color: var(--text-700);
             vertical-align: middle;
+            box-sizing: border-box;
         }
-        .matrix-table tbody tr:hover td { background: rgba(255,229,217,.4); }
+        .matrix-table tbody tr:hover td { background: rgba(255,229,217,.3); }
         .price-highlight {
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-900);
             white-space: nowrap;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
         }
         .price-weekend {
-            font-weight: 800;
+            font-weight: 700;
             color: var(--primary);
             white-space: nowrap;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
         }
+        .col-config {
+            width: 22%;
+            text-align: left;
+        }
+        .col-daytype {
+            width: 7.5%;
+            text-align: center;
+        }
+        .col-base {
+            width: 8.5%;
+            text-align: right;
+        }
+        .col-surcharge {
+            width: 8%;
+            text-align: right;
+        }
+        .col-seat {
+            width: 10%;
+            text-align: right;
+        }
+        .col-status {
+            width: 7%;
+            text-align: center;
+        }
+        .col-actions {
+            width: 7%;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .seat-th-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .seat-th-name {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-700);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .seat-th-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .seat-mult-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: #b74a10;
+            background: #ffebe6;
+            padding: 1px 4px;
+            border-radius: 3px;
+            line-height: 1.2;
+        }
+        .btn-edit-mult {
+            background: none;
+            border: none;
+            color: #b74a10;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .btn-edit-mult:hover { opacity: 1; }
+        .config-title {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-900);
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .config-sub {
+            font-size: 11px;
+            color: var(--text-400);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .actions-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        .action-btn-sm {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10.5px;
+            padding: 0;
+            transition: all 0.15s;
+        }
+        .action-btn-sm.edit {
+            color: #d92332;
+            background: #fff5f5;
+            border-color: #ffd6d6;
+        }
+        .action-btn-sm.edit:hover { background: #ffd6d6; }
+        .action-btn-sm.view {
+            color: var(--text-600);
+        }
+        .action-btn-sm.view:hover { background: #f0ece9; }
 
         .surcharge-grid {
             display: grid;
@@ -216,72 +342,85 @@
                     <span class="badge badge-blue">Unit: VND</span>
                 </div>
 
-                <div style="overflow-x:auto;">
+                <div style="width:100%;overflow:hidden;">
                     <table class="matrix-table">
                         <thead>
                             <tr>
-                                <th style="width:220px">Configuration</th>
-                                <th style="width:110px">Day type</th>
-                                <th style="width:120px">2D base price</th>
-                                <th style="width:100px">Surcharge</th>
+                                <th class="col-config">Configuration</th>
+                                <th class="col-daytype">Day type</th>
+                                <th class="col-base">2D Base</th>
+                                <th class="col-surcharge">Surcharge</th>
                                 <!-- Dynamic Seat Types Columns -->
-                                <th th:each="st : ${seatTypes}">
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <span th:text="${st.typeName}">Standard</span>
-                                        <span class="badge badge-blue" style="font-size:10px;padding:1px 5px;" th:text="${st.priceMultiplier} + 'x'">1.0x</span>
-                                        <button type="button" class="action-btn action-btn-edit btn-edit-multiplier"
-                                                style="width:20px;height:20px;font-size:10px;"
-                                                th:data-id="${st.seatTypeId}"
-                                                th:data-name="${st.typeName}"
-                                                th:data-multiplier="${st.priceMultiplier}">✎</button>
+                                <th th:each="st : ${seatTypes}" class="col-seat">
+                                    <div class="seat-th-wrap">
+                                        <span class="seat-th-name"
+                                              th:text="${st.typeCode == 'FRONT' ? 'Front' : (st.typeCode == 'STD' ? 'Standard' : (st.typeCode == 'VIP' ? 'VIP Amber' : (st.typeCode == 'COUPLE' ? 'Sweetbox' : st.typeName)))}">Standard</span>
+                                        <div class="seat-th-meta">
+                                            <span class="seat-mult-badge" th:text="${st.priceMultiplier} + 'x'">1.00x</span>
+                                            <button type="button" class="btn-edit-mult btn-edit-multiplier"
+                                                    th:data-id="${st.seatTypeId}"
+                                                    th:data-name="${st.typeName}"
+                                                    th:data-multiplier="${st.priceMultiplier}"
+                                                    title="Edit multiplier">✎</button>
+                                        </div>
                                     </div>
                                 </th>
-                                <th style="width:90px;text-align:center">Status</th>
+                                <th class="col-status">Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="r : ${rules}">
-                                <td>
-                                    <strong style="color:var(--text-900)" th:text="${r.ruleName}">Rule</strong>
-                                    <div style="font-size:11.5px;color:var(--text-400);margin-top:2px;" th:text="${r.pricingCode} + ' • ' + ${r.experienceType}">CODE</div>
+                                <td class="col-config">
+                                    <strong class="config-title" th:text="${r.ruleName}" th:title="${r.ruleName}">Rule</strong>
+                                    <div class="config-sub" th:text="${r.pricingCode} + ' • ' + ${r.experienceType}">CODE</div>
                                 </td>
-                                <td>
-                                    <span class="badge" th:classappend="${r.dayType == 'WEEKEND' ? 'badge-orange' : 'badge-blue'}" th:text="${r.dayType}">WEEKDAY</span>
+                                <td class="col-daytype">
+                                    <span class="badge" style="font-size:10px;padding:2px 6px;"
+                                          th:classappend="${r.dayType == 'WEEKEND' ? 'badge-orange' : 'badge-blue'}"
+                                          th:text="${r.dayType}">WEEKDAY</span>
                                 </td>
-                                <td class="price-highlight" th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">85.000 ₫</td>
-                                <td style="color:var(--primary);font-weight:600;" th:text="'+' + ${#numbers.formatDecimal(r.formatSurcharge, 0, 'COMMA', 0, 'POINT')} + ' ₫'">+0 ₫</td>
+                                <td class="col-base price-highlight" th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">85.000 ₫</td>
+                                <td class="col-surcharge" style="color:var(--primary);font-weight:600;font-variant-numeric:tabular-nums;"
+                                    th:text="'+' + ${#numbers.formatDecimal(r.formatSurcharge, 0, 'COMMA', 0, 'POINT')} + ' ₫'">+0 ₫</td>
 
                                 <!-- Calculated Prices for Each Seat Type -->
-                                <td th:each="st : ${seatTypes}" th:class="${r.dayType == 'WEEKEND'} ? 'price-weekend' : 'price-highlight'">
+                                <td th:each="st : ${seatTypes}" class="col-seat"
+                                    th:classappend="${r.dayType == 'WEEKEND'} ? 'price-weekend' : 'price-highlight'">
                                     <span th:if="${matrix.get(r.pricingId) != null and matrix.get(r.pricingId).get(st.seatTypeId) != null}"
                                           th:text="${#numbers.formatDecimal(matrix.get(r.pricingId).get(st.seatTypeId), 0, 'COMMA', 0, 'POINT')} + ' ₫'">
                                         85.000 ₫
                                     </span>
+                                    <span th:unless="${matrix.get(r.pricingId) != null and matrix.get(r.pricingId).get(st.seatTypeId) != null}"
+                                          style="color:var(--text-300);">—</span>
                                 </td>
 
-                                <td style="text-align:center">
-                                    <span class="badge" th:classappend="${r.active ? 'badge-green' : 'badge-gray'}" th:text="${r.status}">Active</span>
+                                <td class="col-status">
+                                    <span class="badge" style="font-size:10px;padding:2px 6px;"
+                                          th:classappend="${r.active ? 'badge-green' : 'badge-gray'}"
+                                          th:text="${r.status}">Active</span>
                                 </td>
                                 <td class="col-actions">
-                                    <button type="button" class="action-btn action-btn-edit btn-edit-rule"
-                                            th:data-id="${r.pricingId}"
-                                            th:data-code="${r.pricingCode}"
-                                            th:data-name="${r.ruleName}"
-                                            th:data-baseprice="${r.basePrice}"
-                                            th:data-surcharge="${r.formatSurcharge}"
-                                            th:data-daytype="${r.dayType}"
-                                            th:data-timeslot="${r.timeSlot}"
-                                            th:data-exptype="${r.experienceType}"
-                                            title="Edit configuration">✎</button>
-                                    <form th:action="@{'/manager/pricing/status/' + ${r.pricingId}}" method="post" style="display:inline;">
-                                        <input type="hidden" name="status" th:value="${r.active ? 'Inactive' : 'Active'}">
-                                        <button type="submit" class="action-btn action-btn-view"
-                                                th:title="${r.active ? 'Suspend configuration' : 'Reactivate'}">
-                                            <span th:if="${r.active}">⏹</span>
-                                            <span th:unless="${r.active}">▶</span>
-                                        </button>
-                                    </form>
+                                    <div class="actions-wrap">
+                                        <button type="button" class="action-btn-sm edit btn-edit-rule"
+                                                th:data-id="${r.pricingId}"
+                                                th:data-code="${r.pricingCode}"
+                                                th:data-name="${r.ruleName}"
+                                                th:data-baseprice="${r.basePrice}"
+                                                th:data-surcharge="${r.formatSurcharge}"
+                                                th:data-daytype="${r.dayType}"
+                                                th:data-timeslot="${r.timeSlot}"
+                                                th:data-exptype="${r.experienceType}"
+                                                title="Edit configuration">✎</button>
+                                        <form th:action="@{'/manager/pricing/status/' + ${r.pricingId}}" method="post" style="display:inline;margin:0;">
+                                            <input type="hidden" name="status" th:value="${r.active ? 'Inactive' : 'Active'}">
+                                            <button type="submit" class="action-btn-sm view"
+                                                    th:title="${r.active ? 'Suspend configuration' : 'Reactivate'}">
+                                                <span th:if="${r.active}">⏹</span>
+                                                <span th:unless="${r.active}">▶</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -340,7 +479,7 @@
 </div>
 </div>
 
-<!-- Modal: Tạo / Sửa Quy Tắc Định Giá (IDs for manager-pricing.js) -->
+<!-- Modal: Create / Edit Pricing Rule (IDs for manager-pricing.js) -->
 <div id="pricingModal" class="modal-backdrop">
     <div class="modal-content">
         <div class="modal-header">
@@ -403,7 +542,7 @@
     </div>
 </div>
 
-<!-- Modal: Chỉnh Sửa Multiplier Loại Ghế -->
+<!-- Modal: Edit Seat Type Price Multiplier -->
 <div id="multiplierModal" class="modal-backdrop">
     <div class="modal-content" style="max-width: 440px;">
         <div class="modal-header">

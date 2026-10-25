@@ -201,7 +201,7 @@
                             </button>
                         </form>
                         <form th:action="@{'/manager/seat-types/delete/' + ${st.seatTypeId}}" method="post" style="display:inline;"
-                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa loại ghế này?');">
+                              onsubmit="return confirm('Are you sure you want to delete this seat type?');">
                             <button type="submit" class="action-btn action-btn-del" title="Delete seat type">🗑</button>
                         </form>
                     </td>
@@ -233,7 +233,7 @@
 </div>
 </div>
 
-<!-- Modal 1: Thêm / Sửa Loại Ghế (IDs for manager-seat-types.js) -->
+<!-- Modal 1: Add / Edit Seat Type (IDs for manager-seat-types.js) -->
 <div id="seatTypeModal" class="modal-backdrop">
     <div class="modal-content">
         <div class="modal-header">
@@ -282,7 +282,7 @@
     </div>
 </div>
 
-<!-- Modal 2: Cập Nhật Nhanh Hệ Số Giá -->
+<!-- Modal 2: Quick Multiplier Update -->
 <div id="multiplierModal" class="modal-backdrop">
     <div class="modal-content" style="max-width: 440px;">
         <div class="modal-header">

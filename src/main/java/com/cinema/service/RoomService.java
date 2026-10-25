@@ -37,18 +37,18 @@ public class RoomService {
 
     public void validateCapacityAndLayout(RoomForm form) {
         if (form.getTotalRows() == null || form.getTotalRows() <= 0) {
-            throw new IllegalArgumentException("Vui lòng nhập tổng số hàng ghế (hàng dọc) lớn hơn 0.");
+            throw new IllegalArgumentException("Please enter vertical rows greater than 0.");
         }
         if (form.getSeatsPerRow() == null || form.getSeatsPerRow() <= 0) {
-            throw new IllegalArgumentException("Vui lòng nhập số ghế mỗi hàng (hàng ngang) lớn hơn 0.");
+            throw new IllegalArgumentException("Please enter seats per row (horizontal) greater than 0.");
         }
         if (form.getCapacity() == null || form.getCapacity() <= 0) {
-            throw new IllegalArgumentException("Vui lòng nhập tổng số ghế cả phòng lớn hơn 0.");
+            throw new IllegalArgumentException("Please enter total room capacity greater than 0.");
         }
         int expectedCapacity = form.getTotalRows() * form.getSeatsPerRow();
         if (form.getCapacity() != expectedCapacity) {
             throw new IllegalArgumentException(
-                String.format("Tổng số ghế cả phòng (%d) phải bằng tổng số ghế hàng dọc nhân với tổng số ghế hàng ngang (%d hàng × %d ghế = %d ghế).",
+                String.format("Total room capacity (%d) must equal vertical rows multiplied by horizontal seats (%d rows × %d seats = %d seats / phải bằng).",
                     form.getCapacity(),
                     form.getTotalRows(),
                     form.getSeatsPerRow(),
@@ -61,10 +61,10 @@ public class RoomService {
     public void create(RoomForm form) {
         validateCapacityAndLayout(form);
         if (roomDao.existsByRoomCode(form.getRoomCode(), null)) {
-            throw new IllegalArgumentException("Mã phòng chiếu '" + form.getRoomCode().trim() + "' đã tồn tại trong hệ thống. Vui lòng nhập mã phòng khác.");
+            throw new IllegalArgumentException("Room code '" + form.getRoomCode().trim() + "' already exists in the system. Please enter a different room code.");
         }
         if (roomDao.existsByRoomName(form.getRoomName(), null)) {
-            throw new IllegalArgumentException("Tên phòng chiếu '" + form.getRoomName().trim() + "' đã tồn tại trong hệ thống. Vui lòng đặt tên phòng khác.");
+            throw new IllegalArgumentException("Room name '" + form.getRoomName().trim() + "' already exists in the system. Please choose a different room name.");
         }
         roomDao.insert(form);
     }
@@ -74,10 +74,10 @@ public class RoomService {
         getById(form.getRoomId());
         validateCapacityAndLayout(form);
         if (roomDao.existsByRoomCode(form.getRoomCode(), form.getRoomId())) {
-            throw new IllegalArgumentException("Mã phòng chiếu '" + form.getRoomCode().trim() + "' đã tồn tại trong hệ thống. Vui lòng nhập mã phòng khác.");
+            throw new IllegalArgumentException("Room code '" + form.getRoomCode().trim() + "' already exists in the system. Please enter a different room code.");
         }
         if (roomDao.existsByRoomName(form.getRoomName(), form.getRoomId())) {
-            throw new IllegalArgumentException("Tên phòng chiếu '" + form.getRoomName().trim() + "' đã tồn tại trong hệ thống. Vui lòng đặt tên phòng khác.");
+            throw new IllegalArgumentException("Room name '" + form.getRoomName().trim() + "' already exists in the system. Please choose a different room name.");
         }
         roomDao.update(form);
     }
@@ -123,7 +123,7 @@ public class RoomService {
             throw new RoomHasActiveShowtimesException(roomId);
         }
         if (room.getShowtimeCount() > 0) {
-            throw new IllegalStateException("Phòng chiếu '" + room.getRoomName() + "' đã có lịch sử " + room.getShowtimeCount() + " suất chiếu trong hệ thống nên không thể xóa để bảo toàn dữ liệu vé và doanh thu. Bạn vui lòng chuyển trạng thái phòng sang 'Bảo trì' nếu không muốn sử dụng phòng này nữa.");
+            throw new IllegalStateException("Screening room '" + room.getRoomName() + "' has a history of " + room.getShowtimeCount() + " showtimes in the system and cannot be deleted to preserve ticket and revenue data. Please change the room status to 'Maintenance' if you no longer wish to use this room.");
         }
         seatDao.deleteByRoomId(roomId);
         roomDao.delete(roomId);

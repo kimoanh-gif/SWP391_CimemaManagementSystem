@@ -392,8 +392,8 @@
                 <tr th:if="${#lists.isEmpty(reportData.dailyItems)}">
                     <td colspan="7" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">bar_chart</span></div>
-                        <div style="font-size:14px;font-weight:600;">Không có doanh thu trong giai đoạn này</div>
-                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
+                        <div style="font-size:14px;font-weight:600;">No revenue data in this period</div>
+                        <div style="font-size:12px;margin-top:4px;">Please select another date range or adjust filters.</div>
                     </td>
                 </tr>
                 </tbody>
@@ -439,8 +439,8 @@
                 <tr th:if="${#lists.isEmpty(reportData.movieItems)}">
                     <td colspan="7" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">movie</span></div>
-                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu phim trong giai đoạn này</div>
-                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
+                        <div style="font-size:14px;font-weight:600;">No movie data in this period</div>
+                        <div style="font-size:12px;margin-top:4px;">Please select another date range or adjust filters.</div>
                     </td>
                 </tr>
                 </tbody>
@@ -500,14 +500,14 @@
                 <tr th:if="${#lists.isEmpty(reportData.transactionItems)}">
                     <td colspan="11" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">receipt_long</span></div>
-                        <div style="font-size:14px;font-weight:600;">Không có giao dịch thành công trong giai đoạn này</div>
-                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
+                        <div style="font-size:14px;font-weight:600;">No successful transactions in this period</div>
+                        <div style="font-size:12px;margin-top:4px;">Please select another date range or adjust filters.</div>
                     </td>
                 </tr>
                 </tbody>
                 <tfoot>
                 <tr>
-                    <td colspan="6" style="font-weight:700;">TOTAL (<span th:text="${summary.totalPaidBookings != null ? summary.totalPaidBookings : 0}">0</span> đơn)</td>
+                    <td colspan="6" style="font-weight:700;">TOTAL (<span th:text="${summary.totalPaidBookings != null ? summary.totalPaidBookings : 0}">0</span> orders)</td>
                     <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
                     <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
                     <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>

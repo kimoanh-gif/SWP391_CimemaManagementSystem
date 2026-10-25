@@ -232,13 +232,13 @@
                         <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/stop'}" method="post" style="display:inline;">
                             <input type="hidden" name="date" th:value="${selectedDate}">
                             <button type="submit" class="action-btn"
-                                    onclick="return confirm('Bạn có chắc chắn muốn dừng suất chiếu này?');"
+                                    onclick="return confirm('Are you sure you want to stop this showtime?');"
                                     title="Stop showtime">⏹</button>
                         </form>
                         <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/delete'}" method="post" style="display:inline;">
                             <input type="hidden" name="date" th:value="${selectedDate}">
                             <button type="submit" class="action-btn action-btn-del"
-                                    onclick="return confirm('Bạn có chắc chắn muốn xóa suất chiếu này?');"
+                                    onclick="return confirm('Are you sure you want to delete this showtime?');"
                                     title="Delete showtime">🗑</button>
                         </form>
                     </td>
@@ -262,7 +262,7 @@
 </div>
 </div>
 
-<!-- Modal: Tạo / Sửa Suất Chiếu (IDs for manager-showtimes.js) -->
+<!-- Modal: Create / Edit Showtime (IDs for manager-showtimes.js) -->
 <div id="showtimeModal" class="modal-backdrop">
     <div class="modal-content">
         <div class="modal-header">

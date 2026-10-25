@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Verify Reset Code | CINEORA</title>
@@ -30,28 +30,28 @@
       </div>
 
       <button class="auth-btn" type="button" id="verifyBtn">
-        <span class="label">XÁC MINH</span><span class="spinner" aria-hidden="true"></span>
+        <span class="label">VERIFY</span><span class="spinner" aria-hidden="true"></span>
       </button>
 
       <!-- Countdown (shown after successful OTP) -->
       <div class="otp-countdown-wrap" id="otpCountdownWrap" style="display:none;">
         <div class="otp-countdown-bar"><div class="otp-countdown-fill" id="otpCountdownFill"></div></div>
-        <div class="otp-countdown-text">Mời bạn chờ <span id="otpCountdownText">5</span> giây trước khi tiếp tục...</div>
+        <div class="otp-countdown-text">Please wait <span id="otpCountdownText">5</span> seconds before continuing...</div>
       </div>
 
       <!-- Next step notice -->
       <div class="next-step-notice" id="nextStepNotice" style="display:none;">
-        ✓ Mã OTP đúng! Đang chuyển sang trang đặt mật khẩu...
+        ✓ OTP verified! Redirecting to password reset page...
       </div>
 
       <!-- Resend OTP -->
       <div class="otp-resend" id="otpResend">
-        <span class="cooldown">Không nhận được mã?
-          <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Gửi lại</a>
+        <span class="cooldown">Didn't receive the code?
+          <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Resend</a>
         </span>
       </div>
 
-      <div class="auth-bottom"><a th:href="@{/forgot-password}">← Yêu cầu mã khác</a></div>
+      <div class="auth-bottom"><a th:href="@{/forgot-password}">← Request another code</a></div>
  </section></main>
 <script>
 // Expose verifyOtp to global scope (called by inline onclick)
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.verifyOtp = async function() {
     const otp = getOtpValue();
     if (otp.length !== 6) {
-      showStatus('Vui lòng nhập đủ 6 chữ số.', 'error');
+      showStatus('Please enter all 6 digits.', 'error');
       shakeInputs();
       return;
     }
@@ -126,17 +126,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const json = await resp.json();
 
       if (json.success) {
-        showStatus('✓ Mã OTP đúng!', 'success');
+        showStatus('✓ OTP verified!', 'success');
         otpInputs.forEach(d => d && d.classList.add('success'));
         otpInputs.forEach(i => i.disabled = true);
         startRedirectCountdown();
       } else {
-        showStatus('✗ ' + (json.message || 'Mã OTP không đúng hoặc đã hết hạn.'), 'error');
+        showStatus('✗ ' + (json.message || 'Invalid or expired OTP code.'), 'error');
         shakeInputs();
         btn.disabled = false;
       }
     } catch (e) {
-      showStatus('Đã xảy ra lỗi. Vui lòng thử lại.', 'error');
+      showStatus('An error occurred. Please try again.', 'error');
       btn.disabled = false;
     } finally {
       btn.classList.remove('loading');
@@ -185,12 +185,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let remaining = parseInt(resend.getAttribute('data-cooldown') || '60', 10);
     const update = () => {
       if (remaining <= 0) {
-        resend.textContent = 'Gửi lại';
+        resend.textContent = 'Resend';
         resend.style.pointerEvents = 'auto';
         resend.style.opacity = '1';
         return;
       }
-      resend.innerHTML = 'Gửi lại sau <span style="color:#7c3aed;font-weight:600;">' + remaining + 's</span>';
+      resend.innerHTML = 'Resend in <span style="color:#7c3aed;font-weight:600;">' + remaining + 's</span>';
       resend.style.pointerEvents = 'none';
       resend.style.opacity = '.6';
       remaining--;

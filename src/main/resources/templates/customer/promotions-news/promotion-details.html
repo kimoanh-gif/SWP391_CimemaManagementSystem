@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/cinema-header-footer :: metaHead(${promotion.name} + ' - Ưu Đãi')}">
-    <title>CineVerse - Chi Tiết Khuyến Mãi</title>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead(${promotion.name} + ' - Promotion')}">
+    <title>CineVerse - Promotion Details</title>
 </head>
 <body>
 <div th:replace="~{fragments/cinema-header-footer :: header('promotions-news')}"></div>
@@ -9,16 +9,16 @@
 <main class="section-shell" style="padding-top:2.5rem;max-width:960px;">
     <div style="margin-bottom:2rem;">
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
-            <a th:href="@{/}" style="color:var(--text-secondary);">Trang chủ</a>
+            <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
             <span> / </span>
-            <a th:href="@{/promotions-news(tab='promotions')}" style="color:var(--text-secondary);">Khuyến mãi</a>
+            <a th:href="@{/promotions-news(tab='promotions')}" style="color:var(--text-secondary);">Promotions</a>
             <span> / </span>
-            <span style="color:var(--primary-light);" th:text="${promotion.name}">Tên Khuyến Mãi</span>
+            <span style="color:var(--primary-light);" th:text="${promotion.name}">Promotion Name</span>
         </div>
-        <span class="hero-tag" style="margin-bottom:12px;">Ưu Đãi Đặc Biệt</span>
-        <h1 style="font-size:clamp(1.8rem, 3.5vw, 2.6rem);font-weight:900;" th:text="${promotion.name}">Tên Khuyến Mãi</h1>
+        <span class="hero-tag" style="margin-bottom:12px;">Special Offer</span>
+        <h1 style="font-size:clamp(1.8rem, 3.5vw, 2.6rem);font-weight:900;" th:text="${promotion.name}">Promotion Name</h1>
         <div style="font-size:0.9rem;color:var(--text-muted);margin-top:8px;">
-            <span>Thời gian áp dụng: </span>
+            <span>Validity period: </span>
             <strong style="color:var(--gold);" th:text="${promotion.validityRange}">18/10/2026 - 31/12/2026</strong>
         </div>
     </div>
@@ -29,39 +29,39 @@
     </div>
     <div th:if="${promotion.vouchers != null && !promotion.vouchers.isEmpty()}"
          style="background:var(--bg-surface-elevated);border:1px solid var(--border-focus);border-radius:var(--radius-md);padding:1.75rem;margin-bottom:2.5rem;box-shadow:var(--shadow-glow);">
-        <h3 style="font-size:1.25rem;margin-bottom:12px;color:#fff;">Mã Ưu Đãi Áp Dụng:</h3>
+        <h3 style="font-size:1.25rem;margin-bottom:12px;color:#fff;">Applicable Voucher Codes:</h3>
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div th:each="v : ${promotion.vouchers}"
                  style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-dark);padding:12px 18px;border-radius:var(--radius-sm);border:1px dashed var(--border-subtle);flex-wrap:wrap;gap:10px;">
                 <div>
                     <span class="voucher-code-pill" style="font-size:1.1rem;margin-right:10px;" th:text="${v.code}">CODE</span>
-                    <strong style="color:#fff;" th:text="${v.discountDisplay}">Giảm 20%</strong>
-                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;" th:text="${'Hạn dùng: ' + v.formattedValidRange}">Hạn dùng: 18/10/2026 - 31/12/2026</div>
+                    <strong style="color:#fff;" th:text="${v.discountDisplay}">20% Off</strong>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;" th:text="${'Valid: ' + v.formattedValidRange}">Valid: 18/10/2026 - 31/12/2026</div>
                 </div>
                 <button type="button" class="btn-copy-code"
                         th:attr="onclick=|copyVoucherCode('${v.code}')|">
-                    Sao Chép Mã
+                    Copy Code
                 </button>
             </div>
         </div>
     </div>
     <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2.5rem;line-height:1.8;color:var(--text-secondary);font-size:1rem;margin-bottom:3rem;">
-        <h3 style="color:#fff;font-size:1.35rem;margin-bottom:1rem;">Thể Lệ &amp; Điều Kiện Áp Dụng</h3>
+        <h3 style="color:#fff;font-size:1.35rem;margin-bottom:1rem;">Terms &amp; Conditions</h3>
         <div style="white-space:pre-line;" th:text="${promotion.description}">
-            Nội dung chi tiết về chương trình ưu đãi, đối tượng tham gia và quy định áp dụng mã giảm giá khi đặt vé trực tuyến hoặc mua tại quầy CineVerse.
+            Detailed information about the promotion program, eligible participants, and terms when booking online or at the box office.
         </div>
         <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border-subtle);">
-            <h4 style="color:#fff;font-size:1.05rem;margin-bottom:8px;">Lưu ý quan trọng:</h4>
+            <h4 style="color:#fff;font-size:1.05rem;margin-bottom:8px;">Important notes:</h4>
             <ul style="padding-left:1.5rem;color:var(--text-muted);font-size:0.9rem;display:flex;flex-direction:column;gap:6px;">
-                <li>Mỗi tài khoản thành viên chỉ được áp dụng mã ưu đãi theo giới hạn của từng chương trình.</li>
-                <li>Không áp dụng đồng thời với các chương trình khuyến mãi khác trừ khi có quy định riêng.</li>
-                <li>Ưu đãi không có giá trị quy đổi thành tiền mặt.</li>
+                <li>Each member account may apply vouchers subject to program usage limits.</li>
+                <li>Cannot be combined with other promotions unless explicitly stated.</li>
+                <li>Offers cannot be redeemed for cash.</li>
             </ul>
         </div>
     </div>
 
     <div th:if="${otherPromotions != null && !otherPromotions.isEmpty()}" style="margin-bottom:3rem;">
-        <h3 style="font-size:1.4rem;margin-bottom:1.5rem;color:#fff;">Khuyến Mãi Khác</h3>
+        <h3 style="font-size:1.4rem;margin-bottom:1.5rem;color:#fff;">Other Promotions</h3>
         <div class="promo-grid">
             <article class="promo-card" th:each="item : ${otherPromotions}">
                 <div class="promo-body">
@@ -76,10 +76,10 @@
 
     <div style="display:flex;justify-content:space-between;align-items:center;">
         <a th:href="@{/promotions}" class="btn-secondary">
-            <span>➔ Quay Lại Danh Sách</span>
+            <span>➔ Back to List</span>
         </a>
         <a th:href="@{/movies}" class="btn-primary">
-            <span>Đặt Vé Ngay</span>
+            <span>Book Tickets Now</span>
         </a>
     </div>
 </main>

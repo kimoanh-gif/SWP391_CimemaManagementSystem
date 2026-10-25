@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Verify Your Email | CINEORA</title>
@@ -21,7 +21,7 @@
       <form th:action="@{/verify-activation-otp}" th:object="${activationForm}" method="post" novalidate>
         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
         <div class="auth-field" th:classappend="${otpError != null} ? 'has-error' : ''">
-          <label for="otp">MÃ OTP</label>
+          <label for="otp">OTP CODE</label>
           <div class="auth-input-wrap" th:classappend="${otpError != null} ? 'invalid' : ''">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
@@ -32,17 +32,17 @@
         </div>
 
         <button class="auth-btn" type="submit" id="submitBtn">
-          <span class="label">XÁC MINH</span><span class="spinner" aria-hidden="true"></span>
+          <span class="label">VERIFY</span><span class="spinner" aria-hidden="true"></span>
         </button>
       </form>
 
       <div class="otp-resend" id="otpResend">
-        <span class="cooldown">Không nhận được mã?
-          <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Gửi lại</a>
+        <span class="cooldown">Didn't receive the code?
+          <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Resend</a>
         </span>
       </div>
 
-      <div class="auth-bottom"><a th:href="@{/login}">← Quay lại đăng nhập</a></div>
+      <div class="auth-bottom"><a th:href="@{/login}">← Back to Login</a></div>
  </section></main>
 <script>
 (() => {
@@ -88,13 +88,13 @@
     let remaining = cooldown;
     const update = () => {
       if (remaining <= 0) {
-        resend.textContent = 'Gửi lại';
+        resend.textContent = 'Resend';
         resend.style.pointerEvents = 'auto';
         resend.style.opacity = '1';
         resend.removeAttribute('aria-disabled');
         return;
       }
-      resend.innerHTML = 'Gửi lại sau <span class="otp-countdown">' + remaining + 's</span>';
+      resend.innerHTML = 'Resend in <span class="otp-countdown">' + remaining + 's</span>';
       resend.style.pointerEvents = 'none';
       resend.style.opacity = '.6';
       resend.setAttribute('aria-disabled', 'true');

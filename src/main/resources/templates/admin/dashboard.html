@@ -64,39 +64,39 @@
 <article class="metric-card"><div class="metric-top"><span>Active customers</span><span class="metric-icon">&#128101;</span></div><strong class="metric-value" th:text="${#numbers.formatInteger(d.activeCustomers,1,'POINT')}">&#8212;</strong><p><b th:text="${d.newCustomers}">0</b> registered today</p></article>
 </div>
 <div class="analytics-grid">
-<section class="dashboard-panel chart-panel"><div class="panel-title"><div><h2>Doanh thu</h2><p th:text="${d.chartDescription}"></p></div><span class="date-chip" th:text="${#temporals.format(d.chartStart,'dd/MM') + ' - ' + #temporals.format(d.chartEnd,'dd/MM/yyyy')}"></span></div>
+<section class="dashboard-panel chart-panel"><div class="panel-title"><div><h2>Revenue</h2><p th:text="${d.chartDescription}"></p></div><span class="date-chip" th:text="${#temporals.format(d.chartStart,'dd/MM') + ' - ' + #temporals.format(d.chartEnd,'dd/MM/yyyy')}"></span></div>
 <form class="revenue-filter" method="get" th:action="@{/admin/dashboard}">
   <div class="revenue-filter-field">
-  <label for="revenuePeriod">Hiển thị theo</label>
+  <label for="revenuePeriod">View by</label>
   <select id="revenuePeriod" name="period">
-    <option value="day" th:selected="${d.period == 'day'}">Ngày</option>
-    <option value="week" th:selected="${d.period == 'week'}">Tuần</option>
-    <option value="month" th:selected="${d.period == 'month'}">Tháng</option>
-    <option value="quarter" th:selected="${d.period == 'quarter'}">Quý</option>
-    <option value="year" th:selected="${d.period == 'year'}">Năm</option>
+    <option value="day" th:selected="${d.period == 'day'}">Day</option>
+    <option value="week" th:selected="${d.period == 'week'}">Week</option>
+    <option value="month" th:selected="${d.period == 'month'}">Month</option>
+    <option value="quarter" th:selected="${d.period == 'quarter'}">Quarter</option>
+    <option value="year" th:selected="${d.period == 'year'}">Year</option>
   </select>
   </div>
   <div class="revenue-date-range">
   <div class="revenue-filter-field">
-  <label for="revenueFrom">Từ ngày</label>
+  <label for="revenueFrom">From date</label>
   <input id="revenueFrom" type="date" name="from" required min="1900-01-01" max="9998-12-31" th:value="${d.chartStart}">
   </div>
   <span class="revenue-range-divider" aria-hidden="true">–</span>
   <div class="revenue-filter-field">
-  <label for="revenueTo">Đến ngày</label>
+  <label for="revenueTo">To date</label>
   <input id="revenueTo" type="date" name="to" required min="1900-01-01" max="9998-12-31" th:value="${d.chartEnd}">
   </div>
   </div>
   <div class="revenue-filter-actions">
-  <button class="btn btn-primary" type="submit">Áp dụng</button>
-  <a class="btn btn-secondary" th:href="@{/admin/dashboard}">Mặc định</a>
+  <button class="btn btn-primary" type="submit">Apply</button>
+  <a class="btn btn-secondary" th:href="@{/admin/dashboard}">Default</a>
   </div>
 </form>
 <p class="revenue-filter-error" role="alert" th:if="${revenueFilterError}" th:text="${revenueFilterError}"></p>
-<div class="chart-total"><span>Tổng doanh thu trong khoảng hiển thị</span><strong th:text="${#numbers.formatDecimal(d.chartTotal,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong><small>Đơn vị: VNĐ · Thanh toán thành công</small></div>
-<p class="chart-empty-note" th:if="${d.chartTotal == 0}">Chưa ghi nhận doanh thu trong khoảng thời gian này.</p>
-<div class="revenue-chart" role="group" aria-label="Biểu đồ doanh thu"><div class="chart-day" th:each="day : ${d.chartBars}"><div class="bar-track"><div class="chart-bar" th:classappend="${day.peak} ? 'peak' : ''" th:style="${'height:' + day.height + '%'}"></div></div><span class="bar-date" th:title="${#temporals.format(day.start,'dd/MM/yyyy') + ' – ' + #temporals.format(day.end,'dd/MM/yyyy')}" th:text="${day.label}"></span><span class="bar-amount" th:text="${#numbers.formatDecimal(day.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></span></div></div>
-<div class="chart-legend"><span><i></i>Revenue received</span><span><i class="peak"></i>Cao nhất trong kỳ</span></div></section>
+<div class="chart-total"><span>Total revenue in selected range</span><strong th:text="${#numbers.formatDecimal(d.chartTotal,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong><small>Unit: VND · Successful payments</small></div>
+<p class="chart-empty-note" th:if="${d.chartTotal == 0}">No revenue recorded in this period.</p>
+<div class="revenue-chart" role="group" aria-label="Revenue chart"><div class="chart-day" th:each="day : ${d.chartBars}"><div class="bar-track"><div class="chart-bar" th:classappend="${day.peak} ? 'peak' : ''" th:style="${'height:' + day.height + '%'}"></div></div><span class="bar-date" th:title="${#temporals.format(day.start,'dd/MM/yyyy') + ' – ' + #temporals.format(day.end,'dd/MM/yyyy')}" th:text="${day.label}"></span><span class="bar-amount" th:text="${#numbers.formatDecimal(day.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></span></div></div>
+<div class="chart-legend"><span><i></i>Revenue received</span><span><i class="peak"></i>Peak in period</span></div></section>
 <section class="dashboard-panel"><div class="panel-title"><div><h2>Top performing movies</h2><p>Revenue received in the last 7 days</p></div></div><p class="empty-message" th:if="${#lists.isEmpty(d.topMovies)}">No paid movie bookings in this period.</p><div class="movie-row" th:each="movie, row : ${d.topMovies}"><span class="movie-rank" th:text="${row.count}"></span><div><h3 th:text="${movie.title}"></h3><p><span th:text="${movie.bookings}"></span> paid bookings</p></div><strong th:text="${#numbers.formatDecimal(movie.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong></div></section>
 </div>
 <div class="operations-grid">

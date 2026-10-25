@@ -139,9 +139,9 @@ function initVoucherCopy() {
     window.copyVoucherCode = function(code) {
         if (!code) return;
         navigator.clipboard.writeText(code).then(() => {
-            showToast(`Đã sao chép mã ưu đãi "${code}"!`);
+            showToast(`Promotion code "${code}" copied!`);
         }).catch(() => {
-            showToast(`Mã ưu đãi: ${code}`);
+            showToast(`Promotion code: ${code}`);
         });
     };
 
@@ -216,7 +216,7 @@ function initQuickBooking() {
 
         if (!movieId) {
             e.preventDefault();
-            alert('Vui lòng chọn phim bạn muốn xem.');
+            alert('Please select a movie you want to watch.');
             return;
         }
         let targetUrl = `/movies/${movieId}`;
