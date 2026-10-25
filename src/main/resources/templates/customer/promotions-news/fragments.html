@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Page heading + tabs shared by /promotions and /news (UC04). -->
+<div th:fragment="pageHeading(activeTab)">
+    <div style="margin-bottom:2rem;">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
+            <a th:href="@{/}" style="color:var(--text-secondary);">Home</a>
+            <span> / </span>
+            <span style="color:var(--primary-light);">Promotions &amp; News</span>
+        </div>
+        <h1 style="font-size:2.5rem;font-weight:900;">Promotions &amp; Cinema News</h1>
+        <p style="color:var(--text-secondary);margin-top:6px;">Discover CINEORA offers, voucher updates, cinema news, and upcoming events.</p>
+    </div>
+
+    <div th:if="${errorMessage != null}" class="pn-alert" role="alert"
+         style="margin-bottom:1.5rem;padding:12px 16px;border-radius:var(--radius-sm);border:1px solid rgba(239,68,68,.45);background:rgba(239,68,68,.12);color:#fecaca;"
+         th:text="${errorMessage}">Error</div>
+
+    <div class="filter-toolbar" style="margin-bottom:3rem;">
+        <div class="filter-tabs">
+            <a th:href="@{/promotions}" class="filter-tab"
+               th:classappend="${activeTab == 'promotions'} ? 'active'">
+                🎁 Promotions &amp; Vouchers
+            </a>
+            <a th:href="@{/news}" class="filter-tab"
+               th:classappend="${activeTab == 'news'} ? 'active'">
+                📰 News &amp; Events
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- UC04 E1: data retrieval error with retry. -->
+<div th:fragment="loadError(retryUrl)"
+     style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+    <p style="color:var(--text-secondary);margin-bottom:1rem;">We could not load this content right now.</p>
+    <a th:href="${retryUrl}" class="btn-primary"><span>Try again</span></a>
+</div>
+
+<!-- UC04 A1/A2: empty state. -->
+<div th:fragment="emptyState(message)"
+     style="text-align:center;padding:3rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+    <p style="color:var(--text-muted);" th:text="${message}">No content.</p>
+</div>
+
+</body>
+</html>
