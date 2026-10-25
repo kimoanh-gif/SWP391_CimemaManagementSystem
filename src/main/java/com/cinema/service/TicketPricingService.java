@@ -147,6 +147,17 @@ public class TicketPricingService {
         return getSeatTypeById(id);
     }
 
+    @Transactional
+    public void deleteSeatType(int id) {
+        SeatType st = getSeatTypeById(id);
+        if (seatTypeDao.isReferencedBySeats(id)) {
+            throw new InvalidPricingConfigurationException(
+                    "Không thể xóa loại ghế '" + st.getTypeName() + "' vì đã có ghế trong phòng chiếu đang áp dụng loại ghế này."
+            );
+        }
+        seatTypeDao.delete(id);
+    }
+
     /**
      * Calculates the calculated ticket unit price according to BR-50:
      * Ticket unit price = Showtime base ticket price x SeatType price multiplier,

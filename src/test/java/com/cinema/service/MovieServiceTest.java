@@ -122,14 +122,35 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("createMovie: Should reject when endDate is before releaseDate")
-    void testCreateMovie_InvalidDates() {
-        sampleForm.setReleaseDate(LocalDate.of(2026, 5, 20));
-        sampleForm.setEndDate(LocalDate.of(2026, 5, 10));
+    @DisplayName("createMovie: Should reject when releaseDate is in the past")
+    void testCreateMovie_PastReleaseDate() {
+        sampleForm.setReleaseDate(LocalDate.now().minusDays(1));
+
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày khởi chiếu");
+    }
+
+    @Test
+    @DisplayName("createMovie: Should reject when endDate is in the past")
+    void testCreateMovie_PastEndDate() {
+        sampleForm.setReleaseDate(LocalDate.now().plusDays(2));
+        sampleForm.setEndDate(LocalDate.now().minusDays(1));
 
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Ngày kết thúc");
+    }
+
+    @Test
+    @DisplayName("createMovie: Should reject when endDate is before releaseDate")
+    void testCreateMovie_InvalidDates() {
+        sampleForm.setReleaseDate(LocalDate.now().plusDays(20));
+        sampleForm.setEndDate(LocalDate.now().plusDays(10));
+
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày kết thúc không được diễn ra trước ngày khởi chiếu");
     }
 
     @Test
@@ -212,5 +233,31 @@ class MovieServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).isActiveForShowtimes()).isTrue();
         verify(movieDao).findMoviesAvailableForShowtimes();
+    }
+
+    @Test
+    @DisplayName("deleteMovie: Should hard delete movie when it has 0 showtimes")
+    void testDeleteMovie_ZeroShowtimes() {
+        when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
+        when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(0);
+        when(movieDao.countShowtimesByMovieId(1)).thenReturn(0);
+
+        movieService.deleteMovie(1);
+
+        verify(movieDao).delete(1);
+        verify(movieDao, never()).updateStatus(anyInt(), anyString());
+    }
+
+    @Test
+    @DisplayName("deleteMovie: Should deactivate movie when it has past showtimes but 0 upcoming")
+    void testDeleteMovie_PastShowtimes() {
+        when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
+        when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(0);
+        when(movieDao.countShowtimesByMovieId(1)).thenReturn(2);
+
+        movieService.deleteMovie(1);
+
+        verify(movieDao).updateStatus(1, "Archived");
+        verify(movieDao, never()).delete(1);
     }
 }

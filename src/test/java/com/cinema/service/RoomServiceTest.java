@@ -76,4 +76,46 @@ class RoomServiceTest {
         when(roomDao.hasUpcomingShowtimes(6)).thenReturn(true);
         assertThrows(RoomHasActiveShowtimesException.class, () -> roomService.deactivate(6));
     }
+
+    @Test
+    void create_validCapacityAndLayout_success() {
+        RoomForm form = new RoomForm();
+        form.setRoomCode("ROOM-TEST");
+        form.setRoomName("Test Room");
+        form.setRoomType("2D Standard");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(12);
+        form.setCapacity(120); // 10 * 12 = 120
+        form.setStatus("Ready");
+
+        when(roomDao.existsByRoomCode("ROOM-TEST", null)).thenReturn(false);
+        when(roomDao.existsByRoomName("Test Room", null)).thenReturn(false);
+        when(roomDao.insert(form)).thenReturn(1);
+
+        assertDoesNotThrow(() -> roomService.create(form));
+        verify(roomDao).insert(form);
+    }
+
+    @Test
+    void create_mismatchedCapacity_throwsIllegalArgumentException() {
+        RoomForm form = new RoomForm();
+        form.setRoomCode("ROOM-TEST");
+        form.setRoomName("Test Room");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(12);
+        form.setCapacity(100); // 10 * 12 = 120 != 100
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
+        assertTrue(ex.getMessage().contains("phải bằng"));
+    }
+
+    @Test
+    void create_missingRowsOrSeats_throwsIllegalArgumentException() {
+        RoomForm form = new RoomForm();
+        form.setRoomCode("ROOM-TEST");
+        form.setRoomName("Test Room");
+        form.setCapacity(100);
+
+        assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
+    }
 }

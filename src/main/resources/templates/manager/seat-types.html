@@ -200,6 +200,10 @@
                                 <span th:unless="${st.active}">▶</span>
                             </button>
                         </form>
+                        <form th:action="@{'/manager/seat-types/delete/' + ${st.seatTypeId}}" method="post" style="display:inline;"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa loại ghế này?');">
+                            <button type="submit" class="action-btn action-btn-del" title="Delete seat type">🗑</button>
+                        </form>
                     </td>
                 </tr>
             </tbody>

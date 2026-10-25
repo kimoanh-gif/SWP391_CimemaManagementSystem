@@ -196,17 +196,65 @@ public class MovieDao {
         return Optional.of(movie);
     }
 
+    private volatile String writablePosterColumn = null;
+    private volatile String writableTrailerColumn = null;
+
+    private synchronized void resolveWritableColumns() {
+        if (writablePosterColumn != null) return;
+        try {
+            String posterCol = jdbcTemplate.queryForObject("""
+                SELECT CASE 
+                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 1)
+                    THEN 'Poster'
+                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 0)
+                    THEN 'PosterURL'
+                    ELSE 'Poster'
+                END
+                """, String.class);
+
+            String trailerCol = jdbcTemplate.queryForObject("""
+                SELECT CASE 
+                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 1)
+                    THEN 'Trailer'
+                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 0)
+                    THEN 'TrailerURL'
+                    ELSE 'Trailer'
+                END
+                """, String.class);
+
+            writablePosterColumn = (posterCol != null && !posterCol.isBlank()) ? posterCol : "Poster";
+            writableTrailerColumn = (trailerCol != null && !trailerCol.isBlank()) ? trailerCol : "Trailer";
+        } catch (Exception ex) {
+            writablePosterColumn = "Poster";
+            writableTrailerColumn = "Trailer";
+        }
+    }
+
+    private String getWritablePosterColumn() {
+        if (writablePosterColumn == null) {
+            resolveWritableColumns();
+        }
+        return writablePosterColumn;
+    }
+
+    private String getWritableTrailerColumn() {
+        if (writableTrailerColumn == null) {
+            resolveWritableColumns();
+        }
+        return writableTrailerColumn;
+    }
+
     /**
      * Inserts a new Movie record and returns the generated MovieID.
      */
     public int insert(MovieForm form) {
-        String sql = """
-                INSERT INTO Movie (
-                    Title, OriginalTitle, Duration, ReleaseDate, EndDate,
-                    [Language], Director, Actors, AgeRating, [Description],
-                    PosterURL, TrailerURL, [Status], CreatedAt
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())
-                """;
+        String posterCol = getWritablePosterColumn();
+        String trailerCol = getWritableTrailerColumn();
+        String sql = "INSERT INTO Movie ("
+                + "Title, OriginalTitle, Duration, ReleaseDate, EndDate, "
+                + "[Language], Director, Actors, AgeRating, [Description], "
+                + posterCol + ", " + trailerCol + ", [Status], CreatedAt"
+                + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -242,24 +290,24 @@ public class MovieDao {
      * Updates an existing movie's information.
      */
     public void update(int movieId, MovieForm form) {
-        String sql = """
-                UPDATE Movie
-                SET Title = ?,
-                    OriginalTitle = ?,
-                    Duration = ?,
-                    ReleaseDate = ?,
-                    EndDate = ?,
-                    [Language] = ?,
-                    Director = ?,
-                    Actors = ?,
-                    AgeRating = ?,
-                    [Description] = ?,
-                    PosterURL = ?,
-                    TrailerURL = ?,
-                    [Status] = ?,
-                    UpdatedAt = SYSUTCDATETIME()
-                WHERE MovieID = ?
-                """;
+        String posterCol = getWritablePosterColumn();
+        String trailerCol = getWritableTrailerColumn();
+        String sql = "UPDATE Movie SET "
+                + "Title = ?, "
+                + "OriginalTitle = ?, "
+                + "Duration = ?, "
+                + "ReleaseDate = ?, "
+                + "EndDate = ?, "
+                + "[Language] = ?, "
+                + "Director = ?, "
+                + "Actors = ?, "
+                + "AgeRating = ?, "
+                + "[Description] = ?, "
+                + posterCol + " = ?, "
+                + trailerCol + " = ?, "
+                + "[Status] = ?, "
+                + "UpdatedAt = SYSUTCDATETIME() "
+                + "WHERE MovieID = ?";
 
         jdbcTemplate.update(
                 sql,
@@ -396,7 +444,7 @@ public class MovieDao {
                 SELECT COUNT(1)
                 FROM Showtime
                 WHERE MovieID = ?
-                  AND StartTime >= SYSUTCDATETIME()
+                  AND StartTime >= SYSDATETIME()
                   AND [Status] NOT IN ('Cancelled', 'Stopped')
                 """;
         try {
@@ -549,6 +597,11 @@ public class MovieDao {
             m.setGenres(findGenresByMovieId(m.getMovieId()));
         }
         return list;
+    }
+
+    public void delete(int movieId) {
+        jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
+        jdbcTemplate.update("DELETE FROM Movie WHERE MovieID = ?", movieId);
     }
 
     private String emptyToNull(String value) {

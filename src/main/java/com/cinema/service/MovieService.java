@@ -9,6 +9,7 @@ import com.cinema.dto.MovieForm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +68,18 @@ public class MovieService {
     public Movie updateMovie(int movieId, MovieForm form) {
         validateMovieForm(form);
         Movie existing = getMovieById(movieId);
+
+        LocalDate today = LocalDate.now();
+        if (form.getReleaseDate() != null && form.getReleaseDate().isBefore(today)) {
+            if (existing.getReleaseDate() == null || !existing.getReleaseDate().equals(form.getReleaseDate())) {
+                throw new IllegalArgumentException("Ngày khởi chiếu mới phải từ hôm nay trở đi, không được ở quá khứ.");
+            }
+        }
+        if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
+            if (existing.getEndDate() == null || !existing.getEndDate().equals(form.getEndDate())) {
+                throw new IllegalArgumentException("Ngày kết thúc dự kiến mới phải từ hôm nay trở đi, không được ở quá khứ.");
+            }
+        }
 
         String newStatus = normalizeAndValidateStatus(form.getStatus());
 
@@ -169,7 +182,7 @@ public class MovieService {
     }
 
     /**
-     * AC02 / BR-37: Deactivates or archives a movie while ensuring no active upcoming showtimes exist.
+     * AC02 / BR-37: Deletes or archives a movie while ensuring no active upcoming showtimes exist.
      */
     @Transactional(rollbackFor = Exception.class)
     public void deleteMovie(int movieId) {
@@ -182,7 +195,15 @@ public class MovieService {
                             + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước."
             );
         }
-        deactivateMovie(movieId);
+        int totalShowtimes = movieDao.countShowtimesByMovieId(movieId);
+        if (totalShowtimes > 0) {
+            throw new MovieHasActiveShowtimesException(
+                    "Không thể xóa phim '" + movie.getTitle()
+                            + "' vì đang có ràng buộc dữ liệu (" + totalShowtimes
+                            + " suất chiếu trong hệ thống). Bạn có thể sử dụng nút 'Dừng chiếu' (⏹) để lưu trữ phim."
+            );
+        }
+        movieDao.delete(movieId);
     }
 
     /**
@@ -201,6 +222,16 @@ public class MovieService {
         }
         if (form.getDuration() == null || form.getDuration() <= 0) {
             throw new IllegalArgumentException("Thời lượng phim phải lớn hơn 0 phút.");
+        }
+        LocalDate today = LocalDate.now();
+        boolean isNew = (form.getId() == null || form.getId() <= 0);
+        if (isNew) {
+            if (form.getReleaseDate() != null && form.getReleaseDate().isBefore(today)) {
+                throw new IllegalArgumentException("Ngày khởi chiếu phải từ hôm nay trở đi, không được ở quá khứ.");
+            }
+            if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
+                throw new IllegalArgumentException("Ngày kết thúc dự kiến phải từ hôm nay trở đi, không được ở quá khứ.");
+            }
         }
         if (form.getReleaseDate() != null && form.getEndDate() != null
                 && form.getEndDate().isBefore(form.getReleaseDate())) {

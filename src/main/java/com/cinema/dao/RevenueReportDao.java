@@ -47,11 +47,11 @@ public class RevenueReportDao {
 
         try {
             jdbcTemplate.query(sql, rs -> {
-                if (rs.next()) {
-                    summary.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
-                    summary.setDiscountAmount(rs.getBigDecimal("TotalDiscount"));
-                    summary.setTotalPaidBookings(rs.getInt("TotalPaidBookings"));
-                }
+                BigDecimal totalRev = rs.getBigDecimal("TotalRevenue");
+                BigDecimal discount = rs.getBigDecimal("TotalDiscount");
+                summary.setTotalRevenue(totalRev != null ? totalRev : BigDecimal.ZERO);
+                summary.setDiscountAmount(discount != null ? discount : BigDecimal.ZERO);
+                summary.setTotalPaidBookings(rs.getInt("TotalPaidBookings"));
             }, Date.valueOf(startDate), Date.valueOf(endDate));
 
             // Sum of F&B Revenue for paid bookings
@@ -77,11 +77,9 @@ public class RevenueReportDao {
                       AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
                     """;
             jdbcTemplate.query(ticketSql, rs -> {
-                if (rs.next()) {
-                    summary.setTotalTickets(rs.getInt("TotalTickets"));
-                    BigDecimal seatRev = rs.getBigDecimal("TicketRevenue");
-                    summary.setTicketRevenue(seatRev != null ? seatRev : BigDecimal.ZERO);
-                }
+                summary.setTotalTickets(rs.getInt("TotalTickets"));
+                BigDecimal seatRev = rs.getBigDecimal("TicketRevenue");
+                summary.setTicketRevenue(seatRev != null ? seatRev : BigDecimal.ZERO);
             }, Date.valueOf(startDate), Date.valueOf(endDate));
 
             // In case bookings have tickets but no separate BookingSeat records (counter sales fallback)

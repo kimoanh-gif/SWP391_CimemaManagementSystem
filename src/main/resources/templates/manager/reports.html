@@ -392,20 +392,20 @@
                 <tr th:if="${#lists.isEmpty(reportData.dailyItems)}">
                     <td colspan="7" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">bar_chart</span></div>
-                        <div style="font-size:14px;font-weight:600;">No revenue data in this period</div>
-                        <div style="font-size:12px;margin-top:4px;">Choose another period or check the filters.</div>
+                        <div style="font-size:14px;font-weight:600;">Không có doanh thu trong giai đoạn này</div>
+                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
                     </td>
                 </tr>
                 </tbody>
-                <tfoot th:if="${!#lists.isEmpty(reportData.dailyItems)}">
+                <tfoot>
                 <tr>
-                    <td>TOTAL</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.discountAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-center" th:text="${summary.totalTickets}">0</td>
-                    <td class="text-center" th:text="${summary.totalPaidBookings}">0</td>
+                    <td style="font-weight:700;">TOTAL</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(summary.discountAmount != null ? summary.discountAmount : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-center" style="font-weight:700;" th:text="${summary.totalTickets != null ? summary.totalTickets : 0}">0</td>
+                    <td class="text-center" style="font-weight:700;" th:text="${summary.totalPaidBookings != null ? summary.totalPaidBookings : 0}">0</td>
                 </tr>
                 </tfoot>
             </table>
@@ -439,10 +439,20 @@
                 <tr th:if="${#lists.isEmpty(reportData.movieItems)}">
                     <td colspan="7" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">movie</span></div>
-                        <div style="font-size:14px;font-weight:600;">No movie data in this period</div>
+                        <div style="font-size:14px;font-weight:600;">Không có dữ liệu phim trong giai đoạn này</div>
+                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
                     </td>
                 </tr>
                 </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3" style="font-weight:700;">TOTAL</td>
+                    <td class="text-center" style="font-weight:700;" th:text="${summary.totalTickets != null ? summary.totalTickets : 0}">0</td>
+                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                </tr>
+                </tfoot>
             </table>
         </div>
 
@@ -490,10 +500,20 @@
                 <tr th:if="${#lists.isEmpty(reportData.transactionItems)}">
                     <td colspan="11" class="empty-state">
                         <div class="empty-icon"><span class="material-symbols-outlined" style="font-size:36px">receipt_long</span></div>
-                        <div style="font-size:14px;font-weight:600;">No successful transactions in this period</div>
+                        <div style="font-size:14px;font-weight:600;">Không có giao dịch thành công trong giai đoạn này</div>
+                        <div style="font-size:12px;margin-top:4px;">Hãy chọn khoảng thời gian khác hoặc kiểm tra bộ lọc.</div>
                     </td>
                 </tr>
                 </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="6" style="font-weight:700;">TOTAL (<span th:text="${summary.totalPaidBookings != null ? summary.totalPaidBookings : 0}">0</span> đơn)</td>
+                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td colspan="2"></td>
+                </tr>
+                </tfoot>
             </table>
         </div>
 

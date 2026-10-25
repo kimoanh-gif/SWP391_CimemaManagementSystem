@@ -65,3 +65,10 @@ src/main/resources/application-local.properties
 # AI / Assistant tools
 .claude/
 CLAUDE.md
+
+# Node / JS testing
+node_modules/
+e2e/node_modules/
+e2e/*.png
+audit_test_results.json
+

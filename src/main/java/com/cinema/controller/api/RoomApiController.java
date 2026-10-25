@@ -68,6 +68,19 @@ public class RoomApiController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Phòng đã được đưa vào bảo trì", null, null));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable int id,
+                                                    jakarta.servlet.http.HttpServletRequest request) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        roomService.delete(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Xóa phòng chiếu thành công", null, null));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+    }
+
     @ExceptionHandler(RoomNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(RoomNotFoundException ex) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, ex.getMessage(), null, null));
@@ -83,8 +96,37 @@ public class RoomApiController {
         return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage(), null, null));
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        String msg = "Dữ liệu phòng không hợp lệ hoặc bị trùng lặp.";
+        Throwable cause = ex.getMostSpecificCause();
+        String specificMsg = cause != null && cause.getMessage() != null ? cause.getMessage() : "";
+        if (specificMsg.contains("UQ_Room_RoomCode")) {
+            msg = "Mã phòng chiếu đã tồn tại trong hệ thống. Vui lòng nhập mã phòng khác.";
+        } else if (specificMsg.contains("UQ_Room_RoomName")) {
+            msg = "Tên phòng chiếu đã tồn tại trong hệ thống. Vui lòng đặt tên phòng khác.";
+        }
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(new ApiResponse<>(false, msg, null, null));
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        String errorMsg = ex.getBindingResult().getFieldErrors().stream()
+                .map(org.springframework.validation.FieldError::getDefaultMessage)
+                .findFirst()
+                .orElse("Dữ liệu nhập không hợp lệ.");
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, errorMsg, null, null));
+    }
+
     @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, ex.getMessage(), null, null));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>(false, "Đã xảy ra lỗi: " + ex.getMessage(), null, null));
     }
 }

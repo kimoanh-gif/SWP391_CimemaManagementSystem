@@ -83,6 +83,65 @@ function getCsrfToken() {
     return match ? decodeURIComponent(match[2]) : "";
 }
 
+function getTodayIso() {
+    var today = new Date();
+    var yyyy = today.getFullYear();
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var dd = String(today.getDate()).padStart(2, '0');
+    return yyyy + '-' + mm + '-' + dd;
+}
+
+function validateMovieDates() {
+    var releaseInput = document.getElementById("movieReleaseDate");
+    var endInput = document.getElementById("movieEndDate");
+    if (!releaseInput || !endInput) return true;
+
+    var releaseDate = releaseInput.value;
+    var endDate = endInput.value;
+    var id = getValue("movieId").trim();
+    var isNew = !id || parseInt(id, 10) <= 0;
+    var todayStr = getTodayIso();
+    var origReleaseDate = releaseInput.getAttribute("data-original-date") || "";
+    var origEndDate = endInput.getAttribute("data-original-date") || "";
+
+    var isValid = true;
+
+    // Validate Release Date: cannot be in past for new movie or if modified
+    if (releaseDate) {
+        if (releaseDate < todayStr && (isNew || releaseDate !== origReleaseDate)) {
+            showError("movieReleaseDate", "releaseDateFeedback", "Ngày khởi chiếu phải từ hôm nay trở đi, không được ở quá khứ.");
+            isValid = false;
+        } else {
+            clearError("movieReleaseDate", "releaseDateFeedback");
+        }
+    } else {
+        clearError("movieReleaseDate", "releaseDateFeedback");
+    }
+
+    // Dynamic min attribute for Expected End Date
+    var effectiveMin = (releaseDate && releaseDate > todayStr) ? releaseDate : todayStr;
+    if (isNew || (endDate && endDate >= effectiveMin)) {
+        endInput.min = effectiveMin;
+    }
+
+    // Validate Expected End Date: cannot be in past or before release date
+    if (endDate) {
+        if (endDate < todayStr && (isNew || endDate !== origEndDate)) {
+            showError("movieEndDate", "dateFeedback", "Ngày kết thúc dự kiến phải từ hôm nay trở đi, không được ở quá khứ.");
+            isValid = false;
+        } else if (releaseDate && endDate < releaseDate) {
+            showError("movieEndDate", "dateFeedback", "Ngày kết thúc không được diễn ra trước ngày khởi chiếu.");
+            isValid = false;
+        } else {
+            clearError("movieEndDate", "dateFeedback");
+        }
+    } else {
+        clearError("movieEndDate", "dateFeedback");
+    }
+
+    return isValid;
+}
+
 // =====================================================================
 // Global Modal Controls (available immediately to inline onclick)
 // =====================================================================
@@ -93,6 +152,18 @@ function openAddMovieModal() {
 
     var status = document.getElementById("movieStatus");
     if (status) status.value = "Upcoming";
+
+    var todayStr = getTodayIso();
+    var releaseInput = document.getElementById("movieReleaseDate");
+    var endInput = document.getElementById("movieEndDate");
+    if (releaseInput) {
+        releaseInput.min = todayStr;
+        releaseInput.removeAttribute("data-original-date");
+    }
+    if (endInput) {
+        endInput.min = todayStr;
+        endInput.removeAttribute("data-original-date");
+    }
 
     var backdrop = document.getElementById("movieModalBackdrop");
     if (backdrop) backdrop.classList.add("open");
@@ -136,6 +207,27 @@ function openEditMovieModal(button) {
     setValue("movieDescription", description);
     setValue("moviePoster", poster);
     setValue("movieTrailer", trailer);
+
+    var todayStr = getTodayIso();
+    var releaseInput = document.getElementById("movieReleaseDate");
+    var endInput = document.getElementById("movieEndDate");
+    if (releaseInput) {
+        releaseInput.setAttribute("data-original-date", releaseDate);
+        if (releaseDate && releaseDate < todayStr) {
+            releaseInput.min = releaseDate;
+        } else {
+            releaseInput.min = todayStr;
+        }
+    }
+    if (endInput) {
+        endInput.setAttribute("data-original-date", endDate);
+        var baseMin = (releaseDate && releaseDate > todayStr) ? releaseDate : todayStr;
+        if (endDate && endDate < baseMin) {
+            endInput.min = endDate;
+        } else {
+            endInput.min = baseMin;
+        }
+    }
 
     var counter = document.getElementById("descCharCounter");
     if (counter) counter.textContent = description.length + "/1000";
@@ -225,7 +317,22 @@ function resetMovieForm() {
     setValue("movieId", "");
     clearFeedback("titleFeedback");
     clearFeedback("durationFeedback");
+    clearFeedback("releaseDateFeedback");
     clearFeedback("dateFeedback");
+
+    var releaseInput = document.getElementById("movieReleaseDate");
+    if (releaseInput) {
+        releaseInput.removeAttribute("min");
+        releaseInput.removeAttribute("data-original-date");
+        releaseInput.classList.remove("is-invalid");
+    }
+
+    var endInput = document.getElementById("movieEndDate");
+    if (endInput) {
+        endInput.removeAttribute("min");
+        endInput.removeAttribute("data-original-date");
+        endInput.classList.remove("is-invalid");
+    }
 
     var errorAlert = document.getElementById("modalErrorAlert");
     if (errorAlert) {
@@ -254,10 +361,10 @@ async function deactivateMovie(button) {
     var title = button.getAttribute("data-title");
     var showtimes = parseInt(button.getAttribute("data-showtimes") || "0", 10);
 
-    var confirmMsg = "Are you sure you want to deactivate and archive '" + title + "'?\n" +
-        "The movie will move to Archived and can no longer be used for new showtimes.";
+    var confirmMsg = "Bạn có chắc chắn muốn dừng chiếu và lưu trữ phim '" + title + "' không?\n" +
+        "Phim sẽ được chuyển sang trạng thái Đã lưu trữ (Archived) và không thể tạo thêm suất chiếu mới.";
     if (showtimes > 0) {
-        confirmMsg += "\n\nNote: this movie currently has " + showtimes + " showtimes in the system.";
+        confirmMsg += "\n\n(Lưu ý: Phim hiện có " + showtimes + " suất chiếu trong hệ thống. Nếu có suất chiếu sắp diễn ra, hệ thống sẽ từ chối để bảo toàn lịch chiếu).";
     }
 
     if (!confirm(confirmMsg)) {
@@ -283,12 +390,13 @@ async function deactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Could not deactivate the movie: " + (result.message || "Unknown error"));
+            var errorMsg = (result && result.message) ? result.message : "Không thể dừng chiếu phim.";
+            alert("Ràng buộc hệ thống:\n" + errorMsg);
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Connection error: " + err.message);
+        alert("Lỗi kết nối hoặc xử lý: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -301,8 +409,8 @@ async function reactivateMovie(button) {
     var id = button.getAttribute("data-id");
     var title = button.getAttribute("data-title");
 
-    var confirmMsg = "Are you sure you want to reactivate '" + title + "'?\n" +
-        "The movie will be available again for scheduling new showtimes.";
+    var confirmMsg = "Bạn có chắc chắn muốn kích hoạt lại phim '" + title + "' không?\n" +
+        "Phim sẽ chuyển về trạng thái hoạt động và có thể xếp lịch chiếu mới.";
 
     if (!confirm(confirmMsg)) {
         return;
@@ -327,12 +435,12 @@ async function reactivateMovie(button) {
         if (response.ok && result.success) {
             window.location.reload();
         } else {
-            alert("Could not reactivate the movie: " + (result.message || "Unknown error"));
+            alert("Không thể kích hoạt lại phim: " + (result.message || "Lỗi không xác định"));
             button.disabled = false;
             button.innerHTML = originalText;
         }
     } catch (err) {
-        alert("Connection error: " + err.message);
+        alert("Lỗi kết nối: " + err.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }
@@ -347,6 +455,7 @@ window.closeQuickViewModal = closeQuickViewModal;
 window.resetMovieForm = resetMovieForm;
 window.deactivateMovie = deactivateMovie;
 window.reactivateMovie = reactivateMovie;
+window.validateMovieDates = validateMovieDates;
 window.setValue = setValue;
 window.getValue = getValue;
 window.setText = setText;
@@ -364,6 +473,60 @@ document.addEventListener("DOMContentLoaded", function () {
         descInput.addEventListener("input", function () {
             charCounter.textContent = this.value.length + "/1000";
         });
+    }
+
+    var durationInput = document.getElementById("movieDuration");
+    if (durationInput) {
+        // Prevent typing exponential, negative, decimal signs
+        durationInput.addEventListener("keydown", function (e) {
+            if (["e", "E", "+", "-", "."].indexOf(e.key) !== -1) {
+                e.preventDefault();
+            }
+        });
+
+        // Restrict input to maximum 3 digits and validate range 1 - 600
+        durationInput.addEventListener("input", function () {
+            // Strip any non-digit character
+            this.value = this.value.replace(/\D/g, "");
+
+            // Limit maximum length to 3 digits (e.g. 1 to 600)
+            if (this.value.length > 3) {
+                this.value = this.value.slice(0, 3);
+            }
+
+            var val = parseInt(this.value, 10);
+            if (!this.value || isNaN(val)) {
+                showError("movieDuration", "durationFeedback", "Duration is required (1 to 600 minutes).");
+            } else if (val < 1 || val > 600) {
+                showError("movieDuration", "durationFeedback", "Duration must be between 1 and 600 minutes.");
+            } else {
+                clearError("movieDuration", "durationFeedback");
+            }
+        });
+
+        // On blur, auto-correct if empty or out of bounds
+        durationInput.addEventListener("blur", function () {
+            var val = parseInt(this.value, 10);
+            if (!this.value || isNaN(val) || val < 1) {
+                this.value = "1";
+                clearError("movieDuration", "durationFeedback");
+            } else if (val > 600) {
+                this.value = "600";
+                clearError("movieDuration", "durationFeedback");
+            }
+        });
+    }
+
+    // Real-time validation for release date and expected end date
+    var releaseDateInput = document.getElementById("movieReleaseDate");
+    var endDateInput = document.getElementById("movieEndDate");
+    if (releaseDateInput) {
+        releaseDateInput.addEventListener("input", validateMovieDates);
+        releaseDateInput.addEventListener("change", validateMovieDates);
+    }
+    if (endDateInput) {
+        endDateInput.addEventListener("input", validateMovieDates);
+        endDateInput.addEventListener("change", validateMovieDates);
     }
 
     // Close on backdrop click
@@ -408,11 +571,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 clearError("movieDuration", "durationFeedback");
             }
 
-            if (releaseDate && endDate && endDate < releaseDate) {
-                showError("movieEndDate", "dateFeedback", "End date cannot be before the release date.");
+            if (!validateMovieDates()) {
                 hasError = true;
-            } else {
-                clearError("movieEndDate", "dateFeedback");
             }
 
             if (hasError) return;
@@ -481,4 +641,21 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    // Event delegation for movie delete confirmation and constraint alert
+    document.addEventListener("submit", function (e) {
+        var deleteForm = e.target.closest(".delete-movie-form");
+        if (deleteForm) {
+            var title = deleteForm.getAttribute("data-title") || "phim này";
+            var showtimes = parseInt(deleteForm.getAttribute("data-showtimes") || "0", 10);
+            if (showtimes > 0) {
+                e.preventDefault();
+                alert("Ràng buộc dữ liệu không cho phép xóa:\n\nPhim '" + title + "' đang có " + showtimes + " suất chiếu liên kết trong hệ thống.\n\nĐể đảm bảo toàn vẹn dữ liệu vé và lịch chiếu, không thể xóa phim này. Bạn có thể sử dụng nút 'Dừng chiếu' (⏹) để lưu trữ phim.");
+                return;
+            }
+            if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn phim '" + title + "' không?\nThao tác này sẽ xóa phim khỏi cơ sở dữ liệu và không thể hoàn tác.")) {
+                e.preventDefault();
+            }
+        }
+    });
 });

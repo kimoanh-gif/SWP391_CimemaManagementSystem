@@ -47,6 +47,10 @@ public final class ManagerSecurityUtils {
             if (sessionRole instanceof String str && !str.isBlank()) {
                 return str.trim();
             }
+            Object userObj = session.getAttribute("currentUser");
+            if (userObj instanceof com.cinema.model.AuthenticatedUser au && au.getRole() != null) {
+                return au.getRole().trim();
+            }
         }
 
         // 2. Check HTTP Header

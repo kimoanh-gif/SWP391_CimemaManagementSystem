@@ -201,4 +201,30 @@ public class MovieController {
 
         return "redirect:/manager/movies";
     }
+
+    /**
+     * Deletes a movie or deactivates it if historical showtimes exist.
+     */
+    @PostMapping("/{id}/delete")
+    public String deleteMovie(
+            @PathVariable int id,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            movieService.deleteMovie(id);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Đã xóa phim thành công."
+            );
+        } catch (MovieHasActiveShowtimesException | MovieNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa phim: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/movies";
+    }
 }

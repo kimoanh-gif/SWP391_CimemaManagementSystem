@@ -8,13 +8,7 @@
     <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         .fb-layout {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 20px;
-            align-items: start;
-        }
-        @media (max-width: 1200px) {
-            .fb-layout { grid-template-columns: 1fr; }
+            display: block;
         }
 
         .category-tabs {
@@ -413,64 +407,6 @@
                 <p>Click the button below to add a food item or combo.</p>
                 <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Add new product</button>
             </div>
-        </div>
-
-        <!-- Right: Business Standards & Snapshot Pricing Rules -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-
-            <div class="widget-card">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="material-symbols-outlined" style="font-size:20px;color:var(--cm-red)">fact_check</span>
-                    <h3 style="font-size:13.5px;font-weight:700;margin:0;">F&amp;B sales rules (UC-32)</h3>
-                </div>
-
-                <div style="font-size:12px;color:var(--text-600);line-height:1.5;display:flex;flex-direction:column;gap:10px;">
-                    <div style="border-left:3px solid var(--primary);padding-left:8px;">
-                        <strong style="color:var(--text-900);">1. Price snapshot (BR-51):</strong>
-                        <div>When a booking with F&amp;B is completed, the selling price is stored on the invoice. Later price changes do not affect past orders.</div>
-                    </div>
-                    <div style="border-left:3px solid var(--warning);padding-left:8px;">
-                        <strong style="color:var(--text-900);">2. Combo components:</strong>
-                        <div>Combos are built only from single items (Food, Drink, Snack). When a component is suspended, related combos are paused automatically.</div>
-                    </div>
-                    <div style="border-left:3px solid var(--success);padding-left:8px;">
-                        <strong style="color:var(--text-900);">3. Inventory scope:</strong>
-                        <div>The system manages menu prices and listing status. Physical stock (popcorn bags, syrup) is handled per shift at the POS counter.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upsell AI Widget -->
-            <div class="widget-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span class="material-symbols-outlined" style="font-size:20px;color:var(--cm-red)">lightbulb</span>
-                        <h3 style="font-size:13.5px;font-weight:700;margin:0;">POS &amp; kiosk upsell suggestions</h3>
-                    </div>
-                    <span class="badge badge-blue" style="font-size:9.5px;">AI ENGINE</span>
-                </div>
-
-                <p style="font-size:11.5px;color:var(--text-500);margin:0;line-height:1.4;">
-                    Shows a suggestion popup when customers book online or at the POS counter.
-                </p>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-                    <div>
-                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Popcorn size upgrade (+15.000 ₫)</div>
-                        <div style="font-size:11px;color:var(--text-400);">Suggest upgrading from M to L</div>
-                    </div>
-                    <input type="checkbox" checked style="width:16px;height:16px;">
-                </div>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-                    <div>
-                        <div style="font-size:12.5px;font-weight:600;color:var(--text-900);">Cheese / Caramel flavor mix</div>
-                        <div style="font-size:11px;color:var(--text-400);">Encourage a 2-flavor mix (+10.000 ₫)</div>
-                    </div>
-                    <input type="checkbox" checked style="width:16px;height:16px;">
-                </div>
-            </div>
-
         </div>
 
     </div>
