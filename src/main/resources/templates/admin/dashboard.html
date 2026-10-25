@@ -5,7 +5,7 @@
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" th:href="@{/css/cineora-admin.css}">
-<link rel="stylesheet" th:href="@{/css/cineora-admin-dashboard.css}">
+<link rel="stylesheet" th:href="@{/css/cineora-admin-dashboard.css(v='20261025-2')}">
 </head><body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
@@ -18,23 +18,18 @@
     <div class="sidebar-section">Management</div>
     <nav class="sidebar-nav">
       <a th:href="@{/admin/dashboard}" class="sidebar-link active">
-        <span class="link-icon">🏠</span>
         <span class="link-label">Dashboard</span>
       </a>
       <a th:href="@{/admin/customers}" class="sidebar-link">
-        <span class="link-icon">👥</span>
         <span class="link-label">Customers</span>
       </a>
       <a th:href="@{/admin/staffs}" class="sidebar-link">
-        <span class="link-icon">🛡️</span>
         <span class="link-label">Staffs & Managers</span>
       </a>
       <a th:href="@{/admin/roles}" class="sidebar-link">
-        <span class="link-icon">🔑</span>
         <span class="link-label">Roles & Permissions</span>
       </a>
       <a th:href="@{/admin/config}" class="sidebar-link">
-        <span class="link-icon">⚙️</span>
         <span class="link-label">System Config</span>
       </a>
     </nav>
@@ -58,7 +53,7 @@
 <main class="admin-main">
 <header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div><div class="topbar-actions"><span class="profile-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</span><span class="admin-pill">ADMIN</span></div></header>
 <div class="admin-content dashboard-content">
-<div class="dashboard-heading"><div><span class="eyebrow">CINEORA / ADMIN CONSOLE</span><h1>Admin Dashboard</h1><p>Revenue, bookings and cinema activity at a glance.</p></div><div class="heading-actions"><a class="btn btn-secondary" th:href="@{/admin/customers}">Customer accounts</a><a class="btn btn-primary" th:href="@{/admin/dashboard}">Refresh dashboard &#8635;</a></div></div>
+<div class="dashboard-heading"><div><span class="eyebrow">CINEORA / ADMIN CONSOLE</span><h1>Admin Dashboard</h1><p>Revenue, bookings and cinema activity at a glance.</p></div><div class="heading-actions"><a class="btn btn-secondary" th:href="@{/admin/customers}">Customer accounts</a><a class="btn btn-primary" th:href="@{/admin/dashboard(period=${param.period != null ? param.period[0] : 'day'},from=${param.from != null ? param.from[0] : null},to=${param.to != null ? param.to[0] : null})}">Refresh dashboard &#8635;</a></div></div>
 <div class="dashboard-error" role="alert" th:if="${dashboardError}" th:text="${dashboardError}"></div>
 <th:block th:if="${dashboard != null}" th:with="d=${dashboard}">
 <div class="data-caption"><span class="live-dot"></span><span>Database snapshot</span><span th:text="${#temporals.format(d.updatedAt,'dd/MM/yyyy HH:mm')}" ></span><span>UTC+7</span></div>
@@ -69,10 +64,39 @@
 <article class="metric-card"><div class="metric-top"><span>Active customers</span><span class="metric-icon">&#128101;</span></div><strong class="metric-value" th:text="${#numbers.formatInteger(d.activeCustomers,1,'POINT')}">&#8212;</strong><p><b th:text="${d.newCustomers}">0</b> registered today</p></article>
 </div>
 <div class="analytics-grid">
-<section class="dashboard-panel chart-panel"><div class="panel-title"><div><h2>Revenue over the last 7 days</h2><p>Payments received across online and counter sales</p></div><span class="date-chip" th:text="${#temporals.format(d.startDate,'dd/MM') + ' - ' + #temporals.format(d.today,'dd/MM/yyyy')}"></span></div>
-<div class="chart-total"><strong th:text="${#numbers.formatDecimal(d.weekTotal,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong><span>Total collected this week</span></div>
-<div class="revenue-chart" role="group" aria-label="Daily revenue chart"><div class="chart-day" th:each="day : ${d.days}"><div class="bar-track"><div class="chart-bar" th:classappend="${day.peak} ? 'peak' : ''" th:style="${'height:' + day.height + '%'}"></div></div><span class="bar-date" th:text="${#temporals.format(day.day,'dd/MM')}"></span><span class="bar-amount" th:text="${#numbers.formatDecimal(day.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></span></div></div>
-<div class="chart-legend"><span><i></i>Revenue received</span><span><i class="peak"></i>Weekly peak</span></div></section>
+<section class="dashboard-panel chart-panel"><div class="panel-title"><div><h2>Doanh thu</h2><p th:text="${d.chartDescription}"></p></div><span class="date-chip" th:text="${#temporals.format(d.chartStart,'dd/MM') + ' - ' + #temporals.format(d.chartEnd,'dd/MM/yyyy')}"></span></div>
+<form class="revenue-filter" method="get" th:action="@{/admin/dashboard}">
+  <div class="revenue-filter-field">
+  <label for="revenuePeriod">Hiển thị theo</label>
+  <select id="revenuePeriod" name="period">
+    <option value="day" th:selected="${d.period == 'day'}">Ngày</option>
+    <option value="week" th:selected="${d.period == 'week'}">Tuần</option>
+    <option value="month" th:selected="${d.period == 'month'}">Tháng</option>
+    <option value="quarter" th:selected="${d.period == 'quarter'}">Quý</option>
+    <option value="year" th:selected="${d.period == 'year'}">Năm</option>
+  </select>
+  </div>
+  <div class="revenue-date-range">
+  <div class="revenue-filter-field">
+  <label for="revenueFrom">Từ ngày</label>
+  <input id="revenueFrom" type="date" name="from" required min="1900-01-01" max="9998-12-31" th:value="${d.chartStart}">
+  </div>
+  <span class="revenue-range-divider" aria-hidden="true">–</span>
+  <div class="revenue-filter-field">
+  <label for="revenueTo">Đến ngày</label>
+  <input id="revenueTo" type="date" name="to" required min="1900-01-01" max="9998-12-31" th:value="${d.chartEnd}">
+  </div>
+  </div>
+  <div class="revenue-filter-actions">
+  <button class="btn btn-primary" type="submit">Áp dụng</button>
+  <a class="btn btn-secondary" th:href="@{/admin/dashboard}">Mặc định</a>
+  </div>
+</form>
+<p class="revenue-filter-error" role="alert" th:if="${revenueFilterError}" th:text="${revenueFilterError}"></p>
+<div class="chart-total"><span>Tổng doanh thu trong khoảng hiển thị</span><strong th:text="${#numbers.formatDecimal(d.chartTotal,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong><small>Đơn vị: VNĐ · Thanh toán thành công</small></div>
+<p class="chart-empty-note" th:if="${d.chartTotal == 0}">Chưa ghi nhận doanh thu trong khoảng thời gian này.</p>
+<div class="revenue-chart" role="group" aria-label="Biểu đồ doanh thu"><div class="chart-day" th:each="day : ${d.chartBars}"><div class="bar-track"><div class="chart-bar" th:classappend="${day.peak} ? 'peak' : ''" th:style="${'height:' + day.height + '%'}"></div></div><span class="bar-date" th:title="${#temporals.format(day.start,'dd/MM/yyyy') + ' – ' + #temporals.format(day.end,'dd/MM/yyyy')}" th:text="${day.label}"></span><span class="bar-amount" th:text="${#numbers.formatDecimal(day.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></span></div></div>
+<div class="chart-legend"><span><i></i>Revenue received</span><span><i class="peak"></i>Cao nhất trong kỳ</span></div></section>
 <section class="dashboard-panel"><div class="panel-title"><div><h2>Top performing movies</h2><p>Revenue received in the last 7 days</p></div></div><p class="empty-message" th:if="${#lists.isEmpty(d.topMovies)}">No paid movie bookings in this period.</p><div class="movie-row" th:each="movie, row : ${d.topMovies}"><span class="movie-rank" th:text="${row.count}"></span><div><h3 th:text="${movie.title}"></h3><p><span th:text="${movie.bookings}"></span> paid bookings</p></div><strong th:text="${#numbers.formatDecimal(movie.amount,0,'POINT',0,'COMMA') + ' &#8363;'}"></strong></div></section>
 </div>
 <div class="operations-grid">
