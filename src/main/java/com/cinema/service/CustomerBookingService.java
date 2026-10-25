@@ -60,6 +60,15 @@ public class CustomerBookingService {
         return bookingDAO.findSeats(showtimeId);
     }
 
+    public List<SeatOption> getSeats(int showtimeId, Integer currentBookingId) {
+        return bookingDAO.findSeats(showtimeId, currentBookingId);
+    }
+
+    public List<Integer> getBookingSeatIds(int bookingId, int accountId) {
+        getActiveBooking(bookingId, accountId);
+        return bookingDAO.findBookingSeatIds(bookingId, accountId);
+    }
+
     @Transactional
     public int holdSeats(int accountId, int showtimeId, List<Integer> requestedSeatIds,
                          Integer previousBookingId) {
@@ -75,6 +84,10 @@ public class CustomerBookingService {
             throw new BookingException("You can select up to " + MAX_SEATS_PER_BOOKING + " seats per booking.");
         }
 
+        if (previousBookingId != null) {
+            bookingDAO.releaseBooking(previousBookingId, accountId);
+        }
+
         Map<Integer, SeatOption> availableSeats = new LinkedHashMap<>();
         for (SeatOption seat : bookingDAO.findSeats(showtimeId)) {
             if (seat.isAvailable() && seatIds.contains(seat.getSeatId())) {
@@ -87,10 +100,6 @@ public class CustomerBookingService {
 
         int customerId = bookingDAO.findCustomerId(accountId)
                 .orElseThrow(() -> new BookingException("Your customer profile could not be found."));
-
-        if (previousBookingId != null) {
-            bookingDAO.releaseBooking(previousBookingId, accountId);
-        }
 
         String bookingCode = generateBookingCode();
         LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(HOLD_MINUTES);

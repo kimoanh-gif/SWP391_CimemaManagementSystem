@@ -30,7 +30,9 @@ class CustomerProfileServiceTest {
     @BeforeEach
     void setUp() {
         customerProfileService = new CustomerProfileService(customerProfileDao);
-        when(customerProfileDao.findByAccountId(1)).thenReturn(Optional.of(new CustomerProfile()));
+        org.mockito.Mockito.lenient()
+                .when(customerProfileDao.findByAccountId(1))
+                .thenReturn(Optional.of(new CustomerProfile()));
     }
 
     @Test
@@ -50,6 +52,17 @@ class CustomerProfileServiceTest {
         assertDoesNotThrow(() -> customerProfileService.updateProfile(1, validForm()));
 
         verify(customerProfileDao).updateProfile(eq(1), any(ProfileUpdateForm.class));
+    }
+
+    @Test
+    void prefilledFormKeepsTheCurrentPhoneNumber() {
+        CustomerProfile profile = new CustomerProfile();
+        profile.setFullName("Customer Example");
+        profile.setPhone("0901234567");
+
+        ProfileUpdateForm form = ProfileUpdateForm.from(profile);
+
+        org.junit.jupiter.api.Assertions.assertEquals("0901234567", form.getPhone());
     }
 
     private ProfileUpdateForm validForm() {

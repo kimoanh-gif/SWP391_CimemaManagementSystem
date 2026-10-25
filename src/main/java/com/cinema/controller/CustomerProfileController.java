@@ -98,13 +98,18 @@ public class CustomerProfileController {
 
         try {
             customerProfileService.updateProfile(accountId, form);
+        } catch (CustomerProfileService.DuplicatePhoneException exception) {
+            bindingResult.rejectValue("phone", "profile.phone.duplicate", exception.getMessage());
+            addPageContext(session, model, profile);
+            model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
+            return "customer/profile-edit";
         } catch (IllegalArgumentException exception) {
             bindingResult.reject("profile.update", exception.getMessage());
             addPageContext(session, model, profile);
             model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
             return "customer/profile-edit";
         }
-        sessionService.updateProfileSnapshot(session, form.getFullName().trim(), profile.getPhone());
+        sessionService.updateProfileSnapshot(session, form.getFullName().trim(), form.getPhone());
 
         redirectAttributes.addFlashAttribute(
                 "successMessage",

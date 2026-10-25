@@ -71,7 +71,7 @@ public class CustomerProfileDao {
     public void updateProfile(int accountId, ProfileUpdateForm form) {
         String updateAccountSql = """
                 UPDATE Account
-                SET FullName = ?
+                SET FullName = ?, Phone = ?
                 WHERE AccountID = ?
                 """;
 
@@ -84,6 +84,7 @@ public class CustomerProfileDao {
         jdbcTemplate.update(
                 updateAccountSql,
                 form.getFullName().trim(),
+                form.getPhone(),
                 accountId
         );
 

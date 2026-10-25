@@ -30,25 +30,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const csrfName = document.getElementById("csrf-name").value;
   const csrfToken = document.getElementById("csrf-token").value;
 
+  const showPasswordMessage = (text, type = "") => {
+    message.textContent = text;
+    message.classList.toggle("password-message-error", type === "error");
+    message.classList.toggle("password-message-success", type === "success");
+  };
+
   document.getElementById("open-password-modal").addEventListener("click", () => modal.showModal());
-  document.getElementById("request-password-code").addEventListener("click", async () => {
-    message.textContent = "Sending verification...";
-    const body = new URLSearchParams();
-    body.append(csrfName, csrfToken);
-    const response = await fetch("/customer/profile/password/request", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body});
-    const result = await response.json();
-    message.textContent = result.message;
-    if (!response.ok) return;
-    otpField.hidden = result.firstGoogleSetup === true;
-    requestStep.hidden = true;
-    updateStep.hidden = false;
+  document.getElementById("request-password-code").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    showPasswordMessage("Sending verification...");
+    try {
+      const body = new URLSearchParams();
+      body.append(csrfName, csrfToken);
+      const response = await fetch("/customer/profile/password/request", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body});
+      const result = await response.json();
+      showPasswordMessage(result.message, response.ok ? "success" : "error");
+      if (!response.ok) return;
+      otpField.hidden = result.firstGoogleSetup === true;
+      requestStep.hidden = true;
+      updateStep.hidden = false;
+      (otpField.hidden ? document.getElementById("new-password") : document.getElementById("password-otp")).focus();
+    } catch (error) {
+      showPasswordMessage("Could not contact the server. Please try again.", "error");
+    } finally {
+      button.disabled = false;
+    }
   });
 
-  document.getElementById("update-password").addEventListener("click", async () => {
+  document.getElementById("update-password").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
     const newPassword = document.getElementById("new-password").value;
     const confirmPassword = document.getElementById("confirm-password").value;
     if (newPassword !== confirmPassword) {
-      message.textContent = "Password confirmation does not match.";
+      showPasswordMessage("Password confirmation does not match.", "error");
+      return;
+    }
+    if (newPassword.length < 8) {
+      showPasswordMessage("Password must contain at least 8 characters.", "error");
       return;
     }
     const body = new URLSearchParams({
@@ -57,12 +77,19 @@ document.addEventListener("DOMContentLoaded", () => {
       confirmPassword
     });
     body.append(csrfName, csrfToken);
-    const response = await fetch("/customer/profile/password/update", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body});
-    const result = await response.json();
-    message.textContent = result.message;
-    if (response.ok) {
-      updateStep.hidden = true;
-      setTimeout(() => modal.close(), 900);
+    button.disabled = true;
+    try {
+      const response = await fetch("/customer/profile/password/update", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body});
+      const result = await response.json();
+      showPasswordMessage(result.message, response.ok ? "success" : "error");
+      if (response.ok) {
+        updateStep.hidden = true;
+        setTimeout(() => modal.close(), 900);
+      }
+    } catch (error) {
+      showPasswordMessage("Could not contact the server. Please try again.", "error");
+    } finally {
+      button.disabled = false;
     }
   });
 });
