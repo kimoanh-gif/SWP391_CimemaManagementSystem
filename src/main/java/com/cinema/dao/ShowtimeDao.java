@@ -131,7 +131,7 @@ public class ShowtimeDao {
 
 
     public int insert(ShowtimeForm form) {
-        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
+        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
@@ -145,7 +145,7 @@ public class ShowtimeDao {
 
     public int update(int id, ShowtimeForm form) {
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
+                "BaseTicketPrice = ?, Status = ? WHERE ShowtimeID = ?";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
                 form.getRoomId(),
@@ -175,5 +175,20 @@ public class ShowtimeDao {
             // If Booking table is not created yet, return false
             return false;
         }
+    }
+
+    public int countTotalBookings(int showtimeId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM Booking WHERE ShowtimeID = ?",
+                    Integer.class, showtimeId);
+            return count != null ? count : 0;
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    public int delete(int showtimeId) {
+        return jdbcTemplate.update("DELETE FROM Showtime WHERE ShowtimeID = ?", showtimeId);
     }
 }

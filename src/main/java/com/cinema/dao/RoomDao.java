@@ -153,5 +153,23 @@ public class RoomDao {
         String sql = "UPDATE Room SET UpdatedAt = SYSUTCDATETIME() WHERE RoomID = ?";
         jdbcTemplate.update(sql, roomId);
     }
+
+    public boolean existsByRoomCode(String roomCode, Integer excludeRoomId) {
+        if (roomCode == null || roomCode.trim().isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM Room WHERE RoomCode = ?" + (excludeRoomId != null ? " AND RoomID <> ?" : "");
+        Integer cnt = (excludeRoomId != null)
+                ? jdbcTemplate.queryForObject(sql, Integer.class, roomCode.trim(), excludeRoomId)
+                : jdbcTemplate.queryForObject(sql, Integer.class, roomCode.trim());
+        return cnt != null && cnt > 0;
+    }
+
+    public boolean existsByRoomName(String roomName, Integer excludeRoomId) {
+        if (roomName == null || roomName.trim().isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM Room WHERE RoomName = ?" + (excludeRoomId != null ? " AND RoomID <> ?" : "");
+        Integer cnt = (excludeRoomId != null)
+                ? jdbcTemplate.queryForObject(sql, Integer.class, roomName.trim(), excludeRoomId)
+                : jdbcTemplate.queryForObject(sql, Integer.class, roomName.trim());
+        return cnt != null && cnt > 0;
+    }
 }
 

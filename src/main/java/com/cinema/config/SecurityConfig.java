@@ -72,17 +72,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .ignoringRequestMatchers(
-                            new AntPathRequestMatcher("/login"),
-                            new AntPathRequestMatcher("/register"),
-                            new AntPathRequestMatcher("/forgot-password"),
-                            new AntPathRequestMatcher("/verify-activation-otp"),
-                            new AntPathRequestMatcher("/verify-reset-otp"),
-                            new AntPathRequestMatcher("/reset-password"),
-                            new AntPathRequestMatcher("/logout"),
-                            new AntPathRequestMatcher("/oauth2/**"),
-                            new AntPathRequestMatcher("/login/oauth2/**"),
-                            new AntPathRequestMatcher("/manager/**"),
-                            new AntPathRequestMatcher("/api/**")
+                            "/login",
+                            "/register",
+                            "/forgot-password",
+                            "/verify-activation-otp",
+                            "/verify-reset-otp",
+                            "/reset-password",
+                            "/logout",
+                            "/oauth2/**",
+                            "/login/oauth2/**",
+                            "/manager/**",
+                            "/api/**"
                     )
             )
             // Session: keep server-side; default URL rewriting off.

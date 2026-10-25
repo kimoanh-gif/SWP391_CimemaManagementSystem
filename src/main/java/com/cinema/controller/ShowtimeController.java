@@ -118,11 +118,14 @@ public class ShowtimeController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
+        String targetDate = (form.getStartTime() != null) ? form.getStartTime().toLocalDate().toString() : "";
+        String redirectUrl = "redirect:/manager/showtimes" + (targetDate.isEmpty() ? "" : "?date=" + targetDate);
+
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.showtimeForm", bindingResult);
             redirectAttributes.addFlashAttribute("showtimeForm", form);
             redirectAttributes.addFlashAttribute("errorMessage", "Thông tin suất chiếu không hợp lệ. Vui lòng kiểm tra lại.");
-            return "redirect:/manager/showtimes";
+            return redirectUrl;
         }
 
         try {
@@ -141,12 +144,13 @@ public class ShowtimeController {
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         }
 
-        return "redirect:/manager/showtimes";
+        return redirectUrl;
     }
 
     @PostMapping("/{id}/stop")
     public String stopShowtime(
             @PathVariable int id,
+            @RequestParam(required = false) String date,
             RedirectAttributes redirectAttributes,
             HttpServletRequest request
     ) {
@@ -161,6 +165,27 @@ public class ShowtimeController {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
         }
 
-        return "redirect:/manager/showtimes";
+        return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteShowtime(
+            @PathVariable int id,
+            @RequestParam(required = false) String date,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        try {
+            showtimeService.deleteShowtime(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa suất chiếu thành công!");
+        } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa suất chiếu: " + ex.getMessage());
+        }
+
+        return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");
     }
 }

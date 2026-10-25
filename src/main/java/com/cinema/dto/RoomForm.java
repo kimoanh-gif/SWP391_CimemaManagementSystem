@@ -26,8 +26,14 @@ public class RoomForm {
     @Max(value = 5000, message = "Sức chứa không được vượt quá 5000")
     private Integer capacity;
 
-    // Optional technical specs
+    @NotNull(message = "Tổng số hàng ghế (hàng dọc) không được để trống")
+    @Min(value = 1, message = "Tổng số hàng ghế (hàng dọc) phải lớn hơn 0")
+    @Max(value = 100, message = "Tổng số hàng ghế không được vượt quá 100")
     private Integer totalRows;
+
+    @NotNull(message = "Số ghế mỗi hàng (hàng ngang) không được để trống")
+    @Min(value = 1, message = "Số ghế mỗi hàng (hàng ngang) phải lớn hơn 0")
+    @Max(value = 100, message = "Số ghế mỗi hàng không được vượt quá 100")
     private Integer seatsPerRow;
     private String projector;
     private String soundSystem;

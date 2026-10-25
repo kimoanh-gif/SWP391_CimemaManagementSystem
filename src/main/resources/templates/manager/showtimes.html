@@ -144,7 +144,7 @@
         <form th:action="@{/manager/showtimes}" method="get" class="toolbar-form">
             <div class="toolbar-field">
                 <label>Screening date:</label>
-                <input type="date" name="date" th:value="${selectedDate}">
+                <input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()">
             </div>
             <select name="roomId" onchange="this.form.submit()">
                 <option value="0">All rooms</option>
@@ -230,9 +230,16 @@
                                 th:data-price="${st.baseTicketPrice}"
                                 title="Edit showtime">✎</button>
                         <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/stop'}" method="post" style="display:inline;">
-                            <button type="submit" class="action-btn action-btn-del"
-                                    onclick="return confirm('Are you sure you want to stop / cancel this showtime?');"
+                            <input type="hidden" name="date" th:value="${selectedDate}">
+                            <button type="submit" class="action-btn"
+                                    onclick="return confirm('Bạn có chắc chắn muốn dừng suất chiếu này?');"
                                     title="Stop showtime">⏹</button>
+                        </form>
+                        <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/delete'}" method="post" style="display:inline;">
+                            <input type="hidden" name="date" th:value="${selectedDate}">
+                            <button type="submit" class="action-btn action-btn-del"
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa suất chiếu này?');"
+                                    title="Delete showtime">🗑</button>
                         </form>
                     </td>
                 </tr>
