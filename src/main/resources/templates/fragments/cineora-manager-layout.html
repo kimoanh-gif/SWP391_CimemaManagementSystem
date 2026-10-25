@@ -50,8 +50,8 @@
             <span class="material-symbols-outlined">chair</span><span>Seat Type Management</span></a>
         <a th:href="@{/manager/seats}" class="cm-nav-link" th:classappend="${activeMenu == 'seats'} ? ' is-active'">
             <span class="material-symbols-outlined">grid_view</span><span>Seat Map Management</span></a>
-        <span class="cm-nav-link is-disabled" title="Coming soon">
-            <span class="material-symbols-outlined">newspaper</span><span>News Management</span></span>
+        <a th:href="@{/manager/news}" class="cm-nav-link" th:classappend="${activeMenu == 'news'} ? ' is-active'">
+            <span class="material-symbols-outlined">newspaper</span><span>News Management</span></a>
         <a th:href="@{/manager/showtimes}" class="cm-nav-link" th:classappend="${activeMenu == 'showtimes'} ? ' is-active'">
             <span class="material-symbols-outlined">schedule</span><span>Showtime Management</span></a>
         <a th:href="@{/manager/pricing}" class="cm-nav-link" th:classappend="${activeMenu == 'pricing'} ? ' is-active'">
