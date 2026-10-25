@@ -23,8 +23,7 @@ public class ProfileUpdateForm {
     public static ProfileUpdateForm from(CustomerProfile profile) {
         ProfileUpdateForm form = new ProfileUpdateForm();
         form.setFullName(profile.getFullName());
-        // Retained for server-side compatibility; the edit screen never submits this locked field.
-        form.setPhone(null);
+        form.setPhone(profile.getPhone());
         form.setDateOfBirth(profile.getDateOfBirth());
         return form;
     }

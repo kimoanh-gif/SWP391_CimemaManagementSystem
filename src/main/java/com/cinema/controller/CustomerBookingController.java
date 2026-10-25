@@ -5,6 +5,7 @@ import com.cinema.model.ShowtimeOption;
 import com.cinema.service.CustomerBookingService;
 import com.cinema.service.CustomerBookingService.BookingException;
 import com.cinema.service.SessionService;
+import com.cinema.service.VnpayService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,12 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/customer/booking")
@@ -30,11 +33,14 @@ public class CustomerBookingController {
 
     private final CustomerBookingService bookingService;
     private final SessionService sessionService;
+    private final VnpayService vnpayService;
 
     public CustomerBookingController(CustomerBookingService bookingService,
-                                     SessionService sessionService) {
+                                     SessionService sessionService,
+                                     VnpayService vnpayService) {
         this.bookingService = bookingService;
         this.sessionService = sessionService;
+        this.vnpayService = vnpayService;
     }
 
     @ModelAttribute
@@ -70,6 +76,19 @@ public class CustomerBookingController {
             movies = movies.stream()
                     .filter(movie -> movie.getMovieId() == movieId)
                     .toList();
+            // A Home-page "Book Tickets" click has no date. Open the first
+            // bookable day instead of showing an empty state for today.
+            if ((date == null || date.isBlank()) && movies.isEmpty()) {
+                for (int offset = 1; offset <= 14 && movies.isEmpty(); offset++) {
+                    LocalDate candidateDate = today.plusDays(offset);
+                    var candidateMovies = bookingService.getMoviesAndShowtimes(candidateDate);
+                    movies = candidateMovies.stream()
+                            .filter(movie -> movie.getMovieId() == movieId)
+                            .toList();
+                    if (!movies.isEmpty()) selectedDate = candidateDate;
+                }
+                model.addAttribute("selectedDate", selectedDate);
+            }
             model.addAttribute("selectedMovieId", movieId);
         }
         model.addAttribute("movies", movies);
@@ -134,16 +153,22 @@ public class CustomerBookingController {
         Integer showtimeId = (Integer) session.getAttribute(SESSION_SHOWTIME_ID);
         if (showtimeId == null) return "redirect:/customer/booking";
 
-        Integer currentBookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
-        if (currentBookingId != null) {
-            bookingService.cancelBooking(currentBookingId, customerAccountId(session));
-            session.removeAttribute(SESSION_BOOKING_ID);
-        }
-
         try {
             ShowtimeOption showtime = bookingService.getBookableShowtime(showtimeId);
+            Integer currentBookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+            List<Integer> selectedSeatIds = List.of();
+            if (currentBookingId != null) {
+                try {
+                    bookingService.getActiveBooking(currentBookingId, customerAccountId(session));
+                    selectedSeatIds = bookingService.getBookingSeatIds(currentBookingId, customerAccountId(session));
+                } catch (BookingException exception) {
+                    session.removeAttribute(SESSION_BOOKING_ID);
+                    currentBookingId = null;
+                }
+            }
             model.addAttribute("showtime", showtime);
-            model.addAttribute("seats", bookingService.getSeats(showtimeId));
+            model.addAttribute("seats", bookingService.getSeats(showtimeId, currentBookingId));
+            model.addAttribute("selectedSeatIds", selectedSeatIds);
             model.addAttribute("maxSeats", CustomerBookingService.MAX_SEATS_PER_BOOKING);
             model.addAttribute("activeStep", 2);
             return "customer/booking/seats";
@@ -278,7 +303,8 @@ public class CustomerBookingController {
 
     @PostMapping("/checkout")
     public String submitCheckout(@RequestParam(defaultValue = "VNPAY") String paymentMethod,
-                                 HttpSession session, RedirectAttributes redirectAttributes) {
+                                 HttpSession session, RedirectAttributes redirectAttributes,
+                                 jakarta.servlet.http.HttpServletRequest request) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
         Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
@@ -293,18 +319,63 @@ public class CustomerBookingController {
         }
     }
 
+    @GetMapping("/payment/vnpay/return")
+    public String handleVnpayReturn(@RequestParam Map<String, String> parameters,
+                                    HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!vnpayService.hasValidSignature(parameters)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "VNPay returned an invalid signature.");
+            return "redirect:/customer/booking/checkout";
+        }
+        var payment = vnpayService.findPayment(parameters.get("vnp_TxnRef"));
+        if (payment.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "The VNPay transaction could not be found.");
+            return "redirect:/customer/booking/checkout";
+        }
+        if (!"00".equals(parameters.get("vnp_ResponseCode"))) {
+            redirectAttributes.addFlashAttribute("errorMessage", "VNPay payment was cancelled or unsuccessful.");
+            return "redirect:/customer/booking/payment/" + payment.get().paymentId() + "?returned=true";
+        }
+        if ("PAID".equalsIgnoreCase(payment.get().status())) {
+            clearBookingSession(session);
+            session.removeAttribute("customerPaymentId");
+            return "redirect:/customer/booking/success/" + payment.get().bookingId();
+        }
+        redirectAttributes.addFlashAttribute("errorMessage", "Payment was received and is waiting for VNPay confirmation. Please refresh shortly.");
+        return "redirect:/customer/booking/payment/" + payment.get().paymentId() + "?returned=true";
+    }
+
     @GetMapping("/payment/{paymentId}")
-    public String showPayment(@PathVariable int paymentId, HttpSession session, Model model) {
+    public String showPayment(@PathVariable int paymentId,
+                              @RequestParam(defaultValue = "false") boolean returned,
+                              HttpSession session, Model model,
+                              jakarta.servlet.http.HttpServletRequest request) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
         try {
             var payment = bookingService.getPayment(paymentId, accountId);
+            if ("VNPAY".equalsIgnoreCase(payment.method())
+                    && "PENDING".equalsIgnoreCase(payment.status()) && vnpayService.isReady()) {
+                model.addAttribute("gatewayUrl", vnpayService.createPaymentUrl(payment, request));
+            }
             model.addAttribute("payment", payment);
             model.addAttribute("summary", bookingService.getActiveBooking(payment.bookingId(), accountId));
             return "customer/booking/payment";
         } catch (BookingException exception) {
             model.addAttribute("errorMessage", exception.getMessage());
             return "customer/booking/payment";
+        }
+    }
+
+    @GetMapping("/payment/{paymentId}/status")
+    @ResponseBody
+    public Map<String, Object> paymentStatus(@PathVariable int paymentId, HttpSession session) {
+        Integer accountId = customerAccountId(session);
+        if (accountId == null) return Map.of("status", "UNAUTHORIZED");
+        try {
+            var payment = bookingService.getPayment(paymentId, accountId);
+            return Map.of("status", payment.status(), "bookingId", payment.bookingId());
+        } catch (BookingException exception) {
+            return Map.of("status", "NOT_FOUND");
         }
     }
 
