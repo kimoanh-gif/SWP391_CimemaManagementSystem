@@ -40,6 +40,13 @@ public class AdminDashboardDao {
             """, ts(start), ts(end), ts(start), ts(end), ts(start), ts(end));
     }
 
+    public java.math.BigDecimal revenue(LocalDateTime start, LocalDateTime end) {
+        return jdbc.queryForObject(PAID + """
+            SELECT COALESCE(SUM(Amount), 0) FROM paid
+            WHERE PaidTime >= ? AND PaidTime < ?
+            """, java.math.BigDecimal.class, ts(start), ts(end));
+    }
+
     public List<Map<String, Object>> daily(LocalDateTime start, LocalDateTime end) {
         return jdbc.queryForList(PAID + """
             SELECT CAST(PaidTime AS date) day, SUM(Amount) amount FROM paid
