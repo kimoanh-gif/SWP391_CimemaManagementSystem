@@ -118,6 +118,32 @@
     };
     window.setInterval(update, 1000);
     update();
+
+    const statusUrl = document.body.dataset.paymentStatusUrl;
+    const successUrl = document.body.dataset.paymentSuccessUrl;
+    const gatewayStatus = document.querySelector("#gateway-status");
+    if (statusUrl && successUrl && document.querySelector("#open-vnpay")) {
+      const checkStatus = async () => {
+        try {
+          const response = await fetch(statusUrl, {
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) return;
+          const result = await response.json();
+          if (result.status === "PAID") {
+            if (gatewayStatus) gatewayStatus.textContent = "Payment confirmed. Opening your tickets…";
+            window.location.href = successUrl;
+          } else if (["FAILED", "CANCELLED", "EXPIRED"].includes(result.status)) {
+            if (gatewayStatus) gatewayStatus.textContent = `Payment ${result.status.toLowerCase()}.`;
+          }
+        } catch (_) {
+          // A temporary polling failure should not interrupt the payment window.
+        }
+      };
+      window.setInterval(checkStatus, 2000);
+      checkStatus();
+    }
   };
 
   if (document.body.dataset.page === "seats") setupSeats();

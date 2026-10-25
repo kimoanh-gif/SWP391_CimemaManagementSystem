@@ -119,6 +119,10 @@ public class CustomerBookingDAO {
     }
 
     public List<SeatOption> findSeats(int showtimeId) {
+        return findSeats(showtimeId, null);
+    }
+
+    public List<SeatOption> findSeats(int showtimeId, Integer currentBookingId) {
         String sql = """
                 SELECT seat.SeatID, seat.RowLabel, seat.SeatNumber, seat.GridRow, seat.GridColumn,
                        seatType.TypeName, seatType.PriceMultiplier,
@@ -130,6 +134,7 @@ public class CustomerBookingDAO {
                            WHERE bs.ShowtimeID = st.ShowtimeID
                              AND bs.SeatID = seat.SeatID
                              AND UPPER(b.[Status]) NOT IN ('CANCELLED', 'EXPIRED')
+                             AND b.BookingID <> COALESCE(?, -1)
                              AND (UPPER(bs.[Status]) IN ('BOOKED', 'CONFIRMED')
                                   OR (UPPER(bs.[Status]) = 'HELD' AND bs.HeldUntil > SYSDATETIME()))
                        ) THEN 0 ELSE 1 END AS Available
@@ -154,7 +159,19 @@ public class CustomerBookingDAO {
             seat.setPrice(rs.getBigDecimal("Price"));
             seat.setAvailable(rs.getBoolean("Available"));
             return seat;
-        }, showtimeId);
+        }, currentBookingId, showtimeId);
+    }
+
+    public List<Integer> findBookingSeatIds(int bookingId, int accountId) {
+        return jdbcTemplate.queryForList("""
+                SELECT bs.SeatID
+                FROM dbo.BookingSeat bs
+                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+                JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
+                WHERE b.BookingID = ? AND c.AccountID = ?
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
+                  AND UPPER(bs.[Status]) = 'HELD' AND bs.HeldUntil > SYSDATETIME()
+                """, Integer.class, bookingId, accountId);
     }
 
     public Optional<Integer> findCustomerId(int accountId) {
@@ -413,6 +430,53 @@ public class CustomerBookingDAO {
                 paymentId, accountId).stream().findFirst();
     }
 
+    public Optional<PaymentView> findPaymentByTransactionRef(String transactionRef) {
+        if (transactionRef == null || transactionRef.isBlank()) return Optional.empty();
+        return jdbcTemplate.query("""
+                SELECT p.PaymentID,p.BookingID,b.BookingCode,p.TransactionRef,p.Method,p.Amount,p.[Status],p.ExpiresAt,
+                       (SELECT MIN(bs.HeldUntil) FROM dbo.BookingSeat bs WHERE bs.BookingID=b.BookingID) HeldUntil
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                WHERE p.TransactionRef=?
+                """, (rs,n) -> new PaymentView(rs.getInt("PaymentID"), rs.getInt("BookingID"),
+                rs.getString("BookingCode"), rs.getString("TransactionRef"), rs.getString("Method"),
+                rs.getBigDecimal("Amount"), rs.getString("Status"),
+                rs.getObject("ExpiresAt", LocalDateTime.class), rs.getObject("HeldUntil", LocalDateTime.class)),
+                transactionRef).stream().findFirst();
+    }
+
+    public void applyVnpayResult(int paymentId, boolean successful, String providerTransactionNo,
+                                 String responseCode, String transactionStatus, String bankCode, String cardType) {
+        PaymentView payment = findPaymentById(paymentId)
+                .orElseThrow(() -> new IllegalStateException("The payment transaction could not be found."));
+        if (!"PENDING".equalsIgnoreCase(payment.status())) return;
+        if (!successful) {
+            jdbcTemplate.update("""
+                    UPDATE dbo.Payment SET [Status]='FAILED',ProviderTransactionNo=?,ResponseCode=?,
+                    TransactionStatus=?,BankCode=?,CardType=?,LastCallbackAt=SYSDATETIME(),UpdatedAt=SYSDATETIME()
+                    WHERE PaymentID=? AND [Status]='PENDING'
+                    """, providerTransactionNo, responseCode, transactionStatus, bankCode, cardType, paymentId);
+            return;
+        }
+        jdbcTemplate.update("""
+                UPDATE dbo.Payment SET [Status]='PAID',ProviderTransactionNo=?,ResponseCode=?,TransactionStatus=?,
+                BankCode=?,CardType=?,PaidAt=SYSDATETIME(),LastCallbackAt=SYSDATETIME(),UpdatedAt=SYSDATETIME()
+                WHERE PaymentID=? AND [Status]='PENDING'
+                """, providerTransactionNo, responseCode, transactionStatus, bankCode, cardType, paymentId);
+        confirmBookingAndIssueTickets(payment.bookingId());
+    }
+
+    private Optional<PaymentView> findPaymentById(int paymentId) {
+        return jdbcTemplate.query("""
+                SELECT p.PaymentID,p.BookingID,b.BookingCode,p.TransactionRef,p.Method,p.Amount,p.[Status],p.ExpiresAt,
+                       (SELECT MIN(bs.HeldUntil) FROM dbo.BookingSeat bs WHERE bs.BookingID=b.BookingID) HeldUntil
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID WHERE p.PaymentID=?
+                """, (rs,n) -> new PaymentView(rs.getInt("PaymentID"), rs.getInt("BookingID"),
+                rs.getString("BookingCode"), rs.getString("TransactionRef"), rs.getString("Method"),
+                rs.getBigDecimal("Amount"), rs.getString("Status"),
+                rs.getObject("ExpiresAt", LocalDateTime.class), rs.getObject("HeldUntil", LocalDateTime.class)),
+                paymentId).stream().findFirst();
+    }
+
     public void expirePaymentIfNeeded(int paymentId, int accountId) {
         jdbcTemplate.update("""
                 UPDATE p SET p.[Status]='EXPIRED',p.UpdatedAt=SYSDATETIME()
@@ -445,9 +509,13 @@ public class CustomerBookingDAO {
         if (payment.heldUntil() == null || !payment.heldUntil().isAfter(now))
             throw new IllegalStateException("Your seat hold has expired. Please select your seats again.");
         jdbcTemplate.update("UPDATE dbo.Payment SET [Status]='PAID',PaidAt=SYSDATETIME(),UpdatedAt=SYSDATETIME(),ResponseCode='00',TransactionStatus='SUCCESS' WHERE PaymentID=? AND [Status]='PENDING'", paymentId);
-        jdbcTemplate.update("UPDATE dbo.Booking SET [Status]='CONFIRMED' WHERE BookingID=? AND [Status]='PAYMENT_PENDING'", payment.bookingId());
-        jdbcTemplate.update("UPDATE dbo.BookingSeat SET [Status]='BOOKED',HeldUntil=NULL WHERE BookingID=? AND [Status]='HELD'", payment.bookingId());
-        List<Integer> bookingSeatIds = jdbcTemplate.queryForList("SELECT BookingSeatID FROM dbo.BookingSeat WHERE BookingID=?", Integer.class, payment.bookingId());
+        confirmBookingAndIssueTickets(payment.bookingId());
+    }
+
+    private void confirmBookingAndIssueTickets(int bookingId) {
+        jdbcTemplate.update("UPDATE dbo.Booking SET [Status]='CONFIRMED' WHERE BookingID=? AND [Status]='PAYMENT_PENDING'", bookingId);
+        jdbcTemplate.update("UPDATE dbo.BookingSeat SET [Status]='BOOKED',HeldUntil=NULL WHERE BookingID=? AND [Status]='HELD'", bookingId);
+        List<Integer> bookingSeatIds = jdbcTemplate.queryForList("SELECT BookingSeatID FROM dbo.BookingSeat WHERE BookingID=?", Integer.class, bookingId);
         for (Integer bookingSeatId : bookingSeatIds) {
             jdbcTemplate.update("""
                     IF NOT EXISTS (SELECT 1 FROM dbo.Ticket WHERE BookingSeatID=?)

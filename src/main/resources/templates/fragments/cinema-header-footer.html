@@ -69,7 +69,12 @@
             <!-- Customer account dropdown -->
             <details th:if="${currentUser.role == 'CUSTOMER'}" class="account-dropdown">
               <summary class="user-badge" title="Account menu">
-                <div class="user-avatar" th:text="${currentUser.fullName != null && !currentUser.fullName.isEmpty() ? #strings.substring(currentUser.fullName, 0, 1) : 'U'}">U</div>
+                <div class="user-avatar">
+                  <img th:if="${currentAvatarUrl != null and !#strings.isEmpty(currentAvatarUrl)}"
+                       th:src="${currentAvatarUrl}" alt="Profile photo" />
+                  <span th:unless="${currentAvatarUrl != null and !#strings.isEmpty(currentAvatarUrl)}"
+                        th:text="${currentUser.fullName != null && !currentUser.fullName.isEmpty() ? #strings.substring(currentUser.fullName, 0, 1) : 'U'}">U</span>
+                </div>
                 <div class="user-info-text">
                     <span class="user-name" th:text="${currentUser.fullName}">Customer</span>
                     <span class="user-points" th:if="${availablePoints != null}">

@@ -24,7 +24,7 @@ public class CustomerProfileService {
     public void updateProfile(int accountId, ProfileUpdateForm form) {
         getProfile(accountId);
         if (form.getPhone() != null && customerProfileDao.existsByPhoneExcludingAccount(form.getPhone(), accountId)) {
-            throw new IllegalArgumentException("This phone number is already used by another account.");
+            throw new DuplicatePhoneException("This phone number is already used by another account.");
         }
         customerProfileDao.updateProfile(accountId, form);
     }
@@ -33,5 +33,11 @@ public class CustomerProfileService {
     public void updateAvatar(int accountId, String avatarUrl) {
         getProfile(accountId);
         customerProfileDao.updateAvatar(accountId, avatarUrl);
+    }
+
+    public static class DuplicatePhoneException extends IllegalArgumentException {
+        public DuplicatePhoneException(String message) {
+            super(message);
+        }
     }
 }
