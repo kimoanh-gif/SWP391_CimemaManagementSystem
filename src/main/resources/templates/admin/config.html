@@ -89,6 +89,7 @@
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/cineora-admin.css" th:href="@{/css/cineora-admin.css}">
+<link rel="stylesheet" th:href="@{/css/cineora-admin-config.css}" href="/css/cineora-admin-config.css">
 </head>
 <body>
 
@@ -150,16 +151,16 @@
       <div class="page-header">
         <div>
           <h1>System Rules & Configuration</h1>
-          <p class="page-desc">Configure voucher rules, membership settings, booking rules, and system parameters</p>
+          <p class="page-desc">Adjust your cinema rules. Review your changes, then save each section.</p>
         </div>
       </div>
 
       <!-- Category Tabs -->
       <div class="category-tabs">
-        <button class="tab-btn active" onclick="switchTab('voucher')">Voucher Settings</button>
-        <button class="tab-btn" onclick="switchTab('membership')">Membership Ranks</button>
-        <button class="tab-btn" onclick="switchTab('booking')">Booking Rules</button>
-        <button class="tab-btn" onclick="switchTab('system')">System Settings</button>
+        <button class="tab-btn active" onclick="switchTab('voucher', this)">Voucher Settings</button>
+        <button class="tab-btn" onclick="switchTab('membership', this)">Membership Ranks</button>
+        <button class="tab-btn" onclick="switchTab('booking', this)">Booking Rules</button>
+        <button class="tab-btn" onclick="switchTab('system', this)">System Settings</button>
       </div>
 
       <!-- Loading -->
@@ -198,7 +199,7 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 // CSRF Helper
@@ -211,13 +212,14 @@ function getCsrfHeaders() {
 let settings = {};
 let membershipRanks = [];
 let currentValues = {};
+let savingCategory = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadAllData();
 });
 
 async function loadAllData() {
-  document.getElementById('loadingIndicator').classList.add('show');
+  document.getElementById('loadingIndicator').hidden = false;
   
   try {
     const [settingsResp, ranksResp] = await Promise.all([
@@ -228,6 +230,8 @@ async function loadAllData() {
     const settingsJson = await settingsResp.json();
     const ranksJson = await ranksResp.json();
     
+    if (!settingsResp.ok || !ranksResp.ok || !settingsJson.success || !ranksJson.success) throw new Error("Unable to load configuration");
+    currentValues = {};
     settings = settingsJson.data || {};
     membershipRanks = ranksJson.data || [];
     
@@ -242,7 +246,7 @@ async function loadAllData() {
     showToast('Failed to load configuration.', 'error');
     console.error(e);
   } finally {
-    document.getElementById('loadingIndicator').classList.remove('show');
+    document.getElementById('loadingIndicator').hidden = true;
   }
 }
 
@@ -253,9 +257,9 @@ function renderAllSections() {
   renderSystemSettings();
 }
 
-function switchTab(tab) {
+function switchTab(tab, button) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  button.classList.add('active');
   
   document.querySelectorAll('.config-section').forEach(sec => sec.classList.remove('active'));
   document.getElementById('section-' + tab).classList.add('active');
@@ -264,24 +268,35 @@ function switchTab(tab) {
 function renderVoucherSettings() {
   const container = document.getElementById('voucher-settings');
   const voucherSettings = settings['VOUCHER'] || [];
-  
-  if (voucherSettings.length === 0) {
+  if (!voucherSettings.length) {
     container.innerHTML = '<div class="loading">No voucher settings found.</div>';
     return;
   }
-  
-  container.innerHTML = `
-    <div class="setting-card">
-      <div class="setting-card-header">
-        <div>
-          <h3>Voucher Configuration</h3>
-          <p class="setting-desc">Configure voucher validity, limits, and conditions</p>
-        </div>
-        <span class="setting-badge voucher">VOUCHER</span>
-      </div>
-      ${voucherSettings.map(s => renderSettingItem(s)).join('')}
+  const presentation = {
+    VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Thời hạn hiệu lực', label: 'Thời hạn của voucher', unit: 'ngày' },
+    VOUCHER_MIN_BOOKING_AMOUNT: { order: 2, title: 'Giá trị đơn tối thiểu', label: 'Giá trị đặt vé tối thiểu', unit: 'VNĐ' },
+    VOUCHER_MAX_DISCOUNT_PERCENT: { order: 3, title: 'Giới hạn giảm giá', label: 'Phần trăm giảm tối đa', unit: '%' },
+    VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Giới hạn tổng số lượng', label: 'Số lượng voucher tối đa', unit: 'mã' },
+    VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Giới hạn mỗi tài khoản', label: 'Số voucher tối đa mỗi khách hàng', unit: 'mã' }
+  };
+  const ordered = [...voucherSettings].sort((a, b) => (presentation[a.settingKey]?.order || 99) - (presentation[b.settingKey]?.order || 99));
+  container.innerHTML = `<div class="voucher-policy">
+    <div class="voucher-toolbar">
+      <div><span class="voucher-eyebrow">VOUCHER SETTINGS</span><h2>Quy tắc voucher</h2><p>Điều chỉnh thời hạn, mức giảm và giới hạn số lượng.</p></div>
+      ${renderSaveBar('VOUCHER')}
     </div>
-  `;
+    <div class="voucher-policy-grid">
+      ${ordered.map((setting, index) => {
+        const info = presentation[setting.settingKey] || { title: setting.settingName, label: setting.settingName, unit: '' };
+        const field = renderSettingItem({ ...setting, settingName: info.label })
+          .replace('class="setting-input-wrap"', 'class="setting-input-wrap" data-unit="' + escHtml(info.unit) + '"');
+        return `<section class="voucher-policy-card" aria-labelledby="voucher-title-${setting.settingId}">
+          <div class="voucher-card-heading"><span class="voucher-step">${String(index + 1).padStart(2, '0')}</span><h3 id="voucher-title-${setting.settingId}">${escHtml(info.title)}</h3></div>
+          ${field}
+        </section>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 
 function renderBookingSettings() {
@@ -303,6 +318,7 @@ function renderBookingSettings() {
         <span class="setting-badge booking">BOOKING</span>
       </div>
       ${bookingSettings.map(s => renderSettingItem(s)).join('')}
+      ${renderSaveBar('BOOKING')}
     </div>
   `;
 }
@@ -326,44 +342,47 @@ function renderSystemSettings() {
         <span class="setting-badge system">SYSTEM</span>
       </div>
       ${systemSettings.map(s => renderSettingItem(s)).join('')}
+      ${renderSaveBar('SYSTEM')}
     </div>
   `;
+}
+
+function renderSaveBar(category) {
+  return `<div class="config-savebar">
+    <div><strong id="status-${category}" role="status" aria-live="polite">All changes saved</strong><p>Changes apply only after you save.</p></div>
+    <div class="config-save-actions">
+      <button type="button" class="btn btn-secondary" id="discard-${category}" onclick="discardChanges('${category}')" disabled>Discard</button>
+      <button type="button" class="btn btn-primary" id="save-${category}" onclick="saveCategory('${category}')" disabled>Save changes</button>
+    </div>
+  </div>`;
 }
 
 function renderSettingItem(setting) {
   const inputType = getInputType(setting);
   const hint = getValidationHint(setting);
-  const isReadonly = setting.validationRules && setting.validationRules.includes('readonly');
-  
-  return `
-    <div class="setting-item" data-id="${setting.settingId}">
-      <label class="setting-label">
-        ${setting.settingName}
-        ${isReadonly ? '<span style="color: var(--text-muted); font-weight: normal;"> (Read-only)</span>' : ''}
-      </label>
-      <div class="setting-input-wrap">
-        ${inputType === 'checkbox' ? `
-          <input type="checkbox" class="setting-checkbox" 
-                 ${setting.value === 'true' || setting.value === '1' ? 'checked' : ''}
-                 ${isReadonly ? 'disabled' : ''}
-                 onchange="handleSettingChange(${setting.settingId}, this.checked ? 'true' : 'false')">
-        ` : `
-          <input type="${inputType}" class="setting-input" 
-                 id="input-${setting.settingId}"
-                 value="${escHtml(setting.value || '')}"
-                 placeholder="Enter value"
-                 ${isReadonly ? 'disabled' : ''}
-                 oninput="handleInputChange(${setting.settingId}, this.value)"
-                 onblur="handleInputBlur(${setting.settingId})">
-        `}
-        ${!isReadonly ? `
-          <button class="btn btn-sm btn-secondary" onclick="resetToDefault(${setting.settingId})">Reset</button>
-        ` : ''}
-      </div>
-      ${hint ? `<div class="setting-hint">${hint}</div>` : ''}
-      <div class="setting-error" id="error-${setting.settingId}"></div>
+  const readonly = (setting.validationRules || '').includes('readonly');
+  const value = currentValues[setting.settingId] ?? setting.value ?? '';
+  const min = (setting.validationRules || '').match(/min:([\d.-]+)/)?.[1];
+  const max = (setting.validationRules || '').match(/max:([\d.-]+)/)?.[1];
+  return `<div class="setting-item" data-id="${setting.settingId}">
+    <div class="setting-details">
+      <label class="setting-label" for="input-${setting.settingId}">${escHtml(setting.settingName)}${readonly ? ' <span class="readonly-label">Read-only</span>' : ''}</label>
+      ${hint ? `<div class="setting-hint" id="hint-${setting.settingId}">${escHtml(hint)}</div>` : ''}
     </div>
-  `;
+    <div class="setting-control">
+      <div class="setting-input-wrap">
+        ${inputType === 'checkbox' ? `<input type="checkbox" class="setting-checkbox" id="input-${setting.settingId}"
+          ${value === 'true' || value === '1' ? 'checked' : ''} ${readonly ? 'disabled' : ''}
+          onchange="handleInputChange(${setting.settingId}, this.checked ? 'true' : 'false')">` :
+        `<input type="${inputType}" ${inputType === 'number' ? 'step="any"' : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
+          aria-describedby="${hint ? 'hint-' + setting.settingId + ' ' : ''}error-${setting.settingId}" ${readonly ? 'disabled' : ''}
+          ${min !== undefined ? `min="${min}"` : ''} ${max !== undefined ? `max="${max}"` : ''}
+          oninput="handleInputChange(${setting.settingId}, this.value)">`}
+        ${!readonly && setting.defaultValue != null ? `<button type="button" class="btn btn-sm btn-secondary reset-setting" onclick="resetToDefault(${setting.settingId})">Reset</button>` : ''}
+      </div>
+      <div class="setting-error" id="error-${setting.settingId}" role="alert"></div>
+    </div>
+  </div>`;
 }
 
 function getInputType(setting) {
@@ -389,74 +408,113 @@ function getValidationHint(setting) {
   return hints.join(' | ');
 }
 
+function findSetting(id) {
+  return Object.values(settings).flat().find(setting => setting.settingId === id);
+}
+
+function dirtySettings(category) {
+  return (settings[category] || []).filter(setting =>
+    !(setting.validationRules || '').includes('readonly') &&
+    String(currentValues[setting.settingId] ?? '') !== String(setting.value ?? ''));
+}
+
+function updateSaveState(category) {
+  const count = dirtySettings(category).length;
+  const busy = savingCategory !== null;
+  document.getElementById('save-' + category).disabled = busy || count === 0;
+  document.getElementById('discard-' + category).disabled = busy || count === 0;
+  document.getElementById('save-' + category).textContent = savingCategory === category ? 'Saving…' : 'Save changes';
+  const status = document.getElementById('status-' + category);
+  status.textContent = savingCategory === category ? 'Saving your changes…' : count ? count + ' unsaved change' + (count === 1 ? '' : 's') : 'All changes saved';
+  status.classList.toggle('is-dirty', count > 0);
+}
+
 function handleInputChange(settingId, value) {
   currentValues[settingId] = value;
-  const errorEl = document.getElementById('error-' + settingId);
-  if (errorEl) {
-    errorEl.classList.remove('show');
-    errorEl.textContent = '';
+  showSettingError(settingId, '');
+  updateSaveState(findSetting(settingId).category);
+}
+
+function showSettingError(settingId, message) {
+  const error = document.getElementById('error-' + settingId);
+  error.textContent = message;
+  error.classList.toggle('show', Boolean(message));
+  const input = document.getElementById('input-' + settingId);
+  input.classList.toggle('error', Boolean(message));
+  input.setAttribute('aria-invalid', String(Boolean(message)));
+}
+
+function resetToDefault(settingId) {
+  if (savingCategory) return;
+  const setting = findSetting(settingId);
+  if (setting.defaultValue == null) return;
+  const input = document.getElementById('input-' + settingId);
+  if (input.type === 'checkbox') input.checked = setting.defaultValue === 'true' || setting.defaultValue === '1';
+  else input.value = setting.defaultValue;
+  handleInputChange(settingId, String(setting.defaultValue));
+}
+
+function discardChanges(category) {
+  if (savingCategory) return;
+  for (const setting of settings[category] || []) {
+    currentValues[setting.settingId] = setting.value;
+    const input = document.getElementById('input-' + setting.settingId);
+    if (input.type === 'checkbox') input.checked = setting.value === 'true' || setting.value === '1';
+    else input.value = setting.value ?? '';
+    showSettingError(setting.settingId, '');
   }
-  const inputEl = document.getElementById('input-' + settingId);
-  if (inputEl) inputEl.classList.remove('error');
+  updateSaveState(category);
 }
 
-function handleInputBlur(settingId) {
-  validateAndSave(settingId);
-}
-
-async function validateAndSave(settingId) {
-  const newValue = currentValues[settingId];
-  if (newValue === undefined) return;
-  
+async function saveCategory(category) {
+  if (savingCategory) return;
+  const changes = dirtySettings(category);
+  if (!changes.length) return;
+  let invalid = false;
+  for (const setting of changes) {
+    const input = document.getElementById('input-' + setting.settingId);
+    if (!input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
+      showSettingError(setting.settingId, input.validationMessage || 'Enter a valid number.');
+      if (!invalid) input.focus();
+      invalid = true;
+    }
+  }
+  if (invalid) return;
+  savingCategory = category;
+  const section = document.getElementById('section-' + category.toLowerCase());
+  const editable = [...section.querySelectorAll('input:not(:disabled), .reset-setting:not(:disabled)')];
+  editable.forEach(control => control.disabled = true);
+  Object.keys(settings).forEach(key => { if (document.getElementById('save-' + key)) updateSaveState(key); });
+  let failed = 0;
   try {
-    const resp = await fetch('/api/admin/config/settings/' + settingId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
-      body: JSON.stringify({ value: newValue })
-    });
-    
-    const json = await resp.json();
-    
-    if (json.success) {
-      showToast(json.message, 'success');
-      currentValues[settingId] = newValue;
-    } else {
-      const errorEl = document.getElementById('error-' + settingId);
-      const inputEl = document.getElementById('input-' + settingId);
-      if (errorEl) {
-        errorEl.textContent = json.message;
-        errorEl.classList.add('show');
+    for (const setting of changes) {
+      const value = currentValues[setting.settingId];
+      try {
+        const response = await fetch('/api/admin/config/settings/' + setting.settingId, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
+          body: JSON.stringify({ value })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Unable to save this setting.');
+        setting.value = value;
+        showSettingError(setting.settingId, '');
+      } catch (error) {
+        failed++;
+        showSettingError(setting.settingId, error.message || 'Connection failed. Please try again.');
       }
-      if (inputEl) inputEl.classList.add('error');
     }
-  } catch (e) {
-    showToast('An error occurred.', 'error');
+    showToast(failed ? failed + ' change(s) could not be saved. Check the highlighted fields and try again.' : 'Configuration saved successfully.', failed ? 'error' : 'success');
+  } finally {
+    savingCategory = null;
+    editable.forEach(control => control.disabled = false);
+    Object.keys(settings).forEach(key => { if (document.getElementById('save-' + key)) updateSaveState(key); });
   }
 }
 
-async function resetToDefault(settingId) {
-  if (!confirm('Reset this setting to default value?')) return;
-  
-  try {
-    const resp = await fetch('/api/admin/config/settings/' + settingId + '/reset', {
-      method: 'POST',
-      headers: getCsrfHeaders() }
-    );
-    
-    const json = await resp.json();
-    
-    if (json.success) {
-      showToast('Reset to default: ' + json.newValue, 'info');
-      const inputEl = document.getElementById('input-' + settingId);
-      if (inputEl) inputEl.value = json.newValue;
-      currentValues[settingId] = json.newValue;
-    } else {
-      showToast(json.message, 'error');
-    }
-  } catch (e) {
-    showToast('An error occurred.', 'error');
-  }
-}
+window.addEventListener('beforeunload', event => {
+  const pending = Object.keys(settings).some(category => dirtySettings(category).length > 0) || Object.keys(rankInputs).length > 0;
+  if (pending) { event.preventDefault(); event.returnValue = ''; }
+});
 
 function renderMembershipRanks() {
   const container = document.getElementById('membership-ranks');
@@ -486,13 +544,13 @@ function renderMembershipRanks() {
           <div class="setting-input-wrap">
             <input type="number" class="setting-input" 
                    id="rank-${rank.rankId}" 
-                   value="${rank.minPoints}"
+                   value="${escHtml(rankInputs[rank.rankId] ?? rank.minPoints)}"
                    min="0"
                    oninput="handleRankInput(${rank.rankId}, this.value)">
             <span style="color: var(--text-secondary); font-size: 14px;">points</span>
           </div>
           <div class="setting-error" id="rank-error-${rank.rankId}"></div>
-          <button class="btn btn-sm btn-primary" style="margin-top: 8px;" onclick="updateRankThreshold(${rank.rankId})">
+          <button class="btn btn-sm btn-primary" id="save-rank-${rank.rankId}" ${rankInputs[rank.rankId] === undefined ? 'disabled' : ''} style="margin-top: 8px;" onclick="updateRankThreshold(${rank.rankId})">
             Save Threshold
           </button>
         </div>
@@ -523,12 +581,18 @@ function parseBenefits(benefitsJson) {
 let rankInputs = {};
 
 function handleRankInput(rankId, value) {
-  rankInputs[rankId] = value;
+  const saved = membershipRanks.find(rank => rank.rankId === rankId);
+  if (saved && String(saved.minPoints) === value) delete rankInputs[rankId];
+  else rankInputs[rankId] = value;
+  document.getElementById('save-rank-' + rankId).disabled = rankInputs[rankId] === undefined;
 }
 
 async function updateRankThreshold(rankId) {
   const newValue = rankInputs[rankId];
   if (newValue === undefined) return;
+  if (newValue.trim() === '' || !Number.isInteger(Number(newValue)) || Number(newValue) < 0) {
+    showToast('Enter a whole number of points, zero or greater.', 'error'); return;
+  }
   
   try {
     const resp = await fetch('/api/admin/config/membership/ranks/' + rankId + '/threshold', {
@@ -543,6 +607,7 @@ async function updateRankThreshold(rankId) {
       showToast(json.message, 'success');
       document.getElementById('rank-error-' + rankId).textContent = '';
       document.getElementById('rank-error-' + rankId).classList.remove('show');
+      delete rankInputs[rankId];
       await loadMembershipRanks();
     } else {
       const errorEl = document.getElementById('rank-error-' + rankId);
