@@ -196,18 +196,18 @@ public class SystemConfigApiController {
     @PutMapping("/membership/ranks/{id}/threshold")
     public ResponseEntity<?> updateRankThreshold(
             @PathVariable int id,
-            @RequestBody Map<String, Integer> body) {
+            @RequestBody com.fasterxml.jackson.databind.JsonNode body) {
         
-        Integer newMinPoints = body.get("minPoints");
-        if (newMinPoints == null) {
+        var points = body.get("minPoints");
+        if (points == null || !points.isIntegralNumber() || !points.canConvertToInt() || points.intValue() < 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "code", "INVALID_REQUEST",
-                    "message", "minPoints is required."
+                    "message", "minPoints must be a whole number between 0 and 2147483647."
             ));
         }
 
-        var result = service.updateRankThreshold(id, newMinPoints);
+        var result = service.updateRankThreshold(id, points.intValue());
         
         return result.success()
                 ? ResponseEntity.ok(Map.of(
