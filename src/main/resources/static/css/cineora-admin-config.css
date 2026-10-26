@@ -1,0 +1,77 @@
+/* Compact configuration forms; loaded after the shared admin theme. */
+.admin-content { max-width: 1180px; padding-bottom: 40px; }
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 26px; line-height: 1.35; margin-bottom: 8px; }
+.page-desc { line-height: 1.7; }
+.category-tabs { gap: 10px; margin-bottom: 24px; }
+.tab-btn { min-height: 44px; white-space: nowrap; }
+.settings-grid { grid-template-columns: minmax(0, 1fr); }
+.setting-card { min-width: 0; padding: 26px 28px 0; border-radius: 18px; }
+.setting-card-header { padding-bottom: 22px; margin-bottom: 0; gap: 16px; }
+.setting-card-header h3 { font-size: 17px; margin-bottom: 7px; }
+.setting-desc { font-size: 13px; line-height: 1.6; }
+.setting-badge { margin-top: 3px; padding: 5px 10px; letter-spacing: .04em; }
+.setting-item { display: grid; grid-template-columns: minmax(0, 1fr) 280px; align-items: center; gap: 24px; padding: 20px 0; margin: 0; border-bottom: 1px solid var(--border); }
+.setting-label { font-size: 13px; line-height: 1.6; margin: 0; }
+.setting-hint { font-size: 12px; line-height: 1.5; margin-top: 5px; }
+.readonly-label { display: inline-block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+.setting-control { min-width: 0; }
+.setting-input-wrap { display: grid; grid-template-columns: 200px 70px; gap: 10px; align-items: center; }
+.setting-input { box-sizing: border-box; width: 200px; min-width: 0; height: 44px; padding: 10px 13px; flex: none; font-size: 14px; font-variant-numeric: tabular-nums; border-radius: 10px; }
+.setting-checkbox { width: 20px; height: 20px; margin: 12px 0; }
+.reset-setting { height: 36px; padding: 6px 10px; box-shadow: none; }
+.setting-error { font-size: 12px; line-height: 1.5; margin-top: 7px; }
+.config-savebar { position: sticky; bottom: 14px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 16px -12px 0; padding: 18px 12px; background: rgba(255,255,255,.98); border-radius: 12px; box-shadow: 0 -6px 18px rgba(69,33,38,.035); }
+.config-savebar strong { display: block; color: #28745a; font-size: 13px; font-weight: 600; }
+.config-savebar strong.is-dirty { color: #9a6410; }
+.config-savebar p { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; }
+.config-save-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.config-save-actions .btn { min-height: 42px; min-width: 100px; }
+.config-save-actions .btn-primary { min-width: 145px; }
+.btn:disabled { cursor: not-allowed; opacity: .5; }
+.ranks-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 20px; }
+.rank-card { border-width: 1px; border-radius: 18px; padding: 24px; }
+.rank-threshold .setting-label { margin-bottom: 8px; }
+.rank-threshold .setting-input-wrap { grid-template-columns: 200px auto; }
+.rank-threshold .btn-primary { min-height: 40px; margin-top: 14px !important; }
+.rank-benefits { margin-top: 20px; padding-top: 18px; }
+/* Voucher view: retain only the real policy fields from the supplied design. */
+.voucher-policy { min-width: 0; }
+.voucher-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 28px; margin-bottom: 22px; }
+.voucher-eyebrow { color: var(--cineora-red); font-size: 10px; font-weight: 700; letter-spacing: .13em; }
+.voucher-toolbar h2 { margin: 6px 0 8px; font-size: 24px; line-height: 1.3; }
+.voucher-toolbar > div > p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+.voucher-toolbar .config-savebar { position: static; padding: 0; margin: 0; background: none; box-shadow: none; flex-direction: column; align-items: flex-end; gap: 10px; }
+.voucher-toolbar .config-savebar strong { font-size: 12px; font-weight: 500; }
+.voucher-toolbar .config-savebar p { display: none; }
+.voucher-policy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.voucher-policy-card { min-width: 0; padding: 22px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 2px 8px rgba(40,32,42,.035); }
+.voucher-card-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.voucher-step { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; background: #fff0e8; color: #b3001f; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.voucher-card-heading h3 { margin: 0; font-size: 15px; line-height: 1.5; font-weight: 600; }
+.voucher-policy .setting-item { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 0; border: 0; }
+.voucher-policy .setting-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.voucher-policy .setting-hint { margin-top: 4px; font-size: 11px; }
+.voucher-policy .setting-input-wrap { position: relative; grid-template-columns: 200px 64px; gap: 10px; }
+.voucher-policy .setting-input { padding-right: 48px; background: var(--surface-raised); font-weight: 500; }
+.voucher-policy .setting-input-wrap::after { content: attr(data-unit); pointer-events: none; position: absolute; left: 146px; top: 0; width: 30px; height: 44px; display: grid; place-items: center; color: var(--text-secondary); font-size: 11px; }
+.voucher-policy .reset-setting { background: transparent; border-color: transparent; color: var(--text-secondary); }
+.voucher-policy .reset-setting:hover { background: var(--purple-50); color: var(--cineora-red); }
+@media (max-width: 1050px) {
+  .voucher-policy-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .setting-card { padding: 22px 18px 0; }
+  .setting-item { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 18px 0; }
+  .setting-input-wrap { grid-template-columns: minmax(0, 200px) 70px; }
+  .setting-input { width: 100%; }
+  .config-savebar { flex-wrap: wrap; bottom: 8px; margin: 12px -6px 0; padding: 16px 6px; }
+  .config-save-actions { width: 100%; }
+  .config-save-actions .btn { flex: 1; min-width: 0; }
+  .page-header h1 { font-size: 22px; }
+  .voucher-toolbar { flex-direction: column; align-items: stretch; gap: 18px; }
+  .voucher-toolbar .config-savebar { align-items: stretch; }
+  .voucher-policy-card { padding: 20px 18px; }
+  .voucher-policy .setting-input-wrap { grid-template-columns: minmax(0, 200px) 64px; }
+  .voucher-policy .setting-input-wrap::after { left: min(146px, calc(100% - 128px)); }
+}
