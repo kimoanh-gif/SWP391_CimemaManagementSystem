@@ -174,7 +174,12 @@
                 th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
               ></strong>
             </div>
-            <button class="button primary full" type="submit">
+            <button
+              id="food-continue-button"
+              class="button primary full"
+              type="submit"
+              th:hidden="${summary.foodTotal == null or summary.foodTotal.signum() == 0}"
+            >
               Continue
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>

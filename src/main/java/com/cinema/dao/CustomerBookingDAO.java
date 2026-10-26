@@ -7,6 +7,7 @@ import com.cinema.model.SeatOption;
 import com.cinema.model.ShowtimeOption;
 import com.cinema.model.PaymentView;
 import com.cinema.model.CustomerTicket;
+import com.cinema.model.TicketVerification;
 import com.cinema.model.BookingHistoryItem;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -536,6 +537,27 @@ public class CustomerBookingDAO {
                 """, (rs,n) -> new CustomerTicket(rs.getInt("TicketID"),rs.getString("QRCode"),rs.getString("TicketStatus"),
                 rs.getString("BookingCode"),rs.getString("Title"),rs.getString("RoomName"),
                 rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabel"),rs.getString("PosterURL")), bookingId, accountId);
+    }
+
+    public Optional<TicketVerification> findTicketByQrCode(String qrCode) {
+        if (qrCode == null || qrCode.isBlank()) return Optional.empty();
+        return jdbcTemplate.query("""
+                SELECT t.TicketID,t.QRCode,t.TicketStatus,b.BookingCode,a.FullName,a.Email,a.Phone,
+                       m.Title,r.RoomName,st.StartTime,CONCAT(s.RowLabel,s.SeatNumber) SeatLabel
+                FROM dbo.Ticket t
+                JOIN dbo.BookingSeat bs ON bs.BookingSeatID=t.BookingSeatID
+                JOIN dbo.Booking b ON b.BookingID=bs.BookingID
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                JOIN dbo.Account a ON a.AccountID=c.AccountID
+                JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID=st.MovieID
+                JOIN dbo.Room r ON r.RoomID=st.RoomID
+                JOIN dbo.Seat s ON s.SeatID=bs.SeatID
+                WHERE t.QRCode=?
+                """, (rs,n) -> new TicketVerification(rs.getInt("TicketID"),rs.getString("QRCode"),
+                rs.getString("TicketStatus"),rs.getString("BookingCode"),rs.getString("FullName"),
+                rs.getString("Email"),rs.getString("Phone"),rs.getString("Title"),rs.getString("RoomName"),
+                rs.getObject("StartTime",LocalDateTime.class),rs.getString("SeatLabel")), qrCode).stream().findFirst();
     }
 
     public List<BookingHistoryItem> findBookingHistory(int accountId) {

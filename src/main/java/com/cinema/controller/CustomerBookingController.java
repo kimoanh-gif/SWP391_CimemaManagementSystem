@@ -1,6 +1,7 @@
 package com.cinema.controller;
 
 import com.cinema.model.BookingSummary;
+import com.cinema.model.CustomerTicket;
 import com.cinema.model.ShowtimeOption;
 import com.cinema.service.CustomerBookingService;
 import com.cinema.service.CustomerBookingService.BookingException;
@@ -8,6 +9,7 @@ import com.cinema.service.SessionService;
 import com.cinema.service.VnpayService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,17 +18,24 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
+
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/customer/booking")
 public class CustomerBookingController {
+
+    @Value("${app.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
 
     private static final String SESSION_SHOWTIME_ID = "customerBookingShowtimeId";
     private static final String SESSION_BOOKING_ID = "customerPendingBookingId";
@@ -335,12 +344,21 @@ public class CustomerBookingController {
             redirectAttributes.addFlashAttribute("errorMessage", "VNPay payment was cancelled or unsuccessful.");
             return "redirect:/customer/booking/payment/" + payment.get().paymentId() + "?returned=true";
         }
-        if ("PAID".equalsIgnoreCase(payment.get().status())) {
+
+        // VNPay may redirect the browser before its server-to-server IPN reaches a
+        // local ngrok tunnel. The signed return contains the same transaction data,
+        // so process it idempotently to make local/sandbox confirmation immediate.
+        String resultCode = vnpayService.processIpn(parameters);
+        var updatedPayment = vnpayService.findPayment(parameters.get("vnp_TxnRef"));
+        if (updatedPayment.isPresent() && "PAID".equalsIgnoreCase(updatedPayment.get().status())) {
             clearBookingSession(session);
             session.removeAttribute("customerPaymentId");
-            return "redirect:/customer/booking/success/" + payment.get().bookingId();
+            return "redirect:/customer/booking/success/" + updatedPayment.get().bookingId();
         }
-        redirectAttributes.addFlashAttribute("errorMessage", "Payment was received and is waiting for VNPay confirmation. Please refresh shortly.");
+        String message = "04".equals(resultCode)
+                ? "VNPay returned an amount that does not match this booking."
+                : "Payment was received but could not be confirmed. Please try again.";
+        redirectAttributes.addFlashAttribute("errorMessage", message);
         return "redirect:/customer/booking/payment/" + payment.get().paymentId() + "?returned=true";
     }
 
@@ -355,7 +373,8 @@ public class CustomerBookingController {
             var payment = bookingService.getPayment(paymentId, accountId);
             if ("VNPAY".equalsIgnoreCase(payment.method())
                     && "PENDING".equalsIgnoreCase(payment.status()) && vnpayService.isReady()) {
-                model.addAttribute("gatewayUrl", vnpayService.createPaymentUrl(payment, request));
+                String gatewayUrl = vnpayService.createPaymentUrl(payment, request);
+                model.addAttribute("gatewayUrl", gatewayUrl);
             }
             model.addAttribute("payment", payment);
             model.addAttribute("summary", bookingService.getActiveBooking(payment.bookingId(), accountId));
@@ -424,6 +443,7 @@ public class CustomerBookingController {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
         model.addAttribute("tickets", bookingService.getTickets(bookingId, accountId));
+        model.addAttribute("ticketBaseUrl", publicBaseUrl.replaceAll("/+$", ""));
         return "customer/booking/tickets";
     }
 
@@ -431,8 +451,31 @@ public class CustomerBookingController {
     public String showHistory(HttpSession session, Model model) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
+        var bookings = bookingService.getBookingHistory(accountId);
+        LocalDateTime now = LocalDateTime.now();
+        long confirmedCount = bookings.stream()
+                .filter(item -> "CONFIRMED".equalsIgnoreCase(item.bookingStatus()))
+                .count();
+        long upcomingCount = bookings.stream()
+                .filter(item -> "CONFIRMED".equalsIgnoreCase(item.bookingStatus()))
+                .filter(item -> item.startTime() != null && item.startTime().isAfter(now))
+                .count();
+        BigDecimal totalSpent = bookings.stream()
+                .filter(item -> "PAID".equalsIgnoreCase(item.paymentStatus()))
+                .map(item -> item.totalAmount() == null ? BigDecimal.ZERO : item.totalAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<Integer, List<CustomerTicket>> ticketsByBooking = new LinkedHashMap<>();
+        bookings.stream()
+                .filter(item -> "CONFIRMED".equalsIgnoreCase(item.bookingStatus()))
+                .forEach(item -> ticketsByBooking.put(
+                        item.bookingId(), bookingService.getTickets(item.bookingId(), accountId)));
         model.addAttribute("currentUser", sessionService.getCurrentUser(session));
-        model.addAttribute("bookings", bookingService.getBookingHistory(accountId));
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("confirmedCount", confirmedCount);
+        model.addAttribute("upcomingCount", upcomingCount);
+        model.addAttribute("totalSpent", totalSpent);
+        model.addAttribute("ticketsByBooking", ticketsByBooking);
+        model.addAttribute("ticketBaseUrl", publicBaseUrl.replaceAll("/+$", ""));
         return "customer/booking/history";
     }
 
