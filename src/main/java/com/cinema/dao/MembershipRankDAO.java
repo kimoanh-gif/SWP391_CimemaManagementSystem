@@ -116,6 +116,10 @@ public class MembershipRankDAO {
             minPoints, rankId);
     }
 
+    public void lockThresholds() {
+        jdbcTemplate.queryForList("SELECT RankID FROM dbo.MembershipRank WITH (UPDLOCK, HOLDLOCK) ORDER BY RankID");
+    }
+
     public int delete(int rankId) {
         return jdbcTemplate.update("DELETE FROM dbo.MembershipRank WHERE RankID = ?", rankId);
     }

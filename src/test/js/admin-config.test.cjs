@@ -65,3 +65,33 @@ test('navigation warns only while there are unsaved changes',async()=>{
   f.run('handleInputChange(1,"30")');f.events.beforeunload(event);assert.equal(prevented,1);
   await f.run('saveCategory("VOUCHER")');f.events.beforeunload(event);assert.equal(prevented,1);
 });
+
+function ranksFixture() {
+ const f=fixture(); f.run('membershipRanks=[{rankId:1,name:"SILVER",minPoints:0,maxPoints:499},{rankId:2,name:"GOLD",minPoints:500,maxPoints:1999},{rankId:3,name:"PLATINUM",minPoints:2000,maxPoints:null}];');return f;
+}
+test('rank validation rejects empty, negative, fractional, exponent and oversized numbers', async()=>{
+ const f=ranksFixture();for(const value of ['', '-1', '1.5', '1e3', '2147483648']){
+  f.run('handleRankInput(2,'+JSON.stringify(value)+')');await f.run('updateRankThreshold(2)');
+  assert.equal(f.calls.length,0);assert.equal(f.element('save-rank-2').disabled,true);
+ }
+});
+test('rank thresholds cannot overlap previous maximum or exceed their own maximum',()=>{
+ const f=ranksFixture();assert.notEqual(f.run('rankValidationMessage(2,"499")'),'');
+ assert.notEqual(f.run('rankValidationMessage(2,"2000")'),'');
+ assert.equal(f.run('rankValidationMessage(2,"600")'),'');
+ assert.equal(f.run('rankValidationMessage(3,"2500")'),'');
+});
+test('saving a rank preserves another rank draft and refreshes real data',async()=>{
+ const f=ranksFixture();f.run('handleRankInput(2,"600");handleRankInput(3,"2500")');
+ f.replies.push({success:true},{success:true,data:[{rankId:1,name:'SILVER',minPoints:0,maxPoints:499},{rankId:2,name:'GOLD',minPoints:600,maxPoints:1999},{rankId:3,name:'PLATINUM',minPoints:2000,maxPoints:null}]});
+ await f.run('updateRankThreshold(2)');
+ assert.deepEqual(JSON.parse(f.calls[0].options.body),{minPoints:600});
+ assert.equal(f.run('rankInputs[2]'),undefined);assert.equal(f.run('rankInputs[3]'),'2500');
+ assert.equal(f.element('rank-3').disabled,false);
+});
+test('rank server error preserves draft and discard returns to saved threshold',async()=>{
+ const f=ranksFixture();f.run('handleRankInput(2,"600")');f.replies.push({success:false,message:'Threshold changed by another user'});
+ await f.run('updateRankThreshold(2)');
+ assert.equal(f.run('rankInputs[2]'),'600');assert.equal(f.element('rank-error-2').textContent,'Threshold changed by another user');
+ f.run('discardRank(2)');assert.equal(f.run('rankInputs[2]'),undefined);assert.equal(f.element('rank-2').value,500);
+});
