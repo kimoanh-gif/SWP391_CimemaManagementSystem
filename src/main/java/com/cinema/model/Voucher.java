@@ -133,7 +133,7 @@ public class Voucher {
 
     public String getDiscountDisplay() {
         if (discountValue == null) return "Giảm giá đặc biệt";
-        if ("PERCENTAGE".equalsIgnoreCase(discountType) || "%".equals(discountType)) {
+        if (VoucherDiscounts.isPercentage(discountType)) {
             return "Giảm " + discountValue.stripTrailingZeros().toPlainString() + "%";
         }
         DecimalFormat df = new DecimalFormat("###,###");
