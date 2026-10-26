@@ -20,29 +20,137 @@ public class AdminDashboardService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> load() {
+        return load("day");
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> load(String requestedPeriod) {
+        return load(requestedPeriod, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> load(String requestedPeriod, String from, String to) {
+        LocalDate fromDate = parseDate(from);
+        LocalDate toDate = parseDate(to);
+        if ((fromDate == null) != (toDate == null)) {
+            throw new IllegalArgumentException("Vui lòng chọn cả Từ ngày và Đến ngày.");
+        }
+        if (fromDate != null && (fromDate.isAfter(toDate) || toDate.isAfter(fromDate.plusYears(10)))) {
+            throw new IllegalArgumentException("Từ ngày phải trước hoặc bằng Đến ngày; khoảng chọn tối đa 10 năm.");
+        }
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDate today = now.toLocalDate();
         LocalDateTime end = today.plusDays(1).atStartOfDay();
         Map<String,Object> data = new LinkedHashMap<>(dao.summary(today.atStartOfDay(),end));
-        List<Map<String,Object>> raw = dao.daily(today.minusDays(6).atStartOfDay(),end);
-        Map<LocalDate,BigDecimal> byDate = new HashMap<>();
-        raw.forEach(row -> byDate.put(((java.sql.Date) row.get("day")).toLocalDate(), (BigDecimal)row.get("amount")));
-        BigDecimal max = byDate.values().stream().max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
-        List<Map<String,Object>> days = new ArrayList<>();
-        for(int i=6;i>=0;i--) {
-            LocalDate day=today.minusDays(i);
-            BigDecimal amount=byDate.getOrDefault(day,BigDecimal.ZERO);
-            BigDecimal height=max.signum()==0?BigDecimal.ZERO:amount.multiply(BigDecimal.valueOf(100)).divide(max,2,RoundingMode.HALF_UP);
-            days.add(Map.of("day",day,"amount",amount,"height",height,"peak",amount.signum()>0 && amount.compareTo(max)==0));
-        }
-        data.put("days",days);
-        data.put("weekTotal",byDate.values().stream().reduce(BigDecimal.ZERO,BigDecimal::add));
+        addRevenueChart(data, requestedPeriod, today, fromDate, toDate);
         data.put("topMovies",dao.topMovies(today.minusDays(6).atStartOfDay(),end));
         data.put("recent",dao.recentBookings());
         data.put("upcoming",dao.upcoming(now,end));
         data.put("updatedAt",now);
-        data.put("startDate",today.minusDays(6));
         data.put("today",today);
         return data;
+    }
+
+    private LocalDate parseDate(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            LocalDate date = LocalDate.parse(value);
+            if (date.getYear() < 1900 || date.getYear() > 9998) throw new IllegalArgumentException();
+            return date;
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Ngày không hợp lệ. Vui lòng chọn ngày từ năm 1900 đến 9998.");
+        }
+    }
+
+    private void addRevenueChart(Map<String, Object> data, String requestedPeriod, LocalDate today,
+                                 LocalDate fromDate, LocalDate toDate) {
+        String period = Set.of("day", "week", "month", "quarter", "year").contains(requestedPeriod == null ? "" : requestedPeriod)
+                ? requestedPeriod : "day";
+        LocalDate start;
+        int count;
+        String description;
+        switch (period) {
+            case "week" -> {
+                start = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(7);
+                count = 8;
+                description = "8 tuần gần nhất · Thứ Hai – Chủ nhật";
+            }
+            case "month" -> { start = today.withDayOfYear(1); count = 12; description = "12 tháng của năm " + today.getYear(); }
+            case "quarter" -> { start = today.withDayOfYear(1); count = 4; description = "4 quý của năm " + today.getYear(); }
+            case "year" -> { start = today.withDayOfYear(1).minusYears(4); count = 5; description = "5 năm gần nhất"; }
+            default -> { start = today.minusDays(6); count = 7; description = "7 ngày gần nhất"; }
+        }
+        List<Map<String, Object>> bars = new ArrayList<>();
+        boolean custom = fromDate != null;
+        LocalDate rangeEnd = null;
+        Map<LocalDate, BigDecimal> dailyAmounts = new HashMap<>();
+        if (custom) {
+            start = fromDate;
+            rangeEnd = toDate.plusDays(1);
+            description = "Doanh thu trong khoảng ngày đã chọn · Tuần tính từ thứ Hai";
+            LocalDate queryEnd = rangeEnd.isAfter(today.plusDays(1)) ? today.plusDays(1) : rangeEnd;
+            if (start.isBefore(queryEnd)) {
+                for (Map<String, Object> row : dao.daily(start.atStartOfDay(), queryEnd.atStartOfDay())) {
+                    dailyAmounts.put(((java.sql.Date) row.get("day")).toLocalDate(), (BigDecimal) row.get("amount"));
+                }
+            }
+        }
+        LocalDate cursor = start;
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal max = BigDecimal.ZERO;
+        for (int i = 0; custom ? cursor.isBefore(rangeEnd) : i < count; i++) {
+            LocalDate bucketStart = custom ? switch (period) {
+                case "week" -> cursor.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                case "month" -> cursor.withDayOfMonth(1);
+                case "quarter" -> LocalDate.of(cursor.getYear(), ((cursor.getMonthValue() - 1) / 3) * 3 + 1, 1);
+                case "year" -> cursor.withDayOfYear(1);
+                default -> cursor;
+            } : cursor;
+            LocalDate next = switch (period) {
+                case "week" -> bucketStart.plusWeeks(1);
+                case "month" -> bucketStart.plusMonths(1);
+                case "quarter" -> bucketStart.plusMonths(3);
+                case "year" -> bucketStart.plusYears(1);
+                default -> cursor.plusDays(1);
+            };
+            if (custom && next.isAfter(rangeEnd)) next = rangeEnd;
+            // Never include future-dated payments in the current or a future bucket.
+            LocalDate queryEnd = next.isAfter(today.plusDays(1)) ? today.plusDays(1) : next;
+            BigDecimal amount = BigDecimal.ZERO;
+            if (custom) {
+                for (LocalDate date = cursor; date.isBefore(next); date = date.plusDays(1)) {
+                    amount = amount.add(dailyAmounts.getOrDefault(date, BigDecimal.ZERO));
+                }
+            } else if (!cursor.isAfter(today)) {
+                amount = dao.revenue(cursor.atStartOfDay(), queryEnd.atStartOfDay());
+            }
+            String label = switch (period) {
+                case "month" -> "T" + cursor.getMonthValue() + "/" + cursor.getYear();
+                case "quarter" -> "Q" + ((cursor.getMonthValue() - 1) / 3 + 1) + "/" + cursor.getYear();
+                case "year" -> String.valueOf(cursor.getYear());
+                default -> cursor.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy"));
+            };
+            Map<String, Object> bar = new LinkedHashMap<>();
+            bar.put("label", label);
+            bar.put("start", cursor);
+            bar.put("end", next.minusDays(1));
+            bar.put("amount", amount);
+            bars.add(bar);
+            total = total.add(amount);
+            max = max.max(amount);
+            cursor = next;
+        }
+        for (Map<String, Object> bar : bars) {
+            BigDecimal amount = (BigDecimal) bar.get("amount");
+            bar.put("height", max.signum() == 0 ? BigDecimal.ZERO
+                    : amount.multiply(BigDecimal.valueOf(100)).divide(max, 2, RoundingMode.HALF_UP));
+            bar.put("peak", amount.signum() > 0 && amount.compareTo(max) == 0);
+        }
+        data.put("period", period);
+        data.put("chartDescription", description);
+        data.put("chartStart", start);
+        data.put("chartEnd", cursor.minusDays(1));
+        data.put("chartBars", bars);
+        data.put("chartTotal", total);
     }
 }
