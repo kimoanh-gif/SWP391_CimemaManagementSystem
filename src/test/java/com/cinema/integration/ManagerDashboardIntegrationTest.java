@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
 @Transactional
-public class ManagerDashboardIntegrationTest {
+public class ManagerDashboardIntegrationTest extends com.cinema.support.AuthenticatedMvcTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
@@ -30,7 +30,7 @@ public class ManagerDashboardIntegrationTest {
     @Test
     @DisplayName("GET /manager/dashboard returns OK and required summary attributes")
     void testDashboardSummary() throws Exception {
-        mockMvc.perform(get("/manager/dashboard"))
+        mockMvc.perform(get("/manager/dashboard").session(authSession("MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/dashboard"))
                 .andExpect(model().attributeExists("movieCount"))

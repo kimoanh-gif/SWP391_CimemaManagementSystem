@@ -68,7 +68,7 @@
     <!-- Group 3: vouchers -->
     <section class="cm-card mp-group">
         <h2><span class="mp-group-icon material-symbols-outlined">confirmation_number</span>Voucher codes in this promotion
-            <a class="mp-btn mp-btn-soft mp-btn-sm" th:unless="${p.stopped}" th:href="@{/manager/vouchers/new(promotionId=${p.promotionId})}">
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-btn mp-btn-soft mp-btn-sm" th:unless="${p.stopped}" th:href="@{/manager/vouchers/new(promotionId=${p.promotionId})}">
                 <span class="material-symbols-outlined">add</span>Add voucher</a></h2>
         <div class="cm-table-wrap" th:if="${!vouchers.isEmpty()}">
             <table class="cm-table mp-table mp-table-compact">
@@ -80,7 +80,7 @@
                     <td th:text="${v.validityDisplay}">01/01 - 31/12</td>
                     <td class="mp-right" th:text="${v.usageCount + ' / ' + v.totalLimitDisplay}">0 / 100</td>
                     <td><span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span></td>
-                    <td class="mp-right"><a class="mp-icon-btn" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" title="View voucher"><span class="material-symbols-outlined">chevron_right</span></a></td>
+                    <td class="mp-right"><a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-icon-btn" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" title="View voucher"><span class="material-symbols-outlined">chevron_right</span></a></td>
                 </tr>
                 </tbody>
             </table>
@@ -107,7 +107,7 @@
 
     <!-- Actions -->
     <section class="cm-card mp-detail-actions">
-        <a class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
+        <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
         <div class="mp-detail-actions-right">
             <form method="post" th:if="${p.status == 'ACTIVE' and p.displayStatus != 'EXPIRED'}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
                 <input type="hidden" name="status" value="PAUSED">
@@ -118,9 +118,9 @@
                 <button type="submit" class="mp-btn mp-btn-success"><span class="material-symbols-outlined">play_circle</span>
                     <th:block th:text="${p.status == 'DRAFT'} ? 'Activate' : 'Resume'">Resume</th:block></button>
             </form>
-            <a class="mp-btn mp-btn-soft" th:href="@{/manager/promotions/{id}(id=${p.promotionId},confirmDelete=1)}">
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-btn mp-btn-soft" th:href="@{/manager/promotions/{id}(id=${p.promotionId},confirmDelete=1)}">
                 <span class="material-symbols-outlined" th:text="${p.locked} ? 'lock' : 'delete'">delete</span>Delete (M11.4)</a>
-            <a class="mp-btn mp-btn-primary" th:unless="${p.stopped}" th:href="@{/manager/promotions/{id}/edit(id=${p.promotionId})}">
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-btn mp-btn-primary" th:unless="${p.stopped}" th:href="@{/manager/promotions/{id}/edit(id=${p.promotionId})}">
                 <span class="material-symbols-outlined">edit</span>Edit (M11.3)</a>
         </div>
     </section>
@@ -133,7 +133,7 @@
         <div class="mp-modal-head">
             <span class="mp-modal-icon material-symbols-outlined">gavel</span>
             <div><small>Manager action M11.4</small><h2 id="delete-title">Delete promotion</h2></div>
-            <a class="mp-close" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-close" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
         </div>
         <div class="mp-modal-body">
             <div class="mp-target">
@@ -160,7 +160,7 @@
             </div>
         </div>
         <div class="mp-modal-foot">
-            <a class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}">Cancel</a>
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-btn mp-btn-ghost" th:href="@{/manager/promotions/{id}(id=${p.promotionId})}">Cancel</a>
             <form method="post" th:if="${p.locked and !p.stopped}" th:action="@{/manager/promotions/{id}/status(id=${p.promotionId})}">
                 <input type="hidden" name="status" value="INACTIVE">
                 <button type="submit" class="mp-btn mp-btn-outline-red"><span class="material-symbols-outlined">block</span>Stop promotion</button>

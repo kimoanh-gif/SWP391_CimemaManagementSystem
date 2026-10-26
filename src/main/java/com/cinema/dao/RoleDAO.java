@@ -55,4 +55,9 @@ public class RoleDAO {
                 SELECT RoleID, Name, Description FROM dbo.[Role] ORDER BY RoleID
                 """, roleRowMapper);
     }
+
+    /** Held until the surrounding permission update transaction commits. */
+    public void lockById(int roleId) {
+        jdbcTemplate.queryForList("SELECT RoleID FROM dbo.[Role] WITH (UPDLOCK, HOLDLOCK) WHERE RoleID = ?", roleId);
+    }
 }

@@ -33,6 +33,7 @@ public class StaffAccountService {
 
     public List<Account> getAllStaffs() {
         return accountDAO.findAll().stream()
+                .map(this::withRole)
                 .filter(a -> !isCustomerRole(a.getRoleId()))
                 .toList();
     }
@@ -42,6 +43,7 @@ public class StaffAccountService {
             return getAllStaffs();
         }
         return accountDAO.searchByKeyword(keyword.trim()).stream()
+                .map(this::withRole)
                 .filter(a -> !isCustomerRole(a.getRoleId()))
                 .toList();
     }
@@ -59,7 +61,14 @@ public class StaffAccountService {
     }
 
     public Optional<Account> getStaffById(int accountId) {
-        return accountDAO.findById(accountId).filter(a -> !isCustomerRole(a.getRoleId()));
+        return accountDAO.findById(accountId).map(this::withRole)
+                .filter(a -> !isCustomerRole(a.getRoleId()));
+    }
+
+    private Account withRole(Account account) {
+        account.setRole(roleDAO.findById(account.getRoleId())
+                .map(Role::getName).orElse(null));
+        return account;
     }
 
     private boolean isCustomerRole(int roleId) {
@@ -90,18 +99,22 @@ public class StaffAccountService {
             return "INVALID_PHONE_FORMAT";
         }
 
-        if (accountDAO.existsByUsername(username.trim())) {
+        if (excludeId == null ? accountDAO.existsByUsername(username.trim())
+                : accountDAO.existsByUsername(username.trim(), excludeId)) {
             return "DUPLICATE_USERNAME";
         }
-        if (accountDAO.existsByEmail(emailTrimmed.toLowerCase())) {
+        if (excludeId == null ? accountDAO.existsByEmail(emailTrimmed.toLowerCase(java.util.Locale.ROOT))
+                : accountDAO.existsByEmail(emailTrimmed.toLowerCase(java.util.Locale.ROOT), excludeId)) {
             return "DUPLICATE_EMAIL";
         }
-        if (accountDAO.existsByPhone(phoneTrimmed)) {
+        if (excludeId == null ? accountDAO.existsByPhone(phoneTrimmed)
+                : accountDAO.existsByPhone(phoneTrimmed, excludeId)) {
             return "DUPLICATE_PHONE";
         }
         return null;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public OperationResult createAccount(String username, String email, String password,
                                         String fullName, String phone, String roleName) {
         if (!"STAFF".equals(roleName) && !"MANAGER".equals(roleName)) {
@@ -134,11 +147,15 @@ public class StaffAccountService {
         account.setStatus("ACTIVE");
 
         Integer id = accountDAO.insert(account);
+        if (id != null && id > 0 && "STAFF".equals(roleName)) {
+            accountDAO.ensureActiveStaffProfile(id);
+        }
         return id != null && id > 0
                 ? OperationResult.success("Account created successfully.")
                 : OperationResult.error("CREATE_FAILED", "Failed to create account.");
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public OperationResult updateAccount(int accountId, String username, String email,
                                         String fullName, String phone, String roleName) {
         Optional<Account> existing = getStaffById(accountId);
@@ -146,18 +163,11 @@ public class StaffAccountService {
             return OperationResult.error("NOT_FOUND", "Account not found.");
         }
 
-        if (email == null || email.trim().isEmpty()) {
-            return OperationResult.error("EMPTY_EMAIL", "Email is required.");
+        String validation = validateAccount(username, email, phone, accountId);
+        if (validation != null) {
+            return OperationResult.error(validation, getErrorMessage(validation));
         }
-        if (phone == null || phone.trim().isEmpty()) {
-            return OperationResult.error("EMPTY_PHONE", "Phone number is required.");
-        }
-        if (!AccountValidation.EMAIL.matcher(email.trim()).matches()) {
-            return OperationResult.error("INVALID_EMAIL", "Invalid email format.");
-        }
-        if (!AccountValidation.PHONE.matcher(phone.trim()).matches()) {
-            return OperationResult.error("INVALID_PHONE_FORMAT", "Phone must start with 0 or +84 followed by 9-10 digits.");
-        }
+
         if (fullName == null || fullName.trim().length() < 2 || fullName.trim().length() > 100) {
             return OperationResult.error("INVALID_FULLNAME", "Full name must be 2-100 characters.");
         }
@@ -167,17 +177,17 @@ public class StaffAccountService {
             return OperationResult.error("INVALID_ROLE", "Invalid role selected.");
         }
 
-        Account acc = existing.get();
-        acc.setFullName(fullName.trim());
-        acc.setPhone(phone.trim());
-        acc.setEmail(email.trim().toLowerCase());
-        acc.setRoleId(role.get().getRoleId());
-        
-        // Update role via DAO
-        int updated = accountDAO.updateRole(accountId, role.get().getRoleId());
-        int profileUpdated = accountDAO.updateProfile(accountId, fullName.trim(), phone.trim());
-        
-        return (updated > 0 || profileUpdated > 0)
+        int updated;
+        try {
+            updated = accountDAO.updateStaffAccount(accountId, username.trim(),
+                    email.trim().toLowerCase(java.util.Locale.ROOT), fullName.trim(), phone.trim(), role.get().getRoleId());
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            return OperationResult.error("DUPLICATE_ACCOUNT", "Username, email or phone is already in use. Please reload and try again.");
+        }
+        if (updated == 1 && "STAFF".equals(roleName)) {
+            accountDAO.ensureActiveStaffProfile(accountId);
+        }
+        return updated == 1
                 ? OperationResult.success("Account updated successfully.")
                 : OperationResult.error("UPDATE_FAILED", "Failed to update account.");
     }

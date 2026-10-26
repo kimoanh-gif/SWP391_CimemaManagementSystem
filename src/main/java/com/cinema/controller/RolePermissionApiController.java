@@ -75,11 +75,13 @@ public class RolePermissionApiController {
     @PutMapping("/{roleId}/permissions")
     public ResponseEntity<?> updatePermissions(
             @PathVariable int roleId,
-            @RequestBody Map<String, Object> body) {
-        
-        @SuppressWarnings("unchecked")
-        List<String> permList = (List<String>) body.get("permissions");
-        Set<String> permissions = permList != null ? Set.copyOf(permList) : Set.of();
+            @RequestBody PermissionUpdate body) {
+        List<String> permList = body.permissions();
+        if (permList == null || permList.stream().anyMatch(p -> p == null || p.isBlank())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false,
+                    "code", "INVALID_PERMISSION", "message", "A list of permission names is required."));
+        }
+        Set<String> permissions = new java.util.HashSet<>(permList);
 
         var result = service.updateRolePermissions(roleId, permissions);
         
@@ -96,6 +98,8 @@ public class RolePermissionApiController {
                         "message", result.getMessage()
                 ));
     }
+
+    public record PermissionUpdate(List<String> permissions) {}
 
     /**
      * POST /api/admin/roles/{roleId}/permissions/add

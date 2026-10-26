@@ -808,13 +808,36 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'account:manage')
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'report:view')
     INSERT dbo.Permission ([Name], [Description]) VALUES (N'report:view', N'Xem báo cáo');
 
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'booking:read')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'booking:read', N'Xem danh sách và chi tiết đặt vé');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'news:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'news:manage', N'Soạn và quản lý bài viết');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'news:approve')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'news:approve', N'Duyệt và xuất bản bài viết');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'movie:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'movie:manage', N'Quản lý phim');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'genre:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'genre:manage', N'Quản lý thể loại phim');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'room:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'room:manage', N'Quản lý phòng chiếu');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'seat:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'seat:manage', N'Quản lý loại ghế và sơ đồ ghế');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'pricing:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'pricing:manage', N'Quản lý giá vé');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'fb:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'fb:manage', N'Quản lý đồ ăn và thức uống');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'voucher:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'voucher:manage', N'Quản lý voucher');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'promotion:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'promotion:manage', N'Quản lý khuyến mãi');
+
 INSERT dbo.RolePermission (RoleID, PermissionID)
 SELECT r.RoleID, p.PermissionID
 FROM dbo.[Role] r
 JOIN dbo.Permission p ON
     (r.[Name] = N'CUSTOMER' AND p.[Name] IN (N'movie:read', N'booking:create')) OR
-    (r.[Name] = N'STAFF' AND p.[Name] IN (N'movie:read', N'booking:create', N'ticket:checkin')) OR
-    (r.[Name] = N'MANAGER' AND p.[Name] IN (N'movie:read', N'showtime:manage', N'report:view')) OR
+    (r.[Name] = N'STAFF' AND p.[Name] IN (N'movie:read', N'booking:create', N'ticket:checkin', N'booking:read', N'news:manage')) OR
+    (r.[Name] = N'MANAGER' AND p.[Name] IN (N'movie:read', N'showtime:manage', N'report:view', N'booking:read', N'news:approve', N'movie:manage', N'genre:manage', N'room:manage', N'seat:manage', N'pricing:manage', N'fb:manage', N'voucher:manage', N'promotion:manage')) OR
     (r.[Name] = N'ADMIN')
 WHERE NOT EXISTS (
     SELECT 1 FROM dbo.RolePermission rp

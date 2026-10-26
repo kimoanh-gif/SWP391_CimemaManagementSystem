@@ -1,6 +1,7 @@
 package com.cinema.controller;
 
 import com.cinema.model.BookingSummary;
+import com.cinema.model.AuthenticatedUser;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
 import com.cinema.model.StaffNewsArticle;
@@ -165,7 +166,9 @@ public class StaffWorkspaceController {
             session.removeAttribute(SESSION_SHOWTIME_ID);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Counter order created with Pending status.");
-            return "redirect:/staff/bookings/" + bookingId;
+            AuthenticatedUser user = sessionService.getCurrentUser(session);
+            return user != null && user.hasPermission("booking:read")
+                    ? "redirect:/staff/bookings/" + bookingId : "redirect:/staff/sales";
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage(exception));
             return "redirect:/staff/sales/foods";

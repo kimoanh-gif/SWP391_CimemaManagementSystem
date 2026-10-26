@@ -2,7 +2,6 @@ package com.cinema.security;
 
 import com.cinema.model.AuthenticatedUser;
 import com.cinema.service.SessionService;
-import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,7 +19,7 @@ import java.util.List;
 
 /**
  * Reads {@link SessionService#ATTR_USER} from the HTTP session and populates the
- * Spring Security {@link SecurityContext} for the filter chain.
+ * Spring Security context for the filter chain.
  *
  * <p>Only the thread-local {@link SecurityContextHolder} is used — no
  * {@link org.springframework.security.web.context.SecurityContextRepository}.
@@ -34,11 +32,24 @@ import java.util.List;
 @Component
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
+    private final java.util.function.Supplier<com.cinema.service.AuthorizationSnapshotService> snapshots;
+
+    public SessionAuthenticationFilter(com.cinema.service.AuthorizationSnapshotService snapshots) {
+        this.snapshots = () -> snapshots;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SessionAuthenticationFilter(org.springframework.beans.factory.ObjectProvider<com.cinema.service.AuthorizationSnapshotService> snapshots) {
+        this.snapshots = snapshots::getObject;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        Object value = session == null ? null : session.getAttribute(SessionService.ATTR_USER);
+        SecurityContextHolder.clearContext();
+        Object value = session == null || session.getAttribute(SessionService.ATTR_USER) == null
+                ? null : snapshots.get().refresh(session);
         
         if (value instanceof AuthenticatedUser user) {
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
@@ -48,18 +59,12 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             }
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(user, null, authorities));
-        } else if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String role = ManagerSecurityUtils.resolveRole(request);
-            if (role != null && !role.isBlank()) {
-                List<SimpleGrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role.trim().toUpperCase())
-                );
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken(role, null, authorities)
-                );
-            }
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 }
