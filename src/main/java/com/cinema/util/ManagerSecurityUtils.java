@@ -40,6 +40,10 @@ public final class ManagerSecurityUtils {
         // 1. Check session
         HttpSession session = request.getSession(false);
         if (session != null) {
+            Object authenticated = session.getAttribute(com.cinema.service.SessionService.ATTR_USER);
+            if (authenticated instanceof com.cinema.model.AuthenticatedUser user) {
+                return user.getRole();
+            }
             Object sessionRole = session.getAttribute("role");
             if (sessionRole == null) {
                 sessionRole = session.getAttribute("userRole");

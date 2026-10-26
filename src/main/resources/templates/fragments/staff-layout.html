@@ -21,21 +21,23 @@
       <span class="link-icon">🏠</span><span>Dashboard</span>
     </a>
     <a th:href="@{/staff/sales}"
+       th:if="${user != null and user.hasPermission('booking:create') and user.hasRole('ADMIN', 'STAFF')}"
        th:classappend="${activeMenu == 'sales'} ? ' active' : ''"
        class="sidebar-link">
       <span class="link-icon">🎟</span><span>Counter Sales</span>
     </a>
-    <a th:href="@{/staff/bookings}"
+    <a th:href="@{/staff/bookings}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:read')}"
        th:classappend="${activeMenu == 'bookings'} ? ' active' : ''"
        class="sidebar-link">
       <span class="link-icon">📋</span><span>Bookings</span>
     </a>
     <a th:href="@{/staff/check-in}"
+       th:if="${user != null and user.hasPermission('ticket:checkin') and user.hasRole('ADMIN', 'STAFF')}"
        th:classappend="${activeMenu == 'check-in'} ? ' active' : ''"
        class="sidebar-link">
       <span class="link-icon">✅</span><span>Ticket Check-In</span>
     </a>
-    <a th:href="@{/staff/news}"
+    <a th:href="@{/staff/news}" th:if="${permissionUser != null and permissionUser.hasPermission('news:manage')}"
        th:classappend="${activeMenu == 'news'} ? ' active' : ''"
        class="sidebar-link">
       <span class="link-icon">✏️</span><span>News Management</span>

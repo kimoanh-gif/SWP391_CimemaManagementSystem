@@ -59,11 +59,6 @@
 .ranks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .rank-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
 .rank-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.rank-icon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; }
-.rank-icon.silver { background: linear-gradient(135deg, #C0C0C0, #E8E8E8); }
-.rank-icon.gold { background: linear-gradient(135deg, #FFD700, #FFA500); }
-.rank-icon.platinum { background: linear-gradient(135deg, #E5E4E2, #B4B4B4); }
-.rank-icon.diamond { background: linear-gradient(135deg, #B9F2FF, #87CEEB); }
 .rank-card h3 { font-size: 16px; margin: 0 0 4px; }
 .rank-points { font-size: 13px; color: var(--text-secondary); }
 .rank-points strong { color: var(--text-primary); }
@@ -111,19 +106,19 @@
     <div class="sidebar-section">Management</div>
     <nav class="sidebar-nav">
       <a th:href="@{/admin/dashboard}" class="sidebar-link">
-        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+        <span class="link-label">Dashboard</span>
       </a>
       <a th:href="@{/admin/customers}" class="sidebar-link">
-        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+        <span class="link-label">Customers</span>
       </a>
       <a th:href="@{/admin/staffs}" class="sidebar-link">
-        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+        <span class="link-label">Staff &amp; Managers</span>
       </a>
       <a th:href="@{/admin/roles}" class="sidebar-link">
-        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+        <span class="link-label">Roles &amp; Permissions</span>
       </a>
       <a th:href="@{/admin/config}" class="sidebar-link active">
-        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+        <span class="link-label">System Configuration</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -147,7 +142,7 @@
   <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div class="page-title">⚙️ System Configuration</div>
+      <div class="page-title">System Configuration</div>
     </div>
     <div class="admin-content">
 
@@ -161,10 +156,10 @@
 
       <!-- Category Tabs -->
       <div class="category-tabs">
-        <button class="tab-btn active" onclick="switchTab('voucher')">🎟️ Voucher Settings</button>
-        <button class="tab-btn" onclick="switchTab('membership')">⭐ Membership Ranks</button>
-        <button class="tab-btn" onclick="switchTab('booking')">🎫 Booking Rules</button>
-        <button class="tab-btn" onclick="switchTab('system')">🔐 System Settings</button>
+        <button class="tab-btn active" onclick="switchTab('voucher')">Voucher Settings</button>
+        <button class="tab-btn" onclick="switchTab('membership')">Membership Ranks</button>
+        <button class="tab-btn" onclick="switchTab('booking')">Booking Rules</button>
+        <button class="tab-btn" onclick="switchTab('system')">System Settings</button>
       </div>
 
       <!-- Loading -->
@@ -279,7 +274,7 @@ function renderVoucherSettings() {
     <div class="setting-card">
       <div class="setting-card-header">
         <div>
-          <h3>🎟️ Voucher Configuration</h3>
+          <h3>Voucher Configuration</h3>
           <p class="setting-desc">Configure voucher validity, limits, and conditions</p>
         </div>
         <span class="setting-badge voucher">VOUCHER</span>
@@ -302,7 +297,7 @@ function renderBookingSettings() {
     <div class="setting-card">
       <div class="setting-card-header">
         <div>
-          <h3>🎫 Booking Rules</h3>
+          <h3>Booking Rules</h3>
           <p class="setting-desc">Configure booking limits and cancellation rules</p>
         </div>
         <span class="setting-badge booking">BOOKING</span>
@@ -325,7 +320,7 @@ function renderSystemSettings() {
     <div class="setting-card">
       <div class="setting-card-header">
         <div>
-          <h3>🔐 System Settings</h3>
+          <h3>System Settings</h3>
           <p class="setting-desc">Configure security and authentication rules</p>
         </div>
         <span class="setting-badge system">SYSTEM</span>
@@ -471,21 +466,13 @@ function renderMembershipRanks() {
     return;
   }
   
-  const rankIcons = {
-    'SILVER': { icon: '🥈', class: 'silver' },
-    'GOLD': { icon: '🥇', class: 'gold' },
-    'PLATINUM': { icon: '💎', class: 'platinum' },
-    'DIAMOND': { icon: '💠', class: 'diamond' }
-  };
   
   container.innerHTML = membershipRanks.map(rank => {
-    const info = rankIcons[rank.name.toUpperCase()] || { icon: '⭐', class: '' };
     const benefits = parseBenefits(rank.benefits);
     
     return `
       <div class="rank-card">
         <div class="rank-card-header">
-          <div class="rank-icon ${info.class}">${info.icon}</div>
           <div>
             <h3>${escHtml(rank.displayName || rank.name)}</h3>
             <div class="rank-points">

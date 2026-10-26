@@ -42,7 +42,7 @@
         <div class="mp-field">
             <span class="mp-label">1. Type <em>*</em></span>
             <div class="mp-type-grid">
-                <a class="mp-type" th:classappend="${!isVoucher} ? 'is-selected'"
+                <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-type" th:classappend="${!isVoucher} ? 'is-selected'"
                    th:href="${editing} ? null : @{/manager/promotions/new}" th:attr="aria-disabled=${editing and isVoucher}">
                     <span class="mp-type-icon"><span class="material-symbols-outlined">campaign</span></span>
                     <span class="mp-type-check material-symbols-outlined">check_circle</span>
@@ -50,7 +50,7 @@
                     <small>Groups vouchers under one name and one period. Pausing or stopping it pauses all its vouchers.</small>
                     <span class="mp-chips"><span>Period &amp; status</span><span>Holds vouchers</span></span>
                 </a>
-                <a class="mp-type mp-type-violet" th:classappend="${isVoucher} ? 'is-selected'"
+                <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-type mp-type-violet" th:classappend="${isVoucher} ? 'is-selected'"
                    th:href="${editing} ? null : @{/manager/vouchers/new}" th:attr="aria-disabled=${editing and !isVoucher}">
                     <span class="mp-type-icon"><span class="material-symbols-outlined">confirmation_number</span></span>
                     <span class="mp-type-check material-symbols-outlined">check_circle</span>
@@ -100,7 +100,7 @@
                     <option th:each="p : ${promotions}" th:value="${p.promotionId}" th:selected="${p.promotionId == form.promotionId}"
                             th:text="${p.name + ' (' + p.periodDisplay + ')'}">Promotion</option>
                 </select>
-                <p class="mp-hint-text" th:if="${promotions.isEmpty()}">There is no promotion yet. <a th:href="@{/manager/promotions/new}">Create a promotion first</a>.</p>
+                <p class="mp-hint-text" th:if="${promotions.isEmpty()}">There is no promotion yet. <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" th:href="@{/manager/promotions/new}">Create a promotion first</a>.</p>
                 <p class="mp-error" th:if="${fieldErrors['promotionId'] != null}" th:text="${fieldErrors['promotionId']}">Error</p>
             </div>
             <div class="mp-field" th:classappend="${fieldErrors['code'] != null} ? 'has-error'">

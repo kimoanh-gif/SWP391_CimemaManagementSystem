@@ -24,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
-public class FBItemApiControllerTest {
+public class FBItemApiControllerTest extends com.cinema.support.AuthenticatedMvcTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,7 +41,7 @@ public class FBItemApiControllerTest {
         when(fbItemService.getAllItems(any(), any(), any())).thenReturn(List.of(item));
 
         mockMvc.perform(get("/api/manager/fb")
-                        .header("X-User-Role", "MANAGER"))
+                        .session(authSession("MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].itemCode").value("CB-SOLO"));
@@ -50,7 +50,7 @@ public class FBItemApiControllerTest {
     @Test
     void testGetAllItems_ForbiddenNonManager() throws Exception {
         mockMvc.perform(get("/api/manager/fb")
-                        .header("X-User-Role", "STAFF"))
+                        .session(authSession("STAFF")))
                 .andExpect(status().isForbidden());
     }
 
@@ -59,7 +59,7 @@ public class FBItemApiControllerTest {
         doNothing().when(fbItemService).deleteItem(1);
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/manager/fb/1")
-                        .header("X-User-Role", "MANAGER"))
+                        .session(authSession("MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
@@ -67,7 +67,7 @@ public class FBItemApiControllerTest {
     @Test
     void testDeleteItemApi_ForbiddenNonManager() throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/manager/fb/1")
-                        .header("X-User-Role", "CUSTOMER"))
+                        .session(authSession("CUSTOMER")))
                 .andExpect(status().isForbidden());
     }
 }

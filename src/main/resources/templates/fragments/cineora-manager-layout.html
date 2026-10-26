@@ -40,28 +40,30 @@
         <a th:href="@{/manager/dashboard}" class="cm-nav-link" th:classappend="${activeMenu == 'dashboard'} ? ' is-active'"
            th:attr="aria-current=${activeMenu == 'dashboard'} ? 'page' : null">
             <span class="material-symbols-outlined">dashboard</span><span>Overview</span></a>
-        <a th:href="@{/manager/movies}" class="cm-nav-link" th:classappend="${activeMenu == 'movies'} ? ' is-active'">
+        <a th:href="@{/manager/movies}" th:if="${permissionUser != null and permissionUser.hasPermission('movie:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'movies'} ? ' is-active'">
             <span class="material-symbols-outlined">movie</span><span>Movie Management</span></a>
-        <a th:href="@{/manager/genres}" class="cm-nav-link" th:classappend="${activeMenu == 'genres'} ? ' is-active'">
+        <a th:href="@{/manager/genres}" th:if="${permissionUser != null and permissionUser.hasPermission('genre:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'genres'} ? ' is-active'">
             <span class="material-symbols-outlined">category</span><span>Movie Genre Management</span></a>
-        <a th:href="@{/manager/rooms}" class="cm-nav-link" th:classappend="${activeMenu == 'rooms'} ? ' is-active'">
+        <a th:href="@{/manager/rooms}" th:if="${permissionUser != null and permissionUser.hasPermission('room:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'rooms'} ? ' is-active'">
             <span class="material-symbols-outlined">meeting_room</span><span>Screening Room Management</span></a>
-        <a th:href="@{/manager/seat-types}" class="cm-nav-link" th:classappend="${activeMenu == 'seat-types'} ? ' is-active'">
+        <a th:href="@{/manager/seat-types}" th:if="${permissionUser != null and permissionUser.hasPermission('seat:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'seat-types'} ? ' is-active'">
             <span class="material-symbols-outlined">chair</span><span>Seat Type Management</span></a>
-        <a th:href="@{/manager/seats}" class="cm-nav-link" th:classappend="${activeMenu == 'seats'} ? ' is-active'">
+        <a th:href="@{/manager/seats}" th:if="${permissionUser != null and permissionUser.hasPermission('seat:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'seats'} ? ' is-active'">
             <span class="material-symbols-outlined">grid_view</span><span>Seat Map Management</span></a>
-        <a th:href="@{/manager/news}" class="cm-nav-link" th:classappend="${activeMenu == 'news'} ? ' is-active'">
+        <a th:href="@{/manager/news}" th:if="${permissionUser != null and permissionUser.hasPermission('news:approve')}" class="cm-nav-link" th:classappend="${activeMenu == 'news'} ? ' is-active'">
             <span class="material-symbols-outlined">newspaper</span><span>News Management</span></a>
-        <a th:href="@{/manager/showtimes}" class="cm-nav-link" th:classappend="${activeMenu == 'showtimes'} ? ' is-active'">
+        <a th:href="@{/manager/showtimes}" th:if="${permissionUser != null and permissionUser.hasPermission('showtime:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'showtimes'} ? ' is-active'">
             <span class="material-symbols-outlined">schedule</span><span>Showtime Management</span></a>
-        <a th:href="@{/manager/pricing}" class="cm-nav-link" th:classappend="${activeMenu == 'pricing'} ? ' is-active'">
+        <a th:href="@{/manager/pricing}" th:if="${permissionUser != null and permissionUser.hasPermission('pricing:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'pricing'} ? ' is-active'">
             <span class="material-symbols-outlined">confirmation_number</span><span>Ticket Pricing</span></a>
-        <a th:href="@{/manager/fb}" class="cm-nav-link" th:classappend="${activeMenu == 'fb'} ? ' is-active'">
+        <a th:href="@{/manager/fb}" th:if="${permissionUser != null and permissionUser.hasPermission('fb:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'fb'} ? ' is-active'">
             <span class="material-symbols-outlined">fastfood</span><span>Food &amp; Beverage Management</span></a>
-        <a th:href="@{/manager/promotions}" class="cm-nav-link" th:classappend="${activeMenu == 'promotions'} ? ' is-active'">
-            <span class="material-symbols-outlined">redeem</span><span>Promotion &amp; Voucher Management</span></a>
-        <a th:href="@{/manager/reports}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
+        <a th:href="@{/manager/promotions}" th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'promotions'} ? ' is-active'">
+            <span class="material-symbols-outlined">redeem</span><span>Promotion Management</span></a>
+        <a th:href="@{/manager/reports}" th:if="${permissionUser != null and permissionUser.hasPermission('report:view')}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
             <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
+        <a th:href="@{/manager/vouchers}" th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'vouchers'} ? ' is-active'">
+            <span class="material-symbols-outlined">sell</span><span>Voucher Management</span></a>
     </nav>
 
     <div class="cm-sidebar-footer">
