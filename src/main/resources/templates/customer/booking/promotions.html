@@ -157,7 +157,8 @@
               <form th:action="@{/customer/booking/promotions/skip}" method="post">
                 <button class="button secondary full" type="submit">Skip</button>
               </form>
-              <form th:action="@{/customer/booking/promotions/continue}" method="post">
+              <form th:if="${appliedVoucher != null}"
+                    th:action="@{/customer/booking/promotions/continue}" method="post">
                 <button class="button primary full" type="submit">
                   Continue
                   <span class="material-symbols-outlined">arrow_forward</span>

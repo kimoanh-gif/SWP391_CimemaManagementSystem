@@ -17,9 +17,10 @@
         </div>
         <footer class="pass-footer"><div><small>Booking code</small><b th:text="${ticket.bookingCode}">BK00001</b></div><div><small>Ticket number</small><b th:text="${'#' + ticket.ticketId}">#1</b></div><div><small>Admission</small><b>One person</b></div></footer>
       </section>
-      <aside class="pass-stub"><p><b>SCAN TO ENTER</b><small>Present this code at the cinema entrance</small></p><div class="fake-qr pass-qr" aria-label="Digital ticket QR code"><span>C</span></div><em>Valid for one admission</em><div class="ticket-barcode" aria-hidden="true"></div><code th:text="${ticket.qrCode}">CINEORA-TICKET-CODE</code><div class="stub-status"><span>●</span> <b th:text="${ticket.ticketStatus}">VALID</b></div></aside>
+      <aside class="pass-stub"><p><b>SCAN TO ENTER</b><small>Present this code at the cinema entrance</small></p><div class="ticket-verification-qr pass-qr" th:attr="data-ticket-url=${ticketBaseUrl + '/ticket/verify/' + ticket.qrCode}" aria-label="Digital ticket verification QR code"></div><em>Valid for one admission</em><div class="ticket-barcode" aria-hidden="true"></div><code th:text="${ticket.qrCode}">CINEORA-TICKET-CODE</code><div class="stub-status"><span>●</span> <b th:text="${ticket.ticketStatus}">VALID</b></div></aside>
     </article>
   </div>
-  <p class="ticket-back"><a class="button secondary" th:href="@{/customer/booking/history}">Back to My Booking History</a></p>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script th:src="@{/js/customer-booking.js}"></script>
 </body></html>

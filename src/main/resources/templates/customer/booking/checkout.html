@@ -60,7 +60,7 @@
         th:if="${errorMessage}"
         th:text="${errorMessage}"
       ></p>
-      <form th:action="@{/customer/booking/checkout}" method="post">
+      <form id="checkout-form" th:action="@{/customer/booking/checkout}" method="post">
         <div class="checkout-layout">
           <section class="checkout-main">
             <div class="panel payment-panel">
