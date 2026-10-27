@@ -450,6 +450,9 @@ table.data-table tbody tr:hover td { background: #FFF5F1; }
 .badge-approved  { background: #D1FAE5; color: #065F46; }
 .badge-rejected  { background: #FEE2E2; color: #991B1B; }
 .badge-pending.news-status { background: #EDE9FE; color: #5B21B6; }
+.badge-expired, .badge-released { background: #F3F4F6; color: #6B7280; }
+.badge-payment_pending, .badge-held { background: #FEF3C7; color: #92400E; }
+.badge-booked, .badge-checked_in { background: #D1FAE5; color: #065F46; }
 
 [hidden] { display: none !important; }
 
