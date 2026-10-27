@@ -33,10 +33,10 @@ public class AdminDashboardService {
         LocalDate fromDate = parseDate(from);
         LocalDate toDate = parseDate(to);
         if ((fromDate == null) != (toDate == null)) {
-            throw new IllegalArgumentException("Vui lòng chọn cả Từ ngày và Đến ngày.");
+            throw new IllegalArgumentException("Please select both the start date and end date.");
         }
         if (fromDate != null && (fromDate.isAfter(toDate) || toDate.isAfter(fromDate.plusYears(10)))) {
-            throw new IllegalArgumentException("Từ ngày phải trước hoặc bằng Đến ngày; khoảng chọn tối đa 10 năm.");
+            throw new IllegalArgumentException("The start date must be on or before the end date. The maximum range is 10 years.");
         }
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDate today = now.toLocalDate();
@@ -58,7 +58,7 @@ public class AdminDashboardService {
             if (date.getYear() < 1900 || date.getYear() > 9998) throw new IllegalArgumentException();
             return date;
         } catch (RuntimeException ex) {
-            throw new IllegalArgumentException("Ngày không hợp lệ. Vui lòng chọn ngày từ năm 1900 đến 9998.");
+            throw new IllegalArgumentException("Invalid date. Please select a date between 1900 and 9998.");
         }
     }
 
@@ -73,12 +73,12 @@ public class AdminDashboardService {
             case "week" -> {
                 start = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(7);
                 count = 8;
-                description = "8 tuần gần nhất · Thứ Hai – Chủ nhật";
+                description = "Last 8 weeks · Monday–Sunday";
             }
-            case "month" -> { start = today.withDayOfYear(1); count = 12; description = "12 tháng của năm " + today.getYear(); }
-            case "quarter" -> { start = today.withDayOfYear(1); count = 4; description = "4 quý của năm " + today.getYear(); }
-            case "year" -> { start = today.withDayOfYear(1).minusYears(4); count = 5; description = "5 năm gần nhất"; }
-            default -> { start = today.minusDays(6); count = 7; description = "7 ngày gần nhất"; }
+            case "month" -> { start = today.withDayOfYear(1); count = 12; description = "12 months of " + today.getYear(); }
+            case "quarter" -> { start = today.withDayOfYear(1); count = 4; description = "4 quarters of " + today.getYear(); }
+            case "year" -> { start = today.withDayOfYear(1).minusYears(4); count = 5; description = "Last 5 years"; }
+            default -> { start = today.minusDays(6); count = 7; description = "Last 7 days"; }
         }
         List<Map<String, Object>> bars = new ArrayList<>();
         boolean custom = fromDate != null;
@@ -87,7 +87,7 @@ public class AdminDashboardService {
         if (custom) {
             start = fromDate;
             rangeEnd = toDate.plusDays(1);
-            description = "Doanh thu trong khoảng ngày đã chọn · Tuần tính từ thứ Hai";
+            description = "Revenue for the selected date range · Weeks start on Monday";
             LocalDate queryEnd = rangeEnd.isAfter(today.plusDays(1)) ? today.plusDays(1) : rangeEnd;
             if (start.isBefore(queryEnd)) {
                 for (Map<String, Object> row : dao.daily(start.atStartOfDay(), queryEnd.atStartOfDay())) {
@@ -125,7 +125,7 @@ public class AdminDashboardService {
                 amount = dao.revenue(cursor.atStartOfDay(), queryEnd.atStartOfDay());
             }
             String label = switch (period) {
-                case "month" -> "T" + cursor.getMonthValue() + "/" + cursor.getYear();
+                case "month" -> "M" + cursor.getMonthValue() + "/" + cursor.getYear();
                 case "quarter" -> "Q" + ((cursor.getMonthValue() - 1) / 3 + 1) + "/" + cursor.getYear();
                 case "year" -> String.valueOf(cursor.getYear());
                 default -> cursor.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy"));

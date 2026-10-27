@@ -80,7 +80,7 @@ tbody tr:hover td { background: var(--purple-50); }
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
 
-<div class="admin-layout">
+<div class="admin-layout" th:with="adminDisplayName=${user != null and user.fullName != null and !#strings.isEmpty(user.fullName.trim()) ? (#strings.equalsIgnoreCase(user.fullName.trim(), 'Quản trị viên') ? 'Administrator' : user.fullName) : 'Administrator'}">
 
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
@@ -108,9 +108,9 @@ tbody tr:hover td { background: var(--purple-50); }
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-avatar" th:text="${adminDisplayName.substring(0,1).toUpperCase()}">A</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-name" th:text="${adminDisplayName}">Admin</div>
           <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
         </div>
       </div>

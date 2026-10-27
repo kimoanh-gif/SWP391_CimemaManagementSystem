@@ -36,7 +36,7 @@ class AdminDashboardViewTest {
     @Test void dashboardRendersRealValuesAndEmptyStates() throws Exception {
         Map<String,Object> d=new HashMap<>();
         for(String key:List.of("revenue","tickets","pending","activeCustomers","newCustomers","customers","staff","roles","locked","chartTotal"))d.put(key,0);
-        d.put("period","day"); d.put("chartDescription","7 ngày gần nhất"); d.put("revenue",new BigDecimal("1234567"));
+        d.put("period","day"); d.put("chartDescription","Last 7 days"); d.put("revenue",new BigDecimal("1234567"));
         d.put("updatedAt",LocalDateTime.of(2026,10,23,18,0));
         d.put("chartEnd",LocalDate.of(2026,10,23));d.put("chartStart",LocalDate.of(2026,10,17));
         d.put("chartBars",List.of(Map.of("label","23/10","start",LocalDate.of(2026,10,23),"end",LocalDate.of(2026,10,23),"height",BigDecimal.ZERO,"amount",BigDecimal.ZERO,"peak",false)));
@@ -47,6 +47,12 @@ class AdminDashboardViewTest {
         assertTrue(html.contains("No bookings yet"));
         assertTrue(html.contains("No more screenings"));
         assertTrue(html.contains("action=\"/logout\""));
+        html=render(new HashMap<>(Map.of("dashboard",d,"user",Map.of("fullName","Quản trị viên","role","ADMIN"))));
+        assertTrue(html.contains(">Administrator</span>"));
+        assertTrue(html.contains(">Administrator</div>"));
+        assertFalse(html.contains(">Quản trị viên<"));
+        html=render(new HashMap<>(Map.of("dashboard",d,"user",Map.of("fullName","Lê Thị Kim Oanh","role","ADMIN"))));
+        assertTrue(html.contains(">Lê Thị Kim Oanh</span>"));
         // Render timestamp-bearing rows as well, and ensure titles are escaped.
         d.put("recent",List.of(Map.of("code","BK-1","title","<script>bad</script>","startTime",Timestamp.valueOf("2026-10-23 19:00:00"),"amount",BigDecimal.TEN,"status","CONFIRMED","channel","ONLINE")));
         d.put("upcoming",List.of(Map.of("title","Movie","room","Room 1","startTime",Timestamp.valueOf("2026-10-23 19:00:00"),"capacity",100,"reserved",12)));

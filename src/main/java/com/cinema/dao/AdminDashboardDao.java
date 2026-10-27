@@ -13,6 +13,7 @@ public class AdminDashboardDao {
     private final JdbcTemplate jdbc;
     public AdminDashboardDao(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
+    // doanh thu theo 
     private static final String PAID = """
             WITH paid AS (
                 SELECT BookingID, MAX(Amount) Amount, MIN(COALESCE(PaidAt, CreatedAt)) PaidTime
@@ -54,6 +55,7 @@ public class AdminDashboardDao {
             """, ts(start), ts(end));
     }
 
+// top 5 phim có doanh thu cao nhất
     public List<Map<String, Object>> topMovies(LocalDateTime start, LocalDateTime end) {
         return jdbc.queryForList(PAID + """
             SELECT TOP (5) m.Title title, SUM(p.Amount) amount, COUNT(*) bookings
