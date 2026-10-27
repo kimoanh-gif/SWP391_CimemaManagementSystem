@@ -116,6 +116,7 @@ function openEditMovieModal(button) {
     var language = button.getAttribute("data-language") || "";
     var description = button.getAttribute("data-description") || "";
     var poster = button.getAttribute("data-poster") || "";
+    var banner = button.getAttribute("data-banner") || "";
     var trailer = button.getAttribute("data-trailer") || "";
     var genreIdsStr = button.getAttribute("data-genre-ids") || "";
 
@@ -135,6 +136,7 @@ function openEditMovieModal(button) {
     setValue("movieLanguage", language);
     setValue("movieDescription", description);
     setValue("moviePoster", poster);
+    setValue("movieBanner", banner);
     setValue("movieTrailer", trailer);
 
     var counter = document.getElementById("descCharCounter");

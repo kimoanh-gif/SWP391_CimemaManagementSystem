@@ -58,6 +58,9 @@ public class MovieForm {
     @Size(max = 500, message = "Đường dẫn Poster không được vượt quá 500 ký tự")
     private String poster;
 
+    @Size(max = 500, message = "Đường dẫn banner không được vượt quá 500 ký tự")
+    private String banner;
+
     @Size(max = 500, message = "Đường dẫn Trailer không được vượt quá 500 ký tự")
     private String trailer;
 
@@ -87,6 +90,7 @@ public class MovieForm {
         form.setAgeRating(movie.getAgeRating() != null ? movie.getAgeRating() : "P");
         form.setDescription(movie.getDescription());
         form.setPoster(movie.getPoster());
+        form.setBanner(movie.getBanner());
         form.setTrailer(movie.getTrailer());
         form.setStatus(movie.getStatus() != null ? movie.getStatus() : "Upcoming");
         form.setGenreIds(movie.getGenreIds());
@@ -188,6 +192,9 @@ public class MovieForm {
     public void setPoster(String poster) {
         this.poster = poster;
     }
+
+    public String getBanner() { return banner; }
+    public void setBanner(String banner) { this.banner = banner; }
 
     public String getTrailer() {
         return trailer;

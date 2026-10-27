@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -48,22 +47,14 @@ public class HomeController {
 
     @GetMapping({"/", "/home"})
     public String home(HttpSession session, Model model) {
-        List<Movie> nowShowing = movieService.getNowShowingMovies(8);
+        List<Movie> nowShowing = movieService.getNowShowingMovies(0);
         model.addAttribute("nowShowingMovies", nowShowing);
 
-        Map<String, String> heroBackdrops = Map.ofEntries(
-                Map.entry("Heart of the Beast", "https://cdn.moveek.com/storage/media/cache/large/6a538be95e054699735537.webp"),
-                Map.entry("The Almost Perfect Murder", "https://cdn.moveek.com/storage/media/cache/large/6a8d5b4137e8c939819537.webp"),
-                Map.entry("Street Fighter", "https://cdn.moveek.com/storage/media/cache/large/6a538ba81c7f6196807171.webp"),
-                Map.entry("Death Whisperer: Saming the Werebeast", "https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp"),
-                Map.entry("Bambi: The Reckoning", "https://cdn.moveek.com/storage/media/cache/large/6accc26017036308778097.webp"),
-                Map.entry("The Curse 2026", "https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp")
-        );
-        nowShowing.forEach(movie -> movie.setHeroImageUrl(
-                heroBackdrops.getOrDefault(movie.getTitle(), movie.getPosterUrl())));
-        model.addAttribute("featuredMovies", nowShowing);
+        List<Movie> topGrossingMovies = movieService.getFeaturedMovies(10);
+        model.addAttribute("featuredMovies", topGrossingMovies);
+        model.addAttribute("topGrossingMovies", topGrossingMovies);
 
-        List<Movie> upcomingMovies = movieService.getUpcomingMovies(15);
+        List<Movie> upcomingMovies = movieService.getUpcomingMovies(0);
         model.addAttribute("upcomingMovies", upcomingMovies);
 
         List<PublicShowtime> todayShowtimes = showtimeService.getTodayShowtimes(8);
