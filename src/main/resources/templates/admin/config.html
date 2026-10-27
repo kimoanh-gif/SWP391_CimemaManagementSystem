@@ -96,7 +96,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">☰</button>
 
-<div class="admin-layout">
+<div class="admin-layout" th:with="adminDisplayName=${user != null and user.fullName != null and !#strings.isEmpty(user.fullName.trim()) ? (#strings.equalsIgnoreCase(user.fullName.trim(), 'Quản trị viên') ? 'Administrator' : user.fullName) : 'Administrator'}">
 
   <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
@@ -124,9 +124,9 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-avatar" th:text="${adminDisplayName.substring(0,1).toUpperCase()}">A</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-name" th:text="${adminDisplayName}">Admin</div>
           <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
         </div>
       </div>
@@ -268,16 +268,16 @@ function renderVoucherSettings() {
     return;
   }
   const presentation = {
-    VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Thời hạn hiệu lực', label: 'Thời hạn của voucher', unit: 'ngày' },
-    VOUCHER_MIN_BOOKING_AMOUNT: { order: 2, title: 'Giá trị đơn tối thiểu', label: 'Giá trị đặt vé tối thiểu', unit: 'VNĐ' },
-    VOUCHER_MAX_DISCOUNT_PERCENT: { order: 3, title: 'Giới hạn giảm giá', label: 'Phần trăm giảm tối đa', unit: '%' },
-    VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Giới hạn tổng số lượng', label: 'Số lượng voucher tối đa', unit: 'mã' },
-    VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Giới hạn mỗi tài khoản', label: 'Số voucher tối đa mỗi khách hàng', unit: 'mã' }
+    VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Validity period', label: 'Voucher validity period', unit: 'days' },
+    VOUCHER_MIN_BOOKING_AMOUNT: { order: 2, title: 'Minimum order value', label: 'Minimum booking amount', unit: 'VND' },
+    VOUCHER_MAX_DISCOUNT_PERCENT: { order: 3, title: 'Discount limit', label: 'Maximum discount percentage', unit: '%' },
+    VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Total quantity limit', label: 'Maximum voucher quantity', unit: 'codes' },
+    VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Per-account limit', label: 'Maximum vouchers per customer', unit: 'codes' }
   };
   const ordered = [...voucherSettings].sort((a, b) => (presentation[a.settingKey]?.order || 99) - (presentation[b.settingKey]?.order || 99));
   container.innerHTML = `<div class="voucher-policy">
     <div class="voucher-toolbar">
-      <div><span class="voucher-eyebrow">VOUCHER SETTINGS</span><h2>Quy tắc voucher</h2><p>Điều chỉnh thời hạn, mức giảm và giới hạn số lượng.</p></div>
+      <div><span class="voucher-eyebrow">VOUCHER SETTINGS</span><h2>Voucher rules</h2><p>Configure validity periods, discounts and quantity limits.</p></div>
       ${renderSaveBar('VOUCHER')}
     </div>
     <div class="voucher-policy-grid">
@@ -518,39 +518,39 @@ function orderedRanks() {
 function rankBenefitsSummary(rank) {
   const benefits = parseBenefits(rank.benefits);
   const items = [];
-  if (benefits.pointsRate != null) items.push('Tích điểm ×' + benefits.pointsRate);
-  if (benefits.birthdayBonus) items.push('Ưu đãi sinh nhật');
-  if (benefits.priorityBooking) items.push('Ưu tiên đặt vé');
-  if (benefits.freeSnacks) items.push('Tặng bắp nước');
-  return items.length ? items.map(escHtml).join('<br>') : 'Chưa có quyền lợi';
+  if (benefits.pointsRate != null) items.push('Points multiplier ×' + benefits.pointsRate);
+  if (benefits.birthdayBonus) items.push('Birthday benefits');
+  if (benefits.priorityBooking) items.push('Priority booking');
+  if (benefits.freeSnacks) items.push('Complimentary snacks');
+  return items.length ? items.map(escHtml).join('<br>') : 'No benefits configured';
 }
 
 function renderMembershipRanks() {
   const container = document.getElementById('membership-ranks');
   const ranks = orderedRanks();
   container.innerHTML = `<div class="membership-heading">
-    <div><span class="voucher-eyebrow">MEMBERSHIP RANKS</span><h2>Hạng thành viên</h2><p>Cấu hình ngưỡng điểm thăng hạng. Thay đổi không điều chỉnh điểm của từng khách hàng.</p></div>
-    <span class="membership-count">${ranks.length} hạng</span>
+    <div><span class="voucher-eyebrow">MEMBERSHIP RANKS</span><h2>Membership ranks</h2><p>Configure rank thresholds. Changes do not modify individual customer point balances.</p></div>
+    <span class="membership-count">${ranks.length} ranks</span>
   </div>
-  <div class="membership-rule">Điểm tối thiểu phải là số nguyên không âm và tăng dần theo thứ tự hạng. Bấm Lưu trên từng hàng để áp dụng.</div>
+  <div class="membership-rule">Minimum points must be non-negative whole numbers in ascending rank order. Click Save on each row to apply changes.</div>
   <div class="membership-table-wrap"><table class="membership-table">
-    <thead><tr><th scope="col">Hạng thành viên</th><th scope="col">Điểm tối thiểu</th><th scope="col">Điểm tối đa</th><th scope="col">Quyền lợi</th><th scope="col">Giảm giá</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+    <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th><th scope="col">Benefits</th><th scope="col">Discount</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
     <tbody>${ranks.length ? ranks.map(rank => `<tr>
       <td><span class="membership-code">${escHtml(rank.name)}</span><strong class="membership-name">${escHtml(rank.displayName || rank.name)}</strong></td>
-      <td class="membership-threshold"><label class="sr-only" for="rank-${rank.rankId}">Điểm tối thiểu của ${escHtml(rank.displayName || rank.name)}</label>
+      <td class="membership-threshold"><label class="sr-only" for="rank-${rank.rankId}">Minimum points for ${escHtml(rank.displayName || rank.name)}</label>
         <input type="number" class="setting-input" id="rank-${rank.rankId}" min="0" max="2147483647" step="1"
           value="${escHtml(rankInputs[rank.rankId] ?? rank.minPoints)}" aria-describedby="rank-error-${rank.rankId}"
           oninput="handleRankInput(${rank.rankId}, this.value)" ${savingRankId !== null ? 'disabled' : ''}>
         <div class="setting-error" role="alert" id="rank-error-${rank.rankId}"></div></td>
-      <td class="membership-number">${rank.maxPoints == null ? '<span class="membership-unlimited">Không giới hạn</span>' : escHtml(Number(rank.maxPoints).toLocaleString('vi-VN'))}</td>
+      <td class="membership-number">${rank.maxPoints == null ? '<span class="membership-unlimited">Unlimited</span>' : escHtml(Number(rank.maxPoints).toLocaleString('en-US'))}</td>
       <td class="membership-benefits">${rankBenefitsSummary(rank)}</td>
       <td><span class="membership-discount">${escHtml(rank.discountPercent ?? '0')}%</span></td>
-      <td><span class="membership-state ${rank.isActive ? 'active' : 'inactive'}">${rank.isActive ? 'Hoạt động' : 'Tạm ngưng'}</span></td>
+      <td><span class="membership-state ${rank.isActive ? 'active' : 'inactive'}">${rank.isActive ? 'Active' : 'Inactive'}</span></td>
       <td><div class="membership-actions">
-        <button type="button" class="btn btn-primary btn-sm" id="save-rank-${rank.rankId}" onclick="updateRankThreshold(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Lưu</button>
-        <button type="button" class="btn btn-secondary btn-sm" id="discard-rank-${rank.rankId}" onclick="discardRank(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" id="save-rank-${rank.rankId}" onclick="updateRankThreshold(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Save</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="discard-rank-${rank.rankId}" onclick="discardRank(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Discard</button>
       </div></td>
-    </tr>`).join('') : '<tr><td colspan="7" class="membership-empty">Chưa có hạng thành viên.</td></tr>'}</tbody>
+    </tr>`).join('') : '<tr><td colspan="7" class="membership-empty">No membership ranks found.</td></tr>'}</tbody>
   </table></div>`;
 }
 
@@ -569,19 +569,19 @@ let savingRankId = null;
 function rankValidationMessage(rankId, raw) {
   const value = String(raw).trim();
   if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) > 2147483647) {
-    return 'Nhập số nguyên từ 0 đến 2.147.483.647.';
+    return 'Enter a whole number between 0 and 2,147,483,647.';
   }
   const ranks = orderedRanks();
   const index = ranks.findIndex(rank => rank.rankId === rankId);
-  if (index < 0) return 'Không tìm thấy hạng thành viên.';
+  if (index < 0) return 'Membership rank not found.';
   const points = Number(value);
-  if (ranks[index].maxPoints != null && points > ranks[index].maxPoints) return 'Điểm tối thiểu không được vượt điểm tối đa của hạng (' + ranks[index].maxPoints + ').';
-  if (index > 0 && ranks[index - 1].maxPoints != null && points <= ranks[index - 1].maxPoints) return 'Điểm phải lớn hơn điểm tối đa của hạng trước (' + ranks[index - 1].maxPoints + ').';
+  if (ranks[index].maxPoints != null && points > ranks[index].maxPoints) return 'Minimum points must not exceed this rank’s maximum (' + ranks[index].maxPoints + ').';
+  if (index > 0 && ranks[index - 1].maxPoints != null && points <= ranks[index - 1].maxPoints) return 'Points must exceed the previous rank’s maximum (' + ranks[index - 1].maxPoints + ').';
   if (index > 0 && points <= ranks[index - 1].minPoints) {
-    return 'Điểm phải lớn hơn ngưỡng ' + ranks[index - 1].minPoints + ' của ' + (ranks[index - 1].displayName || ranks[index - 1].name) + '.';
+    return 'Points must exceed the threshold of ' + ranks[index - 1].minPoints + ' for ' + (ranks[index - 1].displayName || ranks[index - 1].name) + '.';
   }
   if (index < ranks.length - 1 && points >= ranks[index + 1].minPoints) {
-    return 'Điểm phải nhỏ hơn ngưỡng ' + ranks[index + 1].minPoints + ' của ' + (ranks[index + 1].displayName || ranks[index + 1].name) + '.';
+    return 'Points must be below the threshold of ' + ranks[index + 1].minPoints + ' for ' + (ranks[index + 1].displayName || ranks[index + 1].name) + '.';
   }
   return '';
 }
@@ -624,27 +624,27 @@ async function updateRankThreshold(rankId) {
   savingRankId = rankId;
   const controls = [...document.getElementById('membership-ranks').querySelectorAll('input, button')];
   controls.forEach(control => control.disabled = true);
-  document.getElementById('save-rank-' + rankId).textContent = 'Đang lưu…';
+  document.getElementById('save-rank-' + rankId).textContent = 'Saving…';
   try {
     const response = await fetch('/api/admin/config/membership/ranks/' + rankId + '/threshold', {
       method: 'PUT', headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
       body: JSON.stringify({ minPoints: Number(value) })
     });
     const result = await response.json();
-    if (!response.ok || !result.success) throw new Error(result.message || 'Không thể lưu ngưỡng điểm.');
+    if (!response.ok || !result.success) throw new Error(result.message || 'Unable to save the rank threshold.');
     membershipRanks.find(rank => rank.rankId === rankId).minPoints = Number(value);
     delete rankInputs[rankId];
-    showToast('Đã lưu ngưỡng điểm thành công.', 'success');
+    showToast('Rank threshold saved successfully.', 'success');
     await loadMembershipRanks();
   } catch (error) {
-    showRankError(rankId, error.message || 'Lỗi kết nối. Vui lòng thử lại.');
-    showToast('Chưa lưu được thay đổi. Vui lòng kiểm tra lại.', 'error');
+    showRankError(rankId, error.message || 'Connection failed. Please try again.');
+    showToast('Changes could not be saved. Please check the fields and try again.', 'error');
   } finally {
     savingRankId = null;
     controls.forEach(control => control.disabled = false);
     for (const rank of membershipRanks) {
       const draft = rankInputs[rank.rankId];
-      document.getElementById('save-rank-' + rank.rankId).textContent = 'Lưu';
+      document.getElementById('save-rank-' + rank.rankId).textContent = 'Save';
       const validation = draft === undefined ? '' : rankValidationMessage(rank.rankId, draft);
       if (validation) showRankError(rank.rankId, validation);
       document.getElementById('save-rank-' + rank.rankId).disabled = draft === undefined || Boolean(validation);
@@ -663,7 +663,7 @@ async function loadMembershipRanks() {
     renderMembershipRanks();
   } catch (error) {
     renderMembershipRanks();
-    showToast('Đã lưu nhưng chưa tải lại được dữ liệu. Hãy tải lại trang để kiểm tra.', 'info');
+    showToast('Saved, but the latest data could not be loaded. Reload the page to verify.', 'info');
   }
 }
 

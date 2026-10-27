@@ -9,7 +9,7 @@
 </head><body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
-<div class="admin-layout">
+<div class="admin-layout" th:with="adminDisplayName=${user != null and user.fullName != null and !#strings.isEmpty(user.fullName.trim()) ? (#strings.equalsIgnoreCase(user.fullName.trim(), 'Quản trị viên') ? 'Administrator' : user.fullName) : 'Administrator'}">
   <aside class="admin-sidebar" id="adminSidebar">
     <a th:href="@{/admin/dashboard}" class="sidebar-brand">
       <img class="cineora-brand-logo" src="/images/cineora-logo.png" th:src="@{/images/cineora-logo.png}" alt="CINEORA logo">
@@ -35,9 +35,9 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-user-avatar" th:text="${user != null ? user.fullName.substring(0,1).toUpperCase() : 'A'}">A</div>
+        <div class="sidebar-user-avatar" th:text="${adminDisplayName.substring(0,1).toUpperCase()}">A</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</div>
+          <div class="sidebar-user-name" th:text="${adminDisplayName}">Admin</div>
           <div class="sidebar-user-role" th:text="${user != null ? user.role : 'ADMIN'}">ADMIN</div>
         </div>
       </div>
@@ -51,7 +51,7 @@
     </div>
   </aside>
 <main class="admin-main">
-<header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div><div class="topbar-actions"><span class="profile-name" th:text="${user != null ? user.fullName : 'Admin'}">Admin</span><span class="admin-pill">ADMIN</span></div></header>
+<header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div><div class="topbar-actions"><span class="profile-name" th:text="${adminDisplayName}">Admin</span><span class="admin-pill">ADMIN</span></div></header>
 <div class="admin-content dashboard-content">
 <div class="dashboard-heading"><div><span class="eyebrow">CINEORA / ADMIN CONSOLE</span><h1>Admin Dashboard</h1><p>Revenue, bookings and cinema activity at a glance.</p></div><div class="heading-actions"><a class="btn btn-secondary" th:href="@{/admin/customers}">Customer accounts</a><a class="btn btn-primary" th:href="@{/admin/dashboard(period=${param.period != null ? param.period[0] : 'day'},from=${param.from != null ? param.from[0] : null},to=${param.to != null ? param.to[0] : null})}">Refresh dashboard &#8635;</a></div></div>
 <div class="dashboard-error" role="alert" th:if="${dashboardError}" th:text="${dashboardError}"></div>
