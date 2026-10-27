@@ -50,7 +50,7 @@ public class RoomApiController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Tạo phòng thành công", null, null));
     }
 
-    @PutMapping("/{id}")
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.POST})
     public ResponseEntity<ApiResponse<Void>> update(@PathVariable int id,
                                                     @Valid @RequestBody RoomForm form,
                                                     jakarta.servlet.http.HttpServletRequest request) {

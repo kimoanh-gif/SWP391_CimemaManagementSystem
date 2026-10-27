@@ -176,4 +176,29 @@ public class ShowtimeDao {
             return false;
         }
     }
+
+    /**
+     * Checks if this showtime has any bookings (regardless of status).
+     */
+    public boolean hasAnyBookings(int showtimeId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM Booking WHERE ShowtimeID = ?",
+                    Integer.class, showtimeId);
+            return count != null && count > 0;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Physically deletes a showtime.
+     */
+    public int delete(int showtimeId) {
+        try {
+            jdbcTemplate.update("DELETE FROM BookingSeat WHERE ShowtimeID = ?", showtimeId);
+        } catch (Exception ignored) {}
+        String sql = "DELETE FROM Showtime WHERE ShowtimeID = ?";
+        return jdbcTemplate.update(sql, showtimeId);
+    }
 }

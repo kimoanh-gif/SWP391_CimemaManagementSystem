@@ -8,4 +8,8 @@ public class RoomHasActiveShowtimesException extends RuntimeException {
     public RoomHasActiveShowtimesException(int roomId) {
         super("Room ID " + roomId + " has upcoming showtimes and cannot be deactivated.");
     }
+
+    public RoomHasActiveShowtimesException(String message) {
+        super(message);
+    }
 }
