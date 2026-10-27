@@ -231,8 +231,14 @@
                                 title="Edit showtime">✎</button>
                         <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/stop'}" method="post" style="display:inline;">
                             <button type="submit" class="action-btn action-btn-del"
-                                    onclick="return confirm('Are you sure you want to stop / cancel this showtime?');"
+                                     onclick="return confirm('Are you sure you want to stop / cancel this showtime?');"
                                     title="Stop showtime">⏹</button>
+                        </form>
+                        <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/delete'}" method="post" style="display:inline;"
+                              th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa suất chiếu này không?\');'">
+                            <button type="submit" class="action-btn action-btn-del"
+                                    style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                    title="Xóa suất chiếu">🗑</button>
                         </form>
                     </td>
                 </tr>
@@ -286,6 +292,7 @@
             <div class="form-group">
                 <label class="form-label">Start time <span class="req">*</span></label>
                 <input type="datetime-local" id="formStartTime" th:field="*{startTime}" class="form-control" required>
+                <div id="startTimeError" style="display:none;color:var(--danger,#BA1A1A);font-size:12px;margin-top:4px;font-weight:600;"></div>
             </div>
             <div class="form-group" style="background-color: var(--primary-light); padding: 12px; border-radius: 8px;">
                 <label class="form-label" style="margin: 0; color: var(--primary);">Expected end time (+15 min cleaning buffer):</label>

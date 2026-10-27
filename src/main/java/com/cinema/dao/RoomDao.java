@@ -127,6 +127,16 @@ public class RoomDao {
         return jdbcTemplate.update(sql, roomId);
     }
 
+    public int countTotalShowtimes(int roomId) {
+        String sql = "SELECT COUNT(*) FROM Showtime WHERE RoomID = ?";
+        Integer cnt = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
+        return cnt != null ? cnt : 0;
+    }
+
+    public void deleteSeatsByRoomId(int roomId) {
+        jdbcTemplate.update("DELETE FROM Seat WHERE RoomID = ?", roomId);
+    }
+
     /**
      * Checks whether a room has any upcoming (future) showtimes.
      * Used for BR-52 validation before deactivation.

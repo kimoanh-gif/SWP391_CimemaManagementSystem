@@ -64,15 +64,31 @@ public class RoomController {
     }
 
     @PostMapping("/deactivate/{id}")
-    public String deactivate(@PathVariable int id, Model model, jakarta.servlet.http.HttpServletRequest request) {
+    public String deactivate(@PathVariable int id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes, jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         try {
             roomService.deactivate(id);
-            model.addAttribute("successMessage", "Đã đưa phòng vào bảo trì");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã đưa phòng vào bảo trì");
         } catch (RoomNotFoundException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/manager/rooms";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String delete(@PathVariable int id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes, jakarta.servlet.http.HttpServletRequest request) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        try {
+            Room room = roomService.getById(id);
+            String name = room.getRoomName();
+            roomService.delete(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa phòng chiếu '" + name + "' thành công.");
+        } catch (RoomNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/manager/rooms";
     }

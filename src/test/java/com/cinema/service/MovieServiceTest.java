@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -112,20 +113,53 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("createMovie: Should reject duration <= 0")
+    @DisplayName("createMovie: Should reject duration <= 0 or > 600")
     void testCreateMovie_InvalidDuration() {
         sampleForm.setDuration(0);
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Thời lượng");
 
+        sampleForm.setDuration(601);
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Thời lượng");
     }
 
     @Test
+    @DisplayName("createMovie: Should reject past or today releaseDate")
+    void testCreateMovie_PastReleaseDate() {
+        sampleForm.setReleaseDate(LocalDate.now());
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày bắt đầu (khởi chiếu) phải ở tương lai");
+
+        sampleForm.setReleaseDate(LocalDate.now().minusDays(1));
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày bắt đầu (khởi chiếu) phải ở tương lai");
+    }
+
+    @Test
+    @DisplayName("createMovie: Should reject past or today endDate")
+    void testCreateMovie_PastEndDate() {
+        sampleForm.setReleaseDate(LocalDate.now().plusDays(5));
+        sampleForm.setEndDate(LocalDate.now());
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày kết thúc phải ở tương lai");
+
+        sampleForm.setEndDate(LocalDate.now().minusDays(2));
+        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ngày kết thúc phải ở tương lai");
+    }
+
+    @Test
     @DisplayName("createMovie: Should reject when endDate is before releaseDate")
     void testCreateMovie_InvalidDates() {
-        sampleForm.setReleaseDate(LocalDate.of(2026, 5, 20));
-        sampleForm.setEndDate(LocalDate.of(2026, 5, 10));
+        sampleForm.setReleaseDate(LocalDate.now().plusDays(20));
+        sampleForm.setEndDate(LocalDate.now().plusDays(10));
 
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -212,5 +246,41 @@ class MovieServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).isActiveForShowtimes()).isTrue();
         verify(movieDao).findMoviesAvailableForShowtimes();
+    }
+
+    @Test
+    @DisplayName("deleteMovie: Should physically delete movie when no showtimes exist")
+    void testDeleteMovie_Success() {
+        when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
+        when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(0);
+        when(movieDao.countShowtimesByMovieId(1)).thenReturn(0);
+
+        assertDoesNotThrow(() -> movieService.deleteMovie(1));
+        verify(movieDao).delete(1);
+    }
+
+    @Test
+    @DisplayName("deleteMovie: Should reject deletion when movie has upcoming showtimes")
+    void testDeleteMovie_HasUpcomingShowtimes() {
+        when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
+        when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(3);
+
+        assertThatThrownBy(() -> movieService.deleteMovie(1))
+                .isInstanceOf(MovieHasActiveShowtimesException.class)
+                .hasMessageContaining("3 suất chiếu");
+        verify(movieDao, never()).delete(anyInt());
+    }
+
+    @Test
+    @DisplayName("deleteMovie: Should reject deletion when movie has existing showtimes in system")
+    void testDeleteMovie_HasPastShowtimes() {
+        when(movieDao.findById(1)).thenReturn(Optional.of(sampleMovie));
+        when(movieDao.countUpcomingShowtimesByMovieId(1)).thenReturn(0);
+        when(movieDao.countShowtimesByMovieId(1)).thenReturn(2);
+
+        assertThatThrownBy(() -> movieService.deleteMovie(1))
+                .isInstanceOf(MovieHasActiveShowtimesException.class)
+                .hasMessageContaining("2 suất chiếu");
+        verify(movieDao, never()).delete(anyInt());
     }
 }

@@ -603,6 +603,14 @@ public class MovieDao {
         return list;
     }
 
+    public void delete(int movieId) {
+        jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
+        try {
+            jdbcTemplate.update("DELETE FROM MovieReview WHERE MovieID = ?", movieId);
+        } catch (Exception ignored) {}
+        jdbcTemplate.update("DELETE FROM Movie WHERE MovieID = ?", movieId);
+    }
+
     private String emptyToNull(String value) {
         return (value == null || value.trim().isEmpty()) ? null : value.trim();
     }
