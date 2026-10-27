@@ -1,12 +1,16 @@
 package com.cinema.controller;
 
 import com.cinema.dto.NewsRequest;
+import com.cinema.model.ApiResponse;
 import com.cinema.model.StaffNewsArticle;
 import com.cinema.service.SessionService;
 import com.cinema.service.StaffNewsService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +50,19 @@ public class StaffNewsApiController {
     public StaffNewsArticle update(@PathVariable int id, @Valid @RequestBody NewsRequest request,
                                    HttpSession session) {
         return staffNewsService.update(accountId(session), sessionService.currentRole(session), id, request);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNewsError(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.error(ex.getReason()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidNews(MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .toList();
+        return ResponseEntity.badRequest().body(ApiResponse.error("Please check the article fields.", errors));
     }
 
     private int accountId(HttpSession session) {
