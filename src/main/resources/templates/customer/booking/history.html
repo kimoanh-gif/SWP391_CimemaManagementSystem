@@ -5,29 +5,71 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Booking History | CINEORA</title>
   <link rel="icon" type="image/png" th:href="@{/images/cineora-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/cinema-portal.css}">
-  <link rel="stylesheet" th:href="@{/css/customer-booking.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-booking.css(v=2026102602)}">
 </head>
 <body class="customer-booking-page booking-history-page">
   <div th:replace="~{fragments/cinema-header-footer :: header('profile')}"></div>
   <main class="booking-shell history-shell">
-    <nav class="history-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/}">Home</a><span>›</span><strong>My Booking History</strong></nav>
-    <section class="hero-row compact history-heading"><div><p class="eyebrow">CINEORA ACCOUNT</p><h1>My Booking History</h1><p class="lead">Review your bookings and open the digital tickets for confirmed reservations.</p></div></section>
-    <section class="history-list" th:if="${!#lists.isEmpty(bookings)}">
-      <article class="panel history-card" th:each="booking : ${bookings}">
+    <nav class="history-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/}"><span class="material-symbols-outlined">home</span> Home</a><span>›</span><strong>My Booking History</strong></nav>
+    <section class="history-title-row">
+      <div><p class="eyebrow">CINEORA MEMBER ACCOUNT</p><h1>My Booking History</h1><p class="lead">Track your reservations, payment status and digital cinema tickets in one place.</p></div>
+      <div class="history-help"><span class="material-symbols-outlined">receipt_long</span><div><b>Need help with a booking?</b><small>Keep your booking code ready when contacting the cinema.</small></div></div>
+    </section>
+
+    <section class="history-metrics" aria-label="Booking summary">
+      <article><div><small>Total confirmed bookings</small><strong th:text="${confirmedCount}">0</strong><span>Reservations successfully created</span></div><i class="material-symbols-outlined">local_activity</i></article>
+      <article class="highlight"><div><small>Upcoming showtimes</small><strong th:text="${upcomingCount}">0</strong><span>Confirmed sessions yet to begin</span></div><i class="material-symbols-outlined">theaters</i></article>
+      <article><div><small>Total paid</small><strong th:text="${#numbers.formatDecimal(totalSpent,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong><span>Across successful payments</span></div><i class="material-symbols-outlined">payments</i></article>
+    </section>
+
+    <section class="history-controls" th:if="${!#lists.isEmpty(bookings)}">
+      <label class="history-search"><span class="material-symbols-outlined">search</span><input id="history-search" type="search" placeholder="Search by movie title or booking code" autocomplete="off"></label>
+      <div class="history-tabs" role="group" aria-label="Filter bookings">
+        <button class="active" type="button" data-history-filter="all">All</button>
+        <button type="button" data-history-filter="upcoming">Upcoming</button>
+        <button type="button" data-history-filter="completed">Completed</button>
+        <button type="button" data-history-filter="cancelled">Cancelled</button>
+      </div>
+    </section>
+
+    <section class="history-list history-list-premium" th:if="${!#lists.isEmpty(bookings)}" id="history-list">
+      <article class="panel history-card history-card-premium" th:each="booking : ${bookings}"
+               th:attr="data-history-search=${#strings.toLowerCase(booking.movieTitle + ' ' + booking.bookingCode)},data-history-status=${#strings.toLowerCase(booking.bookingStatus)},data-history-showtime=${booking.startTime}">
         <div class="history-poster"><img th:if="${booking.posterUrl != null and !#strings.isEmpty(booking.posterUrl)}" th:src="${booking.posterUrl}" th:alt="${booking.movieTitle}"><span th:unless="${booking.posterUrl != null and !#strings.isEmpty(booking.posterUrl)}">C</span></div>
         <div class="history-card-content">
-          <div class="history-status"><span class="status-pill" th:text="${booking.bookingStatus}">CONFIRMED</span><small th:text="${booking.paymentStatus}">PAID</small></div>
+          <div class="history-status"><span class="status-pill" th:classappend="${#strings.toLowerCase(booking.bookingStatus)}" th:text="${booking.bookingStatus}">CONFIRMED</span><span class="payment-pill"><i></i><span th:text="${booking.paymentStatus}">PAID</span></span></div>
           <h2 th:text="${booking.movieTitle}">Movie Title</h2>
-          <p><b th:text="${booking.bookingCode}">BOOKING-CODE</b></p>
-          <div class="history-meta"><span th:text="${#strings.replace(booking.roomName,'Phòng Chiếu','Cinema')}">Cinema 01</span><span th:text="${#temporals.format(booking.startTime,'HH:mm · MMM d, yyyy')}">19:30 · Oct 23, 2026</span><span th:text="${'Seats: ' + (booking.seatLabels ?: 'Released')}">Seats: A1, A2</span></div>
+          <button class="history-code" type="button" th:attr="data-copy-code=${booking.bookingCode}" title="Copy booking code"><span th:text="${booking.bookingCode}">BOOKING-CODE</span><span class="material-symbols-outlined">content_copy</span></button>
+          <div class="history-meta"><span><i class="material-symbols-outlined">calendar_month</i><b th:text="${#temporals.format(booking.startTime,'dd/MM/yyyy')}">26/10/2026</b></span><span><i class="material-symbols-outlined">schedule</i><b th:text="${#temporals.format(booking.startTime,'HH:mm')}">21:00</b></span><span><i class="material-symbols-outlined">meeting_room</i><b th:text="${#strings.replace(booking.roomName,'Phòng Chiếu','Cinema')}">Cinema 01</b></span><span><i class="material-symbols-outlined">event_seat</i><b th:text="${booking.seatLabels ?: 'Released'}">A1, A2</b></span></div>
         </div>
-        <div class="history-card-actions"><strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong><a th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button secondary" th:href="@{/customer/booking/tickets/{id}(id=${booking.bookingId})}">View Digital Tickets</a></div>
+        <div class="history-card-actions"><small>Total payment</small><strong th:text="${#numbers.formatDecimal(booking.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}">0 ₫</strong><button th:if="${booking.bookingStatus == 'CONFIRMED'}" class="button primary" type="button" th:attr="data-ticket-dialog=${'ticket-dialog-' + booking.bookingId}">View Ticket</button><span class="history-unavailable" th:unless="${booking.bookingStatus == 'CONFIRMED'}">Ticket unavailable</span></div>
+        <dialog class="history-ticket-dialog" th:id="${'ticket-dialog-' + booking.bookingId}" th:if="${booking.bookingStatus == 'CONFIRMED'}">
+          <div class="history-ticket-modal">
+            <header><div><p class="eyebrow">MY DIGITAL TICKET</p><h2 th:text="${booking.movieTitle}">Movie title</h2><span th:text="${booking.bookingCode}">BOOKING-CODE</span></div><form method="dialog"><button class="history-ticket-close" aria-label="Close ticket popup" title="Close">×</button></form></header>
+            <div class="history-popup-list">
+              <article class="history-popup-ticket" th:each="ticket : ${ticketsByBooking[booking.bookingId]}">
+                <div class="history-popup-main">
+                  <div class="history-popup-brand"><b>CINEORA</b><span>DIGITAL CINEMA TICKET</span></div>
+                  <div class="history-popup-movie"><div class="history-popup-poster"><img th:if="${ticket.posterUrl != null and !#strings.isEmpty(ticket.posterUrl)}" th:src="${ticket.posterUrl}" th:alt="${ticket.movieTitle}"><span th:unless="${ticket.posterUrl != null and !#strings.isEmpty(ticket.posterUrl)}">C</span></div><div><span class="status-pill" th:text="${ticket.ticketStatus}">VALID</span><h3 th:text="${ticket.movieTitle}">Movie title</h3><p>Present this ticket at the auditorium entrance.</p></div></div>
+                  <dl class="history-popup-details"><div><dt>Date</dt><dd th:text="${#temporals.format(ticket.startTime,'dd/MM/yyyy')}">26/10/2026</dd></div><div><dt>Showtime</dt><dd th:text="${#temporals.format(ticket.startTime,'HH:mm')}">21:00</dd></div><div><dt>Auditorium</dt><dd th:text="${ticket.roomName}">Cinema 01</dd></div><div><dt>Seat</dt><dd class="seat" th:text="${ticket.seatLabel}">B6</dd></div></dl>
+                </div>
+                <aside class="history-popup-qr"><b>SCAN TO ENTER</b><small>Use your camera to scan this code</small><div class="ticket-verification-qr" th:attr="data-ticket-url=${ticketBaseUrl + '/ticket/verify/' + ticket.qrCode}" aria-label="Digital ticket verification QR code"></div><em>Valid for one admission</em><code th:text="${ticket.qrCode}">CINEORA-TICKET</code></aside>
+              </article>
+            </div>
+          </div>
+        </dialog>
       </article>
+      <div class="history-no-results" id="history-no-results" hidden><span class="material-symbols-outlined">search_off</span><h2>No matching bookings</h2><p>Try another movie title, booking code or status.</p></div>
     </section>
-    <section class="panel empty-state" th:if="${#lists.isEmpty(bookings)}"><h2>You have no booking history yet</h2><p>Your completed bookings will appear here.</p></section>
+    <section class="panel empty-state history-empty" th:if="${#lists.isEmpty(bookings)}"><span class="material-symbols-outlined">confirmation_number</span><h2>You have no booking history yet</h2><p>Your completed bookings and digital tickets will appear here.</p><a class="button primary" th:href="@{/customer/booking}">Browse Showtimes</a></section>
   </main>
   <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
   <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script th:src="@{/js/customer-booking.js(v=2026102602)}"></script>
 </body>
 </html>

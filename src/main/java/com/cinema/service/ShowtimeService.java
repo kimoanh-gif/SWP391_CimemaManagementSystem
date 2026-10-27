@@ -138,11 +138,8 @@ public class ShowtimeService {
     public void deleteShowtime(int id) {
         Showtime existing = getShowtimeById(id);
 
-        if (showtimeDao.hasActiveBookings(id)) {
-            throw new InvalidShowtimeException("Showtime already has bookings; cannot delete (BR-54).");
-        }
-        if (showtimeDao.countTotalBookings(id) > 0) {
-            throw new InvalidShowtimeException("Showtime has prior booking transactions. Please stop the showtime instead of deleting it permanently.");
+        if (showtimeDao.hasAnyBookings(id)) {
+            throw new InvalidShowtimeException("Suất chiếu đã có lịch sử đặt vé hoặc vé đã bán, không thể xóa trực tiếp. Bạn có thể sử dụng chức năng Dừng/Hủy suất chiếu (Stop).");
         }
 
         showtimeDao.delete(id);
@@ -165,9 +162,12 @@ public class ShowtimeService {
             throw new InvalidShowtimeException("Base ticket price cannot be negative.");
         }
 
-        // BR-55: A new showtime must start in the future (for new showtimes)
-        if (currentShowtimeId == null && form.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new InvalidShowtimeException("Start time of a new showtime must be in the future (BR-55).");
+        // BR-55: A new showtime cannot be scheduled in the past or on the current date (must start from tomorrow onwards)
+        if (currentShowtimeId == null) {
+            LocalDate today = LocalDate.now();
+            if (!form.getStartTime().toLocalDate().isAfter(today)) {
+                throw new InvalidShowtimeException("Không được chọn ngày ở quá khứ hoặc hiện tại. Suất chiếu phải được lên lịch từ ngày mai trở đi (BR-55).");
+            }
         }
 
         // Validate Movie & BR-07

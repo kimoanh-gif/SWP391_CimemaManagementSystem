@@ -156,10 +156,12 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         try {
+            SeatType st = pricingService.getSeatTypeById(id);
+            String name = st.getTypeName();
             pricingService.deleteSeatType(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Xóa loại ghế thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa loại ghế '" + name + "' thành công!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa loại ghế: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
         }
 
         return "redirect:/manager/seat-types";

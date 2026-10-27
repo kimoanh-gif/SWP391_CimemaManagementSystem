@@ -133,4 +133,22 @@ public class TicketPricingServiceTest {
         assertThrows(InvalidPricingConfigurationException.class, () ->
                 pricingService.updateBasePrice(1, new BigDecimal("-5000")));
     }
+
+    @Test
+    void testDeleteSeatType_Success() {
+        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
+        when(seatTypeDao.isReferencedBySeats(2)).thenReturn(false);
+
+        assertDoesNotThrow(() -> pricingService.deleteSeatType(2));
+        verify(seatTypeDao).delete(2);
+    }
+
+    @Test
+    void testDeleteSeatType_ReferencedBySeats_ThrowsException() {
+        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
+        when(seatTypeDao.isReferencedBySeats(2)).thenReturn(true);
+
+        assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.deleteSeatType(2));
+        verify(seatTypeDao, never()).delete(anyInt());
+    }
 }

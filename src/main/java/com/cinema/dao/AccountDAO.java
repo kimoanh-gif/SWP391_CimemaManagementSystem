@@ -195,6 +195,47 @@ public class AccountDAO {
         return n == null ? 0 : n;
     }
 
+    public boolean existsByUsername(String username, int excludeId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dbo.Account WHERE LOWER(Username) = LOWER(?) AND AccountID <> ?",
+                Integer.class, username, excludeId);
+        return count != null && count > 0;
+    }
+
+    public boolean existsByEmail(String email, int excludeId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dbo.Account WHERE LOWER(Email) = LOWER(?) AND AccountID <> ?",
+                Integer.class, email, excludeId);
+        return count != null && count > 0;
+    }
+
+    public boolean existsByPhone(String phone, int excludeId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dbo.Account WHERE Phone = ? AND AccountID <> ?",
+                Integer.class, phone, excludeId);
+        return count != null && count > 0;
+    }
+
+    public int updateStaffAccount(int accountId, String username, String email,
+                                  String fullName, String phone, int roleId) {
+        return jdbcTemplate.update("""
+                UPDATE dbo.Account
+                SET Username = ?, Email = ?, FullName = ?, Phone = ?, RoleID = ?
+                WHERE AccountID = ?
+                """, username, email, fullName, phone, roleId, accountId);
+    }
+
+    /** Called within the account service transaction; preserve StaffID and position on edits. */
+    public void ensureActiveStaffProfile(int accountId) {
+        jdbcTemplate.update("""
+                IF EXISTS (SELECT 1 FROM dbo.Staff WITH (UPDLOCK, HOLDLOCK) WHERE AccountID = ?)
+                    UPDATE dbo.Staff SET [Status] = 'ACTIVE' WHERE AccountID = ?;
+                ELSE
+                    INSERT INTO dbo.Staff (AccountID, Position, [Status])
+                    VALUES (?, N'Nhân viên', 'ACTIVE');
+                """, accountId, accountId, accountId);
+    }
+
     public int updateRole(int accountId, int roleId) {
         return jdbcTemplate.update("UPDATE dbo.Account SET RoleID = ? WHERE AccountID = ?",
                 roleId, accountId);

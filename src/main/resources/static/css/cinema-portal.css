@@ -625,6 +625,262 @@ button, input, select, textarea {
     gap: 1.75rem;
 }
 
+/* Ranked revenue strip on the home page. */
+.cineora-home .top-grossing-section {
+    width: min(1380px, calc(100% - 3rem));
+    max-width: 1380px;
+    overflow: hidden;
+    margin-bottom: 5rem;
+    padding: 3rem clamp(1.5rem, 3vw, 3rem) 2.25rem;
+    color: var(--text-primary);
+    border: 1px solid rgba(177, 128, 106, 0.16);
+    border-radius: 32px;
+    background:
+        radial-gradient(circle at 16% 0%, rgba(242, 184, 75, 0.15), transparent 31%),
+        linear-gradient(145deg, #fffaf4 0%, #f6e9df 100%);
+    box-shadow: 0 18px 48px rgba(73, 48, 40, 0.08);
+}
+
+.top-grossing-section .section-header {
+    margin-bottom: 1.7rem;
+}
+
+.top-grossing-section .section-title {
+    color: var(--text-primary);
+    font-size: clamp(1.7rem, 2.3vw, 2.35rem);
+}
+
+.top-grossing-carousel {
+    position: relative;
+}
+
+.top-grossing-track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(1rem, 1.35vw, 1.6rem);
+    overflow: hidden;
+    padding: 1.15rem 0 1.7rem;
+}
+
+.top-grossing-card {
+    min-width: 0;
+    animation: top-card-enter 0.36s ease both;
+}
+
+.top-grossing-card[hidden] {
+    display: none;
+}
+
+@keyframes top-card-enter {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.top-grossing-poster-link {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 30px 30px 20px 20px;
+    background: #fff;
+    box-shadow: 0 16px 34px rgba(72, 43, 35, 0.18);
+    transform: rotate(-5deg);
+    transform-origin: 50% 85%;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.top-grossing-card:nth-child(even) .top-grossing-poster-link {
+    transform: rotate(5deg);
+}
+
+.top-grossing-card:nth-child(3n) .top-grossing-poster-link {
+    transform: rotate(3deg);
+}
+
+.top-grossing-card:hover .top-grossing-poster-link {
+    z-index: 2;
+    transform: rotate(0deg) translateY(-8px);
+    box-shadow: 0 26px 48px rgba(0, 0, 0, 0.48);
+}
+
+.top-grossing-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+}
+
+.top-grossing-card:hover .top-grossing-poster {
+    transform: scale(1.035);
+    filter: saturate(1.08);
+}
+
+.top-grossing-age {
+    position: absolute;
+    right: 14px;
+    bottom: 0;
+    padding: 7px 12px;
+    border-radius: 7px 7px 0 0;
+    background: rgba(69, 76, 99, 0.94);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    backdrop-filter: blur(8px);
+}
+
+.top-grossing-info {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+    padding: 1rem 0.2rem 0;
+}
+
+.top-grossing-rank {
+    color: #6f5200;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(4rem, 5.5vw, 6.2rem);
+    font-style: italic;
+    font-weight: 900;
+    line-height: 0.9;
+}
+
+.top-grossing-copy {
+    min-width: 0;
+    padding-top: 0.15rem;
+}
+
+.top-grossing-copy h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.35;
+}
+
+.top-grossing-copy h3 a {
+    color: var(--text-primary);
+}
+
+.top-grossing-copy p,
+.top-grossing-copy span {
+    display: block;
+    overflow: hidden;
+    margin: 0.2rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.top-grossing-arrow {
+    position: absolute;
+    z-index: 8;
+    top: 42%;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(20, 17, 19, 0.9);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+    font-size: 2.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.top-grossing-arrow:hover:not(:disabled) {
+    background: var(--primary);
+    transform: translateY(-50%) scale(1.06);
+}
+
+.top-grossing-arrow:disabled {
+    opacity: 0.28;
+    cursor: default;
+}
+
+.top-grossing-arrow-left {
+    left: -18px;
+}
+
+.top-grossing-arrow-right {
+    right: -18px;
+}
+
+@media (max-width: 680px) {
+    .top-grossing-section {
+        padding: 2.4rem 1.25rem 1.8rem;
+        width: calc(100% - 1.5rem);
+        border-radius: 22px;
+    }
+
+    .top-grossing-track {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: visible;
+    }
+
+    .top-grossing-poster-link {
+        border-radius: 22px 22px 14px 14px;
+    }
+
+    .top-grossing-arrow {
+        width: 46px;
+        height: 46px;
+    }
+
+    .top-grossing-arrow-left { left: -10px; }
+    .top-grossing-arrow-right { right: -10px; }
+}
+
+.movie-card[hidden] {
+    display: none;
+}
+
+.movie-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin-top: 2rem;
+}
+
+.movie-page-numbers {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.movie-page-arrow,
+.movie-page-number {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 0.75rem;
+    border: 1px solid #eadbd0;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.movie-page-arrow:hover:not(:disabled),
+.movie-page-number:hover,
+.movie-page-number.active {
+    color: #fff;
+    border-color: var(--primary);
+    background: var(--primary);
+    transform: translateY(-2px);
+}
+
+.movie-page-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 .movie-card {
     position: relative;
     background: var(--bg-surface);
@@ -1720,7 +1976,7 @@ button, input, select, textarea {
     --bg-dark: #fff8f0;
     --bg-surface: #ffffff;
     --bg-surface-elevated: #fff7fb;
-    --bg-surface-glass: rgba(255, 248, 240, .95);
+    --bg-surface-glass: rgba(255,248,240,.95);
     --primary: #d92332;
     --primary-light: #b3001f;
     --primary-dark: #930017;
@@ -1730,11 +1986,12 @@ button, input, select, textarea {
     --text-primary: #28202a;
     --text-secondary: #6d5a51;
     --text-muted: #846f67;
-    --border-subtle: rgba(144, 111, 109, .24);
+    --border-subtle: rgba(144,111,109,.24);
     --border-focus: rgba(217, 35, 50, .55);
     color: var(--text-primary);
     background: var(--bg-dark);
 }
+.cineora-home main { background: var(--bg-dark); }
 
 .cineora-home .cinema-header {
     position: fixed;
@@ -1762,7 +2019,7 @@ button, input, select, textarea {
 .cineora-home .user-points { color: #745100; }
 .cineora-home .account-dropdown-menu { border-color: var(--border-subtle); background: #fff; box-shadow: 0 16px 36px rgba(40,32,42,.14); }
 .cineora-home .account-dropdown-menu a,.cineora-home .account-dropdown-menu button { color: var(--text-primary); }
-.cineora-home .account-dropdown-menu a:hover,.cineora-home .account-dropdown-menu button:hover { color: var(--primary); background: #fff1ec; }
+.cineora-home .account-dropdown-menu a:hover,.cineora-home .account-dropdown-menu button:hover { color:var(--primary); background:#fff1ec; }
 .cineora-home .cinema-header.is-scrolled { color:var(--text-primary);border-bottom:1px solid rgba(144,111,109,.16)!important;background:rgba(255,248,240,.96)!important;box-shadow:0 5px 22px rgba(40,32,42,.1)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important; }
 .cineora-home .cinema-header.is-scrolled .brand-copy strong { color:#d92332; }
 .cineora-home .cinema-header.is-scrolled .brand-copy small { color:#6d5a51; }
@@ -1796,6 +2053,32 @@ button, input, select, textarea {
 .cineora-home .section-title { color: var(--text-primary); }
 .cineora-home .movie-card,.cineora-home .promo-card,.cineora-home .news-card { border-color: rgba(229,189,186,.5); background: #fff; box-shadow: 0 5px 20px rgba(40,32,42,.07); }
 .cineora-home .movie-card:hover,.cineora-home .promo-card:hover,.cineora-home .news-card:hover { border-color: rgba(217,35,50,.28); box-shadow: 0 14px 34px rgba(40,32,42,.12); }
+.cineora-home .movie-grid { overflow: visible; }
+.cineora-home .movie-card { position: relative; overflow: visible; }
+.cineora-home .movie-hover-preview {
+    position: absolute;
+    z-index: 30;
+    left: 50%;
+    bottom: 32%;
+    width: min(430px,82vw);
+    overflow: hidden;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 15px;
+    background: #15151d;
+    box-shadow: 0 24px 65px rgba(0,0,0,.48);
+    opacity: 0;
+    transform: translate(-50%,18px) scale(.96);
+    transition: opacity .2s ease,transform .2s ease;
+}
+.cineora-home .movie-card:hover .movie-hover-preview,
+.cineora-home .movie-card:focus-within .movie-hover-preview { opacity: 1; transform: translate(-50%,0) scale(1); }
+.cineora-home .movie-hover-preview img { display:block;width:100%;aspect-ratio:16/9;object-fit:cover; }
+.cineora-home .movie-hover-preview-body { padding:14px 16px;color:#fff; }
+.cineora-home .movie-hover-preview-body strong { display:block;font-size:1.05rem; }
+.cineora-home .movie-hover-preview-body span { display:block;margin-top:4px;color:#f2b84b;font-size:.78rem; }
+.cineora-home .movie-hover-preview-body p { display:-webkit-box;overflow:hidden;margin:8px 0 0;color:#c9c2c0;font-size:.82rem;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:2; }
+@media (hover:none),(max-width:760px) { .cineora-home .movie-hover-preview { display:none; } }
 .cineora-home .movie-card-title,.cineora-home .promo-title,.cineora-home .news-title { color: var(--text-primary); }
 .cineora-home .btn-card-detail { color: var(--primary); border-color: rgba(217,35,50,.35); background: #fff; }
 .cineora-home .btn-card-detail:hover { color: #fff; background: var(--primary); }
@@ -1959,13 +2242,24 @@ button, input, select, textarea {
 .cineora-home .hero-carousel {
     position: relative;
     padding: 0;
+    background: #fff8f0;
+    box-shadow: inset 0 -3px #fff8f0;
 }
 .cineora-home .hero-carousel::before,
 .cineora-home .hero-carousel::after { display: none; }
+.cineora-home .hero-carousel + .quick-booking-bar,
+.cineora-home .cinematic-hero-fallback + .quick-booking-bar {
+    position: relative;
+    z-index: 7;
+}
+.cineora-home .hero-carousel + .quick-booking-bar::before,
+.cineora-home .cinematic-hero-fallback + .quick-booking-bar::before {
+    display: none;
+}
 .cineora-home .hero-carousel-slide {
     position: absolute;
     z-index: 0;
-    inset: 0;
+    inset: 0 0 2px;
     display: flex;
     align-items: center;
     padding: 88px max(5vw,24px) 138px;
@@ -1979,20 +2273,20 @@ button, input, select, textarea {
     position: absolute;
     z-index: -2;
     inset: 0;
-    background-image: var(--hero-image),var(--hero-image);
-    background-position: right center,center;
-    background-size: auto 100%,cover;
-    background-repeat: no-repeat,no-repeat;
-    filter: saturate(.9) contrast(1.05);
-    transform: scale(1);
-    transition: opacity .8s ease;
+    background-image: var(--hero-image);
+    background-position: center 42%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: saturate(.94) brightness(1.06) contrast(1.03);
+    transform: scale(1.01);
+    transition: opacity .8s ease,transform 5s ease;
 }
 .cineora-home .hero-carousel-slide::after {
     content: "";
     position: absolute;
     z-index: -1;
     inset: 0;
-    background: linear-gradient(90deg,rgba(20,14,20,.84) 0%,rgba(27,17,23,.65) 31%,rgba(24,15,21,.23) 65%,rgba(15,11,16,.06) 100%),linear-gradient(0deg,rgba(20,14,20,.86) 0%,transparent 45%,rgba(12,9,13,.2) 100%);
+    background: linear-gradient(90deg,rgba(20,14,20,.76) 0%,rgba(27,17,23,.46) 31%,rgba(24,15,21,.08) 64%,transparent 100%),linear-gradient(0deg,#fff8f0 0%,rgba(255,248,240,.72) 7%,rgba(255,248,240,.12) 25%,transparent 42%);
 }
 .cineora-home .hero-carousel .hero-title { font-family:"Arial Narrow","Segoe UI",sans-serif;font-weight:900;letter-spacing:-2.5px; }
 .cineora-home .hero-carousel-slide.active {

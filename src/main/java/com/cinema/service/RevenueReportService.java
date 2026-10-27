@@ -19,6 +19,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -100,10 +101,47 @@ public class RevenueReportService {
         LocalDate end = request.getEndDate();
 
         RevenueReportData data = new RevenueReportData();
-        data.setSummary(revenueReportDao.getSummary(start, end));
-        data.setDailyItems(revenueReportDao.getDailyRevenue(start, end));
-        data.setMovieItems(revenueReportDao.getMovieRevenue(start, end));
-        data.setTransactionItems(revenueReportDao.getTransactions(start, end));
+        RevenueReportSummary summary = revenueReportDao.getSummary(start, end);
+        List<DailyRevenueItem> dailyItems = revenueReportDao.getDailyRevenue(start, end);
+        List<MovieRevenueItem> movieItems = revenueReportDao.getMovieRevenue(start, end);
+        List<TransactionRevenueItem> transactionItems = revenueReportDao.getTransactions(start, end);
+
+        if (summary == null) {
+            summary = new RevenueReportSummary();
+        }
+
+        // Consistency safeguard: if daily records exist, ensure summary values reflect them
+        if (!dailyItems.isEmpty()) {
+            if (summary.getTotalRevenue() == null || summary.getTotalRevenue().compareTo(BigDecimal.ZERO) == 0
+                    || summary.getTicketRevenue() == null || summary.getTicketRevenue().compareTo(BigDecimal.ZERO) == 0
+                    || summary.getTotalTickets() == 0) {
+                BigDecimal totalRev = BigDecimal.ZERO;
+                BigDecimal ticketRev = BigDecimal.ZERO;
+                BigDecimal fbRev = BigDecimal.ZERO;
+                BigDecimal discount = BigDecimal.ZERO;
+                int totalTickets = 0;
+                int totalBookings = 0;
+                for (DailyRevenueItem item : dailyItems) {
+                    if (item.getTotalRevenue() != null) totalRev = totalRev.add(item.getTotalRevenue());
+                    if (item.getTicketRevenue() != null) ticketRev = ticketRev.add(item.getTicketRevenue());
+                    if (item.getFbRevenue() != null) fbRev = fbRev.add(item.getFbRevenue());
+                    if (item.getDiscountAmount() != null) discount = discount.add(item.getDiscountAmount());
+                    totalTickets += item.getTicketCount();
+                    totalBookings += item.getBookingCount();
+                }
+                summary.setTotalRevenue(totalRev);
+                summary.setTicketRevenue(ticketRev);
+                summary.setFbRevenue(fbRev);
+                summary.setDiscountAmount(discount);
+                summary.setTotalTickets(totalTickets);
+                summary.setTotalPaidBookings(totalBookings);
+            }
+        }
+
+        data.setSummary(summary);
+        data.setDailyItems(dailyItems);
+        data.setMovieItems(movieItems);
+        data.setTransactionItems(transactionItems);
 
         return data;
     }
@@ -138,10 +176,10 @@ public class RevenueReportService {
 
             // 2. Summary KPI Block
             writer.println("--- TỔNG QUAN CHỈ SỐ DOANH THU ---");
-            writer.println("Tổng doanh thu toàn hệ thống (VNĐ)," + df.format(summary.getTotalRevenue()));
-            writer.println("Doanh thu vé xem phim (VNĐ)," + df.format(summary.getTicketRevenue()));
-            writer.println("Doanh thu bắp nước & F&B (VNĐ)," + df.format(summary.getFbRevenue()));
-            writer.println("Tổng giá trị giảm giá/voucher (VNĐ)," + df.format(summary.getDiscountAmount()));
+            writer.println("Tổng doanh thu toàn hệ thống (VNĐ)," + formatMoney(summary.getTotalRevenue(), df));
+            writer.println("Doanh thu vé xem phim (VNĐ)," + formatMoney(summary.getTicketRevenue(), df));
+            writer.println("Doanh thu bắp nước & F&B (VNĐ)," + formatMoney(summary.getFbRevenue(), df));
+            writer.println("Tổng giá trị giảm giá/voucher (VNĐ)," + formatMoney(summary.getDiscountAmount(), df));
             writer.println("Tổng số vé đã bán," + summary.getTotalTickets());
             writer.println("Tổng số đơn đặt vé thành công," + summary.getTotalPaidBookings());
             writer.println();
@@ -154,7 +192,7 @@ public class RevenueReportService {
                 writer.println("Mã Phim,Tên Phim,Số Suất Chiếu,Số Vé Đã Bán,Doanh Thu Vé (VNĐ),Doanh Thu F&B (VNĐ),Tổng Doanh Thu (VNĐ)");
 
                 if (data.getMovieItems().isEmpty()) {
-                    writer.println("Không có dữ liệu phim trong khoảng thời gian này,,,,,,");
+                    writer.println(escape("Không có dữ liệu phim trong khoảng thời gian này") + ",,,,,,");
                 } else {
                     for (MovieRevenueItem m : data.getMovieItems()) {
                         writer.println(String.format(
@@ -163,9 +201,9 @@ public class RevenueReportService {
                                 escape(m.getTitle()),
                                 m.getShowtimesCount(),
                                 m.getSoldTickets(),
-                                df.format(m.getTicketRevenue()),
-                                df.format(m.getFbRevenue()),
-                                df.format(m.getTotalRevenue())
+                                formatMoney(m.getTicketRevenue(), df),
+                                formatMoney(m.getFbRevenue(), df),
+                                formatMoney(m.getTotalRevenue(), df)
                         ));
                     }
                 }
@@ -174,7 +212,7 @@ public class RevenueReportService {
                 writer.println("Mã Đơn,Thời Gian Đặt,Khách Hàng,Số Điện Thoại,Phim,Phòng Chiếu,Suất Chiếu,Ghế Ngồi,Tiền Vé (VNĐ),Tiền F&B (VNĐ),Giảm Giá (VNĐ),Tổng Tiền (VNĐ),Hình Thức TT,Trạng Thái");
 
                 if (data.getTransactionItems().isEmpty()) {
-                    writer.println("Không có giao dịch thanh toán thành công trong khoảng thời gian này,,,,,,,,,,,,,");
+                    writer.println(escape("Không có giao dịch thanh toán thành công trong khoảng thời gian này") + ",,,,,,,,,,,,,");
                 } else {
                     for (TransactionRevenueItem t : data.getTransactionItems()) {
                         writer.println(String.format(
@@ -187,10 +225,10 @@ public class RevenueReportService {
                                 escape(t.getRoomName()),
                                 escape(t.getShowtimeStartTime() != null ? t.getShowtimeStartTime().format(DATETIME_FMT) : "-"),
                                 escape(t.getSeatLabels()),
-                                df.format(t.getTicketAmount()),
-                                df.format(t.getFbAmount()),
-                                df.format(t.getDiscountAmount()),
-                                df.format(t.getTotalAmount()),
+                                formatMoney(t.getTicketAmount(), df),
+                                formatMoney(t.getFbAmount(), df),
+                                formatMoney(t.getDiscountAmount(), df),
+                                formatMoney(t.getTotalAmount(), df),
                                 escape(t.getPaymentMethod()),
                                 escape(t.getBookingStatus())
                         ));
@@ -202,16 +240,16 @@ public class RevenueReportService {
                 writer.println("Ngày,Doanh Thu Vé (VNĐ),Doanh Thu F&B (VNĐ),Giảm Giá (VNĐ),Tổng Doanh Thu (VNĐ),Số Vé Bán,Số Đơn Hàng");
 
                 if (data.getDailyItems().isEmpty()) {
-                    writer.println("Không có dữ liệu doanh thu trong khoảng thời gian này,,,,,,");
+                    writer.println(escape("Không có dữ liệu doanh thu trong khoảng thời gian này") + ",,,,,,");
                 } else {
                     for (DailyRevenueItem d : data.getDailyItems()) {
                         writer.println(String.format(
                                 "%s,%s,%s,%s,%s,%d,%d",
                                 escape(d.getDate() != null ? d.getDate().format(DATE_FMT) : "-"),
-                                df.format(d.getTicketRevenue()),
-                                df.format(d.getFbRevenue()),
-                                df.format(d.getDiscountAmount()),
-                                df.format(d.getTotalRevenue()),
+                                formatMoney(d.getTicketRevenue(), df),
+                                formatMoney(d.getFbRevenue(), df),
+                                formatMoney(d.getDiscountAmount(), df),
+                                formatMoney(d.getTotalRevenue(), df),
                                 d.getTicketCount(),
                                 d.getBookingCount()
                         ));
@@ -229,6 +267,11 @@ public class RevenueReportService {
         if ("MOVIE".equalsIgnoreCase(type)) return "Báo cáo doanh thu theo phim";
         if ("TRANSACTIONS".equalsIgnoreCase(type)) return "Báo cáo chi tiết giao dịch";
         return "Báo cáo doanh thu theo ngày";
+    }
+
+    private String formatMoney(BigDecimal amount, DecimalFormat df) {
+        if (amount == null) return "\"0\"";
+        return escape(df.format(amount));
     }
 
     private String escape(String value) {

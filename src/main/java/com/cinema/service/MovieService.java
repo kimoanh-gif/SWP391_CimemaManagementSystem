@@ -48,7 +48,7 @@ public class MovieService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Movie createMovie(MovieForm form) {
-        validateMovieForm(form);
+        validateMovieForm(form, true);
 
         if (form.getStatus() == null || form.getStatus().trim().isEmpty()) {
             form.setStatus("Upcoming");
@@ -66,7 +66,7 @@ public class MovieService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Movie updateMovie(int movieId, MovieForm form) {
-        validateMovieForm(form);
+        validateMovieForm(form, false);
         Movie existing = getMovieById(movieId);
 
         LocalDate today = LocalDate.now();
@@ -199,8 +199,8 @@ public class MovieService {
         if (totalShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
                     "Không thể xóa phim '" + movie.getTitle()
-                            + "' vì đang có ràng buộc dữ liệu (" + totalShowtimes
-                            + " suất chiếu trong hệ thống). Bạn có thể sử dụng nút 'Dừng chiếu' (⏹) để lưu trữ phim."
+                            + "' vì đã có " + totalShowtimes
+                            + " suất chiếu trong lịch sử hệ thống. Bạn có thể chuyển phim sang trạng thái Lưu trữ (Archived)."
             );
         }
         movieDao.delete(movieId);
@@ -213,15 +213,24 @@ public class MovieService {
         return movieDao.findMoviesAvailableForShowtimes();
     }
 
-    private void validateMovieForm(MovieForm form) {
+    private void validateMovieForm(MovieForm form, boolean isNew) {
         if (form == null) {
             throw new IllegalArgumentException("Dữ liệu phim không được để trống.");
         }
         if (form.getTitle() == null || form.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên phim không được để trống.");
         }
-        if (form.getDuration() == null || form.getDuration() <= 0) {
-            throw new IllegalArgumentException("Thời lượng phim phải lớn hơn 0 phút.");
+        if (form.getDuration() == null || form.getDuration() <= 0 || form.getDuration() > 600) {
+            throw new IllegalArgumentException("Thời lượng phim phải từ 1 đến 600 phút.");
+        }
+        LocalDate today = LocalDate.now();
+        if (isNew) {
+            if (form.getReleaseDate() != null && !form.getReleaseDate().isAfter(today)) {
+                throw new IllegalArgumentException("Ngày bắt đầu (khởi chiếu) phải ở tương lai (từ ngày mai trở đi).");
+            }
+            if (form.getEndDate() != null && !form.getEndDate().isAfter(today)) {
+                throw new IllegalArgumentException("Ngày kết thúc phải ở tương lai (từ ngày mai trở đi).");
+            }
         }
         LocalDate today = LocalDate.now();
         boolean isNew = (form.getId() == null || form.getId() <= 0);

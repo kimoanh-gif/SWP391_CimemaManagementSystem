@@ -330,7 +330,9 @@ public class SystemConfigService implements CommandLineRunner {
      * Alternative Flow A5: Configure Membership Rank Thresholds
      * Exception E4: Invalid Membership Threshold
      */
+    @org.springframework.transaction.annotation.Transactional
     public OperationResult updateRankThreshold(int rankId, int newMinPoints) {
+        membershipRankDAO.lockThresholds();
         Optional<MembershipRank> rankOpt = membershipRankDAO.findById(rankId);
         if (rankOpt.isEmpty()) {
             return OperationResult.error("NOT_FOUND", "Membership rank not found.");
@@ -364,7 +366,7 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E4: Invalid Membership Threshold
      */
     public ValidationResult validateMembershipThreshold(int rankId, int newMinPoints) {
-        List<MembershipRank> allRanks = membershipRankDAO.findAll();
+        List<MembershipRank> allRanks = new ArrayList<>(membershipRankDAO.findAll());
         allRanks.sort(Comparator.comparingInt(MembershipRank::getMinPoints));
 
         // Find current rank position
@@ -380,9 +382,17 @@ public class SystemConfigService implements CommandLineRunner {
             return ValidationResult.error("NOT_FOUND", "Rank not found.");
         }
 
+        MembershipRank current = allRanks.get(currentIndex);
+        if (current.getMaxPoints() != null && newMinPoints > current.getMaxPoints()) {
+            return ValidationResult.error("INVALID_THRESHOLD", "Minimum points cannot exceed this rank's maximum points.");
+        }
+
         // Check lower bound (previous rank's max + 1)
         if (currentIndex > 0) {
             MembershipRank prevRank = allRanks.get(currentIndex - 1);
+            if (prevRank.getMaxPoints() != null && newMinPoints <= prevRank.getMaxPoints()) {
+                return ValidationResult.error("INVALID_THRESHOLD", "Minimum points must be greater than the previous rank's maximum (" + prevRank.getMaxPoints() + ").");
+            }
             if (newMinPoints <= prevRank.getMinPoints()) {
                 return ValidationResult.error("INVALID_THRESHOLD", 
                         "New threshold (" + newMinPoints + ") must be greater than " + 

@@ -83,63 +83,21 @@ function getCsrfToken() {
     return match ? decodeURIComponent(match[2]) : "";
 }
 
-function getTodayIso() {
-    var today = new Date();
-    var yyyy = today.getFullYear();
-    var mm = String(today.getMonth() + 1).padStart(2, '0');
-    var dd = String(today.getDate()).padStart(2, '0');
-    return yyyy + '-' + mm + '-' + dd;
+function getTomorrowDateStr() {
+    var d = new Date();
+    d.setDate(d.getDate() + 1);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
 }
 
-function validateMovieDates() {
-    var releaseInput = document.getElementById("movieReleaseDate");
-    var endInput = document.getElementById("movieEndDate");
-    if (!releaseInput || !endInput) return true;
-
-    var releaseDate = releaseInput.value;
-    var endDate = endInput.value;
-    var id = getValue("movieId").trim();
-    var isNew = !id || parseInt(id, 10) <= 0;
-    var todayStr = getTodayIso();
-    var origReleaseDate = releaseInput.getAttribute("data-original-date") || "";
-    var origEndDate = endInput.getAttribute("data-original-date") || "";
-
-    var isValid = true;
-
-    // Validate Release Date: cannot be in past for new movie or if modified
-    if (releaseDate) {
-        if (releaseDate < todayStr && (isNew || releaseDate !== origReleaseDate)) {
-            showError("movieReleaseDate", "releaseDateFeedback", "Release date must be from today onwards, cannot be in the past.");
-            isValid = false;
-        } else {
-            clearError("movieReleaseDate", "releaseDateFeedback");
-        }
-    } else {
-        clearError("movieReleaseDate", "releaseDateFeedback");
-    }
-
-    // Dynamic min attribute for Expected End Date
-    var effectiveMin = (releaseDate && releaseDate > todayStr) ? releaseDate : todayStr;
-    if (isNew || (endDate && endDate >= effectiveMin)) {
-        endInput.min = effectiveMin;
-    }
-
-    // Validate Expected End Date: cannot be in past or before release date
-    if (endDate) {
-        if (endDate < todayStr && (isNew || endDate !== origEndDate)) {
-            showError("movieEndDate", "dateFeedback", "Expected end date must be from today onwards, cannot be in the past.");
-            isValid = false;
-        } else if (releaseDate && endDate < releaseDate) {
-            showError("movieEndDate", "dateFeedback", "Expected end date cannot be earlier than release date.");
-            isValid = false;
-        } else {
-            clearError("movieEndDate", "dateFeedback");
-        }
-    } else {
-        clearError("movieEndDate", "dateFeedback");
-    }
-
-    return isValid;
+function getTodayDateStr() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
 }
 
 // =====================================================================
@@ -153,17 +111,12 @@ function openAddMovieModal() {
     var status = document.getElementById("movieStatus");
     if (status) status.value = "Upcoming";
 
-    var todayStr = getTodayIso();
+    // Enforce future dates (from tomorrow onwards)
+    var tomorrowStr = getTomorrowDateStr();
     var releaseInput = document.getElementById("movieReleaseDate");
     var endInput = document.getElementById("movieEndDate");
-    if (releaseInput) {
-        releaseInput.min = todayStr;
-        releaseInput.removeAttribute("data-original-date");
-    }
-    if (endInput) {
-        endInput.min = todayStr;
-        endInput.removeAttribute("data-original-date");
-    }
+    if (releaseInput) releaseInput.min = tomorrowStr;
+    if (endInput) endInput.min = tomorrowStr;
 
     var backdrop = document.getElementById("movieModalBackdrop");
     if (backdrop) backdrop.classList.add("open");
@@ -187,11 +140,17 @@ function openEditMovieModal(button) {
     var language = button.getAttribute("data-language") || "";
     var description = button.getAttribute("data-description") || "";
     var poster = button.getAttribute("data-poster") || "";
+    var banner = button.getAttribute("data-banner") || "";
     var trailer = button.getAttribute("data-trailer") || "";
     var genreIdsStr = button.getAttribute("data-genre-ids") || "";
 
     var modalTitle = document.getElementById("movieModalTitle");
     if (modalTitle) modalTitle.textContent = "Edit movie: " + title;
+
+    var releaseInput = document.getElementById("movieReleaseDate");
+    var endInput = document.getElementById("movieEndDate");
+    if (releaseInput) releaseInput.removeAttribute("min");
+    if (endInput) endInput.removeAttribute("min");
 
     setValue("movieId", id);
     setValue("movieTitle", title);
@@ -206,6 +165,7 @@ function openEditMovieModal(button) {
     setValue("movieLanguage", language);
     setValue("movieDescription", description);
     setValue("moviePoster", poster);
+    setValue("movieBanner", banner);
     setValue("movieTrailer", trailer);
 
     var todayStr = getTodayIso();
@@ -346,11 +306,71 @@ function resetMovieForm() {
     var durationInput = document.getElementById("movieDuration");
     if (durationInput) durationInput.classList.remove("is-invalid");
 
+    var releaseInput = document.getElementById("movieReleaseDate");
+    if (releaseInput) releaseInput.classList.remove("is-invalid");
+
+    var endInput = document.getElementById("movieEndDate");
+    if (endInput) endInput.classList.remove("is-invalid");
+
     var counter = document.getElementById("descCharCounter");
     if (counter) counter.textContent = "0/1000";
 
     var checkboxes = document.querySelectorAll(".genre-checkbox-item input[type='checkbox']");
     checkboxes.forEach(function (cb) { cb.checked = false; });
+}
+
+function validateMovieDuration() {
+    var raw = getValue("movieDuration").trim();
+    if (!raw) {
+        showError("movieDuration", "durationFeedback", "Thời lượng phim không được để trống.");
+        return false;
+    }
+    var num = Number(raw);
+    if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
+        showError("movieDuration", "durationFeedback", "Thời lượng phim phải là số nguyên lớn hơn 0 phút.");
+        return false;
+    }
+    if (num > 600) {
+        showError("movieDuration", "durationFeedback", "Thời lượng phim không được vượt quá 600 phút.");
+        return false;
+    }
+    clearError("movieDuration", "durationFeedback");
+    return true;
+}
+
+function validateMovieDates() {
+    var releaseDate = getValue("movieReleaseDate");
+    var endDate = getValue("movieEndDate");
+    var isCreate = !getValue("movieId");
+    var todayStr = getTodayDateStr();
+    var isValid = true;
+
+    if (releaseDate) {
+        if (isCreate && releaseDate <= todayStr) {
+            showError("movieReleaseDate", "releaseDateFeedback", "Ngày bắt đầu (khởi chiếu) phải ở tương lai (từ ngày mai trở đi).");
+            isValid = false;
+        } else {
+            clearError("movieReleaseDate", "releaseDateFeedback");
+        }
+    } else {
+        clearError("movieReleaseDate", "releaseDateFeedback");
+    }
+
+    if (endDate) {
+        if (isCreate && endDate <= todayStr) {
+            showError("movieEndDate", "dateFeedback", "Ngày kết thúc phải ở tương lai (từ ngày mai trở đi).");
+            isValid = false;
+        } else if (releaseDate && endDate < releaseDate) {
+            showError("movieEndDate", "dateFeedback", "Ngày kết thúc không được diễn ra trước ngày bắt đầu.");
+            isValid = false;
+        } else {
+            clearError("movieEndDate", "dateFeedback");
+        }
+    } else {
+        clearError("movieEndDate", "dateFeedback");
+    }
+
+    return isValid;
 }
 
 // =====================================================================
@@ -477,56 +497,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var durationInput = document.getElementById("movieDuration");
     if (durationInput) {
-        // Prevent typing exponential, negative, decimal signs
-        durationInput.addEventListener("keydown", function (e) {
-            if (["e", "E", "+", "-", "."].indexOf(e.key) !== -1) {
-                e.preventDefault();
-            }
-        });
-
-        // Restrict input to maximum 3 digits and validate range 1 - 600
-        durationInput.addEventListener("input", function () {
-            // Strip any non-digit character
-            this.value = this.value.replace(/\D/g, "");
-
-            // Limit maximum length to 3 digits (e.g. 1 to 600)
-            if (this.value.length > 3) {
-                this.value = this.value.slice(0, 3);
-            }
-
-            var val = parseInt(this.value, 10);
-            if (!this.value || isNaN(val)) {
-                showError("movieDuration", "durationFeedback", "Duration is required (1 to 600 minutes).");
-            } else if (val < 1 || val > 600) {
-                showError("movieDuration", "durationFeedback", "Duration must be between 1 and 600 minutes.");
-            } else {
-                clearError("movieDuration", "durationFeedback");
-            }
-        });
-
-        // On blur, auto-correct if empty or out of bounds
-        durationInput.addEventListener("blur", function () {
-            var val = parseInt(this.value, 10);
-            if (!this.value || isNaN(val) || val < 1) {
-                this.value = "1";
-                clearError("movieDuration", "durationFeedback");
-            } else if (val > 600) {
-                this.value = "600";
-                clearError("movieDuration", "durationFeedback");
-            }
-        });
+        durationInput.addEventListener("input", validateMovieDuration);
+        durationInput.addEventListener("change", validateMovieDuration);
     }
 
-    // Real-time validation for release date and expected end date
-    var releaseDateInput = document.getElementById("movieReleaseDate");
-    var endDateInput = document.getElementById("movieEndDate");
-    if (releaseDateInput) {
-        releaseDateInput.addEventListener("input", validateMovieDates);
-        releaseDateInput.addEventListener("change", validateMovieDates);
-    }
-    if (endDateInput) {
-        endDateInput.addEventListener("input", validateMovieDates);
-        endDateInput.addEventListener("change", validateMovieDates);
+    var releaseInput = document.getElementById("movieReleaseDate");
+    var endInput = document.getElementById("movieEndDate");
+    if (releaseInput && endInput) {
+        releaseInput.addEventListener("change", function () {
+            var val = this.value;
+            var tomorrow = getTomorrowDateStr();
+            var minEnd = (val && val > tomorrow) ? val : tomorrow;
+            endInput.min = minEnd;
+            validateMovieDates();
+        });
+        endInput.addEventListener("change", validateMovieDates);
+        releaseInput.addEventListener("input", validateMovieDates);
+        endInput.addEventListener("input", validateMovieDates);
     }
 
     // Close on backdrop click
@@ -555,27 +542,38 @@ document.addEventListener("DOMContentLoaded", function () {
             var hasError = false;
 
             if (!title) {
-                showError("movieTitle", "titleFeedback", "Movie title is required.");
+                showError("movieTitle", "titleFeedback", "Tên phim không được để trống.");
                 hasError = true;
             } else if (title.length > 150) {
-                showError("movieTitle", "titleFeedback", "Movie title must not exceed 150 characters.");
+                showError("movieTitle", "titleFeedback", "Tên phim không được vượt quá 150 ký tự.");
                 hasError = true;
             } else {
                 clearError("movieTitle", "titleFeedback");
             }
 
-            if (!duration || isNaN(duration) || duration <= 0 || duration > 600) {
-                showError("movieDuration", "durationFeedback", "Duration must be between 1 and 600 minutes.");
+            if (!validateMovieDuration()) {
                 hasError = true;
-            } else {
-                clearError("movieDuration", "durationFeedback");
             }
 
             if (!validateMovieDates()) {
                 hasError = true;
             }
 
-            if (hasError) return;
+            if (hasError) {
+                if (!title) {
+                    var tEl = document.getElementById("movieTitle");
+                    if (tEl) tEl.focus();
+                } else if (!validateMovieDuration()) {
+                    var dEl = document.getElementById("movieDuration");
+                    if (dEl) dEl.focus();
+                } else {
+                    var rEl = document.getElementById("movieReleaseDate");
+                    var eEl = document.getElementById("movieEndDate");
+                    if (rEl && rEl.classList.contains("is-invalid")) rEl.focus();
+                    else if (eEl && eEl.classList.contains("is-invalid")) eEl.focus();
+                }
+                return;
+            }
 
             // Collect selected genres
             var selectedGenreIds = [];

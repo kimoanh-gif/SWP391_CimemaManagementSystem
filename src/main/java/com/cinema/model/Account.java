@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class Account {
     private Integer accountId;
     private Integer roleId;
+    private String role;
     private String  username;
     private String  email;
     private String  passwordHash;   // null when account is created via OAuth (no password set yet)
@@ -42,6 +43,9 @@ public class Account {
 
     public Integer getRoleId() { return roleId; }
     public void setRoleId(Integer roleId) { this.roleId = roleId; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

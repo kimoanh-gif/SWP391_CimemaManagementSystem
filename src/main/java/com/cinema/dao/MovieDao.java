@@ -59,6 +59,7 @@ public class MovieDao {
         try { movie.setAgeRating(rs.getString("AgeRating")); } catch (Exception ignored) {}
         try { movie.setDescription(rs.getString("Description")); } catch (Exception ignored) {}
         try { movie.setPoster(rs.getString("Poster")); } catch (Exception ignored) {}
+        try { movie.setBanner(rs.getString("Banner")); } catch (Exception ignored) {}
         try { movie.setTrailer(rs.getString("Trailer")); } catch (Exception ignored) {}
 
         movie.setStatus(rs.getString("Status"));
@@ -105,6 +106,7 @@ public class MovieDao {
                     m.AgeRating,
                     m.[Description],
                     m.PosterURL AS Poster,
+                    m.BannerURL AS Banner,
                     m.TrailerURL AS Trailer,
                     m.[Status],
                     m.CreatedAt,
@@ -177,6 +179,7 @@ public class MovieDao {
                     m.AgeRating,
                     m.[Description],
                     m.PosterURL AS Poster,
+                    m.BannerURL AS Banner,
                     m.TrailerURL AS Trailer,
                     m.[Status],
                     m.CreatedAt,
@@ -248,13 +251,13 @@ public class MovieDao {
      * Inserts a new Movie record and returns the generated MovieID.
      */
     public int insert(MovieForm form) {
-        String posterCol = getWritablePosterColumn();
-        String trailerCol = getWritableTrailerColumn();
-        String sql = "INSERT INTO Movie ("
-                + "Title, OriginalTitle, Duration, ReleaseDate, EndDate, "
-                + "[Language], Director, Actors, AgeRating, [Description], "
-                + posterCol + ", " + trailerCol + ", [Status], CreatedAt"
-                + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
+        String sql = """
+                INSERT INTO Movie (
+                    Title, OriginalTitle, Duration, ReleaseDate, EndDate,
+                    [Language], Director, Actors, AgeRating, [Description],
+                    PosterURL, BannerURL, TrailerURL, [Status], CreatedAt
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())
+                """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -270,8 +273,9 @@ public class MovieDao {
             ps.setString(9, form.getAgeRating() != null ? form.getAgeRating().trim() : "P");
             ps.setString(10, emptyToNull(form.getDescription()));
             ps.setString(11, emptyToNull(form.getPoster()));
-            ps.setString(12, emptyToNull(form.getTrailer()));
-            ps.setString(13, form.getStatus() != null ? form.getStatus().trim() : "Upcoming");
+            ps.setString(12, emptyToNull(form.getBanner()));
+            ps.setString(13, emptyToNull(form.getTrailer()));
+            ps.setString(14, form.getStatus() != null ? form.getStatus().trim() : "Upcoming");
             return ps;
         }, keyHolder);
 
@@ -290,24 +294,25 @@ public class MovieDao {
      * Updates an existing movie's information.
      */
     public void update(int movieId, MovieForm form) {
-        String posterCol = getWritablePosterColumn();
-        String trailerCol = getWritableTrailerColumn();
-        String sql = "UPDATE Movie SET "
-                + "Title = ?, "
-                + "OriginalTitle = ?, "
-                + "Duration = ?, "
-                + "ReleaseDate = ?, "
-                + "EndDate = ?, "
-                + "[Language] = ?, "
-                + "Director = ?, "
-                + "Actors = ?, "
-                + "AgeRating = ?, "
-                + "[Description] = ?, "
-                + posterCol + " = ?, "
-                + trailerCol + " = ?, "
-                + "[Status] = ?, "
-                + "UpdatedAt = SYSUTCDATETIME() "
-                + "WHERE MovieID = ?";
+        String sql = """
+                UPDATE Movie
+                SET Title = ?,
+                    OriginalTitle = ?,
+                    Duration = ?,
+                    ReleaseDate = ?,
+                    EndDate = ?,
+                    [Language] = ?,
+                    Director = ?,
+                    Actors = ?,
+                    AgeRating = ?,
+                    [Description] = ?,
+                    PosterURL = ?,
+                    BannerURL = ?,
+                    TrailerURL = ?,
+                    [Status] = ?,
+                    UpdatedAt = SYSUTCDATETIME()
+                WHERE MovieID = ?
+                """;
 
         jdbcTemplate.update(
                 sql,
@@ -322,6 +327,7 @@ public class MovieDao {
                 form.getAgeRating() != null ? form.getAgeRating().trim() : "P",
                 emptyToNull(form.getDescription()),
                 emptyToNull(form.getPoster()),
+                emptyToNull(form.getBanner()),
                 emptyToNull(form.getTrailer()),
                 form.getStatus() != null ? form.getStatus().trim() : "Upcoming",
                 movieId
@@ -409,7 +415,7 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM Movie m
                 WHERE m.[Status] IN ('Upcoming', 'Now Showing')
@@ -459,7 +465,7 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE (UPPER(m.[Status]) IN ('NOW_SHOWING', 'NOW SHOWING', 'ACTIVE')
@@ -486,7 +492,7 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE UPPER(m.[Status]) IN ('COMING_SOON', 'COMING SOON', 'UPCOMING')
@@ -507,7 +513,7 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE m.ReleaseDate > CAST(SYSDATETIME() AS DATE)
@@ -525,14 +531,60 @@ public class MovieDao {
     }
 
     public List<Movie> findFeatured(int limit) {
-        return findNowShowing(limit);
+        return findTopGrossing(limit);
+    }
+
+    /**
+     * Returns currently bookable movies ordered by successfully paid revenue.
+     * A payment is collapsed to one amount per booking so gateway callbacks do
+     * not accidentally count the same booking more than once.
+     */
+    public List<Movie> findTopGrossing(int limit) {
+        String sql = """
+                WITH paid_booking AS (
+                    SELECT p.BookingID, MAX(p.Amount) AS PaidAmount
+                    FROM dbo.Payment p
+                    WHERE UPPER(p.[Status]) IN ('PAID', 'SUCCESS', 'COMPLETED')
+                    GROUP BY p.BookingID
+                ), movie_revenue AS (
+                    SELECT st.MovieID, SUM(pb.PaidAmount) AS Revenue
+                    FROM paid_booking pb
+                    JOIN dbo.Booking b ON b.BookingID = pb.BookingID
+                    JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                    WHERE UPPER(b.[Status]) NOT IN ('CANCELLED', 'EXPIRED')
+                    GROUP BY st.MovieID
+                )
+                SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
+                       m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
+                       m.[Status], m.CreatedAt, m.UpdatedAt
+                FROM dbo.Movie m
+                LEFT JOIN movie_revenue mr ON mr.MovieID = m.MovieID
+                WHERE (UPPER(m.[Status]) IN ('NOW_SHOWING', 'NOW SHOWING', 'ACTIVE')
+                       OR EXISTS (
+                           SELECT 1 FROM dbo.Showtime st
+                           WHERE st.MovieID = m.MovieID
+                             AND st.StartTime > SYSDATETIME()
+                             AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
+                       ))
+                  AND UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
+                ORDER BY COALESCE(mr.Revenue, 0) DESC, m.ReleaseDate DESC, m.MovieID DESC
+                """;
+        if (limit > 0) {
+            sql = sql.replaceFirst("SELECT m.MovieID", "SELECT TOP (" + limit + ") m.MovieID");
+        }
+        List<Movie> list = jdbcTemplate.query(sql, movieRowMapper);
+        for (Movie m : list) {
+            m.setGenres(findGenresByMovieId(m.getMovieId()));
+        }
+        return list;
     }
 
     public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy) {
         StringBuilder sql = new StringBuilder("""
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE UPPER(m.[Status]) NOT IN ('INACTIVE', 'ARCHIVED', 'DELETED')
@@ -582,7 +634,7 @@ public class MovieDao {
         String sql = """
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,
                        m.[Language], m.Director, m.Actors, m.AgeRating, m.[Description],
-                       m.PosterURL AS Poster, m.TrailerURL AS Trailer,
+                       m.PosterURL AS Poster, m.BannerURL AS Banner, m.TrailerURL AS Trailer,
                        m.[Status], m.CreatedAt, m.UpdatedAt
                 FROM dbo.Movie m
                 WHERE m.MovieID <> ?
@@ -601,6 +653,9 @@ public class MovieDao {
 
     public void delete(int movieId) {
         jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
+        try {
+            jdbcTemplate.update("DELETE FROM MovieReview WHERE MovieID = ?", movieId);
+        } catch (Exception ignored) {}
         jdbcTemplate.update("DELETE FROM Movie WHERE MovieID = ?", movieId);
     }
 

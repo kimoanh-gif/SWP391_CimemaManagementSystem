@@ -134,9 +134,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            background: rgba(30, 24, 32, 0.55);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -144,11 +143,11 @@
         }
         .modal.open { display: flex; }
         .modal-content {
-            background: #ffffff;
+            background: #fff;
             border-radius: 16px;
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.06);
             width: 100%;
-            max-width: 660px;
+            max-width: 680px;
             max-height: 92vh;
             display: flex;
             flex-direction: column;
@@ -160,7 +159,7 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .modal-header {
-            padding: 20px 24px;
+            padding: 20px 28px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -176,14 +175,11 @@
             width: 40px;
             height: 40px;
             border-radius: 10px;
-            background: rgba(229, 9, 20, 0.1);
-            color: var(--primary);
+            background: #FFDAD6;
+            color: #BA1A1A;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-        }
-        .modal-header-icon .material-symbols-outlined {
             font-size: 22px;
         }
         .modal-header h2 {
@@ -191,150 +187,204 @@
             font-weight: 700;
             color: var(--text-900);
             margin: 0;
-            line-height: 1.3;
         }
-        .modal-subtitle {
+        .modal-header p {
             font-size: 12.5px;
-            color: var(--text-400);
-            margin: 2px 0 0 0;
+            color: var(--text-500);
+            margin: 2px 0 0;
         }
         .close-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-400);
-            line-height: 1;
-            background: none;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #F3F4F6;
+            color: var(--text-500);
+            font-size: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
             transition: all 0.15s;
         }
         .close-btn:hover {
+            background: #E5E7EB;
             color: var(--text-900);
-            background: var(--bg-hover);
         }
         #room-form {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            flex: 1;
-            min-height: 0;
-        }
-        .modal-form-scrollable {
-            padding: 18px 24px;
+            padding: 22px 28px;
             overflow-y: auto;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            min-height: 0;
+            gap: 16px;
         }
-        .form-section {
-            background: #fbfbfb;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 16px;
+        .room-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 20px;
+            width: 100%;
         }
-        .form-section-title {
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+        .form-field.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-field-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            margin: 0;
+        }
+        .form-field-label .req {
+            color: #D92332;
+            margin-left: 3px;
+        }
+        .form-field-label .badge-tip {
             font-size: 11px;
+            font-weight: 500;
+            color: #6B7280;
+        }
+        .form-field-input,
+        .form-field-select,
+        .form-field-textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 42px;
+            padding: 0 14px;
+            border: 1.5px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-family: inherit;
+            color: #111827;
+            background-color: #FFFFFF;
+            transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+        }
+        .form-field-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px 14px;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+        .form-field-textarea {
+            height: 72px;
+            padding: 10px 14px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+        .form-field-input:focus,
+        .form-field-select:focus,
+        .form-field-textarea:focus {
+            outline: none;
+            border-color: #D92332;
+            box-shadow: 0 0 0 3px rgba(217, 35, 50, 0.12);
+            background-color: #FFFFFF;
+        }
+        .form-field-input.is-invalid {
+            border-color: #DC2626 !important;
+            background-color: #FEF2F2 !important;
+        }
+        .form-field-input.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18) !important;
+        }
+        .form-section-divider {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0 -4px;
+        }
+        .form-section-divider span {
+            font-size: 11.5px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            color: var(--text-500);
-            margin-bottom: 12px;
-            padding-bottom: 6px;
-            border-bottom: 1px dashed var(--border);
+            color: #9CA3AF;
+            white-space: nowrap;
         }
-        .form-section-title .material-symbols-outlined {
-            font-size: 16px;
-            color: var(--primary);
+        .form-section-divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid #E5E7EB;
+            margin: 0;
         }
-        .form-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .form-grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-700);
+        .calc-status-box {
+            grid-column: 1 / -1;
             display: flex;
             align-items: center;
-            gap: 3px;
+            justify-content: space-between;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 500;
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            color: #4B5563;
+            transition: all 0.2s;
         }
-        .form-label .req {
-            color: var(--danger);
-            font-weight: 700;
+        .calc-status-box.is-match {
+            background: #ECFDF5;
+            border-color: #A7F3D0;
+            color: #065F46;
         }
-        .form-label .hint {
-            font-size: 11px;
-            color: var(--text-400);
-            font-weight: 400;
-            margin-left: 2px;
+        .calc-status-box.is-mismatch {
+            background: #FEF2F2;
+            border-color: #FECACA;
+            color: #991B1B;
         }
-        .form-control {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 8px 12px;
-            border: 1px solid var(--border-dark);
+        .btn-apply-calc {
+            background: #D92332;
+            color: #fff;
+            border: none;
+            padding: 4px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-apply-calc:hover {
+            background: #B91C1C;
+        }
+        .modal-messages {
+            padding: 0 28px;
+        }
+        .rf-alert {
+            padding: 10px 14px;
             border-radius: 8px;
             font-size: 13px;
-            color: var(--text-900);
-            background: #ffffff;
-            outline: none;
-            font-family: inherit;
-            transition: all 0.15s ease-in-out;
+            font-weight: 500;
+            display: none;
+            margin-top: 14px;
         }
-        .form-control:hover {
-            border-color: #cbd5e1;
+        .rf-alert-error {
+            background: #FFDAD6;
+            color: #BA1A1A;
+            border: 1px solid #F5B5AE;
         }
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.12);
+        .rf-alert-success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
         }
-        .form-control::placeholder {
-            color: #94a3b8;
-            font-size: 12.5px;
-        }
-        select.form-control {
-            cursor: pointer;
-            background-color: #ffffff;
-        }
-        .modal-footer-actions {
-            background: #ffffff;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 24px;
+        .modal-footer {
+            padding: 16px 28px;
             border-top: 1px solid var(--border);
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-            flex-shrink: 0;
-        }
-        .success-msg { color: var(--success); font-size: 13px; font-weight: 600; padding: 4px 26px 0; }
-        .error-msg { color: var(--danger); font-size: 13px; font-weight: 600; padding: 4px 26px 0; }
-        @media (max-width: 600px) {
-            .form-grid-2, .form-grid-3 {
-                grid-template-columns: 1fr;
-            }
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #FAF9F8;
         }
     </style>
 </head>
@@ -364,15 +414,15 @@
         </div>
     </div>
 
-    <!-- Alert Messages -->
-    <div class="alert alert-success" th:if="${successMessage}" style="margin-bottom:16px;">
+    <!-- Alerts -->
+    <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
         <span class="alert-icon">✅</span>
-        <div class="alert-body" th:text="${successMessage}">Success message</div>
+        <div class="alert-body" th:text="${successMessage}"></div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
-    <div class="alert alert-error" th:if="${errorMessage}" style="margin-bottom:16px;">
+    <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
         <span class="alert-icon">⚠️</span>
-        <div class="alert-body" th:text="${errorMessage}">Error message</div>
+        <div class="alert-body" th:text="${errorMessage}"></div>
         <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
     </div>
 
@@ -473,22 +523,12 @@
                 </a>
                 <div style="display:flex;gap:6px;">
                     <button type="button" class="action-btn action-btn-edit edit-room-btn" th:data-id="${room.roomId}" title="Edit room">✎</button>
-                    <button type="button" class="action-btn deactivate-room-btn" th:data-id="${room.roomId}" title="Set to maintenance">⏹</button>
-                    <form th:action="@{'/manager/rooms/delete/' + ${room.roomId}}" method="post" style="display:inline;">
+                    <button type="button" class="action-btn action-btn-del deactivate-room-btn" th:data-id="${room.roomId}" title="Set to maintenance">⏹</button>
+                    <form th:action="@{'/manager/rooms/delete/' + ${room.roomId}}" method="post" style="display:inline;"
+                          th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa phòng chiếu \\\'\' + ${room.roomName} + \'\\\' không?\');'">
                         <button type="submit" class="action-btn action-btn-del"
-                                th:if="${room.showtimeCount == 0}"
-                                onclick="return confirm('Are you sure you want to delete this screening room? This will permanently remove the room configuration and seat map.');"
-                                title="Delete screening room">
-                            🗑
-                        </button>
-                        <button type="button" class="action-btn action-btn-del"
-                                th:if="${room.showtimeCount > 0}"
-                                th:data-name="${room.roomName}"
-                                th:data-count="${room.showtimeCount}"
-                                onclick="alert('⚠️ Cannot delete screening room \'' + this.dataset.name + '\'!\n\nReason: This room has a history of ' + this.dataset.count + ' showtimes in the system.\n\n👉 To stop using this room, please click the [⏹] button to set room status to \'Maintenance\'.');"
-                                th:title="'Room has ' + ${room.showtimeCount} + ' showtimes - Click to see why it cannot be deleted'">
-                            🗑
-                        </button>
+                                style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                title="Xóa phòng chiếu">🗑</button>
                     </form>
                 </div>
             </div>
@@ -518,7 +558,7 @@
 </div>
 </div>
 
-<!-- Modal for Add / Edit (IDs preserved for manager-rooms.js) -->
+<!-- Modal for Add / Edit (Screening room configuration) -->
 <div class="modal" id="room-modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -527,121 +567,131 @@
                     <span class="material-symbols-outlined">meeting_room</span>
                 </div>
                 <div>
-                    <h2>Screening Room Configuration</h2>
-                    <p class="modal-subtitle">Configure room specifications, seating layout, and technical equipment.</p>
+                    <h2 id="modal-title">Screening room configuration</h2>
+                    <p>Configure room specifications, seats and audio-visual hardware</p>
                 </div>
             </div>
-            <button type="button" class="close-btn" aria-label="Close modal">&times;</button>
+            <button type="button" class="close-btn" aria-label="Close">&times;</button>
         </div>
-        <div id="form-success" class="success-msg"></div>
-        <div id="form-error" class="error-msg"></div>
+        <div class="modal-messages">
+            <div id="form-error" class="rf-alert rf-alert-error"></div>
+            <div id="form-success" class="rf-alert rf-alert-success"></div>
+        </div>
         <form id="room-form">
             <input type="hidden" name="roomId" />
-
-            <div class="modal-form-scrollable">
-                <!-- SECTION 1: BASIC INFORMATION -->
-                <div class="form-section">
-                    <div class="form-section-title">
-                        <span class="material-symbols-outlined">info</span>
-                        <span>Basic Information</span>
-                    </div>
-                    <div class="form-grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Room code <span class="req">*</span></label>
-                            <input type="text" name="roomCode" required placeholder="e.g. ROOM-01" class="form-control" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Room name <span class="req">*</span></label>
-                            <input type="text" name="roomName" required placeholder="e.g. Screening Room 01 — IMAX Laser" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-grid-2" style="margin-top: 14px;">
-                        <div class="form-group">
-                            <label class="form-label">Room type <span class="req">*</span></label>
-                            <select name="roomType" required class="form-control">
-                                <option value="IMAX Laser">IMAX Laser</option>
-                                <option value="Gold Class">Gold Class VIP</option>
-                                <option value="Dolby Atmos">Dolby Atmos</option>
-                                <option value="Standard Laser">Standard Laser</option>
-                                <option value="Tech Lab">Tech Lab &amp; Hall</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Operating status <span class="req">*</span></label>
-                            <select name="status" required class="form-control">
-                                <option value="Ready">Ready</option>
-                                <option value="Screening">Screening</option>
-                                <option value="Cleaning">Cleaning</option>
-                                <option value="Maintenance">Maintenance</option>
-                            </select>
-                        </div>
-                    </div>
+            
+            <div class="room-form-grid">
+                <!-- Row 1: Code & Name -->
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Room code <span class="req">*</span></span>
+                    </label>
+                    <input type="text" name="roomCode" required placeholder="e.g. ROOM-01" class="form-field-input" />
+                </div>
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Room name <span class="req">*</span></span>
+                    </label>
+                    <input type="text" name="roomName" required placeholder="e.g. Screening Room 01 — IMAX Laser" class="form-field-input" />
                 </div>
 
-                <!-- SECTION 2: CAPACITY & SEATING LAYOUT -->
-                <div class="form-section">
-                    <div class="form-section-title">
-                        <span class="material-symbols-outlined">event_seat</span>
-                        <span>Capacity &amp; Seating Layout</span>
-                    </div>
-                    <div class="form-grid-3">
-                        <div class="form-group">
-                            <label class="form-label">Total rows<span class="req">*</span></label>
-                            <input type="number" name="totalRows" id="roomTotalRows" min="1" max="100" required placeholder="e.g. 10" class="form-control" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Seats per row<span class="req">*</span></label>
-                            <input type="number" name="seatsPerRow" id="roomSeatsPerRow" min="1" max="100" required placeholder="e.g. 12" class="form-control" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Capacity <span class="req">*</span></label>
-                            <input type="number" name="capacity" id="roomCapacity" min="1" max="5000" required placeholder="e.g. 120" class="form-control" />
-                        </div>
-                    </div>
-                    <div id="capacity-calc-hint" style="margin-top: 8px; font-size: 13px; color: var(--text-500); display: flex; align-items: center; gap: 6px;">
-                        <span class="material-symbols-outlined" style="font-size:18px;color:#e11d48;">calculate</span>
-                        <span id="capacityCalcText">Rule: <strong>Total room capacity = Vertical rows × Horizontal seats</strong></span>
-                    </div>
+                <!-- Row 2: Room Type & Status -->
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Room type <span class="req">*</span></span>
+                    </label>
+                    <select name="roomType" required class="form-field-select">
+                        <option value="IMAX Laser">IMAX Laser</option>
+                        <option value="Gold Class">Gold Class VIP</option>
+                        <option value="Dolby Atmos">Dolby Atmos</option>
+                        <option value="Standard Laser">Standard Laser</option>
+                        <option value="Tech Lab">Tech Lab &amp; Hall</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Operating status <span class="req">*</span></span>
+                    </label>
+                    <select name="status" required class="form-field-select">
+                        <option value="Ready">Ready</option>
+                        <option value="Screening">Screening</option>
+                        <option value="Cleaning">Cleaning</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
                 </div>
 
-                <!-- SECTION 3: TECHNICAL SPECIFICATIONS -->
-                <div class="form-section">
-                    <div class="form-section-title">
-                        <span class="material-symbols-outlined">tv_gen</span>
-                        <span>Technical &amp; Audio Specifications</span>
-                    </div>
-                    <div class="form-grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Screen size <span class="hint">(optional)</span></label>
-                            <input type="text" name="screenSize" placeholder="e.g. 26.5m x 15.2m" class="form-control" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Projector <span class="hint">(optional)</span></label>
-                            <input type="text" name="projector" placeholder="e.g. Christie 4K Dual Laser" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-top: 14px;">
-                        <label class="form-label">Sound system <span class="hint">(optional)</span></label>
-                        <input type="text" name="soundSystem" placeholder="e.g. IMAX 12 Ch Audio / Dolby Atmos 7.1.4" class="form-control" />
-                    </div>
+                <!-- Section: Seating Layout & Capacity -->
+                <div class="form-section-divider">
+                    <span>Seat Layout &amp; Capacity</span>
+                    <hr />
                 </div>
 
-                <!-- SECTION 4: DESCRIPTION & LOCATION -->
-                <div class="form-section" style="margin-bottom: 0;">
-                    <div class="form-section-title">
-                        <span class="material-symbols-outlined">notes</span>
-                        <span>Description &amp; Notes</span>
+                <!-- Row 3: Total Rows & Seats Per Row -->
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Number of rows (optional)</span>
+                        <span class="badge-tip">Rows</span>
+                    </label>
+                    <input type="number" id="field-totalRows" name="totalRows" min="1" max="100" placeholder="e.g. 10" class="form-field-input" />
+                </div>
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Seats per row (optional)</span>
+                        <span class="badge-tip">Seats/row</span>
+                    </label>
+                    <input type="number" id="field-seatsPerRow" name="seatsPerRow" min="1" max="100" placeholder="e.g. 12" class="form-field-input" />
+                </div>
+
+                <!-- Row 4: Capacity & Screen size -->
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Capacity (total seats) <span class="req">*</span></span>
+                        <span class="badge-tip" id="calc-hint-text">Rows × Seats/row</span>
+                    </label>
+                    <input type="number" id="field-capacity" name="capacity" min="1" max="5000" required placeholder="e.g. 120" class="form-field-input" />
+                </div>
+                <div class="form-field">
+                    <label class="form-field-label">
+                        <span>Screen size</span>
+                    </label>
+                    <input type="text" name="screenSize" placeholder="e.g. 26.5m x 15.2m" class="form-field-input" />
+                </div>
+
+                <!-- Interactive Calculation Notice -->
+                <div id="calc-sync-notice" class="calc-status-box" style="display:none;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span id="calc-sync-icon" class="material-symbols-outlined" style="font-size:18px;">info</span>
+                        <span id="calc-sync-text"></span>
                     </div>
-                    <div class="form-group">
-                        <textarea name="description" rows="3" placeholder="Additional notes about acoustic treatment, location on floor 2, accessibility, etc..." class="form-control" style="resize:vertical;"></textarea>
-                    </div>
+                    <button type="button" id="btn-apply-calc" class="btn-apply-calc" style="display:none;">Apply calculated seats</button>
+                </div>
+
+                <!-- Section: Hardware Specs -->
+                <div class="form-section-divider">
+                    <span>Hardware &amp; Equipment</span>
+                    <hr />
+                </div>
+
+                <!-- Row 5: Projector & Sound System -->
+                <div class="form-field">
+                    <label class="form-field-label">Projector</label>
+                    <input type="text" name="projector" placeholder="e.g. Christie 4K Dual Laser" class="form-field-input" />
+                </div>
+                <div class="form-field">
+                    <label class="form-field-label">Sound system</label>
+                    <input type="text" name="soundSystem" placeholder="e.g. IMAX 12 Ch Audio" class="form-field-input" />
+                </div>
+
+                <!-- Row 6: Description (Full Width) -->
+                <div class="form-field full-width">
+                    <label class="form-field-label">Description &amp; equipment notes</label>
+                    <textarea name="description" rows="2" placeholder="Notes about projection equipment, accessibility, or floor location..." class="form-field-textarea"></textarea>
                 </div>
             </div>
 
-            <!-- MODAL ACTIONS -->
-            <div class="modal-footer-actions">
-                <button type="button" class="btn btn-secondary close-btn" onclick="document.getElementById('room-modal').classList.remove('open')">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="min-width: 120px;">Save room</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary close-btn" style="height:40px;padding:0 20px;border-radius:8px;font-weight:600;">Cancel</button>
+                <button type="submit" id="btn-save-room" class="btn btn-primary" style="height:40px;padding:0 24px;border-radius:8px;font-weight:600;box-shadow:0 2px 6px rgba(217,35,50,0.3);">Save room</button>
             </div>
         </form>
     </div>

@@ -1,1 +1,60 @@
-<!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Booking Confirmed | CINEORA</title><link rel="stylesheet" th:href="@{/css/cinema-portal.css}"><link rel="stylesheet" th:href="@{/css/customer-booking.css}"></head><body class="customer-booking-page"><div th:replace="~{fragments/cinema-header-footer :: header('')}"></div><main class="booking-shell"><section class="panel success-stage"><div class="success-mark">✓</div><p class="eyebrow">TRANSACTION COMPLETE</p><h1>Booking and Payment Successful!</h1><p>Your seats are confirmed and your digital tickets have been issued.</p><div class="ticket-mini" th:if="${!#lists.isEmpty(tickets)}"><b th:text="${tickets[0].movieTitle}"></b><span th:text="${tickets[0].bookingCode}"></span><span th:text="${#temporals.format(tickets[0].startTime,'HH:mm · dd/MM/yyyy')}"></span></div><div class="success-actions"><a class="button primary" th:href="@{/customer/booking/tickets/{id}(id=${bookingId})}">View Digital Tickets</a><a class="button secondary" th:href="@{/customer/booking/history}">Booking History</a></div></section></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Booking Confirmed | CINEORA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Material+Symbols+Outlined&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cinema-portal.css}"><link rel="stylesheet" th:href="@{/css/customer-booking.css}">
+</head>
+<body class="customer-booking-page success-page" data-page="payment-success" th:attr="data-booking-id=${bookingId}">
+<div th:replace="~{fragments/cinema-header-footer :: header('')}"></div>
+<main class="booking-shell success-shell" th:if="${!#lists.isEmpty(tickets)}">
+  <section class="success-stepper" aria-label="Booking progress">
+    <div><span class="material-symbols-outlined">check</span><b>Seats</b><small>Selected</small></div>
+    <div><span class="material-symbols-outlined">check</span><b>Food &amp; Drinks</b><small>Completed</small></div>
+    <div><span class="material-symbols-outlined">check</span><b>Voucher</b><small>Completed</small></div>
+    <div><span class="material-symbols-outlined">done_all</span><b>Confirmed</b><small>Payment successful</small></div>
+  </section>
+  <section class="success-hero panel">
+    <div class="success-hero-copy"><div class="success-mark"><span class="material-symbols-outlined">verified</span></div><div>
+      <span class="success-status">Transaction complete</span><h1>Booking and Payment Successful!</h1>
+      <p>Thank you<span th:if="${currentUser != null}">, <strong th:text="${currentUser.fullName}">Customer</strong></span>. Your booking is confirmed and your digital tickets are ready.</p>
+      <p class="success-issued"><span class="material-symbols-outlined">mark_email_read</span>Keep your digital tickets ready for check-in at the auditorium entrance.</p>
+    </div></div>
+    <div class="success-reference"><span>BOOKING REFERENCE</span><strong th:text="${tickets[0].bookingCode}">BK000000</strong><small><i></i> Paid and confirmed</small></div>
+  </section>
+  <section class="success-detail-grid">
+    <article class="success-ticket-card panel">
+      <div class="success-poster">
+        <img th:if="${tickets[0].posterUrl != null and !#strings.isEmpty(tickets[0].posterUrl)}" th:src="${tickets[0].posterUrl}" th:alt="${tickets[0].movieTitle}">
+        <div class="success-poster-placeholder" th:unless="${tickets[0].posterUrl != null and !#strings.isEmpty(tickets[0].posterUrl)}"><span class="material-symbols-outlined">movie</span></div>
+        <div class="success-poster-shade"></div><div class="success-movie-title"><span>CINEORA DIGITAL PASS</span><h2 th:text="${tickets[0].movieTitle}">Movie title</h2></div>
+      </div>
+      <div class="success-ticket-body"><div class="success-facts">
+        <div><small>Date</small><b th:text="${#temporals.format(tickets[0].startTime,'dd/MM/yyyy')}">01/01/2026</b></div>
+        <div><small>Showtime</small><b class="accent" th:text="${#temporals.format(tickets[0].startTime,'HH:mm')}">21:00</b></div>
+        <div><small>Auditorium</small><b th:text="${tickets[0].roomName}">Cinema 01</b></div>
+        <div class="success-seats"><small>Seats</small><span><b th:each="ticket,iter : ${tickets}" th:text="${ticket.seatLabel + (!iter.last ? ', ' : '')}">B6</b></span></div>
+      </div><div class="success-ticket-footer">
+        <span><small>Booking code</small><b th:text="${tickets[0].bookingCode}">BK000000</b></span>
+        <span><small>Tickets issued</small><b th:text="${#lists.size(tickets) + (#lists.size(tickets) == 1 ? ' ticket' : ' tickets')}">2 tickets</b></span>
+        <span class="success-valid"><span class="material-symbols-outlined">verified_user</span> VALID</span>
+      </div></div>
+    </article>
+    <aside class="success-payment-card panel">
+      <div class="success-payment-icon"><span class="material-symbols-outlined">credit_score</span></div><p class="eyebrow">PAYMENT STATUS</p><h2>Payment confirmed</h2>
+      <p>The transaction was completed successfully. Your seats are no longer on hold and have been permanently reserved.</p>
+      <div class="success-payment-row"><span>Booking</span><b th:text="${tickets[0].bookingCode}">BK000000</b></div>
+      <div class="success-payment-row"><span>Admission</span><b th:text="${#lists.size(tickets)}">2</b></div><div class="success-payment-row"><span>Status</span><b class="paid">PAID</b></div>
+    </aside>
+  </section>
+  <section class="success-help-grid">
+    <article><span class="material-symbols-outlined">schedule</span><div><b>Arrive early</b><p>Please arrive at least 15 minutes before the showtime.</p></div></article>
+    <article><span class="material-symbols-outlined">qr_code_scanner</span><div><b>Prepare your QR</b><p>Open your digital tickets and present each code at the entrance.</p></div></article>
+    <article><span class="material-symbols-outlined">verified_user</span><div><b>Keep it secure</b><p>Do not share your ticket QR codes publicly before admission.</p></div></article>
+  </section>
+  <nav class="success-bottom-actions" aria-label="Booking actions"><a class="button primary" th:href="@{/customer/booking/history}">View Ticket <span class="material-symbols-outlined">arrow_forward</span></a></nav>
+</main>
+<main class="booking-shell" th:if="${#lists.isEmpty(tickets)}"><section class="panel success-stage"><div class="success-mark"><span class="material-symbols-outlined">info</span></div><h1>Booking confirmed</h1><p>Your booking was completed, but no digital ticket information is available.</p><div class="success-actions"><a class="button primary" th:href="@{/customer/booking/history}">View Ticket</a></div></section></main>
+<script th:src="@{/js/customer-booking.js}"></script></body></html>

@@ -161,8 +161,8 @@ public class TicketPricingService {
         SeatType st = getSeatTypeById(id);
         if (seatTypeDao.isReferencedBySeats(id)) {
             throw new InvalidPricingConfigurationException(
-                    "Cannot delete seat type '" + st.getTypeName()
-                            + "' because existing seats in screening rooms are using this seat type.");
+                    "Không thể xóa loại ghế '" + st.getTypeName() + "' vì đang có ghế trong phòng chiếu sử dụng loại ghế này. Hãy đổi loại ghế cho các ghế liên quan trước hoặc chuyển trạng thái sang Không hoạt động (Inactive)."
+            );
         }
         seatTypeDao.delete(id);
     }

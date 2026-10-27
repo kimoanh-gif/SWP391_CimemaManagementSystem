@@ -48,9 +48,9 @@ public class RevenueReportDao {
         try {
             jdbcTemplate.query(sql, rs -> {
                 BigDecimal totalRev = rs.getBigDecimal("TotalRevenue");
-                BigDecimal discount = rs.getBigDecimal("TotalDiscount");
                 summary.setTotalRevenue(totalRev != null ? totalRev : BigDecimal.ZERO);
-                summary.setDiscountAmount(discount != null ? discount : BigDecimal.ZERO);
+                BigDecimal totalDisc = rs.getBigDecimal("TotalDiscount");
+                summary.setDiscountAmount(totalDisc != null ? totalDisc : BigDecimal.ZERO);
                 summary.setTotalPaidBookings(rs.getInt("TotalPaidBookings"));
             }, Date.valueOf(startDate), Date.valueOf(endDate));
 
@@ -174,7 +174,14 @@ public class RevenueReportDao {
                           AND UPPER(b_fb.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
                           AND CAST(b_fb.BookingTime AS DATE) BETWEEN ? AND ?
                     ), 0) AS FbRevenue,
-                    COALESCE(SUM(b.TotalAmount), 0) AS TotalRevenue
+                    COALESCE((
+                        SELECT SUM(b_sub.TotalAmount)
+                        FROM dbo.Booking b_sub
+                        JOIN dbo.Showtime st_sub ON st_sub.ShowtimeID = b_sub.ShowtimeID
+                        WHERE st_sub.MovieID = m.MovieID
+                          AND UPPER(b_sub.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')
+                          AND CAST(b_sub.BookingTime AS DATE) BETWEEN ? AND ?
+                    ), 0) AS TotalRevenue
                 FROM dbo.Movie m
                 JOIN dbo.Showtime st ON st.MovieID = m.MovieID
                 LEFT JOIN dbo.Booking b ON b.ShowtimeID = st.ShowtimeID
@@ -198,6 +205,7 @@ public class RevenueReportDao {
                 item.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
                 return item;
             }, Date.valueOf(startDate), Date.valueOf(endDate),
+               Date.valueOf(startDate), Date.valueOf(endDate),
                Date.valueOf(startDate), Date.valueOf(endDate));
         } catch (Exception ex) {
             return Collections.emptyList();

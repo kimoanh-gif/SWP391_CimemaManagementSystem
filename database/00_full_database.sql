@@ -204,6 +204,7 @@ BEGIN
         AgeRating NVARCHAR(10) NOT NULL CONSTRAINT DF_Movie_AgeRating DEFAULT 'P',
         [Description] NVARCHAR(1000) NULL,
         PosterURL NVARCHAR(500) NULL,
+        BannerURL NVARCHAR(500) NULL,
         TrailerURL NVARCHAR(500) NULL,
         [Status] NVARCHAR(50) NOT NULL CONSTRAINT DF_Movie_Status DEFAULT 'Upcoming',
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Movie_CreatedAt DEFAULT SYSUTCDATETIME(),
@@ -218,6 +219,7 @@ IF COL_LENGTH(N'dbo.Movie', N'OriginalTitle') IS NULL ALTER TABLE dbo.Movie ADD 
 IF COL_LENGTH(N'dbo.Movie', N'EndDate') IS NULL ALTER TABLE dbo.Movie ADD EndDate DATE NULL;
 IF COL_LENGTH(N'dbo.Movie', N'Actors') IS NULL ALTER TABLE dbo.Movie ADD Actors NVARCHAR(500) NULL;
 IF COL_LENGTH(N'dbo.Movie', N'PosterURL') IS NULL ALTER TABLE dbo.Movie ADD PosterURL NVARCHAR(500) NULL;
+IF COL_LENGTH(N'dbo.Movie', N'BannerURL') IS NULL ALTER TABLE dbo.Movie ADD BannerURL NVARCHAR(500) NULL;
 IF COL_LENGTH(N'dbo.Movie', N'TrailerURL') IS NULL ALTER TABLE dbo.Movie ADD TrailerURL NVARCHAR(500) NULL;
 IF COL_LENGTH(N'dbo.Movie', N'CreatedAt') IS NULL ALTER TABLE dbo.Movie ADD CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME() WITH VALUES;
 IF COL_LENGTH(N'dbo.Movie', N'UpdatedAt') IS NULL ALTER TABLE dbo.Movie ADD UpdatedAt DATETIME2 NULL;
@@ -808,13 +810,36 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'account:manage')
 IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'report:view')
     INSERT dbo.Permission ([Name], [Description]) VALUES (N'report:view', N'View business reports');
 
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'booking:read')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'booking:read', N'Xem danh sách và chi tiết đặt vé');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'news:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'news:manage', N'Soạn và quản lý bài viết');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'news:approve')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'news:approve', N'Duyệt và xuất bản bài viết');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'movie:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'movie:manage', N'Quản lý phim');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'genre:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'genre:manage', N'Quản lý thể loại phim');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'room:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'room:manage', N'Quản lý phòng chiếu');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'seat:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'seat:manage', N'Quản lý loại ghế và sơ đồ ghế');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'pricing:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'pricing:manage', N'Quản lý giá vé');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'fb:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'fb:manage', N'Quản lý đồ ăn và thức uống');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'voucher:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'voucher:manage', N'Quản lý voucher');
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE [Name] = N'promotion:manage')
+    INSERT dbo.Permission ([Name], [Description]) VALUES (N'promotion:manage', N'Quản lý khuyến mãi');
+
 INSERT dbo.RolePermission (RoleID, PermissionID)
 SELECT r.RoleID, p.PermissionID
 FROM dbo.[Role] r
 JOIN dbo.Permission p ON
     (r.[Name] = N'CUSTOMER' AND p.[Name] IN (N'movie:read', N'booking:create')) OR
-    (r.[Name] = N'STAFF' AND p.[Name] IN (N'movie:read', N'booking:create', N'ticket:checkin')) OR
-    (r.[Name] = N'MANAGER' AND p.[Name] IN (N'movie:read', N'showtime:manage', N'report:view')) OR
+    (r.[Name] = N'STAFF' AND p.[Name] IN (N'movie:read', N'booking:create', N'ticket:checkin', N'booking:read', N'news:manage')) OR
+    (r.[Name] = N'MANAGER' AND p.[Name] IN (N'movie:read', N'showtime:manage', N'report:view', N'booking:read', N'news:approve', N'movie:manage', N'genre:manage', N'room:manage', N'seat:manage', N'pricing:manage', N'fb:manage', N'voucher:manage', N'promotion:manage')) OR
     (r.[Name] = N'ADMIN')
 WHERE NOT EXISTS (
     SELECT 1 FROM dbo.RolePermission rp
@@ -982,6 +1007,16 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'Bambi: The Reckoning')
 IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Curse 2026')
     INSERT dbo.Movie (Title,OriginalTitle,Duration,ReleaseDate,EndDate,[Language],Director,Actors,AgeRating,[Description],PosterURL,TrailerURL,[Status]) VALUES
     (N'The Curse 2026',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
+
+-- Horizontal artwork used by the home hero and movie hover previews.
+UPDATE dbo.Movie SET BannerURL=N'https://images.squarespace-cdn.com/content/v1/54ab20e3e4b0a068cecb0355/a36ff2d2-cd02-47b3-bfea-32a31ab63589/BAMBI_STILL_67.jpg' WHERE Title=N'Bambi: The Reckoning';
+UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp' WHERE Title=N'The Curse 2026';
+UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp' WHERE Title=N'Death Whisperer: Saming the Werebeast';
+UPDATE dbo.Movie SET BannerURL=N'https://lumiere-a.akamaihd.net/v1/images/hb_20cs_whalefall_featuredcontentbanner_desktop_9ecd6d21.jpeg?region=0%2C0%2C2048%2C878&width=1536' WHERE Title=N'Whale Fall';
+UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6a538ba81c7f6196807171.webp' WHERE Title=N'Street Fighter';
+UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/7wL3dPMzXXrplNgStX6lt8SwLlJ.jpg' WHERE Title=N'Inside Out 2';
+UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/7TSZf1vog6qxa9IfgwBjEbtgpWN.jpg' WHERE Title=N'Godzilla x Kong: The New Empire';
+UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/ngUswPaQFNBWyQWYfQGMOD02ifU.jpg' WHERE Title=N'Kung Fu Panda 4';
 
 DECLARE @MovieGenreSeed TABLE (MovieTitle NVARCHAR(250), GenreName NVARCHAR(100));
 INSERT @MovieGenreSeed VALUES

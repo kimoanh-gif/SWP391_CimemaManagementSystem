@@ -47,4 +47,62 @@ public class RevenueReportData {
     public void setTransactionItems(List<TransactionRevenueItem> transactionItems) {
         this.transactionItems = transactionItems;
     }
+
+    public int getTotalMovieShowtimes() {
+        if (movieItems == null || movieItems.isEmpty()) return 0;
+        return movieItems.stream().mapToInt(MovieRevenueItem::getShowtimesCount).sum();
+    }
+
+    public int getTotalMovieTicketsSold() {
+        if (movieItems == null || movieItems.isEmpty()) return 0;
+        return movieItems.stream().mapToInt(MovieRevenueItem::getSoldTickets).sum();
+    }
+
+    public java.math.BigDecimal getTotalMovieTicketRevenue() {
+        if (movieItems == null || movieItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return movieItems.stream()
+                .map(MovieRevenueItem::getTicketRevenue)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getTotalMovieFbRevenue() {
+        if (movieItems == null || movieItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return movieItems.stream()
+                .map(MovieRevenueItem::getFbRevenue)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getTotalMovieRevenue() {
+        if (movieItems == null || movieItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return movieItems.stream()
+                .map(MovieRevenueItem::getTotalRevenue)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getTotalTransactionTicketAmount() {
+        if (transactionItems == null || transactionItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return transactionItems.stream()
+                .map(TransactionRevenueItem::getTicketAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getTotalTransactionFbAmount() {
+        if (transactionItems == null || transactionItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return transactionItems.stream()
+                .map(TransactionRevenueItem::getFbAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getTotalTransactionTotalAmount() {
+        if (transactionItems == null || transactionItems.isEmpty()) return java.math.BigDecimal.ZERO;
+        return transactionItems.stream()
+                .map(TransactionRevenueItem::getTotalAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
 }

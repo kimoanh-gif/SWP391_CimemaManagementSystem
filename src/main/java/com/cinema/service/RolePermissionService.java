@@ -4,6 +4,8 @@ import com.cinema.dao.PermissionDAO;
 import com.cinema.dao.RoleDAO;
 import com.cinema.model.Permission;
 import com.cinema.model.Role;
+import com.cinema.security.RolePermissionPolicy;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +26,7 @@ public class RolePermissionService {
      * Mandatory permissions that cannot be removed from roles.
      * Format: RoleName -> Set of mandatory permission names
      */
-    private static final Map<String, Set<String>> MANDATORY_PERMISSIONS = Map.of(
-        "ADMIN", Set.of("account:manage"),  // Admin must always be able to manage accounts
-        "MANAGER", Set.of("report:view"),   // Manager must always see reports
-        "STAFF", Set.of("ticket:checkin")   // Staff must always check-in tickets
-        // CUSTOMER has no mandatory permissions
-    );
+    private static final Map<String, Set<String>> MANDATORY_PERMISSIONS = RolePermissionPolicy.REQUIRED;
 
     @Autowired
     public RolePermissionService(RoleDAO roleDAO, PermissionDAO permissionDAO) {
@@ -57,7 +54,7 @@ public class RolePermissionService {
                     role.getRoleId(),
                     role.getName(),
                     role.getDescription(),
-                    permNames
+                    permNames, RolePermissionPolicy.allowed(role.getName()), RolePermissionPolicy.required(role.getName())
             ));
         }
         
@@ -79,7 +76,7 @@ public class RolePermissionService {
                             role.getRoleId(),
                             role.getName(),
                             role.getDescription(),
-                            permNames
+                            permNames, RolePermissionPolicy.allowed(role.getName()), RolePermissionPolicy.required(role.getName())
                     );
                 });
     }
@@ -90,6 +87,35 @@ public class RolePermissionService {
      */
     public List<Permission> getAllPermissions() {
         return permissionDAO.findAll();
+    }
+
+    /** Remove historical grants outside predefined role boundaries on startup. */
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    @Transactional
+    public void removeInvalidAssignments() {
+        List<Role> roles = roleDAO.findAll().stream()
+                .filter(role -> RolePermissionPolicy.ALLOWED.containsKey(role.getName().toUpperCase(Locale.ROOT)))
+                .sorted(Comparator.comparing(Role::getRoleId)).toList();
+        // Match the role -> catalog lock order used by interactive permission updates.
+        roles.forEach(role -> roleDAO.lockById(role.getRoleId()));
+        Set<String> introduced = new HashSet<>();
+        // Stable order prevents two application instances locking the catalog in opposite orders.
+        new TreeMap<>(RolePermissionPolicy.ADDITIONAL).forEach((name, description) -> {
+            if (permissionDAO.insertIfMissing(name, description)) introduced.add(name);
+        });
+        List<Permission> catalog = permissionDAO.findAll();
+        for (Role role : roles) {
+            List<Permission> current = permissionDAO.findAllByRoleId(role.getRoleId());
+            Set<Integer> valid = current.stream()
+                    .filter(p -> RolePermissionPolicy.allowed(role.getName()).contains(p.getName()))
+                    .map(Permission::getPermissionId).collect(Collectors.toSet());
+            catalog.stream()
+                    .filter(p -> RolePermissionPolicy.required(role.getName()).contains(p.getName())
+                            || (introduced.contains(p.getName()) && RolePermissionPolicy.allowed(role.getName()).contains(p.getName())))
+                    .map(Permission::getPermissionId).forEach(valid::add);
+            Set<Integer> previous = current.stream().map(Permission::getPermissionId).collect(Collectors.toSet());
+            if (!valid.equals(previous)) permissionDAO.updateRolePermissions(role.getRoleId(), new ArrayList<>(valid));
+        }
     }
 
     // ==================== VALIDATION ====================
@@ -118,6 +144,11 @@ public class RolePermissionService {
                 return ValidationResult.error("INVALID_PERMISSION", 
                         "Permission '" + permName + "' does not exist.");
             }
+        }
+
+        if (!RolePermissionPolicy.allowed(role.getName()).containsAll(newPermissions)) {
+            return ValidationResult.error("INVALID_ROLE_CONFIGURATION",
+                    "This role cannot receive permissions outside its business scope.");
         }
 
         // Check mandatory permissions (E2)
@@ -170,7 +201,9 @@ public class RolePermissionService {
      * A1: Add Permission - Admin adds permission to role
      * A2: Remove Permission - Admin removes permission from role
      */
+    @Transactional
     public OperationResult updateRolePermissions(int roleId, Set<String> newPermissions) {
+        roleDAO.lockById(roleId);
         // Validate first
         ValidationResult validation = validatePermissions(roleId, newPermissions);
         if (!validation.isSuccess()) {
@@ -192,14 +225,19 @@ public class RolePermissionService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
+        Set<String> oldPermissions = permissionDAO.findAllByRoleId(roleId).stream()
+                .map(Permission::getName).collect(Collectors.toSet());
+        Set<String> added = new HashSet<>(newPermissions);
+        added.removeAll(oldPermissions);
+        Set<String> removed = new HashSet<>(oldPermissions);
+        removed.removeAll(newPermissions);
         // Update in database
         int result = permissionDAO.updateRolePermissions(roleId, permissionIds);
 
         if (result > 0) {
             return OperationResult.success(
                     "Permissions updated successfully for role '" + roleName + "'.",
-                    getAddedPermissions(roleId, newPermissions),
-                    getRemovedPermissions(roleId, newPermissions)
+                    added, removed
             );
         } else {
             return OperationResult.error("UPDATE_FAILED", "Failed to update role permissions.");
@@ -210,7 +248,9 @@ public class RolePermissionService {
      * Add a single permission to a role.
      * Alternative Flow A1.
      */
+    @Transactional
     public OperationResult addPermission(int roleId, String permissionName) {
+        roleDAO.lockById(roleId);
         // Get current permissions
         Set<String> currentPermissions = permissionDAO.findAllByRoleId(roleId).stream()
                 .map(Permission::getName)
@@ -233,6 +273,7 @@ public class RolePermissionService {
      * Alternative Flow A2.
      * Exception E2: Mandatory Permission cannot be removed.
      */
+    @Transactional
     public OperationResult removePermission(int roleId, String permissionName) {
         // Check if permission is mandatory (E2)
         if (!canRemovePermission(roleId, permissionName)) {
@@ -242,6 +283,7 @@ public class RolePermissionService {
                     "Cannot remove mandatory permission '" + permissionName + "' from role '" + roleName + "'.");
         }
 
+        roleDAO.lockById(roleId);
         // Get current permissions
         Set<String> currentPermissions = permissionDAO.findAllByRoleId(roleId).stream()
                 .map(Permission::getName)
@@ -259,32 +301,6 @@ public class RolePermissionService {
         return updateRolePermissions(roleId, currentPermissions);
     }
 
-    /**
-     * Get list of permissions that would be added (not currently assigned).
-     */
-    private Set<String> getAddedPermissions(int roleId, Set<String> newPermissions) {
-        Set<String> currentPermissions = permissionDAO.findAllByRoleId(roleId).stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-        
-        Set<String> added = new HashSet<>(newPermissions);
-        added.removeAll(currentPermissions);
-        return added;
-    }
-
-    /**
-     * Get list of permissions that would be removed (currently assigned but not in new set).
-     */
-    private Set<String> getRemovedPermissions(int roleId, Set<String> newPermissions) {
-        Set<String> currentPermissions = permissionDAO.findAllByRoleId(roleId).stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-        
-        Set<String> removed = new HashSet<>(currentPermissions);
-        removed.removeAll(newPermissions);
-        return removed;
-    }
-
     // ==================== HELPER CLASSES ====================
 
     /**
@@ -294,7 +310,9 @@ public class RolePermissionService {
             int roleId,
             String roleName,
             String description,
-            Set<String> permissions
+            Set<String> permissions,
+            Set<String> allowedPermissions,
+            Set<String> mandatoryPermissions
     ) {}
 
     /**

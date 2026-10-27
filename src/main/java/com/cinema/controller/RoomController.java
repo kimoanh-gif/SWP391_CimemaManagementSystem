@@ -81,10 +81,14 @@ public class RoomController {
     public String delete(@PathVariable int id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes, jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         try {
+            Room room = roomService.getById(id);
+            String name = room.getRoomName();
             roomService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Xóa phòng chiếu thành công");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa phòng chiếu '" + name + "' thành công.");
+        } catch (RoomNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa phòng chiếu: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/manager/rooms";
     }

@@ -57,7 +57,7 @@ public class SessionService {
                 account.getFullName(),
                 account.getPhone(),
                 roleName == null ? "CUSTOMER" : roleName.toUpperCase(Locale.ROOT),
-                permNames,
+                com.cinema.security.RolePermissionPolicy.effective(roleName, permNames),
                 account.isEmailVerified(),
                 authMethod == null ? AUTH_METHOD_PASSWORD : authMethod);
 

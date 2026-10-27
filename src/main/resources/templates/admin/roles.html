@@ -15,7 +15,6 @@
 .role-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .role-card.active { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(167,139,250,.3); }
 .role-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-.role-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
 .role-card h3 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
 .role-sub { font-size: 12px; color: var(--text-secondary); }
 .role-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
@@ -100,19 +99,19 @@
     <div class="sidebar-section">Management</div>
     <nav class="sidebar-nav">
       <a th:href="@{/admin/dashboard}" class="sidebar-link">
-        <span class="link-icon">🏠</span><span class="link-label">Dashboard</span>
+        <span class="link-label">Dashboard</span>
       </a>
       <a th:href="@{/admin/customers}" class="sidebar-link">
-        <span class="link-icon">👥</span><span class="link-label">Customers</span>
+        <span class="link-label">Customers</span>
       </a>
       <a th:href="@{/admin/staffs}" class="sidebar-link">
-        <span class="link-icon">🛡️</span><span class="link-label">Staff &amp; Managers</span>
+        <span class="link-label">Staff &amp; Managers</span>
       </a>
       <a th:href="@{/admin/roles}" class="sidebar-link active">
-        <span class="link-icon">🔑</span><span class="link-label">Roles &amp; Permissions</span>
+        <span class="link-label">Roles &amp; Permissions</span>
       </a>
       <a th:href="@{/admin/config}" class="sidebar-link">
-        <span class="link-icon">⚙️</span><span class="link-label">System Configuration</span>
+        <span class="link-label">System Configuration</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -136,14 +135,14 @@
   <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div class="page-title">🔑 Roles &amp; Permissions</div>
+      <div class="page-title">Roles &amp; Permissions</div>
     </div>
     <div class="admin-content">
 
       <!-- Page Header -->
       <div class="page-header">
         <h1>Role &amp; Permission Management</h1>
-        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Select a role to manage its permissions</p>
+        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Permissions are limited to each role’s business scope. Profile and password changes remain personal account functions.</p>
       </div>
 
       <!-- Loading -->
@@ -185,12 +184,7 @@ let roles = [];
 let allPermissions = [];
 let selectedRoleId = null;
 
-// Mandatory permissions (from service)
-const MANDATORY_PERMISSIONS = {
-  'ADMIN': ['account:manage'],
-  'MANAGER': ['report:view'],
-  'STAFF': ['ticket:checkin']
-};
+// Role boundaries and required permissions are returned by the backend.
 
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
@@ -222,12 +216,6 @@ async function loadData() {
 function renderRolesGrid() {
   const grid = document.getElementById('rolesGrid');
   
-  const roleIcons = {
-    'ADMIN': { icon: '👑', bg: 'var(--purple-100)' },
-    'MANAGER': { icon: '🛡️', bg: '#D1FAE5' },
-    'STAFF': { icon: '🎟️', bg: '#DBEAFE' },
-    'CUSTOMER': { icon: '🎬', bg: '#FEF3C7' }
-  };
   
   const roleClass = {
     'ADMIN': 'admin',
@@ -237,14 +225,12 @@ function renderRolesGrid() {
   };
   
   grid.innerHTML = roles.map(role => {
-    const info = roleIcons[role.roleName.toUpperCase()] || { icon: '📋', bg: '#E5E7EB' };
     const cls = roleClass[role.roleName.toUpperCase()] || '';
     const permCount = role.permissions ? role.permissions.length : 0;
     
     return `
-      <div class="role-card ${selectedRoleId === role.roleId ? 'active' : ''}" onclick="selectRole(${role.roleId})">
+      <div class="role-card ${selectedRoleId === role.roleId ? 'active' : ''}" onclick="selectRole(${role.roleId}, this)">
         <div class="role-card-header">
-          <div class="role-icon" style="background: ${info.bg};">${info.icon}</div>
           <div>
             <h3>${escHtml(role.roleName)}</h3>
             <div class="role-sub">${escHtml(role.description || 'No description')}</div>
@@ -266,13 +252,13 @@ function renderRolesGrid() {
   }
 }
 
-function selectRole(roleId) {
+function selectRole(roleId, cardElement) {
   selectedRoleId = roleId;
   
   document.querySelectorAll('.role-card').forEach(card => {
     card.classList.remove('active');
   });
-  event.currentTarget.classList.add('active');
+  cardElement.classList.add('active');
   
   const role = roles.find(r => r.roleId === roleId);
   if (role) {
@@ -286,17 +272,17 @@ function renderPermissionPanel(role) {
   const panelBody = document.getElementById('panelBody');
   
   panel.style.display = 'block';
-  panelTitle.innerHTML = `📋 Permissions for <strong>${escHtml(role.roleName)}</strong>`;
+  panelTitle.innerHTML = `Permissions for <strong>${escHtml(role.roleName)}</strong>`;
   
   const rolePerms = new Set(role.permissions || []);
-  const mandatory = MANDATORY_PERMISSIONS[role.roleName.toUpperCase()] || [];
+  const mandatory = role.mandatoryPermissions || [];
+  const allowed = new Set(role.allowedPermissions || []);
   
   const assigned = allPermissions.filter(p => rolePerms.has(p.name));
-  const available = allPermissions.filter(p => !rolePerms.has(p.name));
+  const available = allPermissions.filter(p => allowed.has(p.name) && !rolePerms.has(p.name));
   
   const mandatoryWarning = mandatory.length > 0 ? `
     <div class="mandatory-warning">
-      <span>⚠️</span>
       <div>
         <strong>Mandatory Permissions:</strong> ${mandatory.map(m => `<code>${m}</code>`).join(', ')} 
         cannot be removed from this role.
@@ -325,7 +311,7 @@ function renderPermissionPanel(role) {
           ${available.length === 0 ? `
             <li class="empty-perms">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
-              <div>All permissions assigned</div>
+              <div>No more permissions can be added for this role.</div>
             </li>
           ` : available.map(p => renderPermissionItem(p, false, false)).join('')}
         </ul>
@@ -347,7 +333,7 @@ function renderPermissionItem(permission, isAssigned, isMandatory) {
         </div>
         <div class="perm-actions">
           ${isMandatory ? `<span class="mandatory-badge">Required</span>` : ''}
-          <button class="btn-remove" onclick="removePermission(${selectedRoleId}, '${permName}')">Remove</button>
+          <button class="btn-remove" ${isMandatory ? 'disabled aria-disabled="true"' : ''} onclick="removePermission(${selectedRoleId}, '${permName}')">Remove</button>
         </div>
       </li>
     `;
@@ -389,7 +375,7 @@ async function addPermission(roleId, permissionName) {
 
 async function removePermission(roleId, permissionName) {
   const role = roles.find(r => r.roleId === roleId);
-  const mandatory = MANDATORY_PERMISSIONS[role?.roleName?.toUpperCase()] || [];
+  const mandatory = role?.mandatoryPermissions || [];
   
   if (mandatory.includes(permissionName)) {
     showToast(`Cannot remove mandatory permission '${permissionName}' from this role.`, 'error');

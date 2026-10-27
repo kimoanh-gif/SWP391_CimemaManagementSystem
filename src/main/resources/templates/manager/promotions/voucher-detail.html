@@ -26,7 +26,7 @@
     <section class="cm-card mp-hero">
         <div class="mp-hero-tags">
             <span class="mp-tag-soft mp-tag-violet"><span class="material-symbols-outlined">confirmation_number</span>Voucher / Coupon</span>
-            <a class="mp-code-sm" th:href="@{/manager/promotions/{id}(id=${v.promotionId})}" th:text="${v.promotionName}">Promotion</a>
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="mp-code-sm" th:href="@{/manager/promotions/{id}(id=${v.promotionId})}" th:text="${v.promotionName}">Promotion</a>
         </div>
         <div class="mp-hero-tags">
             <span class="mp-status" th:classappend="${'mp-st-' + #strings.toLowerCase(v.displayStatus)}" th:text="${v.displayStatusLabel}">Active</span>
@@ -90,7 +90,7 @@
     </section>
 
     <section class="cm-card mp-detail-actions">
-        <a class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
+        <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers}"><span class="material-symbols-outlined">arrow_back</span>Back to list</a>
         <div class="mp-detail-actions-right">
             <form method="post" th:if="${v.status == 'ACTIVE' and v.displayStatus != 'EXPIRED'}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
                 <input type="hidden" name="status" value="PAUSED">
@@ -101,9 +101,9 @@
                 <button type="submit" class="mp-btn mp-btn-success"><span class="material-symbols-outlined">play_circle</span>
                     <th:block th:text="${v.status == 'DRAFT'} ? 'Activate' : 'Resume'">Resume</th:block></button>
             </form>
-            <a class="mp-btn mp-btn-soft" th:href="@{/manager/vouchers/{id}(id=${v.voucherId},confirmDelete=1)}">
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-btn mp-btn-soft" th:href="@{/manager/vouchers/{id}(id=${v.voucherId},confirmDelete=1)}">
                 <span class="material-symbols-outlined" th:text="${v.locked} ? 'lock' : 'delete'">delete</span>Delete (M11.4)</a>
-            <a class="mp-btn mp-btn-primary" th:unless="${v.stopped}" th:href="@{/manager/vouchers/{id}/edit(id=${v.voucherId})}">
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-btn mp-btn-primary" th:unless="${v.stopped}" th:href="@{/manager/vouchers/{id}/edit(id=${v.voucherId})}">
                 <span class="material-symbols-outlined">edit</span>Edit (M11.3)</a>
         </div>
     </section>
@@ -115,7 +115,7 @@
         <div class="mp-modal-head">
             <span class="mp-modal-icon material-symbols-outlined">gavel</span>
             <div><small>Manager action M11.4</small><h2 id="delete-title">Delete voucher</h2></div>
-            <a class="mp-close" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-close" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}" aria-label="Close"><span class="material-symbols-outlined">close</span></a>
         </div>
         <div class="mp-modal-body">
             <div class="mp-target">
@@ -140,7 +140,7 @@
             </div>
         </div>
         <div class="mp-modal-foot">
-            <a class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}">Cancel</a>
+            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="mp-btn mp-btn-ghost" th:href="@{/manager/vouchers/{id}(id=${v.voucherId})}">Cancel</a>
             <form method="post" th:if="${v.locked and !v.stopped}" th:action="@{/manager/vouchers/{id}/status(id=${v.voucherId})}">
                 <input type="hidden" name="status" value="INACTIVE">
                 <button type="submit" class="mp-btn mp-btn-outline-red"><span class="material-symbols-outlined">block</span>Stop voucher</button>

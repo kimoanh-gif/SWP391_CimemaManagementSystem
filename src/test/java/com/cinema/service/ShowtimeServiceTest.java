@@ -179,4 +179,51 @@ public class ShowtimeServiceTest {
                 showtimeService.updateShowtime(10, form));
         assertTrue(ex.getMessage().contains("BR-54"));
     }
+
+    @Test
+    void testDeleteShowtime_Success() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        Showtime existing = new Showtime(10, 1, 1, start, start.plusMinutes(120), new BigDecimal("85000"), "Scheduled");
+        when(showtimeDao.findById(10)).thenReturn(Optional.of(existing));
+        when(showtimeDao.hasAnyBookings(10)).thenReturn(false);
+
+        assertDoesNotThrow(() -> showtimeService.deleteShowtime(10));
+        verify(showtimeDao).delete(10);
+    }
+
+    @Test
+    void testDeleteShowtime_WithBookings_ThrowsException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        Showtime existing = new Showtime(10, 1, 1, start, start.plusMinutes(120), new BigDecimal("85000"), "Scheduled");
+        when(showtimeDao.findById(10)).thenReturn(Optional.of(existing));
+        when(showtimeDao.hasAnyBookings(10)).thenReturn(true);
+
+        assertThrows(InvalidShowtimeException.class, () -> showtimeService.deleteShowtime(10));
+        verify(showtimeDao, never()).delete(anyInt());
+    }
+
+    @Test
+    void testCreateShowtime_RejectTodayAndPastDates_BR55() {
+        // Test with today's date
+        ShowtimeForm formToday = new ShowtimeForm();
+        formToday.setMovieId(1);
+        formToday.setRoomId(1);
+        formToday.setStartTime(LocalDateTime.now().withHour(23).withMinute(59));
+        formToday.setBaseTicketPrice(new BigDecimal("85000"));
+
+        InvalidShowtimeException exToday = assertThrows(InvalidShowtimeException.class, () ->
+                showtimeService.createShowtime(formToday));
+        assertTrue(exToday.getMessage().contains("Không được chọn ngày ở quá khứ hoặc hiện tại"));
+
+        // Test with yesterday's date
+        ShowtimeForm formPast = new ShowtimeForm();
+        formPast.setMovieId(1);
+        formPast.setRoomId(1);
+        formPast.setStartTime(LocalDateTime.now().minusDays(1).withHour(10).withMinute(0));
+        formPast.setBaseTicketPrice(new BigDecimal("85000"));
+
+        InvalidShowtimeException exPast = assertThrows(InvalidShowtimeException.class, () ->
+                showtimeService.createShowtime(formPast));
+        assertTrue(exPast.getMessage().contains("Không được chọn ngày ở quá khứ hoặc hiện tại"));
+    }
 }
