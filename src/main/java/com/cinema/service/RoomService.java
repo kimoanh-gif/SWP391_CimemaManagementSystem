@@ -36,23 +36,21 @@ public class RoomService {
     }
 
     public void validateCapacityAndLayout(RoomForm form) {
-        if (form.getTotalRows() == null || form.getTotalRows() <= 0) {
-            throw new IllegalArgumentException("Please enter vertical rows greater than 0.");
-        }
-        if (form.getSeatsPerRow() == null || form.getSeatsPerRow() <= 0) {
-            throw new IllegalArgumentException("Please enter seats per row (horizontal) greater than 0.");
-        }
+        if (form == null) return;
         if (form.getCapacity() == null || form.getCapacity() <= 0) {
-            throw new IllegalArgumentException("Please enter total room capacity greater than 0.");
+            throw new IllegalArgumentException("Sức chứa phòng chiếu phải lớn hơn 0 (Please enter total room capacity greater than 0).");
         }
-        int expectedCapacity = form.getTotalRows() * form.getSeatsPerRow();
-        if (form.getCapacity() != expectedCapacity) {
+        boolean hasRows = form.getTotalRows() != null && form.getTotalRows() > 0;
+        boolean hasSeatsPerRow = form.getSeatsPerRow() != null && form.getSeatsPerRow() > 0;
+        if (!hasRows || !hasSeatsPerRow) {
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng lớn hơn 0 (Please enter vertical rows and horizontal seats greater than 0).");
+        }
+        int expected = form.getTotalRows() * form.getSeatsPerRow();
+        if (!form.getCapacity().equals(expected)) {
             throw new IllegalArgumentException(
-                String.format("Total room capacity (%d) must equal vertical rows multiplied by horizontal seats (%d rows × %d seats = %d seats / phải bằng).",
-                    form.getCapacity(),
-                    form.getTotalRows(),
-                    form.getSeatsPerRow(),
-                    expectedCapacity)
+                    "Tổng sức chứa (" + form.getCapacity() + " ghế) không khớp với số hàng ("
+                            + form.getTotalRows() + ") × số ghế mỗi hàng ("
+                            + form.getSeatsPerRow() + " = " + expected + " ghế / phải bằng). Total room capacity must equal vertical rows multiplied by horizontal seats."
             );
         }
     }
@@ -68,27 +66,6 @@ public class RoomService {
         getById(form.getRoomId());
         validateCapacityAndLayout(form);
         roomDao.update(form);
-    }
-
-    private void validateCapacityAndLayout(RoomForm form) {
-        if (form.getCapacity() == null || form.getCapacity() <= 0) {
-            throw new IllegalArgumentException("Sức chứa phòng chiếu phải lớn hơn 0.");
-        }
-        boolean hasRows = form.getTotalRows() != null && form.getTotalRows() > 0;
-        boolean hasSeatsPerRow = form.getSeatsPerRow() != null && form.getSeatsPerRow() > 0;
-        if (hasRows || hasSeatsPerRow) {
-            if (!hasRows || !hasSeatsPerRow) {
-                throw new IllegalArgumentException("Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng để tính đúng sức chứa.");
-            }
-            int expected = form.getTotalRows() * form.getSeatsPerRow();
-            if (!form.getCapacity().equals(expected)) {
-                throw new IllegalArgumentException(
-                        "Tổng sức chứa (" + form.getCapacity() + " ghế) không khớp với số hàng ("
-                                + form.getTotalRows() + ") × số ghế mỗi hàng ("
-                                + form.getSeatsPerRow() + " = " + expected + " ghế)."
-                );
-            }
-        }
     }
 
     @Transactional
