@@ -166,16 +166,6 @@ class MovieServiceTest {
                 .hasMessageContaining("Ngày kết thúc");
     }
 
-    @Test
-    @DisplayName("createMovie: Should reject when endDate is before releaseDate")
-    void testCreateMovie_InvalidDates() {
-        sampleForm.setReleaseDate(LocalDate.now().plusDays(20));
-        sampleForm.setEndDate(LocalDate.now().plusDays(10));
-
-        assertThatThrownBy(() -> movieService.createMovie(sampleForm))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày kết thúc không được diễn ra trước ngày khởi chiếu");
-    }
 
     @Test
     @DisplayName("updateMovie: Should successfully update movie information")

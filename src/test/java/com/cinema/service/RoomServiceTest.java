@@ -1,6 +1,7 @@
 package com.cinema.service;
 
 import com.cinema.dao.RoomDao;
+import com.cinema.dao.SeatDao;
 import com.cinema.exception.RoomHasActiveShowtimesException;
 import com.cinema.exception.RoomNotFoundException;
 import com.cinema.model.Room;
@@ -22,6 +23,9 @@ class RoomServiceTest {
 
     @Mock
     private RoomDao roomDao;
+
+    @Mock
+    private SeatDao seatDao;
 
     @InjectMocks
     private RoomService roomService;

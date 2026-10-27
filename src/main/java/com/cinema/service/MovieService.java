@@ -232,16 +232,6 @@ public class MovieService {
                 throw new IllegalArgumentException("Ngày kết thúc phải ở tương lai (từ ngày mai trở đi).");
             }
         }
-        LocalDate today = LocalDate.now();
-        boolean isNew = (form.getId() == null || form.getId() <= 0);
-        if (isNew) {
-            if (form.getReleaseDate() != null && form.getReleaseDate().isBefore(today)) {
-                throw new IllegalArgumentException("Ngày khởi chiếu phải từ hôm nay trở đi, không được ở quá khứ.");
-            }
-            if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
-                throw new IllegalArgumentException("Ngày kết thúc dự kiến phải từ hôm nay trở đi, không được ở quá khứ.");
-            }
-        }
         if (form.getReleaseDate() != null && form.getEndDate() != null
                 && form.getEndDate().isBefore(form.getReleaseDate())) {
             throw new IllegalArgumentException("Ngày kết thúc không được diễn ra trước ngày khởi chiếu.");
