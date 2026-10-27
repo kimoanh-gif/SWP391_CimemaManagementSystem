@@ -24,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
-public class ShowtimeApiControllerTest {
+public class ShowtimeApiControllerTest extends com.cinema.support.AuthenticatedMvcTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,7 +42,7 @@ public class ShowtimeApiControllerTest {
         when(showtimeService.getAllShowtimes(any(), any(), any(), any())).thenReturn(List.of(st));
 
         mockMvc.perform(get("/api/manager/showtimes")
-                        .header("X-User-Role", "MANAGER"))
+                        .session(authSession("MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].movieTitle").value("Avatar 2"));
@@ -51,7 +51,7 @@ public class ShowtimeApiControllerTest {
     @Test
     void testGetShowtimes_ForbiddenNonManager() throws Exception {
         mockMvc.perform(get("/api/manager/showtimes")
-                        .header("X-User-Role", "STAFF"))
+                        .session(authSession("STAFF")))
                 .andExpect(status().isForbidden());
     }
 }

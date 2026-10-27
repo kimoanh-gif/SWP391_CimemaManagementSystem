@@ -28,7 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
-public class TicketPricingApiControllerTest {
+public class TicketPricingApiControllerTest extends com.cinema.support.AuthenticatedMvcTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,7 +51,7 @@ public class TicketPricingApiControllerTest {
         when(pricingService.getAverageTicketPrice()).thenReturn(new BigDecimal("85000"));
 
         mockMvc.perform(get("/api/manager/pricing")
-                        .header("X-User-Role", "MANAGER"))
+                        .session(authSession("MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.pricingRules[0].pricingCode").value("PRICE-WD-STD"))
@@ -64,7 +64,7 @@ public class TicketPricingApiControllerTest {
                 .thenReturn(new BigDecimal("106000"));
 
         mockMvc.perform(get("/api/manager/pricing/calculate")
-                        .header("X-User-Role", "MANAGER")
+                        .session(authSession("MANAGER"))
                         .param("basePrice", "85000")
                         .param("multiplier", "1.25"))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ public class TicketPricingApiControllerTest {
     @Test
     void testUnauthorizedRole_Forbidden() throws Exception {
         mockMvc.perform(get("/api/manager/pricing")
-                        .header("X-User-Role", "CUSTOMER"))
+                        .session(authSession("CUSTOMER")))
                 .andExpect(status().isForbidden());
     }
 }

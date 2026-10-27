@@ -24,9 +24,11 @@
         <small>Simulated code for internal review</small>
       </div>
       <div class="qr-shell" th:if="${payment.status == 'PENDING' and gatewayUrl != null}">
-        <div class="fake-qr" aria-hidden="true"><span>V</span></div>
+        <a class="vnpay-qr-link" th:href="${gatewayUrl}" target="vnpay-payment" aria-label="Open this VNPay Sandbox payment">
+          <div id="vnpay-qr" class="vnpay-qr" th:attr="data-payment-url=${gatewayUrl}" aria-label="QR code for this VNPay Sandbox payment"></div>
+        </a>
         <strong th:text="${payment.transactionRef}">PAY0001</strong>
-        <small>VNPay opens separately so this booking page stays available.</small>
+        <small>Scan this QR code to open this payment on VNPay Sandbox.</small>
         <a id="open-vnpay" class="button primary full" th:href="${gatewayUrl}" target="vnpay-payment">Open VNPay Sandbox</a>
         <small id="gateway-status">Waiting for VNPay confirmation…</small>
       </div>
@@ -48,5 +50,6 @@
     </aside>
   </div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script th:src="@{/js/customer-booking.js}"></script>
 </body></html>

@@ -5,7 +5,87 @@ document.addEventListener('DOMContentLoaded', () => {
     initVoucherCopy();
     initStarRating();
     initQuickBooking();
+    initMoviePagination();
+    initTopGrossingCarousel();
 });
+
+function initTopGrossingCarousel() {
+    const carousel = document.querySelector('[data-top-grossing-carousel]');
+    if (!carousel) return;
+
+    const cards = Array.from(carousel.querySelectorAll('.top-grossing-card'));
+    const previous = carousel.querySelector('[data-top-previous]');
+    const next = carousel.querySelector('[data-top-next]');
+    const pageSize = 5;
+    const pageCount = Math.ceil(cards.length / pageSize);
+    let currentPage = 0;
+
+    if (pageCount <= 1) {
+        previous.hidden = true;
+        next.hidden = true;
+        return;
+    }
+
+    function showPage(page) {
+        currentPage = (page + pageCount) % pageCount;
+        const start = currentPage * pageSize;
+        cards.forEach((card, index) => {
+            card.hidden = index < start || index >= start + pageSize;
+        });
+    }
+
+    previous.addEventListener('click', () => showPage(currentPage - 1));
+    next.addEventListener('click', () => showPage(currentPage + 1));
+    showPage(0);
+}
+
+function initMoviePagination() {
+    document.querySelectorAll('[data-paginated-movie-grid]').forEach((grid) => {
+        const cards = Array.from(grid.querySelectorAll(':scope > .movie-card'));
+        const controls = grid.parentElement.querySelector('[data-movie-pagination]');
+        const pageSize = Number.parseInt(grid.dataset.pageSize || '5', 10);
+        const pageCount = Math.ceil(cards.length / pageSize);
+        let currentPage = 1;
+
+        if (!controls || pageCount <= 1) {
+            if (controls) controls.hidden = true;
+            return;
+        }
+
+        const previous = controls.querySelector('[data-page-previous]');
+        const next = controls.querySelector('[data-page-next]');
+        const pages = controls.querySelector('[data-page-numbers]');
+
+        for (let page = 1; page <= pageCount; page += 1) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'movie-page-number';
+            button.textContent = String(page);
+            button.setAttribute('aria-label', `Go to page ${page}`);
+            button.addEventListener('click', () => showPage(page));
+            pages.appendChild(button);
+        }
+
+        function showPage(page) {
+            currentPage = Math.min(Math.max(page, 1), pageCount);
+            const start = (currentPage - 1) * pageSize;
+            cards.forEach((card, index) => {
+                card.hidden = index < start || index >= start + pageSize;
+            });
+            previous.disabled = currentPage === 1;
+            next.disabled = currentPage === pageCount;
+            Array.from(pages.children).forEach((button, index) => {
+                const active = index + 1 === currentPage;
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-current', active ? 'page' : 'false');
+            });
+        }
+
+        previous.addEventListener('click', () => showPage(currentPage - 1));
+        next.addEventListener('click', () => showPage(currentPage + 1));
+        showPage(1);
+    });
+}
 
 function initHomeHeader() {
     const header = document.querySelector('.cineora-home .cinema-header');

@@ -60,12 +60,6 @@ public class RoomService {
     @Transactional
     public void create(RoomForm form) {
         validateCapacityAndLayout(form);
-        if (roomDao.existsByRoomCode(form.getRoomCode(), null)) {
-            throw new IllegalArgumentException("Room code '" + form.getRoomCode().trim() + "' already exists in the system. Please enter a different room code.");
-        }
-        if (roomDao.existsByRoomName(form.getRoomName(), null)) {
-            throw new IllegalArgumentException("Room name '" + form.getRoomName().trim() + "' already exists in the system. Please choose a different room name.");
-        }
         roomDao.insert(form);
     }
 
@@ -73,13 +67,28 @@ public class RoomService {
     public void update(RoomForm form) {
         getById(form.getRoomId());
         validateCapacityAndLayout(form);
-        if (roomDao.existsByRoomCode(form.getRoomCode(), form.getRoomId())) {
-            throw new IllegalArgumentException("Room code '" + form.getRoomCode().trim() + "' already exists in the system. Please enter a different room code.");
-        }
-        if (roomDao.existsByRoomName(form.getRoomName(), form.getRoomId())) {
-            throw new IllegalArgumentException("Room name '" + form.getRoomName().trim() + "' already exists in the system. Please choose a different room name.");
-        }
         roomDao.update(form);
+    }
+
+    private void validateCapacityAndLayout(RoomForm form) {
+        if (form.getCapacity() == null || form.getCapacity() <= 0) {
+            throw new IllegalArgumentException("Sức chứa phòng chiếu phải lớn hơn 0.");
+        }
+        boolean hasRows = form.getTotalRows() != null && form.getTotalRows() > 0;
+        boolean hasSeatsPerRow = form.getSeatsPerRow() != null && form.getSeatsPerRow() > 0;
+        if (hasRows || hasSeatsPerRow) {
+            if (!hasRows || !hasSeatsPerRow) {
+                throw new IllegalArgumentException("Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng để tính đúng sức chứa.");
+            }
+            int expected = form.getTotalRows() * form.getSeatsPerRow();
+            if (!form.getCapacity().equals(expected)) {
+                throw new IllegalArgumentException(
+                        "Tổng sức chứa (" + form.getCapacity() + " ghế) không khớp với số hàng ("
+                                + form.getTotalRows() + ") × số ghế mỗi hàng ("
+                                + form.getSeatsPerRow() + " = " + expected + " ghế)."
+                );
+            }
+        }
     }
 
     @Transactional
@@ -119,13 +128,13 @@ public class RoomService {
     @Transactional
     public void delete(int roomId) {
         Room room = getById(roomId);
-        if (roomDao.hasUpcomingShowtimes(roomId)) {
-            throw new RoomHasActiveShowtimesException(roomId);
+        int showtimes = roomDao.countTotalShowtimes(roomId);
+        if (showtimes > 0) {
+            throw new RoomHasActiveShowtimesException(
+                    "Không thể xóa phòng '" + room.getRoomName() + "' vì đang có " + showtimes + " suất chiếu liên kết. Vui lòng xóa các suất chiếu trước hoặc chuyển sang trạng thái Bảo trì."
+            );
         }
-        if (room.getShowtimeCount() > 0) {
-            throw new IllegalStateException("Screening room '" + room.getRoomName() + "' has a history of " + room.getShowtimeCount() + " showtimes in the system and cannot be deleted to preserve ticket and revenue data. Please change the room status to 'Maintenance' if you no longer wish to use this room.");
-        }
-        seatDao.deleteByRoomId(roomId);
+        roomDao.deleteSeatsByRoomId(roomId);
         roomDao.delete(roomId);
     }
 }

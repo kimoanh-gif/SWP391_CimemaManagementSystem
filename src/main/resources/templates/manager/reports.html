@@ -444,13 +444,15 @@
                     </td>
                 </tr>
                 </tbody>
-                <tfoot>
+                <tfoot th:if="${!#lists.isEmpty(reportData.movieItems)}">
                 <tr>
-                    <td colspan="3" style="font-weight:700;">TOTAL</td>
-                    <td class="text-center" style="font-weight:700;" th:text="${summary.totalTickets != null ? summary.totalTickets : 0}">0</td>
-                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td colspan="2">TOTAL</td>
+                    <td class="text-center" th:text="${reportData.totalMovieShowtimes}">0</td>
+                    <td class="text-center" th:text="${reportData.totalMovieTicketsSold}">0</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(reportData.totalMovieTicketRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(reportData.totalMovieFbRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="color:var(--primary);font-weight:700;"
+                        th:text="${#numbers.formatDecimal(reportData.totalMovieRevenue, 0, 'COMMA', 0, 'POINT')}">0</td>
                 </tr>
                 </tfoot>
             </table>
@@ -505,12 +507,13 @@
                     </td>
                 </tr>
                 </tbody>
-                <tfoot>
+                <tfoot th:if="${!#lists.isEmpty(reportData.transactionItems)}">
                 <tr>
-                    <td colspan="6" style="font-weight:700;">TOTAL (<span th:text="${summary.totalPaidBookings != null ? summary.totalPaidBookings : 0}">0</span> orders)</td>
-                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.ticketRevenue != null ? summary.ticketRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;" th:text="${#numbers.formatDecimal(summary.fbRevenue != null ? summary.fbRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
-                    <td class="text-right" style="font-weight:700;color:var(--primary);" th:text="${#numbers.formatDecimal(summary.totalRevenue != null ? summary.totalRevenue : 0, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td colspan="6">TOTAL</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(reportData.totalTransactionTicketAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(reportData.totalTransactionFbAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
+                    <td class="text-right" style="color:var(--primary);font-weight:700;"
+                        th:text="${#numbers.formatDecimal(reportData.totalTransactionTotalAmount, 0, 'COMMA', 0, 'POINT')}">0</td>
                     <td colspan="2"></td>
                 </tr>
                 </tfoot>

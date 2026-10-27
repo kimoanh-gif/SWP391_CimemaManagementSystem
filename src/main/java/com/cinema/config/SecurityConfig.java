@@ -105,6 +105,7 @@ public class SecurityConfig {
                         "/error", "/favicon.ico",
                         "/oauth2/**", "/login/oauth2/**",
                         "/api/auth/**", "/customer/booking/payment/vnpay/return"
+                        , "/ticket/verify/**"
                 ).permitAll();
 
                 // Form POSTs are also public (we do our own validation/rate-limit).
@@ -117,10 +118,53 @@ public class SecurityConfig {
                         "/api/auth/**"
                 ).permitAll();
 
+                // A permission is required in addition to the role boundary.
+                auth.requestMatchers("/admin/customers/**", "/admin/staffs/**", "/admin/roles/**",
+                        "/api/admin/customers/**", "/api/admin/staffs/**", "/api/admin/roles/**")
+                        .access(roleAndPermission("account:manage", "ADMIN"));
+                auth.requestMatchers("/admin/dashboard", "/manager", "/manager/dashboard",
+                        "/manager/reports/**", "/api/manager/dashboard/**", "/api/manager/reports/**")
+                        .access(roleAndPermission("report:view", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/showtimes/**", "/api/manager/showtimes/**")
+                        .access(roleAndPermission("showtime:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/movies/**", "/api/manager/movies/**")
+                        .access(roleAndPermission("movie:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/genres/**", "/api/manager/genres/**")
+                        .access(roleAndPermission("genre:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/rooms/**", "/api/manager/rooms/**")
+                        .access(roleAndPermission("room:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/seats/**", "/manager/seat-types/**",
+                        "/api/manager/seats/**", "/api/manager/seat-types/**")
+                        .access(roleAndPermission("seat:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/pricing/**", "/api/manager/pricing/**")
+                        .access(roleAndPermission("pricing:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/fb/**", "/api/manager/fb/**")
+                        .access(roleAndPermission("fb:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/vouchers/**", "/api/manager/vouchers/**")
+                        .access(roleAndPermission("voucher:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/promotions/**", "/api/manager/promotions/**")
+                        .access(roleAndPermission("promotion:manage", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/manager/news/**", "/api/manager/news/**")
+                        .access(roleAndPermission("news:approve", "ADMIN", "MANAGER"));
+                auth.requestMatchers("/staff/news/**", "/api/staff/news/**")
+                        .access(roleAndPermission("news:manage", "ADMIN", "STAFF"));
+                auth.requestMatchers("/staff/bookings/**")
+                        .access(roleAndPermission("booking:read", "ADMIN", "MANAGER", "STAFF"));
+                auth.requestMatchers("/staff/check-in/**")
+                        .access(roleAndPermission("ticket:checkin", "ADMIN", "STAFF"));
+                auth.requestMatchers("/staff/sales/**", "/api/staff/members/**")
+                        .access(roleAndPermission("booking:create", "ADMIN", "STAFF"));
+                // Existing payments, tickets and history remain accessible after booking revocation.
+                auth.requestMatchers("/customer/booking", "/customer/booking/change-showtime",
+                        "/customer/booking/showtime", "/customer/booking/select", "/customer/booking/seats/**",
+                        "/customer/booking/foods/**", "/customer/booking/promotions/**", "/customer/booking/checkout")
+                        .access(roleAndPermission("booking:create", "CUSTOMER"));
+
                 // Dashboards are role-gated.
                 auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
                 auth.requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
-                auth.requestMatchers("/manager/**", "/api/**").permitAll();
+                auth.requestMatchers("/manager/**", "/api/manager/**").hasAnyRole("ADMIN", "MANAGER");
+                auth.requestMatchers("/api/**").permitAll();
                 auth.requestMatchers("/admin/**").hasRole("ADMIN");
                 auth.requestMatchers("/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
                 auth.requestMatchers("/customer/**").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER");
@@ -146,6 +190,17 @@ public class SecurityConfig {
         }
 
         return http.build();
+    }
+
+    private static org.springframework.security.authorization.AuthorizationManager<org.springframework.security.web.access.intercept.RequestAuthorizationContext>
+    roleAndPermission(String permission, String... roles) {
+        return (authentication, context) -> {
+            var auth = authentication.get();
+            boolean hasRole = java.util.Arrays.stream(roles).anyMatch(role -> auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_" + role)));
+            boolean hasPermission = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(permission));
+            return new org.springframework.security.authorization.AuthorizationDecision(auth.isAuthenticated() && hasRole && hasPermission);
+        };
     }
 
     /**

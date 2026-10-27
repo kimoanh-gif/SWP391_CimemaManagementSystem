@@ -36,7 +36,7 @@
 
         <!-- KPI cards -->
         <section class="cm-kpi-grid" aria-label="Key figures">
-            <a class="cm-kpi" th:href="@{/manager/movies}">
+            <a class="cm-kpi" th:href="${permissionUser != null and permissionUser.hasPermission('movie:manage')} ? @{/manager/movies} : null">
                 <div class="cm-kpi-top">
                     <span class="cm-kpi-label">Total movies</span>
                     <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">movie</span></span>
@@ -47,7 +47,7 @@
                          th:text="${stats.nowShowingMovies} + ' now showing • ' + ${stats.upcomingMovies} + ' coming soon'">8 now showing • 11 coming soon</div>
                 </div>
             </a>
-            <a class="cm-kpi" th:href="@{/manager/genres}">
+            <a class="cm-kpi" th:href="${permissionUser != null and permissionUser.hasPermission('genre:manage')} ? @{/manager/genres} : null">
                 <div class="cm-kpi-top">
                     <span class="cm-kpi-label">Total genres</span>
                     <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">category</span></span>
@@ -57,7 +57,7 @@
                     <div class="cm-kpi-sub" th:text="${stats.totalSeatTypes} + ' seat types configured'">Catalog standardized</div>
                 </div>
             </a>
-            <a class="cm-kpi" th:href="@{/manager/showtimes}">
+            <a class="cm-kpi" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">
                 <div class="cm-kpi-top">
                     <span class="cm-kpi-label">Today's showtimes</span>
                     <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">schedule</span></span>
@@ -92,7 +92,7 @@
                          th:text="${#numbers.formatDecimal(weeklyRevenueTotal, 1, 'POINT', 0, 'COMMA')} + ' ₫ in 7 days'">924.500.000 ₫ in 7 days</div>
                 </div>
             </a>
-            <a class="cm-kpi" th:href="@{/manager/fb}">
+            <a class="cm-kpi" th:href="${permissionUser != null and permissionUser.hasPermission('fb:manage')} ? @{/manager/fb} : null">
                 <div class="cm-kpi-top">
                     <span class="cm-kpi-label">F&amp;B items on sale</span>
                     <span class="cm-kpi-icon"><span class="material-symbols-outlined cm-fill">fastfood</span></span>
@@ -135,7 +135,7 @@
             <div class="cm-card cm-showtimes">
                 <div class="cm-card-head cm-card-head-line">
                     <h2>Today's showtimes</h2>
-                    <a class="cm-link" th:href="@{/manager/showtimes}">View all →</a>
+                    <a class="cm-link" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">View all →</a>
                 </div>
                 <div class="cm-list">
                     <div class="cm-empty" th:if="${#lists.isEmpty(todayShowtimes)}">
@@ -222,7 +222,7 @@
         <section>
             <h3 class="cm-section-title">Quick Admin Access</h3>
             <div class="cm-quick-grid">
-                <a class="cm-quick" th:href="@{/manager/movies}">
+                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('movie:manage')} ? @{/manager/movies} : null">
                     <span class="cm-quick-icon"><span class="material-symbols-outlined">movie</span></span>
                     <span class="cm-quick-text">
                         <strong>Movie Management</strong>
@@ -230,7 +230,7 @@
                     </span>
                     <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
                 </a>
-                <a class="cm-quick" th:href="@{/manager/genres}">
+                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('genre:manage')} ? @{/manager/genres} : null">
                     <span class="cm-quick-icon"><span class="material-symbols-outlined">category</span></span>
                     <span class="cm-quick-text">
                         <strong>Movie Genre Management</strong>
@@ -238,7 +238,7 @@
                     </span>
                     <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
                 </a>
-                <a class="cm-quick" th:href="@{/manager/showtimes}">
+                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">
                     <span class="cm-quick-icon"><span class="material-symbols-outlined">schedule</span></span>
                     <span class="cm-quick-text">
                         <strong>Showtime Management</strong>

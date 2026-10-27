@@ -8,7 +8,10 @@
     <th:block th:replace="~{fragments/cineora-manager-layout :: legacy-head}"></th:block>
     <style>
         .fb-layout {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
         }
 
         .category-tabs {
@@ -295,118 +298,137 @@
         </div>
     </div>
 
-    <!-- 2-Column Layout -->
+    <!-- Full-width Layout -->
     <div class="fb-layout">
 
-        <!-- Left: Category Tabs, Search & Product Cards -->
-        <div>
-            <!-- Category Pills -->
-            <div class="category-tabs">
-                <a th:href="@{/manager/fb}" class="cat-tab" th:classappend="${selectedCategory == 'ALL'} ? ' active' : ''">All items (<span th:text="${totalCount}">8</span>)</a>
-                <a th:href="@{/manager/fb(category='Combo')}" class="cat-tab" th:classappend="${selectedCategory == 'Combo'} ? ' active' : ''">Combos (<span th:text="${comboCount}">3</span>)</a>
-                <a th:href="@{/manager/fb(category='Food')}" class="cat-tab" th:classappend="${selectedCategory == 'Food'} ? ' active' : ''">Popcorn &amp; Food (<span th:text="${foodCount}">3</span>)</a>
-                <a th:href="@{/manager/fb(category='Drink')}" class="cat-tab" th:classappend="${selectedCategory == 'Drink'} ? ' active' : ''">Drinks (<span th:text="${drinkCount}">2</span>)</a>
-                <a th:href="@{/manager/fb(category='Snack')}" class="cat-tab" th:classappend="${selectedCategory == 'Snack'} ? ' active' : ''">Snacks</a>
-            </div>
+        <!-- Category Pills -->
+        <div class="category-tabs">
+            <a th:href="@{/manager/fb(keyword=${keyword}, status=${selectedStatus})}" class="cat-tab" th:classappend="${selectedCategory == 'ALL'} ? ' active' : ''">All items (<span th:text="${totalCount}">8</span>)</a>
+            <a th:href="@{/manager/fb(category='Combo', keyword=${keyword}, status=${selectedStatus})}" class="cat-tab" th:classappend="${selectedCategory == 'Combo'} ? ' active' : ''">Combos (<span th:text="${comboCount}">3</span>)</a>
+            <a th:href="@{/manager/fb(category='Food', keyword=${keyword}, status=${selectedStatus})}" class="cat-tab" th:classappend="${selectedCategory == 'Food'} ? ' active' : ''">Popcorn &amp; Food (<span th:text="${foodCount}">3</span>)</a>
+            <a th:href="@{/manager/fb(category='Drink', keyword=${keyword}, status=${selectedStatus})}" class="cat-tab" th:classappend="${selectedCategory == 'Drink'} ? ' active' : ''">Drinks (<span th:text="${drinkCount}">2</span>)</a>
+            <a th:href="@{/manager/fb(category='Snack', keyword=${keyword}, status=${selectedStatus})}" class="cat-tab" th:classappend="${selectedCategory == 'Snack'} ? ' active' : ''">Snacks</a>
+        </div>
 
-            <!-- Toolbar Filter -->
-            <div class="toolbar">
-                <form th:action="@{/manager/fb}" method="get" class="toolbar-form">
-                    <div class="toolbar-search">
-                        <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
-                        <input type="text" name="keyword" placeholder="Search by name or SKU..." th:value="${keyword}">
+        <!-- Toolbar Filter -->
+        <div class="toolbar">
+            <form th:action="@{/manager/fb}" method="get" class="toolbar-form">
+                <input type="hidden" name="category" th:value="${selectedCategory}" th:if="${selectedCategory != 'ALL'}">
+                <div class="toolbar-search">
+                    <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
+                    <input type="text" name="keyword" placeholder="Search by name or SKU..." th:value="${keyword}">
+                </div>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="ALL">All statuses</option>
+                    <option value="Active" th:selected="${selectedStatus == 'Active'}">On sale</option>
+                    <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Suspended</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Filter data</button>
+                <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">Reset</a>
+            </form>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <div class="fb-grid" th:if="${not #lists.isEmpty(items)}">
+            <div th:each="it : ${items}" class="fb-card">
+                <div class="fb-thumb-wrap">
+                    <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
+                         alt="Product image" class="fb-thumb">
+                    <div class="badge-tag-wrap">
+                        <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">COMBO</span>
+                        <span class="tag-pill tag-limited" th:if="${it.combo and it.hasInactiveComponents()}" style="background:#BA1A1A;">MISSING ITEM</span>
                     </div>
-                    <select name="status" onchange="this.form.submit()">
-                        <option value="ALL">All statuses</option>
-                        <option value="Active" th:selected="${selectedStatus == 'Active'}">On sale</option>
-                        <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Suspended</option>
-                    </select>
-                    <button type="submit" class="btn btn-primary btn-sm">Filter data</button>
-                    <a th:href="@{/manager/fb}" class="btn btn-secondary btn-sm">Reset</a>
-                </form>
-            </div>
+                </div>
 
-            <!-- Product Cards Grid -->
-            <div class="fb-grid" th:if="${not #lists.isEmpty(items)}">
-                <div th:each="it : ${items}" class="fb-card">
-                    <div class="fb-thumb-wrap">
-                        <img th:src="${it.image != null and !it.image.isBlank() ? it.image : 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400'}"
-                             alt="Product image" class="fb-thumb">
-                        <div class="badge-tag-wrap">
-                            <span class="tag-pill tag-bestseller" th:if="${it.category == 'Combo'}">COMBO</span>
-                            <span class="tag-pill tag-limited" th:if="${it.combo and it.hasInactiveComponents()}" style="background:#BA1A1A;">MISSING ITEM</span>
-                        </div>
+                <div class="fb-body">
+                    <div class="fb-card-title-row">
+                        <h3 class="fb-title" th:text="${it.itemName}">Combo Couple</h3>
+                        <span class="badge" th:classappend="${it.active ? (it.combo and it.hasInactiveComponents() ? 'badge-orange' : 'badge-green') : 'badge-gray'}"
+                              th:text="${!it.active ? 'SUSPENDED' : (it.combo and it.hasInactiveComponents() ? 'PAUSED (MISSING ITEM)' : 'ON SALE')}">ON SALE</span>
                     </div>
+                    <p class="fb-desc" th:text="${it.description}">1 large popcorn + 2 soft drinks.</p>
 
-                    <div class="fb-body">
-                        <div class="fb-card-title-row">
-                            <h3 class="fb-title" th:text="${it.itemName}">Combo Couple</h3>
-                            <span class="badge" th:classappend="${it.active ? (it.combo and it.hasInactiveComponents() ? 'badge-orange' : 'badge-green') : 'badge-gray'}"
-                                  th:text="${!it.active ? 'SUSPENDED' : (it.combo and it.hasInactiveComponents() ? 'PAUSED (MISSING ITEM)' : 'ON SALE')}">ON SALE</span>
-                        </div>
-                        <p class="fb-desc" th:text="${it.description}">1 large popcorn + 2 soft drinks.</p>
-
-                        <!-- Combo Components Breakdown -->
-                        <div th:if="${it.combo and not #lists.isEmpty(it.comboComponents)}" style="font-size:11.5px;color:var(--text-600);background:var(--bg-body);padding:6px 10px;border-radius:6px;border:1px dashed var(--border);">
-                            <span style="font-weight:700;">Includes: </span>
-                            <span th:each="comp, iter : ${it.comboComponents}">
-                                <span th:text="${comp.quantity} + 'x ' + ${comp.componentName}"></span>
-                                <span th:if="${comp.status == 'Inactive'}" style="color:var(--danger);font-weight:700;">(Suspended)</span>
-                                <span th:if="${!iter.last}"> + </span>
-                            </span>
-                        </div>
-
-                        <div class="fb-price-row">
-                            <div>
-                                <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">125.000 ₫</div>
-                                <div class="fb-cost-price" th:text="'Cost: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Cost: 28.000 ₫</div>
-                            </div>
-                            <span class="margin-pill" th:text="'Margin: ' + ${it.profitMarginPercent} + '%'">Margin: 77.6%</span>
-                        </div>
+                    <!-- Combo Components Breakdown -->
+                    <div th:if="${it.combo and not #lists.isEmpty(it.comboComponents)}" style="font-size:11.5px;color:var(--text-600);background:var(--bg-body);padding:6px 10px;border-radius:6px;border:1px dashed var(--border);">
+                        <span style="font-weight:700;">Includes: </span>
+                        <span th:each="comp, iter : ${it.comboComponents}">
+                            <span th:text="${comp.quantity} + 'x ' + ${comp.componentName}"></span>
+                            <span th:if="${comp.status == 'Inactive'}" style="color:var(--danger);font-weight:700;">(Suspended)</span>
+                            <span th:if="${!iter.last}"> + </span>
+                        </span>
                     </div>
 
-                    <div class="fb-footer-row">
-                        <span class="fb-sku-tag" th:text="${it.itemCode}">CB-ROYAL-02</span>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <button type="button" class="btn btn-secondary btn-sm btn-edit-fb"
-                                     style="padding:3px 8px;font-size:12px;"
-                                     th:data-id="${it.itemId}"
-                                     th:data-code="${it.itemCode}"
-                                     th:data-name="${it.itemName}"
-                                     th:data-category="${it.category}"
-                                     th:data-desc="${it.description}"
-                                     th:data-sellingprice="${it.sellingPrice}"
-                                     th:data-costprice="${it.costPrice}"
-                                     th:data-image="${it.image}">Edit</button>
-
-                            <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
-                                <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
-                                <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;"
-                                        th:title="${it.active ? 'Suspend this item' : 'Put back on sale'}">
-                                    <span th:if="${it.active}">⏹</span>
-                                    <span th:unless="${it.active}">▶</span>
-                                </button>
-                            </form>
-
-                            <form th:action="@{'/manager/fb/' + ${it.itemId} + '/delete'}" method="post" style="display:inline;"
-                                  th:onsubmit="'return confirm(\'Are you sure you want to delete \\\'\' + ${it.itemName} + \'\\\' from the menu?\');'">
-                                <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
-                                        title="Delete item">
-                                    🗑
-                                </button>
-                            </form>
+                    <div class="fb-price-row">
+                        <div>
+                            <div class="fb-selling-price" th:text="${#numbers.formatDecimal(it.sellingPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">125.000 ₫</div>
+                            <div class="fb-cost-price" th:text="'Cost: ' + ${#numbers.formatDecimal(it.costPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Cost: 28.000 ₫</div>
                         </div>
+                        <span class="margin-pill" th:text="'Margin: ' + ${it.profitMarginPercent} + '%'">Margin: 77.6%</span>
+                    </div>
+                </div>
+
+                <div class="fb-footer-row">
+                    <span class="fb-sku-tag" th:text="${it.itemCode}">CB-ROYAL-02</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button type="button" class="btn btn-secondary btn-sm btn-edit-fb"
+                                 style="padding:3px 8px;font-size:12px;"
+                                 th:data-id="${it.itemId}"
+                                 th:data-code="${it.itemCode}"
+                                 th:data-name="${it.itemName}"
+                                 th:data-category="${it.category}"
+                                 th:data-desc="${it.description}"
+                                 th:data-sellingprice="${it.sellingPrice}"
+                                 th:data-costprice="${it.costPrice}"
+                                 th:data-image="${it.image}">Edit</button>
+
+                        <form th:action="@{'/manager/fb/' + ${it.itemId} + '/status'}" method="post" style="display:inline;">
+                            <input type="hidden" name="status" th:value="${it.active ? 'Inactive' : 'Active'}">
+                            <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;"
+                                    th:title="${it.active ? 'Suspend this item' : 'Put back on sale'}">
+                                <span th:if="${it.active}">⏹</span>
+                                <span th:unless="${it.active}">▶</span>
+                            </button>
+                        </form>
+
+                        <form th:action="@{'/manager/fb/' + ${it.itemId} + '/delete'}" method="post" style="display:inline;"
+                              th:onsubmit="'return confirm(\'Are you sure you want to delete \\\'\' + ${it.itemName} + \'\\\' from the menu?\');'">
+                            <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                    title="Delete item">
+                                🗑
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" th:if="${#lists.isEmpty(items)}">
-                <div class="empty-state-icon"><span class="material-symbols-outlined" style="font-size:48px">fastfood</span></div>
-                <h3>No products found</h3>
-                <p>Click the button below to add a food item or combo.</p>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Add new product</button>
+        <!-- Pagination (Image 3) -->
+        <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;" th:if="${totalFilteredCount > 0}">
+            <span style="font-size: 13px; color: var(--text-500);">
+                Showing <span th:text="${startItem}">1</span> – <span th:text="${endItem}">8</span> of <span th:text="${totalFilteredCount}">10</span> products
+            </span>
+            <div class="pagination" style="display:flex;gap:4px;">
+                <a th:href="@{/manager/fb(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, category=${selectedCategory}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage <= 1} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage <= 1} ? 'pointer-events:none;opacity:0.4;' : ''">&lsaquo;</a>
+                <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+                   th:href="@{/manager/fb(page=${p}, size=${pageSize}, keyword=${keyword}, category=${selectedCategory}, status=${selectedStatus})}"
+                   th:text="${p}" class="page-btn" th:classappend="${p == currentPage} ? ' active' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">1</a>
+                <a th:href="@{/manager/fb(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, category=${selectedCategory}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage >= totalPages} ? 'pointer-events:none;opacity:0.4;' : ''">&rsaquo;</a>
             </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${#lists.isEmpty(items)}">
+            <div class="empty-state-icon"><span class="material-symbols-outlined" style="font-size:48px">fastfood</span></div>
+            <h3>No products found</h3>
+            <p>Click the button below to add a food item or combo.</p>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('btnCreateFB').click()" style="margin-top:12px;">+ Add new product</button>
         </div>
 
     </div>

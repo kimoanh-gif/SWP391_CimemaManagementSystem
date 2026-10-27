@@ -60,8 +60,9 @@ class HomeControllerTest {
         movie.setMovieId(1);
         movie.setTitle("Featured Movie");
 
-        when(movieService.getNowShowingMovies(8)).thenReturn(List.of(movie));
-        when(movieService.getUpcomingMovies(15)).thenReturn(List.of());
+        when(movieService.getNowShowingMovies(0)).thenReturn(List.of(movie));
+        when(movieService.getFeaturedMovies(10)).thenReturn(List.of(movie));
+        when(movieService.getUpcomingMovies(0)).thenReturn(List.of());
         when(showtimeService.getTodayShowtimes(8)).thenReturn(List.of());
         when(promotionService.getLatestPromotions(4)).thenReturn(List.of());
         when(newsService.getLatestNews(3)).thenReturn(List.of());
@@ -73,6 +74,7 @@ class HomeControllerTest {
 
         assertEquals("index", view);
         assertTrue(model.containsAttribute("featuredMovies"));
+        assertTrue(model.containsAttribute("topGrossingMovies"));
         assertTrue(model.containsAttribute("upcomingMovies"));
         assertTrue(model.containsAttribute("nowShowingMovies"));
         assertTrue(model.containsAttribute("todayShowtimes"));

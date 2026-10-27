@@ -46,6 +46,15 @@ public class PermissionDAO {
                 """, permissionRowMapper);
     }
 
+    public boolean insertIfMissing(String name, String description) {
+        return jdbcTemplate.update("""
+                INSERT INTO dbo.Permission (Name, Description)
+                SELECT ?, ? WHERE NOT EXISTS (
+                    SELECT 1 FROM dbo.Permission WITH (UPDLOCK, HOLDLOCK) WHERE Name = ?
+                )
+                """, name, description, name) > 0;
+    }
+
     public List<Permission> findByIds(List<Integer> ids) {
         if (ids == null || ids.isEmpty()) return List.of();
         String placeholders = String.join(",", ids.stream().map(id -> "?").toList());

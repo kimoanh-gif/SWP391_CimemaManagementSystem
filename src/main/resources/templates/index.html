@@ -109,10 +109,44 @@
             </div>
 
             <button type="button" id="quickBookBtn" class="btn-quick-book">
-                <span>Find Showtimes →</span>
+                <span>Find Showtimes</span>
             </button>
         </div>
     </div>
+
+    <section class="section-shell top-grossing-section"
+             th:if="${topGrossingMovies != null && !topGrossingMovies.isEmpty()}">
+        <div class="section-header">
+            <div class="section-header-left">
+                <h2 class="section-title">Top 10 Box Office Movies</h2>
+            </div>
+        </div>
+
+        <div class="top-grossing-carousel" data-top-grossing-carousel>
+            <button type="button" class="top-grossing-arrow top-grossing-arrow-left"
+                    data-top-previous aria-label="Previous top movies">‹</button>
+            <div class="top-grossing-track" aria-label="Top highest-grossing movies">
+            <article class="top-grossing-card" th:each="movie, stat : ${topGrossingMovies}"
+                     th:attr="data-top-index=${stat.index}">
+                <a class="top-grossing-poster-link" th:href="@{/movies/{id}(id=${movie.movieId})}">
+                    <img class="top-grossing-poster" th:src="${movie.posterUrl}" th:alt="${movie.title}"
+                         loading="lazy" decoding="async" onerror="this.src='/images/cinema-login-hero.png'" />
+                    <span class="top-grossing-age" th:text="${movie.ageRating}">T13</span>
+                </a>
+                <div class="top-grossing-info">
+                    <span class="top-grossing-rank" th:text="${stat.count}">1</span>
+                    <div class="top-grossing-copy">
+                        <h3><a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie title</a></h3>
+                        <p th:text="${movie.originalTitle != null && !movie.originalTitle.isEmpty() ? movie.originalTitle : movie.genresFormatted}">Original title</p>
+                        <span th:text="${movie.formattedDuration}">1h 58m</span>
+                    </div>
+                </div>
+            </article>
+            </div>
+            <button type="button" class="top-grossing-arrow top-grossing-arrow-right"
+                    data-top-next aria-label="Next top movies">›</button>
+        </div>
+    </section>
 
     <section class="section-shell" id="now-showing">
         <div class="section-header">
@@ -122,11 +156,11 @@
             </div>
             <a th:href="@{/movies?type=now-showing}" class="section-link">
                 <span>View All Movies</span>
-                <span>→</span>
             </a>
         </div>
 
-        <div class="movie-grid" th:if="${nowShowingMovies != null && !nowShowingMovies.isEmpty()}">
+        <div class="movie-grid" data-paginated-movie-grid data-page-size="5"
+             th:if="${nowShowingMovies != null && !nowShowingMovies.isEmpty()}">
             <article class="movie-card" th:each="movie : ${nowShowingMovies}">
                 <div class="movie-poster-wrap">
                     <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
@@ -150,6 +184,15 @@
                     </div>
                 </div>
 
+                <div class="movie-hover-preview" th:if="${movie.bannerUrl != null && !movie.bannerUrl.isEmpty()}">
+                    <img th:src="${movie.bannerUrl}" th:alt="${movie.title + ' banner'}">
+                    <div class="movie-hover-preview-body">
+                        <strong th:text="${movie.title}">Movie title</strong>
+                        <span th:text="${movie.genresFormatted}">Genres</span>
+                        <p th:text="${movie.description}">Synopsis</p>
+                    </div>
+                </div>
+
                 <div class="movie-card-body">
                     <h3 class="movie-card-title">
                         <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
@@ -169,6 +212,13 @@
             </article>
         </div>
 
+        <nav class="movie-pagination" data-movie-pagination aria-label="Now Showing pages"
+             th:if="${nowShowingMovies != null && nowShowingMovies.size() > 5}">
+            <button type="button" class="movie-page-arrow" data-page-previous aria-label="Previous page">‹</button>
+            <div class="movie-page-numbers" data-page-numbers></div>
+            <button type="button" class="movie-page-arrow" data-page-next aria-label="Next page">›</button>
+        </nav>
+
         <div th:if="${nowShowingMovies == null || nowShowingMovies.isEmpty()}" style="text-align:center;padding:3rem;background:var(--bg-surface);border-radius:var(--radius-md);">
             <p style="color:var(--text-muted);">No movies are scheduled today. Please check back later.</p>
         </div>
@@ -182,11 +232,10 @@
             </div>
             <a th:href="@{/movies?type=upcoming}" class="section-link">
                 <span>View Coming Soon</span>
-                <span>→</span>
             </a>
         </div>
 
-        <div class="movie-grid">
+        <div class="movie-grid" data-paginated-movie-grid data-page-size="5">
             <article class="movie-card" th:each="movie : ${upcomingMovies}">
                 <div class="movie-poster-wrap">
                     <img th:src="${movie.posterUrl}" th:alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async"
@@ -205,6 +254,15 @@
                     </div>
                 </div>
 
+                <div class="movie-hover-preview" th:if="${movie.bannerUrl != null && !movie.bannerUrl.isEmpty()}">
+                    <img th:src="${movie.bannerUrl}" th:alt="${movie.title + ' banner'}">
+                    <div class="movie-hover-preview-body">
+                        <strong th:text="${movie.title}">Movie title</strong>
+                        <span th:text="${movie.genresFormatted}">Genres</span>
+                        <p th:text="${movie.description}">Synopsis</p>
+                    </div>
+                </div>
+
                 <div class="movie-card-body">
                     <h3 class="movie-card-title">
                         <a th:href="@{/movies/{id}(id=${movie.movieId})}" th:text="${movie.title}">Movie Title</a>
@@ -220,6 +278,12 @@
                 </div>
             </article>
         </div>
+        <nav class="movie-pagination" data-movie-pagination aria-label="Coming Soon pages"
+             th:if="${upcomingMovies != null && upcomingMovies.size() > 5}">
+            <button type="button" class="movie-page-arrow" data-page-previous aria-label="Previous page">‹</button>
+            <div class="movie-page-numbers" data-page-numbers></div>
+            <button type="button" class="movie-page-arrow" data-page-next aria-label="Next page">›</button>
+        </nav>
         <div class="home-empty-state" th:if="${upcomingMovies == null || upcomingMovies.isEmpty()}">Upcoming releases will be announced soon.</div>
     </section>
 
@@ -231,7 +295,6 @@
             </div>
             <a th:href="@{/showtimes}" class="section-link">
                 <span>View Full Schedule</span>
-                <span>→</span>
             </a>
         </div>
 
@@ -273,7 +336,6 @@
             </div>
             <a th:href="@{/promotions}" class="section-link">
                 <span>View All Offers</span>
-                <span>→</span>
             </a>
         </div>
 
@@ -312,7 +374,6 @@
             </div>
             <a th:href="@{/news}" class="section-link">
                 <span>View All News</span>
-                <span>→</span>
             </a>
         </div>
 
@@ -334,7 +395,6 @@
                     <p class="news-excerpt" th:text="${news.getExcerpt(140)}">The latest cinema news, releases, and events from CINEORA.</p>
                     <a th:href="@{/news/{id}(id=${news.newsId})}" class="news-readmore">
                         <span>Read More</span>
-                        <span>→</span>
                     </a>
                 </div>
             </article>

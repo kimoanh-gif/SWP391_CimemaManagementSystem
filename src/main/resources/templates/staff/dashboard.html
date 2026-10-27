@@ -27,16 +27,16 @@
       <a th:href="@{/staff/dashboard}" class="sidebar-link active">
         <span class="link-icon">🏠</span><span>Dashboard</span>
       </a>
-      <a th:href="@{/staff/sales}" class="sidebar-link">
+      <a th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}" class="sidebar-link">
         <span class="link-icon">🎟</span><span>Counter Sales</span>
       </a>
-      <a th:href="@{/staff/bookings}" class="sidebar-link">
+      <a th:href="@{/staff/bookings}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:read')}" class="sidebar-link">
         <span class="link-icon">📋</span><span>Bookings</span>
       </a>
-      <a th:href="@{/staff/check-in}" class="sidebar-link">
+      <a th:href="@{/staff/check-in}" th:if="${permissionUser != null and permissionUser.hasPermission('ticket:checkin')}" class="sidebar-link">
         <span class="link-icon">✅</span><span>Ticket Check-In</span>
       </a>
-      <a th:href="@{/staff/news}" class="sidebar-link">
+      <a th:href="@{/staff/news}" th:if="${permissionUser != null and permissionUser.hasPermission('news:manage')}" class="sidebar-link">
         <span class="link-icon">✏️</span><span>News Management</span>
       </a>
     </nav>
@@ -81,8 +81,8 @@
           <p>Manage ticket sales, bookings and customer check-ins.</p>
         </div>
         <div class="heading-actions">
-          <a class="btn btn-secondary" th:href="@{/staff/bookings}">View Bookings</a>
-          <a class="btn btn-primary"   th:href="@{/staff/sales}">Counter Sales →</a>
+          <a class="btn btn-secondary" th:href="@{/staff/bookings}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:read')}">View Bookings</a>
+          <a class="btn btn-primary"   th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Counter Sales →</a>
         </div>
       </div>
 
@@ -109,35 +109,35 @@
       <div class="panel" style="padding:18px 22px 4px; margin-bottom:24px;">
         <p style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase;margin-bottom:14px;">Quick Actions</p>
         <div class="action-grid" style="margin-bottom:18px;">
-          <a class="action-card primary" th:href="@{/staff/sales}">
+          <a class="action-card primary" th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">
             <div class="action-icon">🎟</div>
             <div>
               <div class="action-title">Counter Ticket Sales</div>
               <div class="action-desc">Select showtime, seats &amp; F&amp;B</div>
             </div>
           </a>
-          <a class="action-card" th:href="@{/staff/bookings}">
+          <a class="action-card" th:href="@{/staff/bookings}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:read')}">
             <div class="action-icon">📋</div>
             <div>
               <div class="action-title">Order List</div>
               <div class="action-desc">Search &amp; view booking details</div>
             </div>
           </a>
-          <a class="action-card" th:href="@{/staff/check-in}">
+          <a class="action-card" th:href="@{/staff/check-in}" th:if="${permissionUser != null and permissionUser.hasPermission('ticket:checkin')}">
             <div class="action-icon">✅</div>
             <div>
               <div class="action-title">Ticket Check-In</div>
               <div class="action-desc">Verify customer tickets at the gate</div>
             </div>
           </a>
-          <a class="action-card" th:href="@{/staff/news}">
+          <a class="action-card" th:href="@{/staff/news}" th:if="${permissionUser != null and permissionUser.hasPermission('news:manage')}">
             <div class="action-icon">✏️</div>
             <div>
               <div class="action-title">News Management</div>
               <div class="action-desc">Draft, save or submit for review</div>
             </div>
           </a>
-          <button class="action-card" id="openMemberLookup" type="button">
+          <button class="action-card" id="openMemberLookup" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}" type="button">
             <div class="action-icon">👤</div>
             <div>
               <div class="action-title">Member Lookup</div>
@@ -161,7 +161,7 @@
             <h2>Upcoming Showtimes (Next 2 Hours)</h2>
             <p>Shows starting soon – prepare counter operations</p>
           </div>
-          <a class="btn btn-primary" th:href="@{/staff/sales}">Create Order →</a>
+          <a class="btn btn-primary" th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Create Order →</a>
         </div>
 
         <div th:if="${staffDashboard != null and !#lists.isEmpty(staffDashboard.upcomingShowtimes)}" class="table-wrap">

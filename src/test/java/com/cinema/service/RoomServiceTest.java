@@ -78,44 +78,83 @@ class RoomServiceTest {
     }
 
     @Test
-    void create_validCapacityAndLayout_success() {
+    void delete_withoutShowtimes_success() {
+        Room room = new Room();
+        room.setRoomId(7);
+        room.setRoomName("Test Cinema 7");
+        when(roomDao.findById(7)).thenReturn(Optional.of(room));
+        when(roomDao.countTotalShowtimes(7)).thenReturn(0);
+
+        assertDoesNotThrow(() -> roomService.delete(7));
+        verify(roomDao).deleteSeatsByRoomId(7);
+        verify(roomDao).delete(7);
+    }
+
+    @Test
+    void delete_withShowtimes_shouldThrow() {
+        Room room = new Room();
+        room.setRoomId(8);
+        room.setRoomName("Test Cinema 8");
+        when(roomDao.findById(8)).thenReturn(Optional.of(room));
+        when(roomDao.countTotalShowtimes(8)).thenReturn(2);
+
+        assertThrows(RoomHasActiveShowtimesException.class, () -> roomService.delete(8));
+        verify(roomDao, never()).delete(anyInt());
+    }
+
+    @Test
+    void create_validCapacityLayout_success() {
         RoomForm form = new RoomForm();
         form.setRoomCode("ROOM-TEST");
         form.setRoomName("Test Room");
-        form.setRoomType("2D Standard");
+        form.setRoomType("Standard 2D");
         form.setTotalRows(10);
         form.setSeatsPerRow(12);
-        form.setCapacity(120); // 10 * 12 = 120
+        form.setCapacity(120);
         form.setStatus("Ready");
-
-        when(roomDao.existsByRoomCode("ROOM-TEST", null)).thenReturn(false);
-        when(roomDao.existsByRoomName("Test Room", null)).thenReturn(false);
-        when(roomDao.insert(form)).thenReturn(1);
 
         assertDoesNotThrow(() -> roomService.create(form));
         verify(roomDao).insert(form);
     }
 
     @Test
-    void create_mismatchedCapacity_throwsIllegalArgumentException() {
+    void create_mismatchCapacityLayout_shouldThrow() {
         RoomForm form = new RoomForm();
-        form.setRoomCode("ROOM-TEST");
-        form.setRoomName("Test Room");
         form.setTotalRows(10);
         form.setSeatsPerRow(12);
         form.setCapacity(100); // 10 * 12 = 120 != 100
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
-        assertTrue(ex.getMessage().contains("phải bằng"));
+        assertTrue(ex.getMessage().contains("không khớp"));
+        verify(roomDao, never()).insert(any());
     }
 
     @Test
-    void create_missingRowsOrSeats_throwsIllegalArgumentException() {
+    void create_missingOneOfRowsOrSeats_shouldThrow() {
         RoomForm form = new RoomForm();
-        form.setRoomCode("ROOM-TEST");
-        form.setRoomName("Test Room");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(null);
         form.setCapacity(100);
 
-        assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
+        assertTrue(ex.getMessage().contains("nhập đầy đủ"));
+        verify(roomDao, never()).insert(any());
+    }
+
+    @Test
+    void update_mismatchCapacityLayout_shouldThrow() {
+        Room existing = new Room();
+        existing.setRoomId(15);
+        when(roomDao.findById(15)).thenReturn(Optional.of(existing));
+
+        RoomForm form = new RoomForm();
+        form.setRoomId(15);
+        form.setTotalRows(8);
+        form.setSeatsPerRow(10);
+        form.setCapacity(90); // 8 * 10 = 80 != 90
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.update(form));
+        assertTrue(ex.getMessage().contains("không khớp"));
+        verify(roomDao, never()).update(any());
     }
 }

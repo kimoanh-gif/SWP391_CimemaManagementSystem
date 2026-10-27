@@ -262,7 +262,7 @@
                                 th:data-release-date="${movie.releaseDate != null ? #temporals.format(movie.releaseDate, 'dd/MM/yyyy') : ''}"
                                 th:data-director="${movie.director}" th:data-actors="${movie.actors}"
                                 th:data-language="${movie.language}" th:data-description="${movie.description}"
-                                th:data-poster="${movie.poster}" th:data-trailer="${movie.trailer}"
+                                th:data-poster="${movie.poster}" th:data-banner="${movie.banner}" th:data-trailer="${movie.trailer}"
                                 th:data-genres="${movie.genreNamesString}" th:data-showtimes="${movie.showtimeCount}">👁</button>
                         <button type="button" class="action-btn action-btn-edit" title="Edit"
                                 onclick="openEditMovieModal(this)"
@@ -273,7 +273,7 @@
                                 th:data-end-date="${movie.endDate}" th:data-director="${movie.director}"
                                 th:data-actors="${movie.actors}" th:data-language="${movie.language}"
                                 th:data-description="${movie.description}" th:data-poster="${movie.poster}"
-                                th:data-trailer="${movie.trailer}" th:data-genre-ids="${movie.genreIdsString}">✎</button>
+                                th:data-banner="${movie.banner}" th:data-trailer="${movie.trailer}" th:data-genre-ids="${movie.genreIdsString}">✎</button>
                         <button type="button" class="action-btn" title="Reactivate movie"
                                 th:if="${movie.isArchived() or movie.status == 'Ended'}"
                                 style="color:#10B981;border-color:#10B981;background:#ECFDF5;"
@@ -283,13 +283,11 @@
                                 th:unless="${movie.isArchived() or movie.status == 'Ended'}"
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
-                        <form th:action="@{/manager/movies/{id}/delete(id=${movie.id})}"
-                              method="post" style="display: inline;" class="delete-movie-form"
-                              th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">
+                        <form th:action="@{'/manager/movies/' + ${movie.id} + '/delete'}" method="post" style="display:inline;"
+                              th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa phim \\\'\' + ${movie.title} + \'\\\' không?\');'">
                             <button type="submit" class="action-btn action-btn-del"
-                                    th:title="${movie.showtimeCount > 0 ? 'Movie is linked to ' + movie.showtimeCount + ' showtimes' : 'Delete movie'}">
-                                🗑
-                            </button>
+                                    style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                    title="Xóa phim">🗑</button>
                         </form>
                     </td>
                 </tr>
@@ -348,9 +346,7 @@
                 <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
                     <div class="form-group">
                         <label class="form-label" for="movieDuration">Duration (minutes) <span class="required">*</span></label>
-                        <input type="number" id="movieDuration" name="duration" class="form-control" placeholder="120" required min="1" max="600" value="120"
-                               onkeydown="if(['e','E','+','-','.'].includes(event.key)) event.preventDefault();"
-                               oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3);">
+                        <input type="number" id="movieDuration" name="duration" class="form-control" placeholder="120" required min="1" max="600" step="1" value="120">
                         <div class="form-error" id="durationFeedback"></div>
                     </div>
                     <div class="form-group">
@@ -402,9 +398,15 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="moviePoster">Poster URL</label>
+                        <label class="form-label" for="moviePoster">Vertical poster URL</label>
                         <input type="url" id="moviePoster" name="poster" class="form-control" placeholder="https://..." maxlength="500">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="movieBanner">Horizontal banner URL</label>
+                        <input type="url" id="movieBanner" name="banner" class="form-control" placeholder="https://... (16:9 recommended)" maxlength="500">
+                    </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="movieTrailer">Trailer URL</label>
                         <input type="url" id="movieTrailer" name="trailer" class="form-control" placeholder="https://youtube.com/..." maxlength="500">
