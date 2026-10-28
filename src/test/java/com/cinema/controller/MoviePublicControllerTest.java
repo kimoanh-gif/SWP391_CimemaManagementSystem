@@ -76,7 +76,7 @@ class MoviePublicControllerTest {
         when(movieService.getRelatedMovies(5, 4)).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
-        String view = controller.movieDetails(5, null, session, model, new RedirectAttributesModelMap());
+        String view = controller.movieDetails(5, null, null, session, model, new RedirectAttributesModelMap());
 
         assertEquals("customer/movies/details", view);
         assertEquals(movie, model.getAttribute("movie"));
@@ -87,7 +87,7 @@ class MoviePublicControllerTest {
         when(movieService.getMovieById(999)).thenReturn(Optional.empty());
 
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
-        String view = controller.movieDetails(999, null, session, new ConcurrentModel(), ra);
+        String view = controller.movieDetails(999, null, null, session, new ConcurrentModel(), ra);
 
         assertEquals("redirect:/movies", view);
         assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));

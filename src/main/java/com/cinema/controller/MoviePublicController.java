@@ -87,6 +87,7 @@ public class MoviePublicController {
     public String movieDetails(
             @PathVariable("id") int movieId,
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate showDate,
+            @RequestParam(name = "bookingId", required = false) Integer bookingId,
             HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes
@@ -123,8 +124,12 @@ public class MoviePublicController {
 
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("currentUser", user);
-        model.addAttribute("canReview", user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())
-                && movieService.canReview(user.getAccountId(), movieId));
+        Integer reviewBookingId = user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())
+                ? movieService.getReviewBookingId(user.getAccountId(), movieId, bookingId) : null;
+        MovieReview currentReview = reviewBookingId != null ? movieService.getReviewForBooking(reviewBookingId) : null;
+        model.addAttribute("canReview", reviewBookingId != null);
+        model.addAttribute("reviewBookingId", reviewBookingId);
+        model.addAttribute("currentReview", currentReview);
         populateCustomerPoints(session, model);
 
         model.addAttribute("activeNav", "movies");
@@ -134,6 +139,7 @@ public class MoviePublicController {
     @PostMapping("/{id}/reviews")
     public String submitReview(
             @PathVariable("id") int movieId,
+            @RequestParam(name = "bookingId") int bookingId,
             @RequestParam(name = "rating", defaultValue = "5") int rating,
             @RequestParam(name = "content", required = false) String content,
             HttpSession session,
@@ -144,18 +150,18 @@ public class MoviePublicController {
             redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with a customer account to review this movie.");
             return "redirect:/login?redirect=/movies/" + movieId;
         }
-        if (!movieService.canReview(user.getAccountId(), movieId)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Reviews are available after your confirmed showtime has ended.");
+        if (movieService.getReviewBookingId(user.getAccountId(), movieId, bookingId) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "This booking is not eligible for review.");
             return "redirect:/movies/" + movieId + "#reviews";
         }
 
-        boolean success = movieService.addReview(user.getAccountId(), movieId, rating, content != null ? content.trim() : "");
+        boolean success = movieService.addReview(user.getAccountId(), movieId, bookingId, rating, content != null ? content.trim() : "");
         if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Thank you for submitting your review.");
+            redirectAttributes.addFlashAttribute("successMessage", "Your review has been saved.");
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "Your review could not be saved. Please try again.");
         }
-        return "redirect:/movies/" + movieId + "#reviews";
+        return "redirect:/movies/" + movieId + "?bookingId=" + bookingId + "#reviews";
     }
 
     private void populateCustomerPoints(HttpSession session, Model model) {

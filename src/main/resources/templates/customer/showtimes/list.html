@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/cinema-header-footer :: metaHead('Showtimes')}">
     <title>Showtimes | CINEORA</title>
 </head>
-<body class="cineora-catalog-page">
+<body class="cineora-catalog-page showtimes-page">
 <div th:replace="~{fragments/cinema-header-footer :: header('showtimes')}"></div>
 
 <main class="section-shell" style="padding-top:2.5rem;">
@@ -21,7 +21,7 @@
            th:href="@{/showtimes(date=${d}, movieId=${selectedMovieId}, roomType=${selectedRoomType}, timeSlot=${selectedTimeSlot})}"
            class="date-pill"
            th:classappend="${d.equals(selectedDate)} ? 'active'">
-            <span class="date-pill-day" th:text="${stat.index == 0 ? 'Today' : (stat.index == 1 ? 'Tomorrow' : #temporals.format(d, 'EEE'))}">Today</span>
+            <span class="date-pill-day" th:text="${stat.index == 0 ? 'Today' : (stat.index == 1 ? 'Tomorrow' : #strings.capitalize(#strings.toLowerCase(#strings.substring(d.dayOfWeek.name(), 0, 3))))}">Today</span>
             <span class="date-pill-date" th:text="${#temporals.format(d, 'dd')}">18</span>
             <span class="date-pill-month" th:text="${#temporals.format(d, 'MM/yyyy')}">10/2026</span>
         </a>
@@ -30,7 +30,7 @@
         <input type="hidden" name="date" th:value="${selectedDate}" />
 
         <div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;font-weight:700;">
-            <span>⚡ Showtime Filters</span>
+            <span>Showtime Filters</span>
         </div>
 
         <div class="filter-controls">

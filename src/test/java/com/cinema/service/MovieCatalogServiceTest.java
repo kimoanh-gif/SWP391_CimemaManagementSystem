@@ -78,17 +78,18 @@ class MovieCatalogServiceTest {
         customer.setAccountId(1);
 
         when(customerDAO.findByAccountId(1)).thenReturn(Optional.of(customer));
+        when(movieReviewDAO.findEligibleBookingId(1, 10, 77)).thenReturn(77);
 
-        boolean ok = movieCatalogService.addReview(1, 10, 5, "Great movie!");
+        boolean ok = movieCatalogService.addReview(1, 10, 77, 5, "Great movie!");
         assertTrue(ok);
-        verify(movieReviewDAO).saveOrUpdateReview(eq(99), eq(10), eq(5), eq("Great movie!"));
+        verify(movieReviewDAO).saveOrUpdateReview(eq(99), eq(10), eq(77), eq(5), eq("Great movie!"));
     }
 
     @Test
     void testAddReviewFailsWhenCustomerNotFound() {
         when(customerDAO.findByAccountId(999)).thenReturn(Optional.empty());
 
-        boolean ok = movieCatalogService.addReview(999, 10, 5, "Nice");
+        boolean ok = movieCatalogService.addReview(999, 10, 77, 5, "Nice");
         assertFalse(ok);
     }
 }

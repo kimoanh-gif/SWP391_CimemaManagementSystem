@@ -628,16 +628,27 @@ BEGIN
         ReviewID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MovieReview PRIMARY KEY,
         CustomerID INT NOT NULL,
         MovieID INT NOT NULL,
+        BookingID INT NULL,
         Rating INT NOT NULL,
         Content NVARCHAR(1000) NULL,
         [Status] VARCHAR(30) NOT NULL CONSTRAINT DF_MovieReview_Status DEFAULT 'ACTIVE',
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_MovieReview_CreatedAt DEFAULT SYSDATETIME(),
-        CONSTRAINT UQ_MovieReview_Customer_Movie UNIQUE (CustomerID, MovieID),
         CONSTRAINT FK_MovieReview_Customer FOREIGN KEY (CustomerID) REFERENCES dbo.Customer(CustomerID),
         CONSTRAINT FK_MovieReview_Movie FOREIGN KEY (MovieID) REFERENCES dbo.Movie(MovieID),
+        CONSTRAINT FK_MovieReview_Booking FOREIGN KEY (BookingID) REFERENCES dbo.Booking(BookingID),
         CONSTRAINT CK_MovieReview_Rating CHECK (Rating BETWEEN 1 AND 5)
     );
 END;
+
+IF COL_LENGTH(N'dbo.MovieReview', N'BookingID') IS NULL
+    ALTER TABLE dbo.MovieReview ADD BookingID INT NULL;
+GO
+IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE parent_object_id=OBJECT_ID(N'dbo.MovieReview') AND [name]=N'UQ_MovieReview_Customer_Movie')
+    ALTER TABLE dbo.MovieReview DROP CONSTRAINT UQ_MovieReview_Customer_Movie;
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id=OBJECT_ID(N'dbo.MovieReview') AND [name]=N'FK_MovieReview_Booking')
+    ALTER TABLE dbo.MovieReview ADD CONSTRAINT FK_MovieReview_Booking FOREIGN KEY (BookingID) REFERENCES dbo.Booking(BookingID);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.MovieReview') AND [name]=N'UX_MovieReview_Booking')
+    CREATE UNIQUE INDEX UX_MovieReview_Booking ON dbo.MovieReview(BookingID) WHERE BookingID IS NOT NULL;
 
 IF OBJECT_ID(N'dbo.News', N'U') IS NULL
 BEGIN
