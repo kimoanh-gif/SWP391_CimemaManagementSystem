@@ -88,6 +88,7 @@
                 <a th:href="@{/customer/profile}">My Profile</a>
                 <a th:href="@{/customer/booking/history}">My Booking History</a>
                 <a th:href="@{/customer/profile/loyalty}">Loyalty</a>
+                <a th:href="@{/customer/reviews}">Reviews</a>
                 <form th:action="@{/logout}" method="post">
                   <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
                   <button type="submit">Log Out</button>

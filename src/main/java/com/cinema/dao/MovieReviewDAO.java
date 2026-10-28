@@ -1,6 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.MovieReview;
+import com.cinema.model.ReviewableMovie;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -67,6 +68,29 @@ public class MovieReviewDAO {
                   AND DATEADD(MINUTE,m.Duration,st.StartTime) <= SYSDATETIME()
                 """, Integer.class, accountId, movieId);
         return count != null && count > 0;
+    }
+
+    public List<ReviewableMovie> findReviewableMovies(int accountId) {
+        return jdbcTemplate.query("""
+                WITH eligible AS (
+                    SELECT m.MovieID,m.Title,m.PosterURL,b.BookingCode,st.StartTime,
+                           ROW_NUMBER() OVER(PARTITION BY m.MovieID ORDER BY st.StartTime DESC) row_number
+                    FROM dbo.Booking b
+                    JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                    JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
+                    JOIN dbo.Movie m ON m.MovieID=st.MovieID
+                    WHERE c.AccountID=? AND UPPER(b.[Status])='CONFIRMED'
+                      AND DATEADD(MINUTE,m.Duration,st.StartTime)<=SYSDATETIME()
+                      AND EXISTS(SELECT 1 FROM dbo.Payment p WHERE p.BookingID=b.BookingID AND UPPER(p.[Status])='PAID')
+                )
+                SELECT e.MovieID,e.Title,e.PosterURL,e.BookingCode,e.StartTime,r.Rating,r.Content
+                FROM eligible e
+                LEFT JOIN dbo.Customer c ON c.AccountID=?
+                LEFT JOIN dbo.MovieReview r ON r.CustomerID=c.CustomerID AND r.MovieID=e.MovieID AND UPPER(r.[Status])='ACTIVE'
+                WHERE e.row_number=1 ORDER BY e.StartTime DESC
+                """, (rs,n) -> new ReviewableMovie(rs.getInt("MovieID"),rs.getString("Title"),rs.getString("PosterURL"),
+                rs.getString("BookingCode"),rs.getObject("StartTime",java.time.LocalDateTime.class),
+                (Integer)rs.getObject("Rating"),rs.getString("Content")), accountId, accountId);
     }
 
     public void saveOrUpdateReview(int customerId, int movieId, int rating, String content) {

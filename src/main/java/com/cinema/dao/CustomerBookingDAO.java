@@ -10,6 +10,7 @@ import com.cinema.model.CustomerTicket;
 import com.cinema.model.TicketVerification;
 import com.cinema.model.BookingHistoryItem;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -28,6 +29,7 @@ public class CustomerBookingDAO {
 
     public CustomerBookingDAO(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        ensureLoyaltySchema();
     }
 
     public List<MovieBookingOption> findMoviesWithShowtimes(LocalDate date) {
@@ -522,6 +524,53 @@ public class CustomerBookingDAO {
                     IF NOT EXISTS (SELECT 1 FROM dbo.Ticket WHERE BookingSeatID=?)
                     INSERT dbo.Ticket(BookingSeatID,QRCode,TicketStatus) VALUES (?,?,'VALID')
                     """, bookingSeatId, bookingSeatId, "CINEORA-" + UUID.randomUUID());
+        }
+        awardLoyaltyPoints(bookingId);
+    }
+
+    private void awardLoyaltyPoints(int bookingId) {
+        jdbcTemplate.update("""
+                DECLARE @Award TABLE (CustomerID INT, Points INT);
+                INSERT dbo.LoyaltyTransaction(CustomerID,BookingID,Points,TransactionType,[Description])
+                OUTPUT inserted.CustomerID,inserted.Points INTO @Award(CustomerID,Points)
+                SELECT b.CustomerID,b.BookingID,
+                       CONVERT(INT,FLOOR((b.TotalAmount / 10000.0) * COALESCE(
+                           CASE WHEN ISJSON(mr.Benefits)=1 THEN TRY_CONVERT(DECIMAL(8,2),JSON_VALUE(mr.Benefits,'$.pointsRate')) END,1))),
+                       'EARN',CONCAT(N'Points earned from booking ',b.BookingCode)
+                FROM dbo.Booking b
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                LEFT JOIN dbo.MembershipRank mr ON mr.RankID=c.RankID
+                WHERE b.BookingID=? AND UPPER(b.[Status])='CONFIRMED' AND b.TotalAmount>=10000
+                  AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID=b.BookingID AND UPPER(p.[Status])='PAID')
+                  AND NOT EXISTS (SELECT 1 FROM dbo.LoyaltyTransaction lt WHERE lt.BookingID=b.BookingID AND lt.TransactionType='EARN');
+
+                UPDATE c SET c.AvailablePoints=c.AvailablePoints+a.Points,c.TierPoints=c.TierPoints+a.Points
+                FROM dbo.Customer c JOIN @Award a ON a.CustomerID=c.CustomerID;
+
+                UPDATE c SET RankID=ranked.RankID
+                FROM dbo.Customer c JOIN @Award a ON a.CustomerID=c.CustomerID
+                CROSS APPLY (SELECT TOP 1 mr.RankID FROM dbo.MembershipRank mr
+                             WHERE mr.IsActive=1 AND mr.MinPoints<=c.TierPoints ORDER BY mr.MinPoints DESC) ranked;
+                """, bookingId);
+    }
+
+    private void ensureLoyaltySchema() {
+        try {
+            jdbcTemplate.execute("""
+                    IF OBJECT_ID(N'dbo.LoyaltyTransaction',N'U') IS NULL
+                    BEGIN
+                      CREATE TABLE dbo.LoyaltyTransaction(
+                        LoyaltyTransactionID INT IDENTITY(1,1) PRIMARY KEY,CustomerID INT NOT NULL,
+                        BookingID INT NULL,Points INT NOT NULL,TransactionType VARCHAR(20) NOT NULL,
+                        [Description] NVARCHAR(250) NOT NULL,CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+                        CONSTRAINT FK_LoyaltyTx_Customer FOREIGN KEY(CustomerID) REFERENCES dbo.Customer(CustomerID),
+                        CONSTRAINT FK_LoyaltyTx_Booking FOREIGN KEY(BookingID) REFERENCES dbo.Booking(BookingID));
+                      CREATE UNIQUE INDEX UX_LoyaltyTransaction_BookingEarn ON dbo.LoyaltyTransaction(BookingID,TransactionType)
+                        WHERE BookingID IS NOT NULL AND TransactionType='EARN';
+                    END
+                    """);
+        } catch (DataAccessException ignored) {
+            // Managed deployments create this table through 00_full_database.sql.
         }
     }
 

@@ -88,8 +88,8 @@
                     </th:block>
                 </div>
 
-                <p class="loyalty-muted" style="margin-top:20px;font-size:.8rem;">
-                    Points are added automatically after each successful payment. Points and rank cannot be edited manually.
+                <p class="loyalty-muted loyalty-rule" style="margin-top:20px;font-size:.8rem;">
+                    Earn 1 point for every 10,000 VND successfully paid, multiplied by your current rank rate. Rewards are recorded once per booking and cannot be edited manually.
                 </p>
             </section>
 
@@ -126,6 +126,11 @@
             <div class="loyalty-empty" th:if="${loyalty.availableVouchers().isEmpty()}">
                 There are no vouchers available for your rank at the moment.
             </div>
+        </section>
+
+        <section th:if="${loyalty != null}" class="profile-card loyalty-card loyalty-how" style="margin-top:22px;">
+            <div><p class="profile-eyebrow">HOW IT WORKS</p><h3>Earn rewards automatically</h3><p class="loyalty-muted">Complete a payment and your points are added immediately. Cancelled, failed, expired, or unpaid bookings never earn points.</p></div>
+            <div class="loyalty-steps"><span><b>1</b> Pay successfully</span><span><b>2</b> Earn points</span><span><b>3</b> Unlock higher ranks</span></div>
         </section>
     </div>
 </main>

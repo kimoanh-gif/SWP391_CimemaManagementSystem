@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     initHomeHeader();
+    initMovieDetailHeader();
     initHeroCarousel();
     initTrailerModal();
     initVoucherCopy();
@@ -8,6 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
     initMoviePagination();
     initTopGrossingCarousel();
 });
+
+function initMovieDetailHeader() {
+    const page = document.querySelector('.movie-detail-page');
+    const header = page?.querySelector('.cinema-header');
+    const hero = page?.querySelector('.movie-details-hero');
+    if (!header || !hero) return;
+
+    const updateHeader = () => {
+        const heroBottom = hero.getBoundingClientRect().bottom;
+        header.classList.toggle('is-scrolled', heroBottom <= header.offsetHeight);
+    };
+
+    updateHeader();
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    window.addEventListener('resize', updateHeader, { passive: true });
+}
 
 function initTopGrossingCarousel() {
     const carousel = document.querySelector('[data-top-grossing-carousel]');
