@@ -54,12 +54,98 @@ public class AdminDashboardService {
     private LocalDate parseDate(String value) {
         if (value == null || value.isBlank()) return null;
         try {
+            if (!value.matches("\\d{4}-\\d{2}-\\d{2}")) throw new IllegalArgumentException();
             LocalDate date = LocalDate.parse(value);
             if (date.getYear() < 1900 || date.getYear() > 9998) throw new IllegalArgumentException();
             return date;
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException("Invalid date. Please select a date between 1900 and 9998.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> loadDateRange(String from, String to) {
+        if (from == null && to == null) {
+            LocalDate today = LocalDate.now(clock);
+            from = today.minusDays(6).toString();
+            to = today.toString();
+        }
+        return loadView(null, "custom", from, to);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> loadFiltered(String period, String range, String from, String to) {
+        LocalDate today = LocalDate.now(clock);
+        Map<String, LocalDate> starts = new LinkedHashMap<>();
+        starts.put("last7", today.minusDays(6));
+        starts.put("last30", today.minusDays(29));
+        starts.put("month", today.withDayOfMonth(1));
+        starts.put("quarter", LocalDate.of(today.getYear(), (today.getMonthValue() - 1) / 3 * 3 + 1, 1));
+        starts.put("year", today.withDayOfYear(1));
+        String selected = "custom".equals(range) || starts.containsKey(range) ? range : "last7";
+        if ("custom".equals(selected) && (from == null || from.isBlank() || to == null || to.isBlank())) {
+            throw new IllegalArgumentException("Please select both the start date and end date.");
+        }
+        Map<String, Object> data = load(period,
+                "custom".equals(selected) ? from : starts.get(selected).toString(),
+                "custom".equals(selected) ? to : today.toString());
+        data.put("range", selected);
+        data.put("rangeStarts", starts);
+        String unit = switch ((String) data.get("period")) {
+            case "week" -> "week (Monday–Sunday)";
+            case "month" -> "month";
+            case "quarter" -> "quarter";
+            case "year" -> "year";
+            default -> "day";
+        };
+        var format = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        data.put("chartDescription", "Revenue from " + ((LocalDate) data.get("chartStart")).format(format)
+                + " to " + ((LocalDate) data.get("chartEnd")).format(format) + " · Each bar represents one " + unit);
+        return data;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> loadView(String period, String mode, String from, String to) {
+        boolean custom = "custom".equals(mode);
+        Map<String, Object> data;
+        if (custom) {
+            LocalDate start = parseDate(from);
+            LocalDate end = parseDate(to);
+            if (start == null || end == null) {
+                throw new IllegalArgumentException("Please select both the start date and end date.");
+            }
+            long days = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+            String grouping = days <= 31 ? "day" : days <= 90 ? "week"
+                    : !end.isAfter(start.plusYears(2).minusDays(1)) ? "month"
+                    : !end.isAfter(start.plusYears(5).minusDays(1)) ? "quarter" : "year";
+            data = loadFiltered(grouping, "custom", from, to);
+        } else {
+            data = load(period);
+            data.put("range", "quick");
+        }
+        LocalDate today = (LocalDate) data.get("today");
+        LocalDate yearStart = today.withDayOfYear(1);
+        Map<String, Map<String, LocalDate>> quickRanges = new LinkedHashMap<>();
+        quickRanges.put("day", Map.of("start", today.minusDays(6), "end", today));
+        LocalDate monday = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        quickRanges.put("week", Map.of("start", monday.minusWeeks(7), "end", monday.plusDays(6)));
+        quickRanges.put("month", Map.of("start", yearStart, "end", yearStart.plusYears(1).minusDays(1)));
+        quickRanges.put("quarter", quickRanges.get("month"));
+        quickRanges.put("year", Map.of("start", yearStart.minusYears(4), "end", yearStart.plusYears(1).minusDays(1)));
+        data.put("quickRanges", quickRanges);
+        var format = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String unit = switch ((String) data.get("period")) {
+            case "week" -> "week";
+            case "month" -> "month";
+            case "quarter" -> "quarter";
+            case "year" -> "year";
+            default -> "day";
+        };
+        data.put("chartDescription", ((LocalDate) data.get("chartStart")).format(format) + " – "
+                + ((LocalDate) data.get("chartEnd")).format(format) + " · "
+                + (custom ? "Automatically grouped" : "Grouped") + " by " + unit
+                + " · Revenue counted only within the range and through today");
+        return data;
     }
 
     private void addRevenueChart(Map<String, Object> data, String requestedPeriod, LocalDate today,

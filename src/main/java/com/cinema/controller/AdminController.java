@@ -34,16 +34,17 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session,
-                            @RequestParam(defaultValue = "day") String period,
                             @RequestParam(required = false) String from,
                             @RequestParam(required = false) String to) {
         addUserToModel(model, session);
         try {
             try {
-                model.addAttribute("dashboard", adminDashboardService.load(period, from, to));
+                model.addAttribute("dashboard", adminDashboardService.loadDateRange(from, to));
             } catch (IllegalArgumentException ex) {
                 model.addAttribute("revenueFilterError", ex.getMessage());
-                model.addAttribute("dashboard", adminDashboardService.load(period));
+                model.addAttribute("filterFrom", from == null ? "" : from);
+                model.addAttribute("filterTo", to == null ? "" : to);
+                model.addAttribute("dashboard", adminDashboardService.loadDateRange(null, null));
             }
         } catch (org.springframework.dao.DataAccessException ex) {
             model.addAttribute("dashboardError", "Unable to load dashboard data. Please try again later.");
