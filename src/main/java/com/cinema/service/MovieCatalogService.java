@@ -72,18 +72,24 @@ public class MovieCatalogService {
         return movieReviewDAO.findReviewableMovies(accountId);
     }
 
-    public boolean addReview(int accountId, int movieId, int rating, String content) {
+    public boolean addReview(int accountId, int movieId, int bookingId, int rating, String content) {
         Optional<Customer> customerOpt = customerDAO.findByAccountId(accountId);
         if (customerOpt.isEmpty()) {
             return false;
         }
         if (rating < 1) rating = 1;
         if (rating > 5) rating = 5;
-        movieReviewDAO.saveOrUpdateReview(customerOpt.get().getCustomerId(), movieId, rating, content);
+        Integer eligibleBookingId = movieReviewDAO.findEligibleBookingId(accountId, movieId, bookingId);
+        if (eligibleBookingId == null || eligibleBookingId != bookingId) return false;
+        movieReviewDAO.saveOrUpdateReview(customerOpt.get().getCustomerId(), movieId, bookingId, rating, content);
         return true;
     }
 
-    public boolean canReview(int accountId, int movieId) {
-        return movieReviewDAO.canCustomerReview(accountId, movieId);
+    public Integer getReviewBookingId(int accountId, int movieId, Integer bookingId) {
+        return movieReviewDAO.findEligibleBookingId(accountId, movieId, bookingId);
+    }
+
+    public MovieReview getReviewForBooking(int bookingId) {
+        return movieReviewDAO.findByBookingId(bookingId);
     }
 }

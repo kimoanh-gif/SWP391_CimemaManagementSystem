@@ -12,6 +12,7 @@ public class MovieReview {
     private Integer customerId;
     private String customerName;
     private Integer movieId;
+    private Integer bookingId;
     private Integer rating; // 1 to 5
     private String content;
     private String status;
@@ -62,6 +63,9 @@ public class MovieReview {
     public void setMovieId(Integer movieId) {
         this.movieId = movieId;
     }
+
+    public Integer getBookingId() { return bookingId; }
+    public void setBookingId(Integer bookingId) { this.bookingId = bookingId; }
 
     public Integer getRating() {
         return rating != null ? rating : 5;

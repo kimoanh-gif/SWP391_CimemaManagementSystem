@@ -162,10 +162,11 @@
             </div>
         </div>
         <div th:if="${canReview}" class="review-form-card review-prompt-card">
-            <h4 style="font-size:1.15rem;margin-bottom:12px;">Write a review for this movie</h4>
+            <h4 style="font-size:1.15rem;margin-bottom:12px;" th:text="${currentReview != null ? 'Edit your review' : 'Write a review for this booking'}">Write a review</h4>
             <form th:action="@{/movies/{id}/reviews(id=${movie.movieId})}" method="post">
                 <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
-                <input type="hidden" id="ratingValue" name="rating" value="5" />
+                <input type="hidden" name="bookingId" th:value="${reviewBookingId}" />
+                <input type="hidden" id="ratingValue" name="rating" th:value="${currentReview != null ? currentReview.rating : 5}" />
 
                 <div style="margin-bottom:12px;">
                     <label style="font-size:0.85rem;color:var(--text-secondary);display:block;margin-bottom:6px;">Rating (1–5 stars)</label>
@@ -178,10 +179,10 @@
                     </div>
                 </div>
 
-                <textarea name="content" class="review-textarea" placeholder="Share your thoughts about the story, acting, visuals, or sound..." required></textarea>
+                <textarea name="content" class="review-textarea" placeholder="Share your thoughts about the story, acting, visuals, or sound..." required th:text="${currentReview != null ? currentReview.content : ''}"></textarea>
 
                 <button type="submit" class="btn-primary" style="padding:10px 22px;">
-                    <span>Submit Review</span>
+                    <span th:text="${currentReview != null ? 'Update Review' : 'Submit Review'}">Submit Review</span>
                 </button>
             </form>
         </div>
