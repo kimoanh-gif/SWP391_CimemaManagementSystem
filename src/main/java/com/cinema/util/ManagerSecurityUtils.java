@@ -20,10 +20,10 @@ public final class ManagerSecurityUtils {
     public static void verifyManagerAccess(HttpServletRequest request) {
         String role = resolveRole(request);
         if (role != null && !role.trim().isEmpty()) {
-            if (!"MANAGER".equalsIgnoreCase(role.trim()) && !"ADMIN".equalsIgnoreCase(role.trim())) {
+            if (!"MANAGER".equalsIgnoreCase(role.trim())) {
                 throw new UnauthorizedManagerException(
                         "Access denied: Account with role '" + role
-                                + "' does not have permission to perform movie genre management operations."
+                                + "' does not have permission to access the manager area."
                 );
             }
         }
