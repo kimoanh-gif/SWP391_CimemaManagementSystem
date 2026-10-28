@@ -92,4 +92,13 @@ public class MovieCatalogService {
     public MovieReview getReviewForBooking(int bookingId) {
         return movieReviewDAO.findByBookingId(bookingId);
     }
+
+    public boolean reportReview(int accountId, int movieId, int reviewId, String reason, String details) {
+        if (reason == null || !List.of("SPOILER", "FALSE_INFORMATION", "OFFENSIVE", "SPAM", "OTHER").contains(reason)) {
+            return false;
+        }
+        String cleanDetails = details == null ? "" : details.trim();
+        if (cleanDetails.length() > 500) cleanDetails = cleanDetails.substring(0, 500);
+        return movieReviewDAO.reportReview(reviewId, movieId, accountId, reason, cleanDetails);
+    }
 }

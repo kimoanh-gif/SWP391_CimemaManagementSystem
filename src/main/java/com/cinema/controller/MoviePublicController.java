@@ -124,12 +124,6 @@ public class MoviePublicController {
 
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("currentUser", user);
-        Integer reviewBookingId = user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())
-                ? movieService.getReviewBookingId(user.getAccountId(), movieId, bookingId) : null;
-        MovieReview currentReview = reviewBookingId != null ? movieService.getReviewForBooking(reviewBookingId) : null;
-        model.addAttribute("canReview", reviewBookingId != null);
-        model.addAttribute("reviewBookingId", reviewBookingId);
-        model.addAttribute("currentReview", currentReview);
         populateCustomerPoints(session, model);
 
         model.addAttribute("activeNav", "movies");
@@ -162,6 +156,25 @@ public class MoviePublicController {
             redirectAttributes.addFlashAttribute("errorMessage", "Your review could not be saved. Please try again.");
         }
         return "redirect:/movies/" + movieId + "?bookingId=" + bookingId + "#reviews";
+    }
+
+    @PostMapping("/{id}/reviews/{reviewId}/report")
+    public String reportReview(@PathVariable("id") int movieId,
+                               @PathVariable int reviewId,
+                               @RequestParam String reason,
+                               @RequestParam(name = "details", required = false) String details,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
+        AuthenticatedUser user = sessionService.getCurrentUser(session);
+        if (user == null || !"CUSTOMER".equalsIgnoreCase(user.getRole())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with a customer account to report a review.");
+            return "redirect:/login?redirect=/movies/" + movieId;
+        }
+        boolean reported = movieService.reportReview(user.getAccountId(), movieId, reviewId, reason, details);
+        redirectAttributes.addFlashAttribute(reported ? "successMessage" : "errorMessage",
+                reported ? "Thank you. The review was reported and is waiting for moderation."
+                        : "This review could not be reported. You may already have reported it, or it may be your own review.");
+        return "redirect:/movies/" + movieId + "#reviews";
     }
 
     private void populateCustomerPoints(HttpSession session, Model model) {

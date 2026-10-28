@@ -8,6 +8,7 @@ import com.cinema.service.CustomerBookingService.BookingException;
 import com.cinema.service.SessionService;
 import com.cinema.service.VnpayService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
@@ -29,12 +30,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.Inet4Address;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Collections;
 
 @Controller
 @RequestMapping("/customer/booking")
 public class CustomerBookingController {
 
-    @Value("${app.public-base-url:http://localhost:8080}")
+    @Value("${app.public-base-url:}")
     private String publicBaseUrl;
 
     private static final String SESSION_SHOWTIME_ID = "customerBookingShowtimeId";
@@ -439,16 +444,16 @@ public class CustomerBookingController {
     }
 
     @GetMapping("/tickets/{bookingId}")
-    public String showTickets(@PathVariable int bookingId, HttpSession session, Model model) {
+    public String showTickets(@PathVariable int bookingId, HttpSession session, HttpServletRequest request, Model model) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
         model.addAttribute("tickets", bookingService.getTickets(bookingId, accountId));
-        model.addAttribute("ticketBaseUrl", publicBaseUrl.replaceAll("/+$", ""));
+        model.addAttribute("ticketBaseUrl", resolveTicketBaseUrl(request));
         return "customer/booking/tickets";
     }
 
     @GetMapping("/history")
-    public String showHistory(HttpSession session, Model model) {
+    public String showHistory(HttpSession session, HttpServletRequest request, Model model) {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return "redirect:/login";
         var bookings = bookingService.getBookingHistory(accountId);
@@ -475,7 +480,7 @@ public class CustomerBookingController {
         model.addAttribute("upcomingCount", upcomingCount);
         model.addAttribute("totalSpent", totalSpent);
         model.addAttribute("ticketsByBooking", ticketsByBooking);
-        model.addAttribute("ticketBaseUrl", publicBaseUrl.replaceAll("/+$", ""));
+        model.addAttribute("ticketBaseUrl", resolveTicketBaseUrl(request));
         return "customer/booking/history";
     }
 
@@ -494,6 +499,43 @@ public class CustomerBookingController {
         return sessionService.hasRole(session, "CUSTOMER")
                 ? sessionService.currentAccountId(session)
                 : null;
+    }
+
+    private String resolveTicketBaseUrl(HttpServletRequest request) {
+        if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
+            return publicBaseUrl.trim().replaceAll("/+$", "");
+        }
+        String scheme = request.getHeader("X-Forwarded-Proto");
+        if (scheme == null || scheme.isBlank()) scheme = request.getScheme();
+        String host = request.getHeader("X-Forwarded-Host");
+        if (host == null || host.isBlank()) {
+            host = request.getServerName();
+            if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
+                String lanAddress = findLanIpv4Address();
+                if (lanAddress != null) host = lanAddress;
+            }
+            int port = request.getServerPort();
+            boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
+                    || ("https".equalsIgnoreCase(scheme) && port == 443);
+            if (!defaultPort) host += ":" + port;
+        }
+        return scheme + "://" + host + request.getContextPath();
+    }
+
+    private String findLanIpv4Address() {
+        try {
+            for (NetworkInterface network : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!network.isUp() || network.isLoopback() || network.isVirtual()) continue;
+                for (var address : Collections.list(network.getInetAddresses())) {
+                    if (address instanceof Inet4Address && address.isSiteLocalAddress()) {
+                        return address.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ignored) {
+            // Fall back to the request host below when network interfaces are unavailable.
+        }
+        return null;
     }
 
     private int parsePositiveInteger(String value) {
