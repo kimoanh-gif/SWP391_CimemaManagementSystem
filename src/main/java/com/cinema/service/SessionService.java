@@ -90,14 +90,19 @@ public class SessionService {
         return u == null ? null : u.getAccountId();
     }
 
-    public void updateProfileSnapshot(HttpSession session, String fullName, String phone) {
+    public void updateProfileSnapshot(HttpSession session, String username, String fullName, String phone) {
         if (session == null) return;
         AuthenticatedUser current = getCurrentUser(session);
         if (current == null) return;
         session.setAttribute(ATTR_USER, new AuthenticatedUser(
-                current.getAccountId(), current.getUsername(), current.getEmail(),
+                current.getAccountId(), username, current.getEmail(),
                 fullName, phone, current.getRole(), current.getPermissions(),
                 current.isEmailVerified(), current.getAuthMethod()));
+    }
+
+    public void updateProfileSnapshot(HttpSession session, String fullName, String phone) {
+        AuthenticatedUser current = getCurrentUser(session);
+        updateProfileSnapshot(session, current == null ? null : current.getUsername(), fullName, phone);
     }
 
     public boolean hasRole(HttpSession session, String... allowed) {

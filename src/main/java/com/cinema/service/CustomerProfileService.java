@@ -23,6 +23,9 @@ public class CustomerProfileService {
     @Transactional
     public void updateProfile(int accountId, ProfileUpdateForm form) {
         getProfile(accountId);
+        if (customerProfileDao.existsByUsernameExcludingAccount(form.getUsername(), accountId)) {
+            throw new DuplicateUsernameException("This username is already taken.");
+        }
         if (form.getPhone() != null && customerProfileDao.existsByPhoneExcludingAccount(form.getPhone(), accountId)) {
             throw new DuplicatePhoneException("This phone number is already used by another account.");
         }
@@ -39,5 +42,9 @@ public class CustomerProfileService {
         public DuplicatePhoneException(String message) {
             super(message);
         }
+    }
+
+    public static class DuplicateUsernameException extends IllegalArgumentException {
+        public DuplicateUsernameException(String message) { super(message); }
     }
 }

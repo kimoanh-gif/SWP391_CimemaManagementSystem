@@ -8,6 +8,7 @@ import com.cinema.model.Customer;
 import com.cinema.model.Genre;
 import com.cinema.model.Movie;
 import com.cinema.model.MovieReview;
+import com.cinema.model.ReviewableMovie;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,6 +66,10 @@ public class MovieCatalogService {
 
     public List<MovieReview> getMovieReviews(int movieId) {
         return movieReviewDAO.findByMovieId(movieId);
+    }
+
+    public List<ReviewableMovie> getReviewableMovies(int accountId) {
+        return movieReviewDAO.findReviewableMovies(accountId);
     }
 
     public boolean addReview(int accountId, int movieId, int rating, String content) {

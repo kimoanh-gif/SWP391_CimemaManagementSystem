@@ -10,6 +10,10 @@ import java.time.LocalDate;
 
 public class ProfileUpdateForm {
 
+    @NotBlank(message = "Username is required.")
+    @Pattern(regexp = "^[A-Za-z0-9._-]{4,50}$", message = "Use 4–50 letters, numbers, dots, underscores, or hyphens.")
+    private String username;
+
     @NotBlank(message = "Full name is required.")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters.")
     private String fullName;
@@ -22,11 +26,15 @@ public class ProfileUpdateForm {
 
     public static ProfileUpdateForm from(CustomerProfile profile) {
         ProfileUpdateForm form = new ProfileUpdateForm();
+        form.setUsername(profile.getUsername());
         form.setFullName(profile.getFullName());
         form.setPhone(profile.getPhone());
         form.setDateOfBirth(profile.getDateOfBirth());
         return form;
     }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username == null ? null : username.trim(); }
 
     public String getFullName() {
         return fullName;

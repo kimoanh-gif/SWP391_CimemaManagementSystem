@@ -71,7 +71,7 @@ public class CustomerProfileDao {
     public void updateProfile(int accountId, ProfileUpdateForm form) {
         String updateAccountSql = """
                 UPDATE Account
-                SET FullName = ?, Phone = ?
+                SET Username = ?, FullName = ?, Phone = ?
                 WHERE AccountID = ?
                 """;
 
@@ -83,7 +83,7 @@ public class CustomerProfileDao {
 
         jdbcTemplate.update(
                 updateAccountSql,
-                form.getFullName().trim(),
+                form.getUsername().trim(), form.getFullName().trim(),
                 form.getPhone(),
                 accountId
         );
@@ -100,6 +100,13 @@ public class CustomerProfileDao {
 
     public boolean existsByPhoneExcludingAccount(String phone, int accountId) {
         Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.Account WHERE Phone=? AND AccountID<>?", Integer.class, phone, accountId);
+        return count != null && count > 0;
+    }
+
+    public boolean existsByUsernameExcludingAccount(String username, int accountId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dbo.Account WHERE LOWER(Username)=LOWER(?) AND AccountID<>?",
+                Integer.class, username, accountId);
         return count != null && count > 0;
     }
 

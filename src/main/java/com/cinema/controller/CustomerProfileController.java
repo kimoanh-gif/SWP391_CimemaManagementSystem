@@ -82,6 +82,7 @@ public class CustomerProfileController {
     public String updateProfile(
             @Valid ProfileUpdateForm form,
             BindingResult bindingResult,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar,
             Model model,
             RedirectAttributes redirectAttributes,
             HttpSession session
@@ -98,6 +99,12 @@ public class CustomerProfileController {
 
         try {
             customerProfileService.updateProfile(accountId, form);
+            if (avatar != null && !avatar.isEmpty()) saveAvatar(accountId, profile, avatar);
+        } catch (CustomerProfileService.DuplicateUsernameException exception) {
+            bindingResult.rejectValue("username", "profile.username.duplicate", exception.getMessage());
+            addPageContext(session, model, profile);
+            model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
+            return "customer/profile-edit";
         } catch (CustomerProfileService.DuplicatePhoneException exception) {
             bindingResult.rejectValue("phone", "profile.phone.duplicate", exception.getMessage());
             addPageContext(session, model, profile);
@@ -109,7 +116,7 @@ public class CustomerProfileController {
             model.addAttribute("latestDateOfBirth", LocalDate.now().minusDays(1));
             return "customer/profile-edit";
         }
-        sessionService.updateProfileSnapshot(session, form.getFullName().trim(), form.getPhone());
+        sessionService.updateProfileSnapshot(session, form.getUsername(), form.getFullName().trim(), form.getPhone());
 
         redirectAttributes.addFlashAttribute(
                 "successMessage",
@@ -150,6 +157,25 @@ public class CustomerProfileController {
             redirectAttributes.addFlashAttribute("errorMessage", "The profile photo could not be updated.");
         }
         return "redirect:/customer/profile/edit";
+    }
+
+    private void saveAvatar(int accountId, CustomerProfile profile, MultipartFile avatar) {
+        if (avatar.getSize() > 2 * 1024 * 1024) throw new IllegalArgumentException("Choose an image up to 2 MB.");
+        Map<String,String> extensions = Map.of("image/jpeg", ".jpg", "image/png", ".png", "image/webp", ".webp");
+        String extension = extensions.get(avatar.getContentType());
+        if (extension == null) throw new IllegalArgumentException("Only JPG, PNG, and WebP images are supported.");
+        Path directory = Paths.get("uploads", "avatars").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(directory);
+            String fileName = "customer-" + accountId + "-" + UUID.randomUUID() + extension;
+            Path target = directory.resolve(fileName).normalize();
+            if (!target.startsWith(directory)) throw new IllegalArgumentException("Invalid upload path.");
+            Files.copy(avatar.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            customerProfileService.updateAvatar(accountId, "/uploads/avatars/" + fileName);
+            deletePreviousAvatar(profile.getAvatarUrl(), directory);
+        } catch (java.io.IOException exception) {
+            throw new IllegalArgumentException("The profile photo could not be saved.");
+        }
     }
 
     @PostMapping("/password/request")

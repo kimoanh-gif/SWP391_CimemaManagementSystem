@@ -575,6 +575,28 @@ IF COL_LENGTH(N'dbo.Payment', N'UpdatedAt') IS NULL ALTER TABLE dbo.Payment ADD 
 IF COL_LENGTH(N'dbo.Payment', N'LastCallbackAt') IS NULL ALTER TABLE dbo.Payment ADD LastCallbackAt DATETIME2 NULL;
 GO
 
+IF OBJECT_ID(N'dbo.LoyaltyTransaction', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.LoyaltyTransaction (
+        LoyaltyTransactionID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_LoyaltyTransaction PRIMARY KEY,
+        CustomerID INT NOT NULL,
+        BookingID INT NULL,
+        Points INT NOT NULL,
+        TransactionType VARCHAR(20) NOT NULL,
+        [Description] NVARCHAR(250) NOT NULL,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_LoyaltyTransaction_CreatedAt DEFAULT SYSDATETIME(),
+        CONSTRAINT FK_LoyaltyTransaction_Customer FOREIGN KEY (CustomerID) REFERENCES dbo.Customer(CustomerID),
+        CONSTRAINT FK_LoyaltyTransaction_Booking FOREIGN KEY (BookingID) REFERENCES dbo.Booking(BookingID),
+        CONSTRAINT CK_LoyaltyTransaction_Points CHECK (Points <> 0),
+        CONSTRAINT CK_LoyaltyTransaction_Type CHECK (TransactionType IN ('EARN','REDEEM','ADJUST'))
+    );
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.LoyaltyTransaction') AND [name]=N'UX_LoyaltyTransaction_BookingEarn')
+    CREATE UNIQUE INDEX UX_LoyaltyTransaction_BookingEarn ON dbo.LoyaltyTransaction(BookingID,TransactionType) WHERE BookingID IS NOT NULL AND TransactionType='EARN';
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Payment') AND [name] = N'UX_Payment_TransactionRef')
     CREATE UNIQUE INDEX UX_Payment_TransactionRef ON dbo.Payment(TransactionRef) WHERE TransactionRef IS NOT NULL;
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Payment') AND [name] = N'UX_Payment_ProviderTransactionNo')
