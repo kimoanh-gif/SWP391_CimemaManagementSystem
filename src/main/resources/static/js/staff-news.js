@@ -12,13 +12,14 @@
     thumbnailUrl: document.getElementById("newsThumbnail"),
     content: document.getElementById("newsContent")
   };
+  const statusLabels = { DRAFT: "Draft", PENDING: "Pending Review", APPROVED: "Approved", PUBLISHED: "Published", REJECTED: "Rejected" };
   let editingId = null;
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitter = event.submitter;
     if (!submitter || !fields.title.value.trim() || !fields.content.value.trim()) {
-      feedback.textContent = "Enter a title and article content.";
+      showFeedback("Enter a title and article content.", "error");
       return;
     }
     const payload = {
@@ -29,7 +30,9 @@
     };
     const method = editingId == null ? "POST" : "PUT";
     const path = editingId == null ? "/api/staff/news" : `/api/staff/news/${editingId}`;
-    feedback.textContent = "Saving article...";
+    const buttons = [...form.querySelectorAll("button")];
+    buttons.forEach((button) => { button.disabled = true; });
+    showFeedback("Saving article...", "info");
     try {
       const response = await fetch(path, {
         method,
@@ -42,18 +45,23 @@
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        feedback.textContent = body?.detail || body?.message || "Unable to save the article.";
+        showFeedback(body?.message || body?.detail || "Unable to save the article.", "error");
         return;
       }
-      feedback.textContent = payload.status === "DRAFT" ? "Draft saved." : "Article submitted for review.";
       clearEditor();
+      showFeedback(payload.status === "DRAFT" ? "Draft saved." : "Article submitted for manager review.", "success");
       await loadArticles();
     } catch (error) {
-      feedback.textContent = "Unable to connect. Please try again.";
+      showFeedback("Unable to connect. Please try again.", "error");
+    } finally {
+      buttons.forEach((button) => { button.disabled = false; });
     }
   });
 
-  cancelEdit.addEventListener("click", clearEditor);
+  cancelEdit.addEventListener("click", () => {
+    clearEditor();
+    hideFeedback();
+  });
   loadArticles();
 
   async function loadArticles() {
@@ -74,25 +82,26 @@
   }
 
   function createArticleCard(article) {
-    const card = document.createElement("article");
-    card.className = "staff-news-item";
-    const title = document.createElement("h3");
-    title.textContent = article.title || "Article";
-    const excerpt = document.createElement("p");
+    const status = String(article.status || "").toUpperCase();
+    const card = el("article", "news-item");
+
+    const head = el("div", "news-item-head");
+    head.append(el("h3", "", article.title || "Article"),
+      el("span", `badge badge-${status.toLowerCase()} news-status`, statusLabels[status] || status));
+    card.append(head);
+
     const content = article.content || "";
-    excerpt.textContent = content.length > 140 ? `${content.slice(0, 140)}...` : content;
-    const status = document.createElement("span");
-    status.className = `staff-status status-${String(article.status || "").toLowerCase()}`;
-    status.textContent = article.status || "";
-    card.append(title, excerpt, status);
-    if (["DRAFT", "REJECTED"].includes(String(article.status).toUpperCase())) {
-      const button = document.createElement("button");
+    card.append(el("p", "", content.length > 140 ? `${content.slice(0, 140)}...` : content));
+
+    const foot = el("div", "news-item-foot");
+    foot.append(el("span", "", formatDate(article.updatedAt || article.createdAt)));
+    if (status === "DRAFT" || status === "REJECTED") {
+      const button = el("button", "btn btn-secondary", "Edit");
       button.type = "button";
-      button.className = "staff-button";
-      button.textContent = "Edit";
       button.addEventListener("click", () => beginEdit(article));
-      card.append(button);
+      foot.append(button);
     }
+    card.append(foot);
     return card;
   }
 
@@ -103,7 +112,7 @@
     fields.content.value = article.content || "";
     document.getElementById("editorTitle").textContent = "Edit Article";
     cancelEdit.hidden = false;
-    feedback.textContent = "";
+    hideFeedback();
     fields.title.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -113,6 +122,30 @@
     form.reset();
     document.getElementById("editorTitle").textContent = "New Article";
     cancelEdit.hidden = true;
+  }
+
+  function showFeedback(text, type) {
+    feedback.textContent = text;
+    feedback.className = `alert alert-${type}`;
+    feedback.hidden = false;
+  }
+
+  function hideFeedback() {
     feedback.textContent = "";
+    feedback.hidden = true;
+  }
+
+  function formatDate(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return `Updated ${date.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+  }
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
   }
 })();

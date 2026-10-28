@@ -1,10 +1,7 @@
 (() => {
   const page = document.body.dataset.page;
-  const currency = (amount) => new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0
-  }).format(amount);
+  // Same "90,000 VND" format the Thymeleaf templates render server-side.
+  const currency = (amount) => `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(amount)} VND`;
 
   if (page === "seats") {
     const form = document.getElementById("staffSeatForm");
@@ -16,19 +13,27 @@
     if (!form || !count || !labels || !total || !button || !limitMessage) return;
     const max = Number(document.body.dataset.maxSeats || 10);
     const boxes = [...form.querySelectorAll('input[name="seatIds"]:not(:disabled)')];
+    const seatLabel = (box) => box.closest(".staff-seat")?.querySelector(".seat-btn")?.textContent.trim() || box.value;
+    const hint = document.getElementById("holdSeatsHint");
+    const canSell = button.dataset.canSell !== "false";
 
     function updateSeatSummary() {
       const selected = boxes.filter((box) => box.checked);
       const overLimit = selected.length > max;
       count.textContent = String(selected.length);
-      labels.textContent = selected.map((box) => box.closest(".staff-seat").querySelector("span").textContent).join(", ") || "None selected";
+      labels.textContent = selected.map(seatLabel).join(", ") || "None";
       total.textContent = currency(selected.reduce((sum, box) => sum + Number(box.dataset.price || 0), 0));
-      button.disabled = selected.length === 0 || overLimit;
+      button.disabled = !canSell || selected.length === 0 || overLimit;
       limitMessage.hidden = !overLimit;
+      if (hint) {
+        hint.textContent = !canSell ? "Only staff accounts can sell tickets."
+          : selected.length === 0 ? "Select at least one seat to continue."
+          : "Seats will be held for 10 minutes.";
+      }
     }
     boxes.forEach((box) => box.addEventListener("change", updateSeatSummary));
     form.addEventListener("submit", (event) => {
-      if (!boxes.some((box) => box.checked) || boxes.filter((box) => box.checked).length > max) {
+      if (!canSell || !boxes.some((box) => box.checked) || boxes.filter((box) => box.checked).length > max) {
         event.preventDefault();
         updateSeatSummary();
       }
@@ -37,7 +42,7 @@
   }
 
   if (page === "foods") {
-    const quantities = [...document.querySelectorAll(".staff-quantity")];
+    const quantities = [...document.querySelectorAll('input[name="quantities"]')];
     const foodTotal = document.getElementById("staffFoodTotal");
     const grandTotal = document.getElementById("staffGrandTotal");
     if (!foodTotal || !grandTotal) return;
