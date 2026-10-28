@@ -25,7 +25,7 @@
     <div class="auth-notice success" role="status" th:if="${resetSuccess}" th:text="${resetSuccess}"></div>
     <div class="auth-notice error" role="alert" th:if="${oauthError}" th:text="${oauthError}"></div>
     <div class="auth-notice error" role="alert" th:if="${oauthRejected}" th:text="${oauthRejected}"></div>
-    <form id="loginForm" th:action="@{/login(redirect=${redirect})}" th:object="${loginForm}" method="post" novalidate>
+    <form id="loginForm" th:action="@{/login(redirect=${redirect})}" th:object="${loginForm}" method="post" autocomplete="on" novalidate>
         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
         <div class="field" th:classappend="${identifierError != null} ? 'has-error' : ''">
           <label class="field-label" for="identifier">Email or Username</label>
@@ -58,10 +58,11 @@
         <!-- Options -->
         <div class="options">
           <label class="remember">
-            <input type="checkbox" id="rememberIdentifier"><span>Remember email/username</span>
+            <input type="checkbox" id="rememberIdentifier"><span>Remember me</span>
           </label>
           <a th:href="@{/forgot-password}">Forgot password?</a>
         </div>
+
 
         <!-- Submit -->
         <button class="sign-in" type="submit" id="submitBtn">
@@ -90,26 +91,42 @@
     });
   }
 
-  // Remember identifier (localStorage only - not a security boundary)
+  // Only the identifier is stored here; passwords stay with the browser password manager.
+  const form = document.getElementById('loginForm');
   const id = document.getElementById('identifier');
   const remember = document.getElementById('rememberIdentifier');
-  if (id && remember) {
+  const rememberHelp = document.getElementById('rememberHelp');
+  const storageKey = 'cinema-login-identifier';
+  function storageUnavailable() {
+    if (rememberHelp) rememberHelp.textContent = 'Your browser has blocked local storage, so your email/username cannot be remembered. Password autofill is managed by your browser.';
+  }
+  function saveIdentifierPreference() {
+    if (!id || !remember) return;
     try {
-      const saved = localStorage.getItem('cinema-login-identifier');
-      if (saved) { id.value = saved; remember.checked = true; }
-    } catch (_) {}
-    document.querySelector('form').addEventListener('submit', () => {
-      try {
-        if (remember.checked) localStorage.setItem('cinema-login-identifier', id.value.trim());
-        else localStorage.removeItem('cinema-login-identifier');
-      } catch (_) {}
-    });
+      const identifier = id.value.trim();
+      if (remember.checked && identifier) localStorage.setItem(storageKey, identifier);
+      else localStorage.removeItem(storageKey);
+    } catch (_) { storageUnavailable(); }
+  }
+  if (id && remember && form) {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        // Preserve an identifier returned after failed login or filled by the browser.
+        if (!id.value.trim()) id.value = saved;
+        remember.checked = true;
+      }
+    } catch (_) { storageUnavailable(); }
+    remember.addEventListener('change', saveIdentifierPreference);
+    id.addEventListener('input', saveIdentifierPreference);
+    id.addEventListener('change', saveIdentifierPreference);
+    form.addEventListener('submit', saveIdentifierPreference);
   }
 
   // Loading state
   const btn = document.getElementById('submitBtn');
-  if (btn) {
-    document.querySelector('form').addEventListener('submit', () => {
+  if (btn && form) {
+    form.addEventListener('submit', () => {
       btn.classList.add('loading');
       btn.disabled = true;
       setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 8000);
