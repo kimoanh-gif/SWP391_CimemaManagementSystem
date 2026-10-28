@@ -58,19 +58,93 @@
     }
     quantities.forEach((input) => input.addEventListener("input", updateFoodTotal));
     updateFoodTotal();
+  }
 
-    const countdown = document.getElementById("staffHoldCountdown");
-    const heldUntil = document.body.dataset.heldUntil;
-    if (countdown && heldUntil) {
-      const deadline = new Date(heldUntil).getTime();
-      const timer = window.setInterval(() => {
-        const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
-        countdown.textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
-        if (remaining === 0) {
-          window.clearInterval(timer);
-          countdown.classList.add("staff-expired");
+  // Counts down to an ISO deadline; onDone runs once when it reaches zero.
+  function countdown(element, deadlineIso, onDone) {
+    if (!element || !deadlineIso) return;
+    const deadline = new Date(deadlineIso).getTime();
+    const tick = () => {
+      const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      element.textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+      if (remaining === 0) {
+        window.clearInterval(timer);
+        element.classList.add("staff-expired");
+        if (onDone) onDone();
+      }
+    };
+    const timer = window.setInterval(tick, 1000);
+    tick();
+  }
+
+  if (page === "foods" || page === "payment") {
+    countdown(document.getElementById("staffHoldCountdown"), document.body.dataset.heldUntil);
+  }
+
+  if (page === "payment") {
+    const form = document.getElementById("counterPaymentForm");
+    const cashFields = document.getElementById("cashFields");
+    const cashInput = document.getElementById("cashReceived");
+    const changeDue = document.getElementById("changeDue");
+    const cashError = document.getElementById("cashError");
+    const payButton = document.getElementById("payButton");
+    const total = Number(document.body.dataset.total || 0);
+    const method = () => form?.querySelector('input[name="method"]:checked')?.value || "CASH";
+
+    function updatePaymentForm() {
+      const isCash = method() === "CASH";
+      if (cashFields) cashFields.hidden = !isCash;
+      if (cashInput) cashInput.required = isCash;
+      const cash = Number(cashInput?.value || 0);
+      const short = isCash && cashInput?.value !== "" && cash < total;
+      if (changeDue) changeDue.textContent = currency(Math.max(0, cash - total));
+      if (cashError) cashError.hidden = !short;
+      if (payButton) payButton.textContent = isCash ? "Confirm & Paid" : "Display QR Code";
+    }
+    form?.querySelectorAll('input[name="method"]').forEach((radio) => radio.addEventListener("change", updatePaymentForm));
+    cashInput?.addEventListener("input", updatePaymentForm);
+    form?.addEventListener("submit", (event) => {
+      if (method() === "CASH" && Number(cashInput?.value || 0) < total) {
+        event.preventDefault();
+        updatePaymentForm();
+        if (cashError) cashError.hidden = false;
+        cashInput?.focus();
+        return;
+      }
+      if (payButton) payButton.disabled = true;
+    });
+    updatePaymentForm();
+
+    // An expired QR is marked on the server; reloading shows the "display a new QR" state.
+    countdown(document.getElementById("paymentCountdown"), document.body.dataset.paymentExpires,
+      () => window.setTimeout(() => window.location.reload(), 800));
+
+    const qr = document.getElementById("vnpayQr");
+    if (qr && qr.dataset.paymentUrl && window.QRCode) {
+      new window.QRCode(qr, { text: qr.dataset.paymentUrl, width: 200, height: 200 });
+    }
+
+    const statusUrl = document.body.dataset.statusUrl;
+    const doneUrl = document.body.dataset.doneUrl;
+    const gatewayStatus = document.getElementById("gatewayStatus");
+    if (statusUrl && doneUrl) {
+      const poll = window.setInterval(async () => {
+        try {
+          const response = await fetch(statusUrl, { credentials: "same-origin", headers: { Accept: "application/json" } });
+          if (!response.ok) return;
+          const { status } = await response.json();
+          if (status === "PAID") {
+            window.clearInterval(poll);
+            if (gatewayStatus) gatewayStatus.textContent = "Payment received. Opening the booking…";
+            window.location.href = doneUrl;
+          } else if (["FAILED", "CANCELLED", "EXPIRED"].includes(status)) {
+            window.clearInterval(poll);
+            if (gatewayStatus) gatewayStatus.textContent = `Payment ${status.toLowerCase()}. Display a new QR code or take cash.`;
+          }
+        } catch (_) {
+          // A dropped poll is retried on the next tick.
         }
-      }, 1000);
+      }, 1500);
     }
   }
 })();

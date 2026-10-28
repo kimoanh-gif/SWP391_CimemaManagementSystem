@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Counter Payment | CINEORA Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script th:src="@{/js/staff-sales.js}" defer></script>
+</head>
+<body data-page="payment"
+      th:attr="data-held-until=${summary.heldUntil},
+               data-total=${summary.totalAmount},
+               data-payment-expires=${payment != null and payment.status == 'PENDING' ? payment.expiresAt : ''},
+               data-status-url=${gatewayUrl != null ? '/staff/sales/payment/status' : ''},
+               data-done-url=${gatewayUrl != null ? '/staff/sales/payment/done' : ''}">
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('sales')}"></div>
+
+  <div class="staff-main">
+    <header class="staff-topbar">
+      <div class="page-title">Staff / Counter Sales / <strong>Payment</strong></div>
+      <div class="topbar-actions">
+        <span class="profile-name">Order&nbsp;<strong th:text="${summary.bookingCode}"></strong></span>
+        <span class="staff-pill" id="staffHoldCountdown">10:00</span>
+      </div>
+    </header>
+
+    <div class="staff-content">
+      <div class="content-heading">
+        <div>
+          <p class="eyebrow">CINEORA / COUNTER SALES</p>
+          <h1>Counter Payment Checkout</h1>
+          <p>Collect payment, then confirm to issue tickets.</p>
+        </div>
+      </div>
+
+      <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+      <div class="payment-layout">
+
+        <!-- I. Order details -->
+        <div class="panel">
+          <div class="panel-header"><div><h2>Order Details</h2></div></div>
+          <div class="panel-body payment-lines">
+            <div>
+              <p class="payment-movie" th:text="${summary.movieTitle}">Movie</p>
+              <p class="payment-muted" th:text="${summary.roomName + ' · ' + #temporals.format(summary.startTime, 'HH:mm dd/MM/yyyy')}"></p>
+              <span class="badge badge-pending" th:if="${ageRating != null}" th:text="'Rated ' + ${ageRating}">Rated T16</span>
+            </div>
+            <div class="payment-line"><span>Seats</span><strong th:text="${summary.seatLabels}"></strong></div>
+            <div class="payment-line">
+              <span th:text="'Tickets × ' + ${summary.seatCount}">Tickets × 2</span>
+              <strong th:text="${#numbers.formatDecimal(summary.seatTotal,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+            <div class="payment-line">
+              <span>Food &amp; Beverage</span>
+              <strong th:text="${#numbers.formatDecimal(summary.foodTotal,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+            <div class="payment-line">
+              <span>Discount</span>
+              <strong th:text="'- ' + ${#numbers.formatDecimal(discountAmount,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+            <hr>
+            <div class="payment-line payment-total">
+              <span>Total Payable</span>
+              <strong th:text="${#numbers.formatDecimal(summary.totalAmount,0,'COMMA',0,'POINT') + ' VND'}"></strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- VNPay QR waiting for the customer -->
+          <div class="panel" th:if="${payment != null}">
+            <div class="panel-header"><div><h2>VNPay QR Code</h2></div></div>
+            <div class="panel-body payment-qr">
+              <th:block th:if="${payment.status == 'PENDING'}">
+                <div th:if="${gatewayUrl != null}" id="vnpayQr" class="payment-qr-code"
+                     th:attr="data-payment-url=${gatewayUrl}" aria-label="VNPay payment QR code"></div>
+                <div th:if="${gatewayUrl == null}" class="payment-qr-code payment-qr-demo" aria-label="Simulated payment QR code">QR</div>
+                <strong th:text="${payment.transactionRef}">PAY0001</strong>
+                <p class="payment-muted" th:text="'Amount: ' + ${#numbers.formatDecimal(payment.amount,0,'COMMA',0,'POINT')} + ' VND'"></p>
+                <p class="payment-muted">Code expires in <strong id="paymentCountdown">03:00</strong></p>
+                <p class="payment-muted" th:if="${gatewayUrl != null}" id="gatewayStatus">Waiting for the customer to complete the VNPay payment…</p>
+                <form th:if="${gatewayUrl == null}" th:action="@{/staff/sales/payment/vnpay/confirm}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <p class="payment-muted">VNPay is not configured on this server. Confirm once the customer shows the completed transfer.</p>
+                  <button class="btn btn-primary payment-wide" type="submit">Confirm &amp; Paid</button>
+                </form>
+              </th:block>
+              <div class="alert alert-error" th:if="${payment.status == 'EXPIRED'}">
+                The QR code expired. Display a new QR code or switch to cash.
+              </div>
+            </div>
+          </div>
+
+          <!-- II–IV. Method, compliance, actions -->
+          <form class="panel" id="counterPaymentForm" th:action="@{/staff/sales/payment}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="panel-header"><div><h2>Payment Method</h2></div></div>
+            <div class="panel-body payment-lines">
+              <label class="payment-option">
+                <input type="radio" name="method" value="CASH"
+                       th:checked="${selectedMethod == null or selectedMethod == 'CASH'}">
+                <span><strong>Cash</strong><small>Enter the cash received to calculate change.</small></span>
+              </label>
+              <div class="payment-cash" id="cashFields">
+                <label class="form-label" for="cashReceived">Cash Received (VND)</label>
+                <input class="form-control" id="cashReceived" name="cashReceived" type="number" min="0" step="1000"
+                       inputmode="numeric" th:placeholder="${summary.totalAmount.toBigInteger()}">
+                <div class="payment-line"><span>Change Due</span><strong id="changeDue">0 VND</strong></div>
+                <p class="payment-error" id="cashError" hidden>Cash received is less than the total payable.</p>
+              </div>
+              <label class="payment-option">
+                <input type="radio" name="method" value="VNPAY" th:checked="${selectedMethod == 'VNPAY'}">
+                <span><strong>VNPay QR Code</strong><small>Show a QR code for the customer to scan and pay.</small></span>
+              </label>
+
+              <hr>
+              <p class="eyebrow">Compliance Check</p>
+              <label class="payment-option" th:if="${ageCheckRequired}">
+                <input type="checkbox" name="ageVerified" value="true" id="ageVerified" required>
+                <span><strong th:text="'I checked the customer\'s ID for the ' + ${ageRating} + ' rating'">I checked the customer's ID</strong>
+                  <small>Required before payment for age-restricted movies.</small></span>
+              </label>
+              <p class="payment-muted" th:unless="${ageCheckRequired}">This movie is rated for all ages. No ID check needed.</p>
+
+              <button class="btn btn-primary payment-wide" id="payButton" type="submit">Confirm &amp; Paid</button>
+            </div>
+          </form>
+
+          <form th:action="@{/staff/sales/cancel}" method="post" class="payment-cancel"
+                onsubmit="return confirm('Cancel this order and release the seats?');">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="returnTo" value="seats">
+            <button class="btn btn-secondary payment-wide" type="submit">Cancel Order</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{fragments/staff-layout :: sidebar-scripts}"></div>
+</body>
+</html>
