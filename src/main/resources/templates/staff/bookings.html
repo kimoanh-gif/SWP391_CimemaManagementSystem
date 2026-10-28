@@ -50,7 +50,9 @@
                 <option value="">All Statuses</option>
                 <option value="PENDING"   th:selected="${bookingPage.status == 'PENDING'}">Pending</option>
                 <option value="CONFIRMED" th:selected="${bookingPage.status == 'CONFIRMED'}">Confirmed</option>
+                <option value="PAYMENT_PENDING" th:selected="${bookingPage.status == 'PAYMENT_PENDING'}">Payment Pending</option>
                 <option value="CANCELLED" th:selected="${bookingPage.status == 'CANCELLED'}">Cancelled</option>
+                <option value="EXPIRED"   th:selected="${bookingPage.status == 'EXPIRED'}">Expired</option>
               </select>
             </div>
             <div class="form-group" style="padding-top:18px;">

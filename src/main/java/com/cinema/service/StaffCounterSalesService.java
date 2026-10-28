@@ -54,6 +54,11 @@ public class StaffCounterSalesService {
         return customerBookingService.getSeats(showtimeId);
     }
 
+    /** Counter orders are recorded against a Staff profile; manager/admin accounts may not have one. */
+    public boolean canSell(int accountId) {
+        return staffNewsDAO.findActiveStaffId(accountId).isPresent();
+    }
+
     @Transactional
     public int createPendingCounterBooking(int accountId, int showtimeId, List<Integer> requestedSeatIds,
                                            String memberIdentifier) {
@@ -81,7 +86,9 @@ public class StaffCounterSalesService {
 
         Integer customerId = null;
         if (memberIdentifier != null && !memberIdentifier.isBlank()) {
-            customerId = memberLookupDAO.findCustomerIdByPhoneOrEmail(memberIdentifier.trim())
+            String identifier = memberIdentifier.trim();
+            if (!identifier.contains("@")) identifier = MemberLookupService.normalizePhone(identifier);
+            customerId = memberLookupDAO.findCustomerIdByPhoneOrEmail(identifier)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "No active member matched the phone number or email."));
         }
