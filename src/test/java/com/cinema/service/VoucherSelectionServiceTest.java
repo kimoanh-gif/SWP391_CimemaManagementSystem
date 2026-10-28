@@ -41,14 +41,42 @@ class VoucherSelectionServiceTest {
     @Mock
     private VoucherDAO voucherDAO;
 
+    @Mock private com.cinema.dao.SystemSettingDAO settings;
     private VoucherSelectionService service;
 
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(NOW.atZone(ZONE).toInstant(), ZONE);
-        service = new VoucherSelectionService(voucherDAO, clock);
+        service = new VoucherSelectionService(voucherDAO, clock, settings);
         lenient().when(voucherDAO.countUsage(anyInt(), anyInt())).thenReturn(0);
         lenient().when(voucherDAO.countCustomerUsage(anyInt(), anyInt(), anyInt())).thenReturn(0);
+    }
+
+    private void systemCap(String value) {
+        var setting = new com.cinema.model.SystemSetting(); setting.setValue(value);
+        when(settings.findByKey("VOUCHER_MAX_DISCOUNT_AMOUNT")).thenReturn(Optional.of(setting));
+    }
+
+    @Test void systemCapLimitsTwentyPercentOfOneMillionToOneHundredThousand() {
+        systemCap("100000");
+        var option = service.evaluate(voucher("SALE20", "PERCENT", 20, null, null), pricing(1_000_000, 0));
+        assertEquals(new BigDecimal("100000"), option.getDiscountAmount());
+        assertTrue(option.getDiscountValueDisplay().contains("max"));
+    }
+    @Test void lowerVoucherSpecificCapStillWins() {
+        systemCap("100000");
+        var option = service.evaluate(voucher("SALE20", "PERCENT", 20, 50_000, null), pricing(1_000_000, 0));
+        assertEquals(new BigDecimal("50000"), option.getDiscountAmount());
+    }
+    @Test void zeroSystemCapPreservesCurrentDiscountRules() {
+        systemCap("0");
+        var option = service.evaluate(voucher("SALE20", "PERCENT", 20, null, null), pricing(1_000_000, 0));
+        assertEquals(new BigDecimal("200000"), option.getDiscountAmount());
+    }
+    @Test void discountBelowSystemCapIsUnchanged() {
+        systemCap("100000");
+        var option = service.evaluate(voucher("SALE20", "PERCENT", 20, null, null), pricing(200_000, 0));
+        assertEquals(new BigDecimal("40000"), option.getDiscountAmount());
     }
 
     @Test

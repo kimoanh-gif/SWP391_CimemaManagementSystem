@@ -270,6 +270,7 @@ function renderVoucherSettings() {
   const presentation = {
     VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Validity period', label: 'Voucher validity period', unit: 'days' },
     VOUCHER_MIN_BOOKING_AMOUNT: { order: 2, title: 'Minimum order value', label: 'Minimum booking amount', unit: 'VND' },
+    VOUCHER_MAX_DISCOUNT_AMOUNT: { order: 3.5, title: 'Maximum discount amount', label: 'Maximum discount per booking', unit: 'VND' },
     VOUCHER_MAX_DISCOUNT_PERCENT: { order: 3, title: 'Discount limit', label: 'Maximum discount percentage', unit: '%' },
     VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Total quantity limit', label: 'Maximum voucher quantity', unit: 'codes' },
     VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Per-account limit', label: 'Maximum vouchers per customer', unit: 'codes' }
@@ -354,7 +355,8 @@ function renderSaveBar(category) {
 
 function renderSettingItem(setting) {
   const inputType = getInputType(setting);
-  const hint = getValidationHint(setting);
+  const isDiscountCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT';
+  const hint = isDiscountCap ? 'Whole VND amount. 0 = no system-wide cap. Applies to percentage vouchers. Lower voucher limits still apply.' : getValidationHint(setting);
   const readonly = (setting.validationRules || '').includes('readonly');
   const value = currentValues[setting.settingId] ?? setting.value ?? '';
   const min = (setting.validationRules || '').match(/min:([\d.-]+)/)?.[1];
@@ -369,7 +371,7 @@ function renderSettingItem(setting) {
         ${inputType === 'checkbox' ? `<input type="checkbox" class="setting-checkbox" id="input-${setting.settingId}"
           ${value === 'true' || value === '1' ? 'checked' : ''} ${readonly ? 'disabled' : ''}
           onchange="handleInputChange(${setting.settingId}, this.checked ? 'true' : 'false')">` :
-        `<input type="${inputType}" ${inputType === 'number' ? 'step="any"' : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
+        `<input type="${inputType}" ${inputType === 'number' ? (isDiscountCap ? 'step="1"' : 'step="any"') : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
           aria-describedby="${hint ? 'hint-' + setting.settingId + ' ' : ''}error-${setting.settingId}" ${readonly ? 'disabled' : ''}
           ${min !== undefined ? `min="${min}"` : ''} ${max !== undefined ? `max="${max}"` : ''}
           oninput="handleInputChange(${setting.settingId}, this.value)">`}
@@ -468,7 +470,8 @@ async function saveCategory(category) {
   let invalid = false;
   for (const setting of changes) {
     const input = document.getElementById('input-' + setting.settingId);
-    if (!input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
+    const invalidCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT' && !/^[0-9]{1,12}$/.test(input.value);
+    if (invalidCap || !input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
       showSettingError(setting.settingId, input.validationMessage || 'Enter a valid number.');
       if (!invalid) input.focus();
       invalid = true;

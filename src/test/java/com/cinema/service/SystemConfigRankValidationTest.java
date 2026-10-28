@@ -17,6 +17,16 @@ class SystemConfigRankValidationTest {
         when(ranks.findById(2)).thenReturn(Optional.of(rank(2,500,1999)));
         when(ranks.updateThreshold(2,600)).thenReturn(1);
     }
+    @Test void maximumDiscountAmountMustBeWholeNonNegativeVnd() {
+        var setting = new com.cinema.model.SystemSetting();
+        setting.setSettingKey("VOUCHER_MAX_DISCOUNT_AMOUNT"); setting.setValueType("NUMBER");
+        setting.setValidationRules("min:0,max:999999999999");
+        for (String value : new String[]{"", "-1", "1.5", "1e5", "NaN", "Infinity", "1000000000000"}) {
+            assertFalse(service.validateSetting(setting, value).valid(), value);
+        }
+        assertTrue(service.validateSetting(setting, "0").valid());
+        assertTrue(service.validateSetting(setting, "100000").valid());
+    }
     @Test void rejectsOverlapPreviousMaximum() {
         assertFalse(service.updateRankThreshold(2,499).success());
         verify(ranks,never()).updateThreshold(anyInt(),anyInt());

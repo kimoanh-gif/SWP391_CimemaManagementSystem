@@ -173,6 +173,8 @@ public class SystemSettingDAO {
     }
 
     private void seedVoucherSettings() {
+        seedIfNotExists("VOUCHER_MAX_DISCOUNT_AMOUNT", "Maximum Discount Amount", "VOUCHER", "NUMBER",
+                "0", "0", "Maximum percentage-voucher discount per booking in VND. 0 means no system-wide cap.", "min:0,max:999999999999");
         seedIfNotExists("VOUCHER_VALIDITY_DAYS", "Voucher Validity Period", "VOUCHER", "NUMBER",
                 "30", "30", "Number of days voucher is valid after creation", "min:1,max:365");
         seedIfNotExists("VOUCHER_MIN_BOOKING_AMOUNT", "Minimum Booking Amount", "VOUCHER", "NUMBER",
