@@ -109,6 +109,10 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E5: Invalid Configuration Value
      */
     public ValidationResult validateSetting(SystemSetting setting, String newValue) {
+        if ("VOUCHER_MAX_DISCOUNT_AMOUNT".equals(setting.getSettingKey())
+                && (newValue == null || !newValue.matches("[0-9]{1,12}"))) {
+            return ValidationResult.error("INVALID_AMOUNT", "Enter a whole VND amount between 0 and 999999999999. Use 0 for no system-wide cap.");
+        }
         String rules = setting.getValidationRules();
         if (rules == null || rules.isBlank()) {
             return ValidationResult.success(); // No rules, accept any value

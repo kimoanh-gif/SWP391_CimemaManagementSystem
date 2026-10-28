@@ -95,3 +95,12 @@ test('rank server error preserves draft and discard returns to saved threshold',
  assert.equal(f.run('rankInputs[2]'),'600');assert.equal(f.element('rank-error-2').textContent,'Threshold changed by another user');
  f.run('discardRank(2)');assert.equal(f.run('rankInputs[2]'),undefined);assert.equal(f.element('rank-2').value,500);
 });
+
+test('maximum discount amount rejects fractional input and saves whole VND through the existing API', async()=>{
+ const f=fixture(); f.run('settings.VOUCHER[0].settingKey="VOUCHER_MAX_DISCOUNT_AMOUNT";');
+ f.element('input-1').value='1.5'; f.run('handleInputChange(1,"1.5")');
+ await f.run('saveCategory("VOUCHER")');assert.equal(f.calls.length,0);
+ f.element('input-1').value='100000';f.run('handleInputChange(1,"100000")');
+ await f.run('saveCategory("VOUCHER")');assert.equal(f.calls.length,1);
+ assert.deepEqual(JSON.parse(f.calls[0].options.body),{value:'100000'});
+});

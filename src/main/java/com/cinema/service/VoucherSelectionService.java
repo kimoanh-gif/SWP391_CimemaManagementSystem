@@ -1,6 +1,7 @@
 package com.cinema.service;
 
 import com.cinema.dao.VoucherDAO;
+import com.cinema.dao.SystemSettingDAO;
 import com.cinema.model.BookingPricing;
 import com.cinema.model.VoucherCandidate;
 import com.cinema.model.VoucherDiscounts;
@@ -30,16 +31,18 @@ public class VoucherSelectionService {
 
     private final VoucherDAO voucherDAO;
     private final Clock clock;
+    private final SystemSettingDAO settings;
 
     @Autowired
-    public VoucherSelectionService(VoucherDAO voucherDAO) {
-        this(voucherDAO, Clock.systemDefaultZone());
+    public VoucherSelectionService(VoucherDAO voucherDAO, SystemSettingDAO settings) {
+        this(voucherDAO, Clock.systemDefaultZone(), settings);
     }
 
     /** Test constructor with a fixed clock. */
-    VoucherSelectionService(VoucherDAO voucherDAO, Clock clock) {
+    VoucherSelectionService(VoucherDAO voucherDAO, Clock clock, SystemSettingDAO settings) {
         this.voucherDAO = voucherDAO;
         this.clock = clock;
+        this.settings = settings;
     }
 
     /** Data shown on the voucher screen. */
@@ -194,8 +197,9 @@ public class VoucherSelectionService {
                     "Requires membership rank " + (v.requiredRankName() != null ? v.requiredRankName() : "") + " or higher.");
         }
 
-        BigDecimal discount = VoucherDiscounts.calculate(v.discountType(), v.discountValue(),
-                v.maxDiscountAmount(), subtotal);
+        BigDecimal cap = effectiveDiscountCap(v);
+        option.setEffectiveDiscountCap(cap);
+        BigDecimal discount = VoucherDiscounts.calculate(v.discountType(), v.discountValue(), cap, subtotal);
         if (discount.signum() <= 0) {
             return reject(option, VoucherOption.INVALID, "This voucher gives no discount for the current booking.");
         }
@@ -203,6 +207,19 @@ public class VoucherSelectionService {
         option.setStatus(pricing.voucherId() != null && pricing.voucherId() == v.voucherId()
                 ? VoucherOption.APPLIED : VoucherOption.AVAILABLE);
         return option;
+    }
+
+    private BigDecimal effectiveDiscountCap(VoucherCandidate voucher) {
+        BigDecimal ownCap = voucher.maxDiscountAmount();
+        if (!voucher.isPercentage()) return ownCap;
+        String value = settings.findByKey("VOUCHER_MAX_DISCOUNT_AMOUNT")
+                .map(com.cinema.model.SystemSetting::getValue).orElse("0");
+        if (!value.matches("[0-9]{1,12}")) {
+            throw new VoucherException("The voucher discount cap is invalid. Please contact an administrator.");
+        }
+        BigDecimal systemCap = new BigDecimal(value);
+        if (systemCap.signum() == 0) return ownCap;
+        return ownCap != null && ownCap.signum() > 0 ? ownCap.min(systemCap) : systemCap;
     }
 
     private static VoucherOption reject(VoucherOption option, String status, String reason) {

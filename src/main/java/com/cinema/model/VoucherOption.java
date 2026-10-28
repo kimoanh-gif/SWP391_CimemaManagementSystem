@@ -22,9 +22,11 @@ public class VoucherOption {
     private String status;
     private String reason;
     private BigDecimal discountAmount = BigDecimal.ZERO;
+    private BigDecimal effectiveDiscountCap;
 
     public VoucherOption(VoucherCandidate voucher) {
         this.voucher = voucher;
+        this.effectiveDiscountCap = voucher.maxDiscountAmount();
     }
 
     public int getVoucherId() { return voucher.voucherId(); }
@@ -37,6 +39,7 @@ public class VoucherOption {
     public LocalDateTime getValidTo() { return voucher.validTo(); }
 
     public String getStatus() { return status; }
+    public void setEffectiveDiscountCap(BigDecimal cap) { this.effectiveDiscountCap = cap; }
     public void setStatus(String status) { this.status = status; }
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
@@ -59,8 +62,8 @@ public class VoucherOption {
         if (voucher.discountValue() == null) return "";
         if (voucher.isPercentage()) {
             String text = voucher.discountValue().stripTrailingZeros().toPlainString() + "%";
-            if (voucher.maxDiscountAmount() != null && voucher.maxDiscountAmount().signum() > 0) {
-                text += " (max " + money.format(voucher.maxDiscountAmount()) + " ₫)";
+            if (effectiveDiscountCap != null && effectiveDiscountCap.signum() > 0) {
+                text += " (max " + money.format(effectiveDiscountCap) + " ₫)";
             }
             return text;
         }
