@@ -77,4 +77,8 @@ public class MovieCatalogService {
         movieReviewDAO.saveOrUpdateReview(customerOpt.get().getCustomerId(), movieId, rating, content);
         return true;
     }
+
+    public boolean canReview(int accountId, int movieId) {
+        return movieReviewDAO.canCustomerReview(accountId, movieId);
+    }
 }

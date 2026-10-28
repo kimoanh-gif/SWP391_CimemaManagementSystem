@@ -3,6 +3,7 @@
 <head th:replace="~{fragments/cinema-header-footer :: metaHead(${movie.title} + ' - Movie Details')}">
     <title>Movie Details | CINEORA</title>
 </head>
+<link rel="stylesheet" th:href="@{/css/movie-details.css}" />
 <body class="cineora-catalog-page movie-detail-page">
 <div th:replace="~{fragments/cinema-header-footer :: header('movies')}"></div>
 
@@ -15,8 +16,8 @@
     </div>
     <section class="movie-details-hero">
         <div class="movie-details-backdrop"
-             th:if="${movie.posterUrl != null && !movie.posterUrl.isEmpty()}"
-             th:style="|background-image: url('${movie.posterUrl}')|"></div>
+             th:if="${movie.bannerUrl != null && !movie.bannerUrl.isEmpty()}"
+             th:style="|background-image: url('${movie.bannerUrl}')|"></div>
         <div class="movie-details-scrim"></div>
         <div class="movie-details-container">
             <div class="movie-details-poster-wrap">
@@ -160,7 +161,7 @@
                 </h2>
             </div>
         </div>
-        <div th:if="${currentUser != null && currentUser.role == 'CUSTOMER'}" class="review-form-card">
+        <div th:if="${canReview}" class="review-form-card review-prompt-card">
             <h4 style="font-size:1.15rem;margin-bottom:12px;">Write a review for this movie</h4>
             <form th:action="@{/movies/{id}/reviews(id=${movie.movieId})}" method="post">
                 <input type="hidden" th:name="${_csrf != null ? _csrf.parameterName : '_csrf'}" th:value="${_csrf != null ? _csrf.token : ''}" />
@@ -184,13 +185,13 @@
                 </button>
             </form>
         </div>
-        <div th:if="${currentUser == null || currentUser.role != 'CUSTOMER'}"
+        <div th:if="${!canReview}"
              style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
             <div>
-                <h4 style="font-size:1.05rem;margin-bottom:4px;">Have you watched this movie?</h4>
-                <p style="font-size:0.88rem;color:var(--text-muted);">Sign in with your member account to share your experience.</p>
+                <h4 style="font-size:1.05rem;margin-bottom:4px;" th:text="${currentUser == null ? 'Have you watched this movie?' : 'Reviews unlock after your showtime'}">Have you watched this movie?</h4>
+                <p style="font-size:0.88rem;color:var(--text-muted);" th:text="${currentUser == null ? 'Sign in with your member account to share your experience.' : 'You can review this movie after a confirmed screening has ended.'}">Review availability</p>
             </div>
-            <a th:href="@{/login(redirect='/movies/' + ${movie.movieId})}" class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">
+            <a th:if="${currentUser == null}" th:href="@{/login(redirect='/movies/' + ${movie.movieId})}" class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">
                 Sign In to Review
             </a>
         </div>

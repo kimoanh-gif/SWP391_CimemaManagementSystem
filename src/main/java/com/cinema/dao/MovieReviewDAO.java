@@ -57,6 +57,18 @@ public class MovieReviewDAO {
         return count != null && count > 0;
     }
 
+    public boolean canCustomerReview(int accountId, int movieId) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM dbo.Booking b
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID=st.MovieID
+                WHERE c.AccountID=? AND m.MovieID=? AND b.[Status]='CONFIRMED'
+                  AND DATEADD(MINUTE,m.Duration,st.StartTime) <= SYSDATETIME()
+                """, Integer.class, accountId, movieId);
+        return count != null && count > 0;
+    }
+
     public void saveOrUpdateReview(int customerId, int movieId, int rating, String content) {
         if (hasCustomerReviewed(customerId, movieId)) {
             String updateSql = """

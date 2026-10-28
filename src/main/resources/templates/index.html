@@ -45,7 +45,7 @@
                     th:classappend="${stat.first} ? ' active'"
                     th:attr="data-slide-target=${stat.index},aria-selected=${stat.first},aria-label=|Show ${hero.title}|"
                     role="tab">
-                <img th:src="${hero.posterUrl}" th:alt="${hero.title}" onerror="this.src='/images/cinema-login-hero.png'" />
+                <img th:src="${hero.heroImageUrl}" th:alt="${hero.title + ' banner'}" onerror="this.src='/images/cinema-login-hero.png'" />
                 <span th:text="${hero.title}">Movie title</span>
             </button>
         </div>
@@ -93,7 +93,7 @@
                 <select id="quickDateSelect">
                     <option th:each="d, stat : ${upcomingDates}"
                             th:value="${d}"
-                            th:text="${stat.index == 0 ? 'Today (' + #temporals.format(d, 'dd/MM') + ')' : (stat.index == 1 ? 'Tomorrow (' + #temporals.format(d, 'dd/MM') + ')' : #temporals.format(d, 'EEEE, dd/MM'))}">
+                            th:text="${stat.index == 0 ? 'Today (' + #temporals.format(d, 'dd/MM') + ')' : (stat.index == 1 ? 'Tomorrow (' + #temporals.format(d, 'dd/MM') + ')' : #strings.capitalize(#strings.toLowerCase(d.dayOfWeek.name())) + ', ' + #temporals.format(d, 'dd/MM'))}">
                         Today (18/10)
                     </option>
                 </select>
