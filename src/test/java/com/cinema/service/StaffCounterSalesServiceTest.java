@@ -5,6 +5,7 @@ import com.cinema.dao.MemberLookupDAO;
 import com.cinema.dao.StaffNewsDAO;
 import com.cinema.model.BookingSummary;
 import com.cinema.model.FoodBeverageOption;
+import com.cinema.model.PaymentView;
 import com.cinema.model.SeatOption;
 import com.cinema.model.ShowtimeOption;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -125,10 +128,65 @@ class StaffCounterSalesServiceTest {
         verify(bookingDAO, never()).recalculateBookingTotal(31);
     }
 
+    @Test
+    void cashPaymentConfirmsTheBookingAndReturnsChangeDue() {
+        when(staffNewsDAO.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        when(bookingDAO.findCounterBookingSummary(31, 4)).thenReturn(Optional.of(activeBooking()));
+        when(bookingDAO.findBookingAgeRating(31)).thenReturn(Optional.of("P"));
+        when(bookingDAO.createCounterPayment(eq(31), eq(4), eq("CASH"), eq(null), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(77));
+
+        BigDecimal change = service.payCash(12, 31, new BigDecimal("200000"), false);
+
+        assertEquals(new BigDecimal("30000"), change);
+        verify(bookingDAO).confirmCounterPayment(77);
+    }
+
+    @Test
+    void rejectsCashBelowTheTotalWithoutRecordingAPayment() {
+        when(staffNewsDAO.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        when(bookingDAO.findCounterBookingSummary(31, 4)).thenReturn(Optional.of(activeBooking()));
+        when(bookingDAO.findBookingAgeRating(31)).thenReturn(Optional.of("P"));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.payCash(12, 31, new BigDecimal("100000"), false));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(bookingDAO, never()).createCounterPayment(anyInt(), anyInt(), anyString(), any(), any());
+    }
+
+    @Test
+    void ageRestrictedMovieRequiresTheIdCheckBeforePayment() {
+        when(staffNewsDAO.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        when(bookingDAO.findCounterBookingSummary(31, 4)).thenReturn(Optional.of(activeBooking()));
+        when(bookingDAO.findBookingAgeRating(31)).thenReturn(Optional.of("T18"));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.startVnpay(12, 31, false));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(bookingDAO, never()).createCounterPayment(anyInt(), anyInt(), anyString(), any(), any());
+    }
+
+    @Test
+    void simulatedVnpayConfirmationNeedsAPendingQrCode() {
+        when(staffNewsDAO.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        when(bookingDAO.findCounterBookingSummary(31, 4)).thenReturn(Optional.of(activeBooking()));
+        when(bookingDAO.findLatestCounterPayment(31, 4)).thenReturn(Optional.of(new PaymentView(77, 31, "BK1",
+                "PAY1", "VNPAY", new BigDecimal("170000"), "EXPIRED", LocalDateTime.now(), LocalDateTime.now())));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.confirmSimulatedVnpay(12, 31));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        verify(bookingDAO, never()).confirmCounterPayment(anyInt());
+    }
+
     private BookingSummary activeBooking() {
         BookingSummary summary = new BookingSummary();
         summary.setStatus("PENDING");
         summary.setHeldUntil(LocalDateTime.now().plusMinutes(5));
+        summary.setTotalAmount(new BigDecimal("170000"));
         return summary;
     }
 

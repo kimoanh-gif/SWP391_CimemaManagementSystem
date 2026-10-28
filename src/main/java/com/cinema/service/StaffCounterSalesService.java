@@ -6,6 +6,7 @@ import com.cinema.dao.StaffNewsDAO;
 import com.cinema.model.BookingSummary;
 import com.cinema.model.FoodBeverageOption;
 import com.cinema.model.MovieBookingOption;
+import com.cinema.model.PaymentView;
 import com.cinema.model.SeatOption;
 import com.cinema.model.ShowtimeOption;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,11 +23,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class StaffCounterSalesService {
+
+    public static final String METHOD_CASH = "CASH";
+    public static final String METHOD_VNPAY = "VNPAY";
 
     private final CustomerBookingDAO bookingDAO;
     private final CustomerBookingService customerBookingService;
@@ -112,15 +119,23 @@ public class StaffCounterSalesService {
 
     @Transactional
     public BookingSummary activeBooking(int accountId, int bookingId) {
+        return openOrder(accountId, bookingId, false);
+    }
+
+    /** Checkout also accepts orders that already have a VNPay QR waiting to be paid. */
+    @Transactional
+    public BookingSummary checkoutBooking(int accountId, int bookingId) {
+        return openOrder(accountId, bookingId, true);
+    }
+
+    private BookingSummary openOrder(int accountId, int bookingId, boolean allowPaymentPending) {
         bookingDAO.expireOldHolds();
-        int staffId = staffNewsDAO.findActiveStaffId(accountId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "An active staff profile is required."));
-        BookingSummary summary = bookingDAO.findCounterBookingSummary(bookingId, staffId)
+        BookingSummary summary = bookingDAO.findCounterBookingSummary(bookingId, requireStaffId(accountId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Counter order was not found."));
-        if (!"PENDING".equalsIgnoreCase(summary.getStatus()) || summary.getHeldUntil() == null
-                || !summary.getHeldUntil().isAfter(LocalDateTime.now())) {
+        boolean open = "PENDING".equalsIgnoreCase(summary.getStatus())
+                || (allowPaymentPending && "PAYMENT_PENDING".equalsIgnoreCase(summary.getStatus()));
+        if (!open || summary.getHeldUntil() == null || !summary.getHeldUntil().isAfter(LocalDateTime.now())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "The seat hold has expired or the order is no longer pending.");
         }
@@ -165,10 +180,95 @@ public class StaffCounterSalesService {
 
     @Transactional
     public void cancel(int accountId, int bookingId) {
-        int staffId = staffNewsDAO.findActiveStaffId(accountId)
+        checkoutBooking(accountId, bookingId);
+        bookingDAO.releaseCounterBooking(bookingId, requireStaffId(accountId));
+    }
+
+    public String ageRating(int bookingId) {
+        return bookingDAO.findBookingAgeRating(bookingId).orElse(null);
+    }
+
+    /** "P" movies are open to all ages; every other rating needs the staff ID check (BR-40). */
+    public static boolean requiresAgeCheck(String ageRating) {
+        return ageRating != null && !ageRating.isBlank() && !"P".equalsIgnoreCase(ageRating.trim());
+    }
+
+    @Transactional
+    public Optional<PaymentView> latestPayment(int accountId, int bookingId) {
+        return bookingDAO.findLatestCounterPayment(bookingId, requireStaffId(accountId));
+    }
+
+    /** Cash is settled on the spot, so the booking is confirmed in the same transaction. Returns the change due. */
+    @Transactional
+    public BigDecimal payCash(int accountId, int bookingId, BigDecimal cashReceived, boolean ageVerified) {
+        BookingSummary order = checkoutBooking(accountId, bookingId);
+        requireAgeVerified(bookingId, ageVerified);
+        BigDecimal total = order.getTotalAmount();
+        if (cashReceived == null || cashReceived.signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter the cash received from the customer.");
+        }
+        if (cashReceived.compareTo(total) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cash received must be at least the total payable (" + formatVnd(total) + ").");
+        }
+        int paymentId = startPayment(accountId, bookingId, METHOD_CASH, null, LocalDateTime.now().plusMinutes(1));
+        confirm(paymentId);
+        return cashReceived.subtract(total);
+    }
+
+    @Transactional
+    public PaymentView startVnpay(int accountId, int bookingId, boolean ageVerified) {
+        BookingSummary order = checkoutBooking(accountId, bookingId);
+        requireAgeVerified(bookingId, ageVerified);
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(CustomerBookingService.PAYMENT_QR_MINUTES);
+        if (order.getHeldUntil().isBefore(expiresAt)) expiresAt = order.getHeldUntil();
+        String transactionRef = "PAY" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"))
+                + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        startPayment(accountId, bookingId, METHOD_VNPAY, transactionRef, expiresAt);
+        return latestPayment(accountId, bookingId).orElseThrow();
+    }
+
+    /** Used only when the VNPay gateway is not configured: staff confirms the simulated transfer. */
+    @Transactional
+    public void confirmSimulatedVnpay(int accountId, int bookingId) {
+        checkoutBooking(accountId, bookingId);
+        PaymentView payment = latestPayment(accountId, bookingId)
+                .filter(p -> METHOD_VNPAY.equalsIgnoreCase(p.method()) && "PENDING".equalsIgnoreCase(p.status()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The VNPay QR code has expired. Display a new QR code."));
+        confirm(payment.paymentId());
+    }
+
+    private int startPayment(int accountId, int bookingId, String method, String transactionRef,
+                             LocalDateTime expiresAt) {
+        return bookingDAO.createCounterPayment(bookingId, requireStaffId(accountId), method, transactionRef, expiresAt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The seat hold has expired or the order is no longer pending."));
+    }
+
+    private void confirm(int paymentId) {
+        try {
+            bookingDAO.confirmCounterPayment(paymentId);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
+        }
+    }
+
+    private void requireAgeVerified(int bookingId, boolean ageVerified) {
+        String rating = ageRating(bookingId);
+        if (requiresAgeCheck(rating) && !ageVerified) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Confirm that you checked the customer's ID for the " + rating.trim() + " age rating.");
+        }
+    }
+
+    private int requireStaffId(int accountId) {
+        return staffNewsDAO.findActiveStaffId(accountId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "An active staff profile is required."));
-        activeBooking(accountId, bookingId);
-        bookingDAO.releaseCounterBooking(bookingId, staffId);
+    }
+
+    public static String formatVnd(BigDecimal amount) {
+        return String.format(Locale.US, "%,.0f VND", amount);
     }
 }
