@@ -123,6 +123,8 @@ public class MoviePublicController {
 
         AuthenticatedUser user = sessionService.getCurrentUser(session);
         model.addAttribute("currentUser", user);
+        model.addAttribute("canReview", user != null && "CUSTOMER".equalsIgnoreCase(user.getRole())
+                && movieService.canReview(user.getAccountId(), movieId));
         populateCustomerPoints(session, model);
 
         model.addAttribute("activeNav", "movies");
@@ -141,6 +143,10 @@ public class MoviePublicController {
         if (user == null || !"CUSTOMER".equalsIgnoreCase(user.getRole())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with a customer account to review this movie.");
             return "redirect:/login?redirect=/movies/" + movieId;
+        }
+        if (!movieService.canReview(user.getAccountId(), movieId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Reviews are available after your confirmed showtime has ended.");
+            return "redirect:/movies/" + movieId + "#reviews";
         }
 
         boolean success = movieService.addReview(user.getAccountId(), movieId, rating, content != null ? content.trim() : "");

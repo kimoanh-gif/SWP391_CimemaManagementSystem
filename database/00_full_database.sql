@@ -434,6 +434,7 @@ BEGIN
 END;
 GO
 
+
 /* ================================================================
    5. PROMOTIONS, BOOKINGS, PAYMENTS, AND TICKETS
    ================================================================ */
@@ -444,12 +445,15 @@ BEGIN
         PromotionID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Promotion PRIMARY KEY,
         [Name] NVARCHAR(150) NOT NULL,
         [Description] NVARCHAR(500) NULL,
+        BannerURL NVARCHAR(500) NULL,
         StartDate DATETIME2 NOT NULL,
         EndDate DATETIME2 NOT NULL,
         [Status] VARCHAR(30) NOT NULL,
         CONSTRAINT CK_Promotion_DateRange CHECK (EndDate >= StartDate)
     );
 END;
+
+IF COL_LENGTH(N'dbo.Promotion', N'BannerURL') IS NULL ALTER TABLE dbo.Promotion ADD BannerURL NVARCHAR(500) NULL;
 
 IF OBJECT_ID(N'dbo.Voucher', N'U') IS NULL
 BEGIN
@@ -1009,11 +1013,13 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Curse 2026')
     (N'The Curse 2026',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
 
 -- Horizontal artwork used by the home hero and movie hover previews.
-UPDATE dbo.Movie SET BannerURL=N'https://images.squarespace-cdn.com/content/v1/54ab20e3e4b0a068cecb0355/a36ff2d2-cd02-47b3-bfea-32a31ab63589/BAMBI_STILL_67.jpg' WHERE Title=N'Bambi: The Reckoning';
-UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6ac85c33c3ca7545011688.webp' WHERE Title=N'The Curse 2026';
-UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6aab6126c0a45774834154.webp' WHERE Title=N'Death Whisperer: Saming the Werebeast';
+UPDATE dbo.Movie SET PosterURL=N'https://image.tmdb.org/t/p/original/aSyZkLD77tcbApFW6C1JIqzM3UJ.jpg', BannerURL=N'https://cdni.fancaps.net/file/fancaps-movieimages/13403371.jpg' WHERE Title=N'Bambi: The Reckoning';
+UPDATE dbo.Movie SET BannerURL=N'https://img.cinematoday.jp/a/T0031470/_size_2000x/_v_1768277124/main.jpg' WHERE Title=N'The Curse 2026';
+UPDATE dbo.Movie SET PosterURL=N'https://image.tmdb.org/t/p/original/lN4YqCIVjDMvlUbmcEO5d060WoL.jpg', BannerURL=N'https://image.tmdb.org/t/p/original/4r7onhOb1exn1d3wTWr6bx5JCsQ.jpg' WHERE Title=N'Death Whisperer: Saming the Werebeast';
 UPDATE dbo.Movie SET BannerURL=N'https://lumiere-a.akamaihd.net/v1/images/hb_20cs_whalefall_featuredcontentbanner_desktop_9ecd6d21.jpeg?region=0%2C0%2C2048%2C878&width=1536' WHERE Title=N'Whale Fall';
-UPDATE dbo.Movie SET BannerURL=N'https://cdn.moveek.com/storage/media/cache/large/6a538ba81c7f6196807171.webp' WHERE Title=N'Street Fighter';
+UPDATE dbo.Movie SET BannerURL=N'https://i.ytimg.com/vi/mtmItaZW5Oo/maxresdefault.jpg' WHERE Title=N'Street Fighter';
+UPDATE dbo.Movie SET BannerURL=N'https://i.ytimg.com/vi/IW-k9cMySWg/maxresdefault.jpg' WHERE Title=N'The Almost Perfect Murder';
+UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg' WHERE Title=N'Dune: Part Two';
 UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/7wL3dPMzXXrplNgStX6lt8SwLlJ.jpg' WHERE Title=N'Inside Out 2';
 UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/7TSZf1vog6qxa9IfgwBjEbtgpWN.jpg' WHERE Title=N'Godzilla x Kong: The New Empire';
 UPDATE dbo.Movie SET BannerURL=N'https://image.tmdb.org/t/p/original/ngUswPaQFNBWyQWYfQGMOD02ifU.jpg' WHERE Title=N'Kung Fu Panda 4';
@@ -1088,6 +1094,45 @@ DECLARE @PromotionID INT = (SELECT PromotionID FROM dbo.Promotion WHERE [Name] =
 IF @PromotionID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Voucher WHERE Code = 'WELCOME10')
     INSERT dbo.Voucher (PromotionID, RequiredRankID, Code, DiscountType, DiscountValue, MaxDiscountAmount, MinBookingAmount, ValidFrom, ValidTo, TotalUsageLimit, PerAccountLimit, [Status])
     VALUES (@PromotionID, NULL, 'WELCOME10', 'PERCENT', 10, 50000, 100000, DATEADD(DAY, -30, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 1000, 1, 'ACTIVE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Voucher WHERE Code = 'DEMO10')
+BEGIN
+    INSERT dbo.Promotion ([Name], [Description], BannerURL, StartDate, EndDate, [Status])
+    VALUES (N'Cinema Night Special', N'Save 10% on your next movie night with friends and family.',
+            N'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=1200&auto=format&fit=crop&q=85',
+            DATEADD(DAY, -14, SYSDATETIME()), DATEADD(DAY, 120, SYSDATETIME()), 'ACTIVE');
+    DECLARE @CinemaNightPromotionID INT = SCOPE_IDENTITY();
+    INSERT dbo.Voucher (PromotionID, RequiredRankID, Code, DiscountType, DiscountValue, MaxDiscountAmount, MinBookingAmount, ValidFrom, ValidTo, TotalUsageLimit, PerAccountLimit, [Status])
+    VALUES (@CinemaNightPromotionID, NULL, 'DEMO10', 'PERCENT', 10, 50000, 100000, DATEADD(DAY, -14, SYSDATETIME()), DATEADD(DAY, 120, SYSDATETIME()), 1000, 2, 'ACTIVE');
+END;
+
+UPDATE p SET
+    p.[Name] = N'New Member Welcome Offer',
+    p.[Description] = N'Enjoy 10% off your first ticket booking as a CINEORA member.',
+    p.BannerURL = N'https://images.unsplash.com/photo-1485095329183-d0797cdc5676?w=1400&auto=format&fit=crop&q=88'
+FROM dbo.Promotion p JOIN dbo.Voucher v ON v.PromotionID = p.PromotionID
+WHERE v.Code = 'WELCOME10';
+
+UPDATE p SET
+    p.[Name] = N'Cinema Night Special',
+    p.[Description] = N'Save 10% on your next movie night with friends and family.',
+    p.BannerURL = N'https://images.unsplash.com/photo-1574267432644-f610fbe9de68?w=1400&auto=format&fit=crop&q=88'
+FROM dbo.Promotion p JOIN dbo.Voucher v ON v.PromotionID = p.PromotionID
+WHERE v.Code = 'DEMO10';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Voucher WHERE Code = 'MIDWEEK15')
+BEGIN
+    INSERT dbo.Promotion ([Name], [Description], BannerURL, StartDate, EndDate, [Status])
+    VALUES (N'Midweek Movie Deal', N'Get 15% off selected screenings from Monday through Thursday.',
+            N'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1200&auto=format&fit=crop&q=85',
+            DATEADD(DAY, -7, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 'ACTIVE');
+    DECLARE @MidweekPromotionID INT = SCOPE_IDENTITY();
+    INSERT dbo.Voucher (PromotionID, RequiredRankID, Code, DiscountType, DiscountValue, MaxDiscountAmount, MinBookingAmount, ValidFrom, ValidTo, TotalUsageLimit, PerAccountLimit, [Status])
+    VALUES (@MidweekPromotionID, NULL, 'MIDWEEK15', 'PERCENT', 15, 75000, 120000, DATEADD(DAY, -7, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 1000, 2, 'ACTIVE');
+END;
+
+UPDATE p SET p.BannerURL=N'https://images.unsplash.com/photo-1489185078527-65e04f3f5f6c?w=1400&auto=format&fit=crop&q=88'
+FROM dbo.Promotion p JOIN dbo.Voucher v ON v.PromotionID=p.PromotionID WHERE v.Code='MIDWEEK15';
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Showtime)
@@ -1192,8 +1237,16 @@ END;
 
 UPDATE dbo.News
 SET Title=N'Weekly Showtimes and Member Offers',
-    Content=N'Explore this week''s newest showtimes and enjoy exclusive benefits when booking with your CINEORA member account.'
-WHERE Title=N'Lịch chiếu và ưu đãi tuần này';
+    Content=N'Explore this week''s newest showtimes and enjoy exclusive benefits when booking with your CINEORA member account.',
+    ThumbnailURL=N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop&q=85'
+WHERE Title=N'Lịch chiếu và ưu đãi tuần này'
+   OR ThumbnailURL LIKE N'%photo-1489599849927%';
+
+UPDATE dbo.News
+SET Title=N'October Movies You Should Not Miss',
+    Content=N'Discover this month''s most anticipated releases, from spectacular adventures to chilling late-night premieres.',
+    ThumbnailURL=N'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1200&auto=format&fit=crop&q=85'
+WHERE Title LIKE N'%Demo:%';
 
 IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Experience Movies with Dolby Atmos')
     INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
@@ -1309,6 +1362,34 @@ SET EmailVerifiedAt = SYSDATETIME()
 WHERE EmailVerifiedAt IS NULL
   AND [Status] = 'ACTIVE'
   AND Email IN ('admin@cinema.com', 'manager@cinema.com', 'staff@cinema.com', 'customer@cinema.com');
+
+DECLARE @Reviewers TABLE (Email VARCHAR(255), Username VARCHAR(50), FullName NVARCHAR(100), Phone VARCHAR(15));
+INSERT @Reviewers VALUES
+ ('olivia.reed@cineora.demo','olivia.reed',N'Olivia Reed','0910000101'),
+ ('ethan.cole@cineora.demo','ethan.cole',N'Ethan Cole','0910000102'),
+ ('maya.brooks@cineora.demo','maya.brooks',N'Maya Brooks','0910000103');
+INSERT dbo.Account(RoleID,Username,Email,PasswordHash,FullName,Phone,[Status],EmailVerifiedAt)
+SELECT (SELECT RoleID FROM dbo.[Role] WHERE [Name]='CUSTOMER'),r.Username,r.Email,
+ '$2a$10$nya.sfK50SAuM6gNW27SCemCJsk/4tRDbKsp/8sV29Cg8NJnq/7Z2',r.FullName,r.Phone,'ACTIVE',SYSDATETIME()
+FROM @Reviewers r WHERE NOT EXISTS(SELECT 1 FROM dbo.Account a WHERE a.Email=r.Email);
+INSERT dbo.Customer(AccountID,RankID)
+SELECT a.AccountID,(SELECT TOP 1 RankID FROM dbo.MembershipRank WHERE [Name]=N'STANDARD')
+FROM dbo.Account a JOIN @Reviewers r ON r.Email=a.Email
+WHERE NOT EXISTS(SELECT 1 FROM dbo.Customer c WHERE c.AccountID=a.AccountID);
+
+;WITH SeedReviews AS (
+ SELECT c.CustomerID,m.MovieID,v.Rating,v.Content
+ FROM dbo.Movie m
+ CROSS JOIN (VALUES
+   ('olivia.reed@cineora.demo',5,N'Beautifully composed and genuinely engaging. The sound design was especially impressive.'),
+   ('ethan.cole@cineora.demo',4,N'A strong cinema experience with memorable performances and confident pacing.'),
+   ('maya.brooks@cineora.demo',4,N'The visuals looked fantastic on the big screen, and the story stayed with me afterward.')
+ ) v(Email,Rating,Content)
+ JOIN dbo.Account a ON a.Email=v.Email JOIN dbo.Customer c ON c.AccountID=a.AccountID
+)
+INSERT dbo.MovieReview(CustomerID,MovieID,Rating,Content,[Status],CreatedAt)
+SELECT s.CustomerID,s.MovieID,s.Rating,s.Content,'ACTIVE',DATEADD(DAY,-(s.CustomerID%12),SYSDATETIME())
+FROM SeedReviews s WHERE NOT EXISTS(SELECT 1 FROM dbo.MovieReview r WHERE r.CustomerID=s.CustomerID AND r.MovieID=s.MovieID);
 
 PRINT N'CinemaManagementDB schema and demo data are ready.';
 GO

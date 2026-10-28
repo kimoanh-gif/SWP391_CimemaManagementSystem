@@ -2204,7 +2204,7 @@ button, input, select, textarea {
 
 .cineora-home .cinematic-hero {
     isolation: isolate;
-    min-height: clamp(610px,76vh,790px);
+    min-height: clamp(800px,100vh,960px);
     padding: 88px max(5vw,24px) 118px;
     overflow: hidden;
     border-bottom: 0;
@@ -2274,7 +2274,7 @@ button, input, select, textarea {
     z-index: -2;
     inset: 0;
     background-image: var(--hero-image);
-    background-position: center 42%;
+    background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
     filter: saturate(.94) brightness(1.06) contrast(1.03);
@@ -2288,7 +2288,15 @@ button, input, select, textarea {
     inset: 0;
     background: linear-gradient(90deg,rgba(20,14,20,.76) 0%,rgba(27,17,23,.46) 31%,rgba(24,15,21,.08) 64%,transparent 100%),linear-gradient(0deg,#fff8f0 0%,rgba(255,248,240,.72) 7%,rgba(255,248,240,.12) 25%,transparent 42%);
 }
-.cineora-home .hero-carousel .hero-title { font-family:"Arial Narrow","Segoe UI",sans-serif;font-weight:900;letter-spacing:-2.5px; }
+.cineora-home .hero-carousel .hero-content { width: min(680px,100%); }
+.cineora-home .hero-carousel .hero-title {
+    max-width: 680px;
+    font-family: "Arial Narrow","Segoe UI",sans-serif;
+    font-size: clamp(2.75rem,4vw,4rem);
+    font-weight: 900;
+    line-height: 1.04;
+    letter-spacing: -2.5px;
+}
 .cineora-home .hero-carousel-slide.active {
     z-index: 1;
     opacity: 1;
@@ -2410,6 +2418,7 @@ button, input, select, textarea {
     .cineora-home .cinematic-hero .hero-actions>*{justify-content:center;width:100%}
     .cineora-home .hero-carousel { min-height: 710px; padding: 0; }
     .cineora-home .hero-carousel-slide { align-items: flex-start; padding: 62px 18px 145px; }
+    .cineora-home .hero-carousel .hero-title { font-size: 2.35rem; line-height: 1.08; }
     .cineora-home .hero-carousel-slide::before { background-position: 58% top; }
     .cineora-home .hero-carousel-slide::after { background: linear-gradient(90deg,rgba(20,14,20,.93),rgba(20,14,20,.5)),linear-gradient(0deg,#171219 10%,rgba(23,18,25,.82) 44%,rgba(15,11,16,.2) 100%); }
     .cineora-home .hero-carousel-thumbnails { right: 18px; bottom: 92px; left: 18px; width: auto; gap: 8px; justify-content: flex-start; overflow-x: auto; padding: 6px 3px 8px; scrollbar-width: none; }

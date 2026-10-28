@@ -25,7 +25,7 @@ import java.util.Optional;
 public class PromotionDAO {
 
     private static final String PROMOTION_COLUMNS = """
-            SELECT p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
+            SELECT p.PromotionID, p.[Name], p.[Description], p.BannerURL, p.StartDate, p.EndDate, p.[Status]
             FROM dbo.Promotion p
             """;
 
@@ -49,6 +49,7 @@ public class PromotionDAO {
         p.setPromotionId(rs.getInt("PromotionID"));
         p.setName(rs.getString("Name"));
         p.setDescription(rs.getString("Description"));
+        p.setBannerUrl(rs.getString("BannerURL"));
 
         Timestamp start = rs.getTimestamp("StartDate");
         p.setStartDate(start != null ? start.toLocalDateTime() : null);
@@ -99,7 +100,7 @@ public class PromotionDAO {
             return findActivePromotions();
         }
         String sql = """
-                SELECT TOP (?) p.PromotionID, p.[Name], p.[Description], p.StartDate, p.EndDate, p.[Status]
+                SELECT TOP (?) p.PromotionID, p.[Name], p.[Description], p.BannerURL, p.StartDate, p.EndDate, p.[Status]
                 FROM dbo.Promotion p
                 """ + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
         return attachVouchers(jdbcTemplate.query(sql, promoMapper, limit));
