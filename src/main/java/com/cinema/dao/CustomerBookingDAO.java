@@ -623,25 +623,98 @@ public class CustomerBookingDAO {
     }
 
     public void releaseCounterBooking(int bookingId, int staffId) {
+        cancelPendingCounterPayments(bookingId, staffId);
         jdbcTemplate.update("""
                 DELETE food
                 FROM dbo.BookingFoodBeverage food
                 JOIN dbo.Booking b ON b.BookingID = food.BookingID
                 WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
-                  AND UPPER(b.[Status]) = 'PENDING'
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                 """, bookingId, staffId);
         jdbcTemplate.update("""
                 DELETE seat
                 FROM dbo.BookingSeat seat
                 JOIN dbo.Booking b ON b.BookingID = seat.BookingID
                 WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
-                  AND UPPER(b.[Status]) = 'PENDING'
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                 """, bookingId, staffId);
         jdbcTemplate.update("""
                 UPDATE dbo.Booking
                 SET [Status] = 'CANCELLED'
                 WHERE BookingID = ? AND StaffID = ? AND UPPER(BookingType) = 'COUNTER'
-                  AND UPPER([Status]) = 'PENDING'
+                  AND UPPER([Status]) IN ('PENDING', 'PAYMENT_PENDING')
+                """, bookingId, staffId);
+    }
+
+    public Optional<String> findBookingAgeRating(int bookingId) {
+        return jdbcTemplate.query("""
+                SELECT m.AgeRating
+                FROM dbo.Booking b
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID = st.MovieID
+                WHERE b.BookingID = ?
+                """, (rs, rowNum) -> rs.getString("AgeRating"), bookingId).stream().findFirst();
+    }
+
+    /**
+     * Starts a counter payment attempt for the booking's current total (BR-24). Any earlier
+     * unfinished attempt is cancelled first so at most one attempt can succeed (BR-41).
+     */
+    public Optional<Integer> createCounterPayment(int bookingId, int staffId, String method,
+                                                  String transactionRef, LocalDateTime expiresAt) {
+        cancelPendingCounterPayments(bookingId, staffId);
+        Optional<Integer> paymentId = jdbcTemplate.query("""
+                INSERT INTO dbo.Payment (BookingID, Method, Amount, TransactionRef, [Status], InitiatedAt, ExpiresAt, UpdatedAt)
+                OUTPUT inserted.PaymentID
+                SELECT b.BookingID, ?, b.TotalAmount, ?, 'PENDING', SYSDATETIME(), ?, SYSDATETIME()
+                FROM dbo.Booking b
+                WHERE b.BookingID = ? AND b.StaffID = ? AND UPPER(b.BookingType) = 'COUNTER'
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
+                  AND EXISTS (SELECT 1 FROM dbo.BookingSeat bs
+                              WHERE bs.BookingID = b.BookingID AND bs.HeldUntil > SYSDATETIME())
+                """, (rs, rowNum) -> rs.getInt("PaymentID"),
+                method, transactionRef, expiresAt, bookingId, staffId).stream().findFirst();
+        paymentId.ifPresent(id -> jdbcTemplate.update(
+                "UPDATE dbo.Booking SET [Status]='PAYMENT_PENDING' WHERE BookingID=? AND [Status]='PENDING'", bookingId));
+        return paymentId;
+    }
+
+    /** Marks a pending counter payment as paid, then confirms the booking and issues tickets (BR-22, BR-23). */
+    public void confirmCounterPayment(int paymentId) {
+        PaymentView payment = findPaymentById(paymentId)
+                .orElseThrow(() -> new IllegalStateException("The payment transaction could not be found."));
+        int updated = jdbcTemplate.update("""
+                UPDATE dbo.Payment SET [Status]='PAID',PaidAt=SYSDATETIME(),UpdatedAt=SYSDATETIME(),TransactionStatus='SUCCESS'
+                WHERE PaymentID=? AND [Status]='PENDING' AND (ExpiresAt IS NULL OR ExpiresAt>SYSDATETIME())
+                """, paymentId);
+        if (updated == 0) throw new IllegalStateException("The payment is no longer pending. Start the payment again.");
+        confirmBookingAndIssueTickets(payment.bookingId());
+    }
+
+    public Optional<PaymentView> findLatestCounterPayment(int bookingId, int staffId) {
+        jdbcTemplate.update("""
+                UPDATE p SET p.[Status]='EXPIRED',p.UpdatedAt=SYSDATETIME()
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                WHERE p.BookingID=? AND b.StaffID=? AND p.[Status]='PENDING' AND p.ExpiresAt<=SYSDATETIME()
+                """, bookingId, staffId);
+        return jdbcTemplate.query("""
+                SELECT TOP 1 p.PaymentID,p.BookingID,b.BookingCode,p.TransactionRef,p.Method,p.Amount,p.[Status],p.ExpiresAt,
+                       (SELECT MIN(bs.HeldUntil) FROM dbo.BookingSeat bs WHERE bs.BookingID=b.BookingID) HeldUntil
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                WHERE p.BookingID=? AND b.StaffID=? AND UPPER(b.BookingType)='COUNTER'
+                ORDER BY p.PaymentID DESC
+                """, (rs,n) -> new PaymentView(rs.getInt("PaymentID"), rs.getInt("BookingID"),
+                rs.getString("BookingCode"), rs.getString("TransactionRef"), rs.getString("Method"),
+                rs.getBigDecimal("Amount"), rs.getString("Status"),
+                rs.getObject("ExpiresAt", LocalDateTime.class), rs.getObject("HeldUntil", LocalDateTime.class)),
+                bookingId, staffId).stream().findFirst();
+    }
+
+    private void cancelPendingCounterPayments(int bookingId, int staffId) {
+        jdbcTemplate.update("""
+                UPDATE p SET p.[Status]='CANCELLED',p.UpdatedAt=SYSDATETIME()
+                FROM dbo.Payment p JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                WHERE p.BookingID=? AND b.StaffID=? AND UPPER(b.BookingType)='COUNTER' AND p.[Status]='PENDING'
                 """, bookingId, staffId);
     }
 
