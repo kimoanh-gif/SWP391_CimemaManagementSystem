@@ -77,7 +77,9 @@ class RolePermissionAccessTest {
         mvc.perform(get(path).session(login(role))).andExpect(status().isForbidden());
         mvc.perform(get(path).session(login(role, permission))).andExpect(status().isOk());
         mvc.perform(get(path).session(login("CUSTOMER", permission))).andExpect(status().isForbidden());
-        mvc.perform(get(path).session(login("ADMIN", permission))).andExpect(status().isOk());
+        mvc.perform(get(path).session(login("ADMIN", permission)))
+                .andExpect(path.startsWith("/manager/") || path.startsWith("/api/manager/")
+                        ? status().isForbidden() : status().isOk());
         if (path.startsWith("/api/")) {
             mvc.perform(post(path).session(login(role))).andExpect(status().isForbidden());
             mvc.perform(post(path).session(login(role, permission))).andExpect(status().isOk());
@@ -91,6 +93,29 @@ class RolePermissionAccessTest {
         mvc.perform(get("/manager/showtimes").header("X-User-Role", "MANAGER")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/movies")).andExpect(status().isOk());
     }
+    @Test void managerDashboardRejectsOtherRolesEvenWithReportPermission() throws Exception {
+        for (String path : List.of("/manager", "/manager/", "/manager/dashboard",
+                "/api/manager/dashboard", "/api/manager/dashboard/stats", "/manager/reports", "/api/manager/reports")) {
+            for (String role : List.of("ADMIN", "STAFF", "CUSTOMER")) {
+                mvc.perform(get(path).session(login(role, "report:view"))
+                        .header("X-User-Role", "MANAGER").param("role", "MANAGER"))
+                        .andExpect(status().isForbidden());
+            }
+            mvc.perform(get(path).session(login("MANAGER", "report:view"))).andExpect(status().isOk());
+            mvc.perform(get(path)).andExpect(status().is3xxRedirection());
+        }
+        mvc.perform(get("/manager/dashboard").session(login("MANAGER"))).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/dashboard").session(login("MANAGER", "report:view"))).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/dashboard").session(login("ADMIN", "report:view"))).andExpect(status().isOk());
+    }
+    @Test void controllerGuardAlsoRejectsAdminSession() {
+        var session = login("ADMIN", "report:view");
+        var request = new MockHttpServletRequest();
+        request.setSession(session);
+        request.addHeader("X-User-Role", "MANAGER");
+        org.junit.jupiter.api.Assertions.assertThrows(com.cinema.exception.UnauthorizedManagerException.class,
+                () -> com.cinema.util.ManagerSecurityUtils.verifyManagerAccess(request));
+    }
     @Configuration @EnableWebMvc @Import(SecurityConfig.class)
     static class Config {
         @Bean AuthorizationSnapshotService snapshots() { return mock(AuthorizationSnapshotService.class); }
@@ -101,6 +126,7 @@ class RolePermissionAccessTest {
         @RequestMapping({"/admin/customers", "/api/admin/customers", "/customer/booking", "/customer/profile",
                 "/customer/booking/history", "/customer/booking/checkout", "/manager/showtimes", "/api/manager/showtimes",
                 "/staff/check-in", "/staff/sales", "/movies", "/staff/news", "/staff/bookings", "/api/staff/news",
+                "/manager", "/manager/", "/admin/dashboard", "/api/manager/dashboard/stats",
                 "/manager/{module}", "/api/manager/{module}"})
         String ok() { return "ok"; }
     }

@@ -122,30 +122,31 @@ public class SecurityConfig {
                 auth.requestMatchers("/admin/customers/**", "/admin/staffs/**", "/admin/roles/**",
                         "/api/admin/customers/**", "/api/admin/staffs/**", "/api/admin/roles/**")
                         .access(roleAndPermission("account:manage", "ADMIN"));
-                auth.requestMatchers("/admin/dashboard", "/manager", "/manager/dashboard",
+                auth.requestMatchers("/admin/dashboard").access(roleAndPermission("report:view", "ADMIN"));
+                auth.requestMatchers("/manager", "/manager/dashboard",
                         "/manager/reports/**", "/api/manager/dashboard/**", "/api/manager/reports/**")
-                        .access(roleAndPermission("report:view", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("report:view", "MANAGER"));
                 auth.requestMatchers("/manager/showtimes/**", "/api/manager/showtimes/**")
-                        .access(roleAndPermission("showtime:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("showtime:manage", "MANAGER"));
                 auth.requestMatchers("/manager/movies/**", "/api/manager/movies/**")
-                        .access(roleAndPermission("movie:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("movie:manage", "MANAGER"));
                 auth.requestMatchers("/manager/genres/**", "/api/manager/genres/**")
-                        .access(roleAndPermission("genre:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("genre:manage", "MANAGER"));
                 auth.requestMatchers("/manager/rooms/**", "/api/manager/rooms/**")
-                        .access(roleAndPermission("room:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("room:manage", "MANAGER"));
                 auth.requestMatchers("/manager/seats/**", "/manager/seat-types/**",
                         "/api/manager/seats/**", "/api/manager/seat-types/**")
-                        .access(roleAndPermission("seat:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("seat:manage", "MANAGER"));
                 auth.requestMatchers("/manager/pricing/**", "/api/manager/pricing/**")
-                        .access(roleAndPermission("pricing:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("pricing:manage", "MANAGER"));
                 auth.requestMatchers("/manager/fb/**", "/api/manager/fb/**")
-                        .access(roleAndPermission("fb:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("fb:manage", "MANAGER"));
                 auth.requestMatchers("/manager/vouchers/**", "/api/manager/vouchers/**")
-                        .access(roleAndPermission("voucher:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("voucher:manage", "MANAGER"));
                 auth.requestMatchers("/manager/promotions/**", "/api/manager/promotions/**")
-                        .access(roleAndPermission("promotion:manage", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("promotion:manage", "MANAGER"));
                 auth.requestMatchers("/manager/news/**", "/api/manager/news/**")
-                        .access(roleAndPermission("news:approve", "ADMIN", "MANAGER"));
+                        .access(roleAndPermission("news:approve", "MANAGER"));
                 auth.requestMatchers("/staff/news/**", "/api/staff/news/**")
                         .access(roleAndPermission("news:manage", "ADMIN", "STAFF"));
                 auth.requestMatchers("/staff/bookings/**")
@@ -163,7 +164,7 @@ public class SecurityConfig {
                 // Dashboards are role-gated.
                 auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
                 auth.requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
-                auth.requestMatchers("/manager/**", "/api/manager/**").hasAnyRole("ADMIN", "MANAGER");
+                auth.requestMatchers("/manager/**", "/api/manager/**").hasRole("MANAGER");
                 auth.requestMatchers("/api/**").permitAll();
                 auth.requestMatchers("/admin/**").hasRole("ADMIN");
                 auth.requestMatchers("/staff/**").hasAnyRole("ADMIN", "MANAGER", "STAFF");
