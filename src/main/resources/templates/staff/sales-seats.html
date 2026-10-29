@@ -123,6 +123,7 @@
       </div>
 
       <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+      <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
       <div class="alert alert-info" th:if="${canSell == false}">
         This account has no active staff profile, so it can view the seat map but cannot sell tickets.
         Sign in with a staff account to create counter orders.
