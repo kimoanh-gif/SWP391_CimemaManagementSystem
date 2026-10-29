@@ -34,7 +34,7 @@ public class StaffOperationsDAO {
                 SELECT COUNT(*)
                 FROM dbo.Booking b
                 WHERE UPPER(b.BookingType) = 'COUNTER'
-                  AND UPPER(b.[Status]) = 'PENDING'
+                  AND UPPER(b.[Status]) IN ('PENDING', 'PAYMENT_PENDING')
                   AND (? = 1 OR b.StaffID = ?)
                 """, Integer.class, allStaff ? 1 : 0, staffId);
         List<PublicShowtime> upcoming = jdbcTemplate.query("""
