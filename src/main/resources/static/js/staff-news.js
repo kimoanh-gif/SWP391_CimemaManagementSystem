@@ -22,6 +22,14 @@
       showFeedback("Enter a title and article content.", "error");
       return;
     }
+    // A thumbnail is needed only to submit for approval; drafts can be saved without one.
+    if (submitter.value === "PENDING" && !fields.thumbnailUrl.value.trim()) {
+      fields.thumbnailUrl.setAttribute("aria-invalid", "true");
+      fields.thumbnailUrl.focus();
+      showFeedback("Add a thumbnail image before submitting for approval.", "error");
+      return;
+    }
+    fields.thumbnailUrl.removeAttribute("aria-invalid");
     const payload = {
       title: fields.title.value.trim(),
       thumbnailUrl: fields.thumbnailUrl.value.trim() || null,
@@ -57,6 +65,8 @@
       buttons.forEach((button) => { button.disabled = false; });
     }
   });
+
+  fields.thumbnailUrl.addEventListener("input", () => fields.thumbnailUrl.removeAttribute("aria-invalid"));
 
   cancelEdit.addEventListener("click", () => {
     clearEditor();
@@ -120,6 +130,7 @@
   function clearEditor() {
     editingId = null;
     form.reset();
+    fields.thumbnailUrl.removeAttribute("aria-invalid");
     document.getElementById("editorTitle").textContent = "New Article";
     cancelEdit.hidden = true;
   }

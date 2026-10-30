@@ -22,6 +22,7 @@ public class StaffNewsService {
     public StaffNewsArticle create(int accountId, NewsRequest request) {
         int staffId = requireStaffId(accountId);
         String status = normalizeStatus(request.status());
+        requireThumbnailForReview(status, request.thumbnailUrl());
         int newsId = staffNewsDAO.insert(staffId, request.title().trim(),
                 cleanOptional(request.thumbnailUrl()), request.content().trim(), status);
         return getById(newsId);
@@ -45,6 +46,7 @@ public class StaffNewsService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own news.");
         }
         String status = normalizeStatus(request.status());
+        requireThumbnailForReview(status, request.thumbnailUrl());
         int updated = staffNewsDAO.update(newsId, staffId, allowOtherOwners, request.title().trim(),
                 cleanOptional(request.thumbnailUrl()), request.content().trim(), status);
         if (updated == 0) {
@@ -62,6 +64,14 @@ public class StaffNewsService {
         return staffNewsDAO.findActiveStaffId(accountId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "An active staff profile is required for this action."));
+    }
+
+    // SRS UC25 E1: a thumbnail is required to submit for approval; drafts may be saved without one.
+    private static void requireThumbnailForReview(String status, String thumbnailUrl) {
+        if ("PENDING".equals(status) && cleanOptional(thumbnailUrl) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Thumbnail image is required to submit for approval.");
+        }
     }
 
     private static String normalizeStatus(String status) {
