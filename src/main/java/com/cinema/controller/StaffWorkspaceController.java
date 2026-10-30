@@ -331,11 +331,20 @@ public class StaffWorkspaceController {
     public String bookings(@RequestParam(defaultValue = "0") int page,
                            @RequestParam(required = false) String q,
                            @RequestParam(required = false) String status,
+                           @RequestParam(required = false) String date,
                            HttpSession session, Model model) {
         Integer accountId = staffAccountId(session);
         if (accountId == null) return "redirect:/login";
+        LocalDate showDate = null;
+        if (date != null && !date.isBlank()) {
+            try {
+                showDate = LocalDate.parse(date);
+            } catch (DateTimeParseException exception) {
+                model.addAttribute("errorMessage", "Please select a valid show date.");
+            }
+        }
         StaffBookingPage bookings = operationsService.bookings(
-                accountId, sessionService.currentRole(session), page, q, status);
+                accountId, sessionService.currentRole(session), page, q, status, showDate);
         model.addAttribute("user", sessionService.getCurrentUser(session));
         model.addAttribute("bookingPage", bookings);
         return "staff/bookings";
