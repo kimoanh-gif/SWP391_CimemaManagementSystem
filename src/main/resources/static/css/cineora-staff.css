@@ -489,6 +489,10 @@ table.data-table tbody tr:hover td { background: #FFF5F1; }
   border-color: var(--cineora-red);
   box-shadow: 0 0 0 3px rgba(217,35,50,.10);
 }
+.form-control[aria-invalid="true"] {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220,38,38,.12);
+}
 textarea.form-control { resize: vertical; }
 .inline-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .inline-form .form-group { margin-bottom: 0; }
