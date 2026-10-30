@@ -1,5 +1,6 @@
 package com.cinema.model;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record StaffBookingPage(
@@ -8,6 +9,7 @@ public record StaffBookingPage(
         int totalPages,
         long totalItems,
         String query,
-        String status
+        String status,
+        LocalDate showDate
 ) {
 }

@@ -28,9 +28,11 @@
         <div>
           <p class="eyebrow">CINEORA / STAFF</p>
           <h1>Bookings</h1>
-          <p>Search by booking code or phone number, or filter by status.</p>
+          <p>Search all counter and online bookings by code or customer, then narrow by show date and status.</p>
         </div>
       </div>
+
+      <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}" role="alert"></div>
 
       <!-- Filter Form -->
       <div class="panel">
@@ -40,9 +42,14 @@
         <div class="panel-body">
           <form th:action="@{/staff/bookings}" method="get" class="inline-form">
             <div class="form-group">
-              <label class="form-label" for="q">Booking Code / Phone</label>
+              <label class="form-label" for="q">Booking Code / Customer</label>
               <input class="form-control" id="q" name="q" th:value="${bookingPage.query}"
-                     placeholder="e.g. BK... or phone number" style="min-width:220px;">
+                     placeholder="Code, phone or customer name" style="min-width:220px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="date">Show Date</label>
+              <input class="form-control" id="date" name="date" type="date"
+                     th:value="${bookingPage.showDate}">
             </div>
             <div class="form-group">
               <label class="form-label" for="status">Status</label>
@@ -57,6 +64,7 @@
             </div>
             <div class="form-group" style="padding-top:18px;">
               <button class="btn btn-primary" type="submit">Search</button>
+              <a class="btn btn-secondary" th:href="@{/staff/bookings}">Clear</a>
             </div>
           </form>
         </div>
@@ -121,10 +129,10 @@
         <!-- Pagination -->
         <div class="pagination" th:if="${bookingPage.totalPages > 1}">
           <a th:if="${bookingPage.page > 0}"
-             th:href="@{/staff/bookings(page=${bookingPage.page - 1},q=${bookingPage.query},status=${bookingPage.status})}">← Previous</a>
+             th:href="@{/staff/bookings(page=${bookingPage.page - 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}">← Previous</a>
           <span th:text="'Page ' + (${bookingPage.page + 1}) + ' of ' + ${bookingPage.totalPages} + ' · ' + ${bookingPage.totalItems} + ' bookings'"></span>
           <a th:if="${bookingPage.page + 1 < bookingPage.totalPages}"
-             th:href="@{/staff/bookings(page=${bookingPage.page + 1},q=${bookingPage.query},status=${bookingPage.status})}">Next →</a>
+             th:href="@{/staff/bookings(page=${bookingPage.page + 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}">Next →</a>
         </div>
       </div>
 

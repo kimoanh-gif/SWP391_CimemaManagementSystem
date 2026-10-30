@@ -7,7 +7,11 @@ import com.cinema.model.StaffDashboardData;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -84,25 +88,30 @@ public class StaffOperationsDAO {
         return new StaffDashboardData(sold == null ? 0 : sold, pending == null ? 0 : pending, upcoming);
     }
 
-    public long countBookings(Integer staffId, boolean allStaff, String query, String status) {
+    // Staff may view every booking (SRS 4.4: Booking View = Full), so there is no StaffID filter.
+    private static final String BOOKING_FILTER = """
+            WHERE (? IS NULL OR b.BookingCode LIKE ? OR COALESCE(a.Phone, '') LIKE ?
+                   OR COALESCE(a.FullName, '') LIKE ?)
+              AND (? IS NULL OR UPPER(b.[Status]) = UPPER(?))
+              AND (? IS NULL OR CAST(st.StartTime AS date) = ?)
+            """;
+
+    public long countBookings(String query, String status, LocalDate showDate) {
         Long count = jdbcTemplate.queryForObject("""
                 SELECT COUNT_BIG(*)
                 FROM dbo.Booking b
                 LEFT JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
                 LEFT JOIN dbo.Account a ON a.AccountID = c.AccountID
-                WHERE (? = 1 OR b.StaffID = ?)
-                  AND (? IS NULL OR b.BookingCode LIKE ? OR COALESCE(a.Phone, '') LIKE ?
-                       OR COALESCE(a.FullName, '') LIKE ?)
-                  AND (? IS NULL OR UPPER(b.[Status]) = UPPER(?))
-                """, Long.class, allStaff ? 1 : 0, staffId, query,
-                query == null ? null : "%" + query + "%",
-                query == null ? null : "%" + query + "%",
-                query == null ? null : "%" + query + "%", status, status);
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                """ + BOOKING_FILTER, Long.class, filterArgs(query, status, showDate).toArray());
         return count == null ? 0 : count;
     }
 
-    public List<StaffBookingListItem> findBookings(Integer staffId, boolean allStaff,
-                                                    String query, String status, int offset, int limit) {
+    public List<StaffBookingListItem> findBookings(String query, String status, LocalDate showDate,
+                                                    int offset, int limit) {
+        List<Object> args = filterArgs(query, status, showDate);
+        args.add(offset);
+        args.add(limit);
         return jdbcTemplate.query("""
                 SELECT b.BookingID, b.BookingCode, a.FullName, a.Phone, m.Title,
                        st.StartTime, b.BookingType, b.[Status], b.TotalAmount
@@ -111,10 +120,7 @@ public class StaffOperationsDAO {
                 LEFT JOIN dbo.Account a ON a.AccountID = c.AccountID
                 JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
                 JOIN dbo.Movie m ON m.MovieID = st.MovieID
-                WHERE (? = 1 OR b.StaffID = ?)
-                  AND (? IS NULL OR b.BookingCode LIKE ? OR COALESCE(a.Phone, '') LIKE ?
-                       OR COALESCE(a.FullName, '') LIKE ?)
-                  AND (? IS NULL OR UPPER(b.[Status]) = UPPER(?))
+                """ + BOOKING_FILTER + """
                 ORDER BY b.BookingTime DESC, b.BookingID DESC
                 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
                 """, (rs, rowNum) -> new StaffBookingListItem(
@@ -122,13 +128,16 @@ public class StaffOperationsDAO {
                 rs.getString("FullName"), rs.getString("Phone"), rs.getString("Title"),
                 rs.getObject("StartTime", java.time.LocalDateTime.class),
                 rs.getString("BookingType"), rs.getString("Status"), rs.getBigDecimal("TotalAmount")
-        ), allStaff ? 1 : 0, staffId, query,
-                query == null ? null : "%" + query + "%",
-                query == null ? null : "%" + query + "%",
-                query == null ? null : "%" + query + "%", status, status, offset, limit);
+        ), args.toArray());
     }
 
-    public Optional<StaffBookingDetail> findBookingDetail(int bookingId, Integer staffId, boolean allStaff) {
+    private static List<Object> filterArgs(String query, String status, LocalDate showDate) {
+        String like = query == null ? null : "%" + query + "%";
+        Date date = showDate == null ? null : Date.valueOf(showDate);
+        return new ArrayList<>(Arrays.asList(query, like, like, like, status, status, date, date));
+    }
+
+    public Optional<StaffBookingDetail> findBookingDetail(int bookingId) {
         List<StaffBookingDetail> matches = jdbcTemplate.query("""
                 SELECT b.BookingID, b.BookingCode, b.BookingType, b.[Status], b.BookingTime,
                        a.FullName, a.Phone, a.Email, m.Title, r.RoomName, st.StartTime,
@@ -139,7 +148,7 @@ public class StaffOperationsDAO {
                 JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
                 JOIN dbo.Movie m ON m.MovieID = st.MovieID
                 JOIN dbo.Room r ON r.RoomID = st.RoomID
-                WHERE b.BookingID = ? AND (? = 1 OR b.StaffID = ?)
+                WHERE b.BookingID = ?
                 """, (rs, rowNum) -> new StaffBookingDetail(
                 rs.getInt("BookingID"), rs.getString("BookingCode"), rs.getString("BookingType"),
                 rs.getString("Status"), rs.getObject("BookingTime", java.time.LocalDateTime.class),
@@ -148,7 +157,7 @@ public class StaffOperationsDAO {
                 rs.getObject("StartTime", java.time.LocalDateTime.class),
                 rs.getBigDecimal("Subtotal"), rs.getBigDecimal("DiscountAmount"),
                 rs.getBigDecimal("TotalAmount"), List.of(), List.of()
-        ), bookingId, allStaff ? 1 : 0, staffId);
+        ), bookingId);
         if (matches.isEmpty()) return Optional.empty();
         StaffBookingDetail header = matches.get(0);
         List<StaffBookingDetail.SeatLine> seats = jdbcTemplate.query("""
