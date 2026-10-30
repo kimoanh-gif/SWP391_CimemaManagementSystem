@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.model.Promotion;
 import com.cinema.service.CustomerHeaderModelService;
+import com.cinema.service.NewsPublicService;
 import com.cinema.service.PromotionPublicService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,9 @@ class PromotionPublicControllerTest {
     private PromotionPublicService promotionService;
 
     @Mock
+    private NewsPublicService newsService;
+
+    @Mock
     private CustomerHeaderModelService headerModelService;
 
     @Mock
@@ -38,7 +42,7 @@ class PromotionPublicControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new PromotionPublicController(promotionService, headerModelService);
+        controller = new PromotionPublicController(promotionService, newsService, headerModelService);
     }
 
     @Test
@@ -98,7 +102,7 @@ class PromotionPublicControllerTest {
     void legacyUrlRedirectsToTheRightTab() {
         assertEquals("redirect:/promotions", controller.legacyPromotionsNews(null));
         assertEquals("redirect:/promotions", controller.legacyPromotionsNews("promotions"));
-        assertEquals("redirect:/news", controller.legacyPromotionsNews("news"));
+        assertEquals("redirect:/promotions#news-events", controller.legacyPromotionsNews("news"));
     }
 
     private static Promotion promotion(int id) {

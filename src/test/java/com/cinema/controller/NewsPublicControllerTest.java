@@ -41,26 +41,11 @@ class NewsPublicControllerTest {
     }
 
     @Test
-    void listShowsPublishedNews() {
-        when(newsService.getPublishedNews()).thenReturn(List.of(article(1), article(2)));
-
+    void listRedirectsToCombinedNewsSection() {
         Model model = new ConcurrentModel();
         String view = controller.listNews(session, model);
 
-        assertEquals("customer/promotions-news/news", view);
-        assertEquals(2, ((List<?>) model.getAttribute("newsList")).size());
-        assertEquals(false, model.getAttribute("loadError"));
-        assertEquals("news", model.getAttribute("activeTab"));
-    }
-
-    @Test
-    void listShowsRetryStateWhenDatabaseFails() {
-        when(newsService.getPublishedNews()).thenThrow(new DataAccessResourceFailureException("db down"));
-
-        Model model = new ConcurrentModel();
-        controller.listNews(session, model);
-
-        assertEquals(true, model.getAttribute("loadError"));
+        assertEquals("redirect:/promotions#news-events", view);
     }
 
     @Test
@@ -84,7 +69,7 @@ class NewsPublicControllerTest {
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
         String view = controller.newsDetails(8, session, new ConcurrentModel(), redirect);
 
-        assertEquals("redirect:/news", view);
+        assertEquals("redirect:/promotions#news-events", view);
         assertTrue(redirect.getFlashAttributes().containsKey("errorMessage"));
     }
 

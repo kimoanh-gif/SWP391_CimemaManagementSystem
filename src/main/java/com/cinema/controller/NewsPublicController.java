@@ -40,18 +40,7 @@ public class NewsPublicController {
 
     @GetMapping("/news")
     public String listNews(HttpSession session, Model model) {
-        headerModelService.addHeaderAttributes(session, model, ACTIVE_NAV);
-        model.addAttribute("activeTab", "news");
-        model.addAttribute("loadError", false);
-        try {
-            model.addAttribute("newsList", newsService.getPublishedNews());
-        } catch (DataAccessException ex) {
-            // UC04 E1 – data retrieval error: show message + retry button.
-            log.error("Cannot load news", ex);
-            model.addAttribute("newsList", List.of());
-            model.addAttribute("loadError", true);
-        }
-        return "customer/promotions-news/news";
+        return "redirect:/promotions#news-events";
     }
 
     @GetMapping("/news/{id}")
@@ -66,13 +55,13 @@ public class NewsPublicController {
             log.error("Cannot load news {}", newsId, ex);
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Unable to load the article right now. Please try again.");
-            return "redirect:/news";
+            return "redirect:/promotions#news-events";
         }
 
         if (article.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "This article does not exist or has not been published.");
-            return "redirect:/news";
+            return "redirect:/promotions#news-events";
         }
 
         headerModelService.addHeaderAttributes(session, model, ACTIVE_NAV);
