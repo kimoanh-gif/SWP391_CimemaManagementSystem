@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.Locale;
 
 @Service
@@ -31,9 +32,8 @@ public class StaffOperationsService {
     }
 
     public StaffBookingPage bookings(int accountId, String role, int requestedPage,
-                                     String query, String requestedStatus) {
-        boolean allStaff = isPrivileged(role);
-        Integer staffId = allStaff ? null : requireStaffId(accountId);
+                                     String query, String requestedStatus, LocalDate showDate) {
+        requireBookingViewer(accountId, role);
         String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
         String status = requestedStatus == null || requestedStatus.isBlank()
                 || "ALL".equalsIgnoreCase(requestedStatus)
@@ -42,19 +42,23 @@ public class StaffOperationsService {
                 "CANCELLED", "EXPIRED").contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid booking status filter.");
         }
-        long totalItems = staffOperationsDAO.countBookings(staffId, allStaff, normalizedQuery, status);
+        long totalItems = staffOperationsDAO.countBookings(normalizedQuery, status, showDate);
         int totalPages = (int) Math.max(1, (totalItems + PAGE_SIZE - 1) / PAGE_SIZE);
         int page = Math.max(0, Math.min(requestedPage, totalPages - 1));
-        return new StaffBookingPage(staffOperationsDAO.findBookings(staffId, allStaff, normalizedQuery,
-                status, page * PAGE_SIZE, PAGE_SIZE), page, totalPages, totalItems, normalizedQuery, status);
+        return new StaffBookingPage(staffOperationsDAO.findBookings(normalizedQuery, status, showDate,
+                page * PAGE_SIZE, PAGE_SIZE), page, totalPages, totalItems, normalizedQuery, status, showDate);
     }
 
     public StaffBookingDetail bookingDetail(int accountId, String role, int bookingId) {
-        boolean allStaff = isPrivileged(role);
-        Integer staffId = allStaff ? null : requireStaffId(accountId);
-        return staffOperationsDAO.findBookingDetail(bookingId, staffId, allStaff)
+        requireBookingViewer(accountId, role);
+        return staffOperationsDAO.findBookingDetail(bookingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Booking was not found."));
+    }
+
+    // Staff can view all bookings, online ones included, but only with an active staff profile.
+    private void requireBookingViewer(int accountId, String role) {
+        if (!isPrivileged(role)) requireStaffId(accountId);
     }
 
     public int checkIn(String bookingCode) {
