@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.model.Promotion;
 import com.cinema.service.CustomerHeaderModelService;
+import com.cinema.service.NewsPublicService;
 import com.cinema.service.PromotionPublicService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -31,11 +32,14 @@ public class PromotionPublicController {
     static final String ACTIVE_NAV = "promotions-news";
 
     private final PromotionPublicService promotionService;
+    private final NewsPublicService newsService;
     private final CustomerHeaderModelService headerModelService;
 
     public PromotionPublicController(PromotionPublicService promotionService,
+                                     NewsPublicService newsService,
                                      CustomerHeaderModelService headerModelService) {
         this.promotionService = promotionService;
+        this.newsService = newsService;
         this.headerModelService = headerModelService;
     }
 
@@ -45,7 +49,7 @@ public class PromotionPublicController {
      */
     @GetMapping("/promotions-news")
     public String legacyPromotionsNews(@RequestParam(name = "tab", required = false) String tab) {
-        return "news".equalsIgnoreCase(tab) ? "redirect:/news" : "redirect:/promotions";
+        return "redirect:/promotions" + ("news".equalsIgnoreCase(tab) ? "#news-events" : "");
     }
 
     @GetMapping("/promotions")
@@ -53,6 +57,8 @@ public class PromotionPublicController {
         headerModelService.addHeaderAttributes(session, model, ACTIVE_NAV);
         model.addAttribute("activeTab", "promotions");
         model.addAttribute("loadError", false);
+        model.addAttribute("promotionLoadError", false);
+        model.addAttribute("newsLoadError", false);
         try {
             List<Promotion> promotions = promotionService.getActivePromotions();
             model.addAttribute("promotions", promotions);
@@ -61,6 +67,15 @@ public class PromotionPublicController {
             log.error("Cannot load promotions", ex);
             model.addAttribute("promotions", List.of());
             model.addAttribute("loadError", true);
+            model.addAttribute("promotionLoadError", true);
+        }
+        try {
+            model.addAttribute("newsList", newsService.getPublishedNews());
+        } catch (DataAccessException ex) {
+            log.error("Cannot load news", ex);
+            model.addAttribute("newsList", List.of());
+            model.addAttribute("loadError", true);
+            model.addAttribute("newsLoadError", true);
         }
         return "customer/promotions-news/promotions";
     }

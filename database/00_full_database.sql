@@ -1064,7 +1064,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Movie WHERE Title=N'The Curse 2026')
     (N'The Curse 2026',N'The Curse 2026',89,'2026-10-23','2026-12-05',N'Japanese',N'Ken''ichi Ugana',N'Yukino Kaizu, YU, Yutaka Kyan',N'T18',N'A young woman races to uncover the origin of a deadly urban-legend curse before she becomes its next victim.',N'https://cdn.moveek.com/storage/media/cache/tall/6ad57dbec3a89041565644.webp',NULL,N'Now Showing');
 
 -- Horizontal artwork used by the home hero and movie hover previews.
-UPDATE dbo.Movie SET PosterURL=N'https://image.tmdb.org/t/p/original/aSyZkLD77tcbApFW6C1JIqzM3UJ.jpg', BannerURL=N'https://cdni.fancaps.net/file/fancaps-movieimages/13403371.jpg' WHERE Title=N'Bambi: The Reckoning';
+UPDATE dbo.Movie SET PosterURL=N'https://image.tmdb.org/t/p/original/aSyZkLD77tcbApFW6C1JIqzM3UJ.jpg', BannerURL=N'https://townsquare.media/site/442/files/2024/04/attachment-bambi-horror-movie-trailer.jpg' WHERE Title=N'Bambi: The Reckoning';
 UPDATE dbo.Movie SET BannerURL=N'https://img.cinematoday.jp/a/T0031470/_size_2000x/_v_1768277124/main.jpg' WHERE Title=N'The Curse 2026';
 UPDATE dbo.Movie SET PosterURL=N'https://image.tmdb.org/t/p/original/lN4YqCIVjDMvlUbmcEO5d060WoL.jpg', BannerURL=N'https://image.tmdb.org/t/p/original/4r7onhOb1exn1d3wTWr6bx5JCsQ.jpg' WHERE Title=N'Death Whisperer: Saming the Werebeast';
 UPDATE dbo.Movie SET BannerURL=N'https://lumiere-a.akamaihd.net/v1/images/hb_20cs_whalefall_featuredcontentbanner_desktop_9ecd6d21.jpeg?region=0%2C0%2C2048%2C878&width=1536' WHERE Title=N'Whale Fall';
@@ -1167,7 +1167,7 @@ WHERE v.Code = 'WELCOME10';
 UPDATE p SET
     p.[Name] = N'Cinema Night Special',
     p.[Description] = N'Save 10% on your next movie night with friends and family.',
-    p.BannerURL = N'https://images.unsplash.com/photo-1574267432644-f610fbe9de68?w=1400&auto=format&fit=crop&q=88'
+    p.BannerURL = N'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=1400&auto=format&fit=crop&q=88'
 FROM dbo.Promotion p JOIN dbo.Voucher v ON v.PromotionID = p.PromotionID
 WHERE v.Code = 'DEMO10';
 
@@ -1182,8 +1182,10 @@ BEGIN
     VALUES (@MidweekPromotionID, NULL, 'MIDWEEK15', 'PERCENT', 15, 75000, 120000, DATEADD(DAY, -7, SYSDATETIME()), DATEADD(DAY, 180, SYSDATETIME()), 1000, 2, 'ACTIVE');
 END;
 
-UPDATE p SET p.BannerURL=N'https://images.unsplash.com/photo-1489185078527-65e04f3f5f6c?w=1400&auto=format&fit=crop&q=88'
+UPDATE p SET p.BannerURL=N'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1400&auto=format&fit=crop&q=88'
 FROM dbo.Promotion p JOIN dbo.Voucher v ON v.PromotionID=p.PromotionID WHERE v.Code='MIDWEEK15';
+UPDATE dbo.Promotion SET BannerURL=N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1400&auto=format&fit=crop&q=88'
+WHERE [Name]=N'New Member Offer' AND (BannerURL IS NULL OR BannerURL=N'');
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Showtime)

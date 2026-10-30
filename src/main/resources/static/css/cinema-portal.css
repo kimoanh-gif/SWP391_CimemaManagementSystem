@@ -1349,6 +1349,53 @@ button, input, select, textarea {
 /* =====================================================================
    PROMOTIONS & NEWS (SCREENS 21 & 25)
    ===================================================================== */
+.pn-content-section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 100px;
+}
+
+.pn-pager {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pn-page-status {
+    min-width: 42px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.pn-page-button {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all var(--transition-fast);
+}
+
+.pn-page-button:hover:not(:disabled) {
+    border-color: var(--primary-light);
+    background: var(--primary-light);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.pn-page-button:disabled {
+    cursor: not-allowed;
+    opacity: .35;
+}
+
+.pn-page-item[hidden] {
+    display: none !important;
+}
+
 .promo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
