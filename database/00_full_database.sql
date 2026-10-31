@@ -617,7 +617,10 @@ FROM sys.check_constraints cc
 WHERE cc.parent_object_id = OBJECT_ID(N'dbo.LoyaltyTransaction')
   AND cc.definition LIKE '%TransactionType%';
 IF @LoyaltyTypeCheck IS NOT NULL
-    EXEC(N'ALTER TABLE dbo.LoyaltyTransaction DROP CONSTRAINT ' + QUOTENAME(@LoyaltyTypeCheck));
+BEGIN
+    DECLARE @DropLoyaltyTypeCheck NVARCHAR(500)=N'ALTER TABLE dbo.LoyaltyTransaction DROP CONSTRAINT ' + QUOTENAME(@LoyaltyTypeCheck);
+    EXEC sys.sp_executesql @DropLoyaltyTypeCheck;
+END;
 ALTER TABLE dbo.LoyaltyTransaction WITH CHECK ADD CONSTRAINT CK_LoyaltyTransaction_Type
     CHECK (TransactionType IN ('EARN','REDEEM','ADJUST','EXPIRE'));
 GO
