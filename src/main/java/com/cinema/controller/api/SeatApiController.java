@@ -1,23 +1,38 @@
 package com.cinema.controller.api;
 
+import com.cinema.dto.SeatLayoutForm;
+import com.cinema.dto.SeatUpdateForm;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.Seat;
 import com.cinema.service.SeatService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST API for Screen 58: Seat Layout Management (UC-29).
  */
 @RestController
 @RequestMapping("/api/manager/seats")
+@Validated
 public class SeatApiController {
 
     private final SeatService seatService;
@@ -28,9 +43,8 @@ public class SeatApiController {
 
     @GetMapping("/room/{roomId}")
     public ResponseEntity<ApiResponse<List<Seat>>> getSeatsByRoom(
-            @PathVariable int roomId,
-            HttpServletRequest request
-    ) {
+            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Seat> seats = seatService.getSeatsByRoomId(roomId);
         return ResponseEntity.ok(ApiResponse.ok("Lấy sơ đồ ghế thành công", seats));
@@ -38,9 +52,8 @@ public class SeatApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Seat>> getSeatById(
-            @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            @PathVariable @Positive(message = "Mã ghế phải lớn hơn 0.") int id,
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Seat seat = seatService.getSeatById(id);
         return ResponseEntity.ok(ApiResponse.ok("Chi tiết ghế", seat));
@@ -48,22 +61,22 @@ public class SeatApiController {
 
     @PutMapping("/room/{roomId}/layout")
     public ResponseEntity<ApiResponse<List<Seat>>> saveLayout(
-            @PathVariable int roomId,
-            @RequestBody List<Seat> seats,
+            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
+            @RequestBody @NotEmpty(message = "Sơ đồ ghế không được để trống.") List<@Valid SeatLayoutForm> seatForms,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime expectedUpdatedAt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
+        List<Seat> seats = seatForms.stream()
+                .map(form -> form.toSeat(roomId))
+                .collect(Collectors.toList());
         List<Seat> saved = seatService.saveRoomLayout(roomId, seats, expectedUpdatedAt);
         return ResponseEntity.ok(ApiResponse.ok("Lưu sơ đồ ghế thành công", saved));
     }
 
-
     @PostMapping("/room/{roomId}/generate-default")
     public ResponseEntity<ApiResponse<List<Seat>>> generateDefault(
-            @PathVariable int roomId,
-            HttpServletRequest request
-    ) {
+            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Seat> generated = seatService.generateDefaultLayout(roomId);
         return ResponseEntity.ok(ApiResponse.ok("Khởi tạo sơ đồ tiêu chuẩn thành công", generated));
@@ -71,34 +84,67 @@ public class SeatApiController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<Seat>> updateSeat(
-            @PathVariable int id,
-            @RequestParam(required = false) String seatTypeName,
-            @RequestParam(required = false) String status,
-            HttpServletRequest request
-    ) {
+            @PathVariable @Positive(message = "Mã ghế phải lớn hơn 0.") int id,
+            @Valid @ModelAttribute SeatUpdateForm form,
+            BindingResult bindingResult,
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
-        Seat updated = seatService.updateSeat(id, seatTypeName, status);
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            String message = errors.isEmpty() ? "Dữ liệu cập nhật ghế không hợp lệ" : errors.get(0);
+            return ResponseEntity.badRequest().body(ApiResponse.error(message, errors));
+        }
+        Seat updated = seatService.updateSeat(id, form.getSeatTypeName(), form.getStatus());
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật ghế thành công", updated));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.InvalidSeatLayoutException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidSeatLayout(com.cinema.exception.InvalidSeatLayoutException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.toList());
+        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.RoomNotFoundException.class)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+        List<String> errors = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toList());
+        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodValidation(HandlerMethodValidationException ex) {
+        List<String> errors = ex.getAllErrors().stream()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.toList());
+        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
+    }
+
+    @ExceptionHandler(com.cinema.exception.InvalidSeatLayoutException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidSeatLayout(
+            com.cinema.exception.InvalidSeatLayoutException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(com.cinema.exception.RoomNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleRoomNotFound(com.cinema.exception.RoomNotFoundException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
+    @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
     }
 }
-

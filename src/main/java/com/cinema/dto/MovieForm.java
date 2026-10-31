@@ -1,11 +1,13 @@
 package com.cinema.dto;
 
 import com.cinema.model.Movie;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -68,9 +70,17 @@ public class MovieForm {
     @Pattern(regexp = "^(Upcoming|Now Showing|Ended|Archived)$", message = "Trạng thái phim phải là Upcoming, Now Showing, Ended hoặc Archived")
     private String status = "Upcoming";
 
-    private List<Integer> genreIds = new ArrayList<>();
+    private List<@Positive(message = "Mã thể loại phải lớn hơn 0") Integer> genreIds = new ArrayList<>();
 
     public MovieForm() {
+    }
+
+    @AssertTrue(message = "Ngày kết thúc không được diễn ra trước ngày khởi chiếu")
+    public boolean isValidDateRange() {
+        if (releaseDate != null && endDate != null) {
+            return !endDate.isBefore(releaseDate);
+        }
+        return true;
     }
 
     public static MovieForm from(Movie movie) {
@@ -193,8 +203,13 @@ public class MovieForm {
         this.poster = poster;
     }
 
-    public String getBanner() { return banner; }
-    public void setBanner(String banner) { this.banner = banner; }
+    public String getBanner() {
+        return banner;
+    }
+
+    public void setBanner(String banner) {
+        this.banner = banner;
+    }
 
     public String getTrailer() {
         return trailer;

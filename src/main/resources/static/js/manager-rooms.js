@@ -211,7 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const s = seatsPerRowInput && seatsPerRowInput.value ? parseInt(seatsPerRowInput.value, 10) : 0;
         const c = capacityInput && capacityInput.value ? parseInt(capacityInput.value, 10) : 0;
 
-        // Validation rule requested: capacity > 0
+        // Validation rule requested: code, name, rows, seatsPerRow and capacity > 0
+        const codeVal = (form.roomCode?.value || '').trim(); const nameVal = (form.roomName?.value || '').trim(); if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) { showFormError('Mã phòng không hợp lệ (tối đa 20 ký tự, chỉ gồm chữ, số, dấu - và _).'); form.roomCode?.focus(); return; } if (!nameVal || nameVal.length > 100) { showFormError('Tên phòng không được để trống và tối đa 100 ký tự.'); form.roomName?.focus(); return; } if (r <= 0 || s <= 0) { showFormError('Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng lớn hơn 0.'); if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus(); return; }
         if (!c || c <= 0) {
             showFormError('Vui lòng nhập tổng sức chứa hợp lệ (lớn hơn 0).');
             capacityInput.focus();

@@ -54,4 +54,29 @@ public class ShowtimeApiControllerTest extends com.cinema.support.AuthenticatedM
                         .session(authSession("STAFF")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void testGetShowtimes_SecurityMatrix_P0_04() throws Exception {
+        // Unauthenticated -> 3xx redirect to login per SecurityConfig
+        mockMvc.perform(get("/api/manager/showtimes"))
+                .andExpect(status().is3xxRedirection());
+
+        // Forged X-User-Role header or ?role=MANAGER param without session -> 3xx redirect to login
+        mockMvc.perform(get("/api/manager/showtimes")
+                        .header("X-User-Role", "MANAGER")
+                        .param("role", "MANAGER"))
+                .andExpect(status().is3xxRedirection());
+
+        // Authenticated CUSTOMER with forged header/param -> 403 Forbidden
+        mockMvc.perform(get("/api/manager/showtimes")
+                        .session(authSession("CUSTOMER"))
+                        .header("X-User-Role", "MANAGER")
+                        .param("role", "MANAGER"))
+                .andExpect(status().isForbidden());
+
+        // Authenticated ADMIN -> 403 Forbidden on /api/manager/** per verified policy
+        mockMvc.perform(get("/api/manager/showtimes")
+                        .session(authSession("ADMIN")))
+                .andExpect(status().isForbidden());
+    }
 }

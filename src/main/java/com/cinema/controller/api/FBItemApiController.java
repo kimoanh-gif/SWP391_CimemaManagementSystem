@@ -139,6 +139,14 @@ public class FBItemApiController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(java.util.stream.Collectors.joining(", "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
+    }
+
     @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));

@@ -143,7 +143,7 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         String status = body.get("status");
-        if (status == null || status.trim().isEmpty()) {
+        if (status == null || !status.trim().matches("^(Upcoming|Now Showing|Ended|Archived)$")) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Trạng thái không được để trống"));
         }
 

@@ -448,7 +448,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">SKU <span class="req">*</span></label>
-                    <input type="text" id="formItemCode" th:field="*{itemCode}" class="form-control" placeholder="e.g. CB-SOLO" required>
+                    <input type="text" id="formItemCode" th:field="*{itemCode}" class="form-control" placeholder="e.g. CB-SOLO" maxlength="50" pattern="^[A-Za-z0-9_-]{2,50}$" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Category <span class="req">*</span></label>
@@ -462,25 +462,25 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Product / combo name <span class="req">*</span></label>
-                <input type="text" id="formItemName" th:field="*{itemName}" class="form-control" placeholder="e.g. Combo Solo Cine" required>
+                <input type="text" id="formItemName" th:field="*{itemName}" class="form-control" placeholder="e.g. Combo Solo Cine" maxlength="150" required>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Listed price (VND) <span class="req">*</span></label>
-                    <input type="number" id="formSellingPrice" th:field="*{sellingPrice}" class="form-control" step="1000" min="0" required>
+                    <input type="number" id="formSellingPrice" th:field="*{sellingPrice}" class="form-control" step="1000" min="0" max="10000000" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cost price / COGS (VND) <span class="req">*</span></label>
-                    <input type="number" id="formCostPrice" th:field="*{costPrice}" class="form-control" step="1000" min="0" required>
+                    <input type="number" id="formCostPrice" th:field="*{costPrice}" class="form-control" step="1000" min="0" max="10000000" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Image URL</label>
-                <input type="text" id="formImage" th:field="*{image}" class="form-control" placeholder="https://images.unsplash.com/...">
+                <input type="text" id="formImage" th:field="*{image}" class="form-control" maxlength="500" placeholder="https://images.unsplash.com/...">
             </div>
             <div class="form-group">
                 <label class="form-label">Description / components</label>
-                <textarea id="formDescription" th:field="*{description}" class="form-control" rows="2" placeholder="Details of the item or combo..."></textarea>
+                <textarea id="formDescription" th:field="*{description}" class="form-control" rows="2" maxlength="500" placeholder="Details of the item or combo..."></textarea>
             </div>
             <!-- Dynamic Combo Component Selection -->
             <div id="comboComponentsSection" class="form-group" style="display:none;background:#FFF8F0;padding:12px;border-radius:8px;border:1px solid var(--border);">

@@ -238,6 +238,11 @@ public class CustomerBookingService {
         return bookingDAO.findBookingHistory(accountId);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public int releaseExpiredSeatReservations() {
+        return bookingDAO.releaseExpiredSeatReservations();
+    }
+
     private String generateBookingCode() {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
         String random = UUID.randomUUID().toString().substring(0, 6).toUpperCase();

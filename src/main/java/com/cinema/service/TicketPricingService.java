@@ -82,6 +82,7 @@ public class TicketPricingService {
 
     @Transactional
     public TicketPricing updatePricingStatus(int id, String status) {
+        if (status == null || (!"Active".equalsIgnoreCase(status.trim()) && !"Inactive".equalsIgnoreCase(status.trim()))) { throw new InvalidPricingConfigurationException("Pricing rule status must be Active or Inactive"); }
         TicketPricing existing = getPricingById(id);
         if ("Active".equalsIgnoreCase(status)) {
             ticketPricingDao
@@ -113,6 +114,7 @@ public class TicketPricingService {
 
     @Transactional
     public SeatType createSeatType(SeatTypeForm form) {
+        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) { throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00"); }
         seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
             throw new InvalidPricingConfigurationException(
                     "Seat type code '" + form.getTypeCode() + "' already exists in the system");
@@ -133,6 +135,7 @@ public class TicketPricingService {
                 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) {
             throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00");
         }
+        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) { throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00"); }
         seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
             if (!s.getSeatTypeId().equals(id)) {
                 throw new InvalidPricingConfigurationException(
@@ -152,6 +155,8 @@ public class TicketPricingService {
     @Transactional
     public SeatType updateSeatTypeStatus(int id, String status) {
         SeatType existing = getSeatTypeById(id);
+        if (status == null || (!"Active".equalsIgnoreCase(status.trim()) && !"Inactive".equalsIgnoreCase(status.trim()))) { throw new InvalidPricingConfigurationException("Seat type status must be Active or Inactive"); }
+        if ("Inactive".equalsIgnoreCase(status.trim()) && seatTypeDao.isReferencedBySeats(id)) { throw new InvalidPricingConfigurationException("Không thể vô hiệu hóa loại ghế '" + existing.getTypeName() + "' vì đang có ghế trong phòng chiếu sử dụng loại ghế này."); }
         seatTypeDao.updateStatus(id, status);
         return getSeatTypeById(id);
     }
@@ -275,6 +280,9 @@ public class TicketPricingService {
         }
 
         // P1-03: Collision check for active pricing rules
+        if (form.getStatus() != null && !form.getStatus().isBlank() && !"Active".equalsIgnoreCase(form.getStatus().trim()) && !"Inactive".equalsIgnoreCase(form.getStatus().trim())) { throw new InvalidPricingConfigurationException("Invalid status: " + form.getStatus()); }
+        if (!form.getDayType().trim().matches("(?i)^(WEEKDAY|WEEKEND|HOLIDAY)$")) { throw new InvalidPricingConfigurationException("Invalid day type: " + form.getDayType()); }
+        if (!form.getTimeSlot().trim().matches("(?i)^(MORNING|STANDARD|GOLDEN_HOUR|ALL_DAY)$")) { throw new InvalidPricingConfigurationException("Invalid time slot: " + form.getTimeSlot()); }
         boolean isActive = form.getStatus() == null || "Active".equalsIgnoreCase(form.getStatus().trim());
         if (isActive) {
             ticketPricingDao

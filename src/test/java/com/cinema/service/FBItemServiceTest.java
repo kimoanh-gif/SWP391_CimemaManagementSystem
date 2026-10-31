@@ -132,6 +132,14 @@ public class FBItemServiceTest {
 
     @Test
     void testDeleteItem_ComponentOfCombo_ThrowsException() {
+        FBItemForm lossForm = new FBItemForm();
+        lossForm.setItemCode("CB-LOSS");
+        lossForm.setItemName("Combo Loss");
+        lossForm.setCategory("Food");
+        lossForm.setSellingPrice(new BigDecimal("20000"));
+        lossForm.setCostPrice(new BigDecimal("50000"));
+        assertThrows(InvalidFBItemException.class, () -> fbItemService.createItem(lossForm));
+        assertThrows(InvalidFBItemException.class, () -> fbItemService.updateStatus(1, "InvalidStatus"));
         when(fbItemDao.findById(1)).thenReturn(Optional.of(sampleItem));
         when(fbItemDao.isReferencedInOrders(1)).thenReturn(false);
         when(fbItemDao.isComponentOfAnyCombo(1)).thenReturn(true);

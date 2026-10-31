@@ -103,6 +103,7 @@ public class ShowtimeService {
             }
         }
 
+        if (form.getStartTime() != null && existing.getStartTime() != null && !existing.getStartTime().equals(form.getStartTime()) && form.getStartTime().isBefore(LocalDateTime.now())) { throw new InvalidShowtimeException("Thời gian bắt đầu mới không được nằm trong quá khứ (BR-55)."); }
         validateShowtime(form, id);
 
         showtimeDao.update(id, form);

@@ -49,7 +49,7 @@ class ManagerDashboardControllerTest {
         when(dashboardService.getActiveMovies()).thenReturn(Collections.emptyList());
         when(dashboardService.getRoomsSummary()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/manager/dashboard"))
+        mockMvc.perform(get("/manager/dashboard").sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/dashboard"))
                 .andExpect(model().attributeExists("stats"))
@@ -67,7 +67,7 @@ class ManagerDashboardControllerTest {
         ManagerDashboardStats stats = new ManagerDashboardStats();
         when(dashboardService.getDashboardStats()).thenReturn(stats);
 
-        mockMvc.perform(get("/manager"))
+        mockMvc.perform(get("/manager").sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/dashboard"));
     }

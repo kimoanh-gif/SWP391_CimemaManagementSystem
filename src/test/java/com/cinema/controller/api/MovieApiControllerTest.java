@@ -16,7 +16,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -47,7 +46,8 @@ class MovieApiControllerTest {
 
         when(movieService.getAllMovies(any(), any(), anyString(), anyString())).thenReturn(List.of(movie));
 
-        mockMvc.perform(get("/api/manager/movies"))
+        mockMvc.perform(get("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].id").value(1))
@@ -63,7 +63,8 @@ class MovieApiControllerTest {
 
         when(movieService.getMovieById(1)).thenReturn(movie);
 
-        mockMvc.perform(get("/api/manager/movies/1"))
+        mockMvc.perform(get("/api/manager/movies/1")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.title").value("Interstellar"));
@@ -74,7 +75,8 @@ class MovieApiControllerTest {
     void testGetMovieByIdApi_NotFound() throws Exception {
         when(movieService.getMovieById(99)).thenThrow(new MovieNotFoundException("Movie not found"));
 
-        mockMvc.perform(get("/api/manager/movies/99"))
+        mockMvc.perform(get("/api/manager/movies/99")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -95,6 +97,7 @@ class MovieApiControllerTest {
         when(movieService.createMovie(any(MovieForm.class))).thenReturn(created);
 
         mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isCreated())
@@ -110,6 +113,7 @@ class MovieApiControllerTest {
         form.setTitle(""); // Blank title
 
         mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isBadRequest())
@@ -132,6 +136,7 @@ class MovieApiControllerTest {
         when(movieService.updateMovie(eq(8), any(MovieForm.class))).thenReturn(updated);
 
         mockMvc.perform(put("/api/manager/movies/8")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isOk())
@@ -148,7 +153,8 @@ class MovieApiControllerTest {
 
         when(movieService.deactivateMovie(8)).thenReturn(movie);
 
-        mockMvc.perform(patch("/api/manager/movies/8/deactivate"))
+        mockMvc.perform(patch("/api/manager/movies/8/deactivate")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("Archived"));
@@ -160,7 +166,8 @@ class MovieApiControllerTest {
         when(movieService.deactivateMovie(8))
                 .thenThrow(new MovieHasActiveShowtimesException("Đang có suất chiếu"));
 
-        mockMvc.perform(patch("/api/manager/movies/8/deactivate"))
+        mockMvc.perform(patch("/api/manager/movies/8/deactivate")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -175,7 +182,8 @@ class MovieApiControllerTest {
 
         when(movieService.getAvailableMoviesForShowtimes()).thenReturn(List.of(movie));
 
-        mockMvc.perform(get("/api/manager/movies/available-for-showtimes"))
+        mockMvc.perform(get("/api/manager/movies/available-for-showtimes")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].id").value(1));
@@ -191,7 +199,8 @@ class MovieApiControllerTest {
 
         when(movieService.reactivateMovie(5)).thenReturn(movie);
 
-        mockMvc.perform(patch("/api/manager/movies/5/reactivate"))
+        mockMvc.perform(patch("/api/manager/movies/5/reactivate")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("Now Showing"));
@@ -200,7 +209,31 @@ class MovieApiControllerTest {
     @Test
     @DisplayName("GET /api/manager/movies: Customer role rejected with 403 Forbidden")
     void testApiAuthorization_ForbiddenForCustomer() throws Exception {
-        mockMvc.perform(get("/api/manager/movies").param("role", "CUSTOMER"))
+        mockMvc.perform(get("/api/manager/movies").sessionAttr("userRole", "CUSTOMER"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("P0-04: Unauthenticated request, STAFF, ADMIN, and forged header/param are rejected with 403 Forbidden")
+    void testApiAuthorization_SecurityMatrix() throws Exception {
+        // Unauthenticated (no session)
+        mockMvc.perform(get("/api/manager/movies"))
+                .andExpect(status().isForbidden());
+
+        // STAFF session
+        mockMvc.perform(get("/api/manager/movies").sessionAttr("userRole", "STAFF"))
+                .andExpect(status().isForbidden());
+
+        // ADMIN session (per verified project policy, /api/manager/** is strictly MANAGER only)
+        mockMvc.perform(get("/api/manager/movies").sessionAttr("userRole", "ADMIN"))
+                .andExpect(status().isForbidden());
+
+        // Forged X-User-Role header without MANAGER session
+        mockMvc.perform(get("/api/manager/movies").header("X-User-Role", "MANAGER"))
+                .andExpect(status().isForbidden());
+
+        // Forged ?role=MANAGER query param without MANAGER session
+        mockMvc.perform(get("/api/manager/movies").param("role", "MANAGER"))
                 .andExpect(status().isForbidden());
     }
 }

@@ -131,7 +131,7 @@ public class ShowtimeDao {
 
 
     public int insert(ShowtimeForm form) {
-        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +
+        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
@@ -145,7 +145,7 @@ public class ShowtimeDao {
 
     public int update(int id, ShowtimeForm form) {
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                "BaseTicketPrice = ?, Status = ? WHERE ShowtimeID = ?";
+                "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
         return jdbcTemplate.update(sql,
                 form.getMovieId(),
                 form.getRoomId(),

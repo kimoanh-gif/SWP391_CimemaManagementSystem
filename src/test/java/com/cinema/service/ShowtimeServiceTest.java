@@ -10,13 +10,20 @@ import com.cinema.model.Room;
 import com.cinema.model.Showtime;
 import com.cinema.dto.ShowtimeForm;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.RowMapper;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +31,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -225,5 +234,81 @@ public class ShowtimeServiceTest {
         InvalidShowtimeException exPast = assertThrows(InvalidShowtimeException.class, () ->
                 showtimeService.createShowtime(formPast));
         assertTrue(exPast.getMessage().contains("Không được chọn ngày ở quá khứ hoặc hiện tại"));
+    }
+
+    @Test
+    @DisplayName("P0-02: ShowtimeDao.insert executes SQL with BasePrice column, not BaseTicketPrice")
+    void testShowtimeDaoInsert_UsesBasePriceColumn() {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        ShowtimeDao realDao = new ShowtimeDao(jdbcTemplate);
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withHour(10).withMinute(0);
+        ShowtimeForm form = new ShowtimeForm();
+        form.setMovieId(1);
+        form.setRoomId(1);
+        form.setStartTime(start);
+        form.setEndTime(start.plusMinutes(120));
+        form.setBaseTicketPrice(new BigDecimal("90000"));
+        form.setStatus("Scheduled");
+
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        int rows = realDao.insert(form);
+        assertEquals(1, rows);
+        String sql = sqlCaptor.getValue();
+        assertTrue(sql.contains("BasePrice"));
+        assertFalse(sql.contains("BaseTicketPrice"));
+    }
+
+    @Test
+    @DisplayName("P0-02: ShowtimeDao.update executes SQL with BasePrice column, not BaseTicketPrice")
+    void testShowtimeDaoUpdate_UsesBasePriceColumn() {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        ShowtimeDao realDao = new ShowtimeDao(jdbcTemplate);
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withHour(14).withMinute(0);
+        ShowtimeForm form = new ShowtimeForm();
+        form.setShowtimeId(10);
+        form.setMovieId(1);
+        form.setRoomId(1);
+        form.setStartTime(start);
+        form.setEndTime(start.plusMinutes(120));
+        form.setBaseTicketPrice(new BigDecimal("95000"));
+        form.setStatus("Scheduled");
+
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        int rows = realDao.update(10, form);
+        assertEquals(1, rows);
+        String sql = sqlCaptor.getValue();
+        assertTrue(sql.contains("BasePrice = ?"));
+        assertFalse(sql.contains("BaseTicketPrice"));
+    }
+
+    @Test
+    @DisplayName("P0-02: Reading showtime maps BasePrice AS BaseTicketPrice into Showtime.baseTicketPrice")
+    @SuppressWarnings("unchecked")
+    void testShowtimeDaoRead_MapsBaseTicketPriceCorrectly() throws Exception {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        ShowtimeDao realDao = new ShowtimeDao(jdbcTemplate);
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withHour(18).withMinute(0);
+        ResultSet rs = mock(ResultSet.class);
+        lenient().when(rs.getString(anyString())).thenReturn("");
+        lenient().when(rs.getInt(anyString())).thenReturn(1);
+        lenient().when(rs.getTimestamp(anyString())).thenReturn(Timestamp.valueOf(start));
+        when(rs.getBigDecimal("BaseTicketPrice")).thenReturn(new BigDecimal("110000.00"));
+
+        when(jdbcTemplate.query(anyString(), any(PreparedStatementSetter.class), any(RowMapper.class)))
+                .thenAnswer(inv -> {
+                    RowMapper<Showtime> mapper = inv.getArgument(2);
+                    return List.of(mapper.mapRow(rs, 0));
+                });
+
+        Optional<Showtime> found = realDao.findById(25);
+        assertTrue(found.isPresent());
+        assertEquals(new BigDecimal("110000.00"), found.get().getBaseTicketPrice());
     }
 }

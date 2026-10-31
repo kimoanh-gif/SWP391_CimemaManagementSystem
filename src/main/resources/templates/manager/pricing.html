@@ -491,11 +491,11 @@
             <input type="hidden" id="formPricingId" th:field="*{pricingId}">
             <div class="form-group">
                 <label class="form-label">Configuration code <span class="req">*</span></label>
-                <input type="text" id="formPricingCode" th:field="*{pricingCode}" class="form-control" placeholder="e.g. PRICE-WD-STD" required>
+                <input type="text" id="formPricingCode" th:field="*{pricingCode}" class="form-control" placeholder="e.g. PRICE-WD-STD" maxlength="50" pattern="^[A-Za-z0-9_-]{2,50}$" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Configuration name <span class="req">*</span></label>
-                <input type="text" id="formRuleName" th:field="*{ruleName}" class="form-control" placeholder="e.g. Weekday – Standard slot" required>
+                <input type="text" id="formRuleName" th:field="*{ruleName}" class="form-control" placeholder="e.g. Weekday – Standard slot" maxlength="150" required>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -519,11 +519,11 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">2D base price (VND) <span class="req">*</span></label>
-                    <input type="number" id="formBasePrice" th:field="*{basePrice}" class="form-control" step="1000" min="0" required>
+                    <input type="number" id="formBasePrice" th:field="*{basePrice}" class="form-control" step="1000" min="0" max="10000000" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Format surcharge (VND) <span class="req">*</span></label>
-                    <input type="number" id="formFormatSurcharge" th:field="*{formatSurcharge}" class="form-control" step="1000" min="0" required>
+                    <input type="number" id="formFormatSurcharge" th:field="*{formatSurcharge}" class="form-control" step="1000" min="0" max="10000000" required>
                 </div>
             </div>
             <div class="form-group">
