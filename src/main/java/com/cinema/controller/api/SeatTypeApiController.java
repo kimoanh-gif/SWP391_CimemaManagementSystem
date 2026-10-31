@@ -1,5 +1,6 @@
 package com.cinema.controller.api;
 
+import com.cinema.exception.InvalidPricingConfigurationException;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.SeatType;
 import com.cinema.dto.SeatTypeForm;
@@ -9,6 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST API Controller for Screen 57: Seat Type Management (UC-28).
@@ -37,8 +42,7 @@ public class SeatTypeApiController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<SeatType>>> getAllSeatTypes(
             @RequestParam(required = false, defaultValue = "ALL") String status,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<SeatType> list = pricingService.getAllSeatTypes(status);
         return ResponseEntity.ok(ApiResponse.ok("Lấy danh sách loại ghế thành công", list));
@@ -47,8 +51,7 @@ public class SeatTypeApiController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SeatType>> getSeatTypeById(
             @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType st = pricingService.getSeatTypeById(id);
         return ResponseEntity.ok(ApiResponse.ok("Chi tiết loại ghế", st));
@@ -57,8 +60,7 @@ public class SeatTypeApiController {
     @PostMapping
     public ResponseEntity<ApiResponse<SeatType>> createSeatType(
             @Valid @RequestBody SeatTypeForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType created = pricingService.createSeatType(form);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -69,8 +71,7 @@ public class SeatTypeApiController {
     public ResponseEntity<ApiResponse<SeatType>> updateMultiplier(
             @PathVariable int id,
             @RequestParam BigDecimal multiplier,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeMultiplier(id, multiplier);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật hệ số giá ghế thành công", updated));
@@ -80,8 +81,7 @@ public class SeatTypeApiController {
     public ResponseEntity<ApiResponse<SeatType>> updateSeatType(
             @PathVariable int id,
             @Valid @RequestBody SeatTypeForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatType(id, form);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật thông tin loại ghế thành công", updated));
@@ -91,24 +91,37 @@ public class SeatTypeApiController {
     public ResponseEntity<ApiResponse<SeatType>> updateStatus(
             @PathVariable int id,
             @RequestParam String status,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeStatus(id, status);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái loại ghế thành công", updated));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.SeatTypeNotFoundException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.toList());
+        String msg = errors.isEmpty() ? "Dữ liệu loại ghế không hợp lệ" : errors.get(0);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
+    }
+
+    @ExceptionHandler(InvalidPricingConfigurationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidPricing(InvalidPricingConfigurationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(com.cinema.exception.SeatTypeNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(com.cinema.exception.SeatTypeNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
+    @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(com.cinema.exception.UnauthorizedManagerException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
     }

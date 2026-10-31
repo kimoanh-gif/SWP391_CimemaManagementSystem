@@ -192,21 +192,22 @@ public class SeatDao {
      * Checks whether a specific seat is booked in upcoming showtimes for this room.
      */
     public boolean isSeatBookedInUpcomingShowtimes(int seatId, int roomId) {
-        try {
-            String sql = """
-                SELECT COUNT(*)
-                FROM Ticket t
-                JOIN Showtime s ON t.ShowtimeID = s.ShowtimeID
-                WHERE t.SeatID = ?
-                  AND s.RoomID = ?
-                  AND s.StartTime >= SYSUTCDATETIME()
-                  AND s.Status NOT IN ('Cancelled', 'Stopped')
-            """;
-            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, seatId, roomId);
-            return count != null && count > 0;
-        } catch (Exception ignored) {
-            return false;
-        }
+        String sql = """
+            SELECT COUNT(*)
+            FROM dbo.BookingSeat bs
+            JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+            JOIN dbo.Showtime s ON s.ShowtimeID = bs.ShowtimeID
+            WHERE bs.SeatID = ?
+              AND s.RoomID = ?
+              AND s.StartTime >= SYSDATETIME()
+              AND UPPER(s.[Status]) NOT IN ('CANCELLED', 'STOPPED')
+              AND UPPER(b.[Status]) NOT IN ('CANCELLED', 'EXPIRED')
+              AND (
+                  UPPER(bs.[Status]) = 'BOOKED'
+                  OR (UPPER(bs.[Status]) = 'HELD' AND (bs.HeldUntil IS NULL OR bs.HeldUntil > SYSDATETIME()))
+              )
+        """;
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, seatId, roomId);
+        return count != null && count > 0;
     }
 }
-

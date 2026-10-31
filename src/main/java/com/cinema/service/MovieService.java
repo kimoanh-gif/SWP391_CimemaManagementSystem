@@ -10,17 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Service managing movies, enforcing business rules UC-26, BR-07, BR-37, and BR-44.
+ * Service managing movies, enforcing business rules UC-26, BR-07, BR-37, and
+ * BR-44.
  */
 @Service
 public class MovieService {
 
     private static final Set<String> VALID_STATUSES = Set.of("Upcoming", "Now Showing", "Ended", "Archived");
+    private static final Set<String> VALID_AGE_RATINGS = Set.of("P", "K", "T13", "T16", "T18");
 
     private final MovieDao movieDao;
 
@@ -53,7 +56,7 @@ public class MovieService {
         if (form.getStatus() == null || form.getStatus().trim().isEmpty()) {
             form.setStatus("Upcoming");
         } else {
-            normalizeAndValidateStatus(form.getStatus());
+            form.setStatus(normalizeAndValidateStatus(form.getStatus()));
         }
 
         int newId = movieDao.insert(form);
@@ -61,7 +64,8 @@ public class MovieService {
     }
 
     /**
-     * Updates movie information enforcing lifecycle rules, showtime integrity, and BR-44.
+     * Updates movie information enforcing lifecycle rules, showtime integrity, and
+     * BR-44.
      * P0-02: Enforces movie duration integrity against active upcoming showtimes.
      */
     @Transactional(rollbackFor = Exception.class)
@@ -77,13 +81,15 @@ public class MovieService {
         }
         if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
             if (existing.getEndDate() == null || !existing.getEndDate().equals(form.getEndDate())) {
-                throw new IllegalArgumentException("Ngày kết thúc dự kiến mới phải từ hôm nay trở đi, không được ở quá khứ.");
+                throw new IllegalArgumentException(
+                        "Ngày kết thúc dự kiến mới phải từ hôm nay trở đi, không được ở quá khứ.");
             }
         }
 
         String newStatus = normalizeAndValidateStatus(form.getStatus());
 
-        // Check if transition to 'Ended' or 'Archived' violates active upcoming showtimes (BR-07)
+        // Check if transition to 'Ended' or 'Archived' violates active upcoming
+        // showtimes (BR-07)
         if (("Ended".equalsIgnoreCase(newStatus) || "Archived".equalsIgnoreCase(newStatus))
                 && existing.isActiveForShowtimes()) {
             int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
@@ -91,8 +97,7 @@ public class MovieService {
                 throw new MovieHasActiveShowtimesException(
                         "Không thể chuyển trạng thái phim '" + existing.getTitle() + "' sang " + newStatus
                                 + " vì hiện tại đang có " + upcomingShowtimes
-                                + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước."
-                );
+                                + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước.");
             }
         }
 
@@ -105,8 +110,7 @@ public class MovieService {
                 throw new MovieHasActiveShowtimesException(
                         "Không thể thay đổi thời lượng phim '" + existing.getTitle() + "' (từ " + oldDuration
                                 + " phút thành " + newDuration + " phút) vì phim đang có " + upcomingShowtimes
-                                + " suất chiếu trong tương lai. Vui lòng hủy hoặc điều chỉnh các suất chiếu tương lai trước khi thay đổi thời lượng."
-                );
+                                + " suất chiếu trong tương lai. Vui lòng hủy hoặc điều chỉnh các suất chiếu tương lai trước khi thay đổi thời lượng.");
             }
         }
 
@@ -114,7 +118,6 @@ public class MovieService {
         movieDao.update(movieId, form);
         return getMovieById(movieId);
     }
-
 
     /**
      * Deactivates a movie by setting status to 'Archived' (soft deactivation).
@@ -132,8 +135,7 @@ public class MovieService {
             throw new MovieHasActiveShowtimesException(
                     "Không thể hủy kích hoạt phim '" + movie.getTitle()
                             + "' vì đang có " + upcomingShowtimes
-                            + " suất chiếu sắp diễn ra. Vui lòng hủy hoặc dời các suất chiếu trước."
-            );
+                            + " suất chiếu sắp diễn ra. Vui lòng hủy hoặc dời các suất chiếu trước.");
         }
 
         movieDao.updateStatus(movieId, "Archived");
@@ -141,13 +143,15 @@ public class MovieService {
     }
 
     /**
-     * Reactivates an Archived or Ended movie back to active status (Now Showing or Upcoming).
+     * Reactivates an Archived or Ended movie back to active status (Now Showing or
+     * Upcoming).
      */
     public Movie reactivateMovie(int movieId) {
         Movie movie = getMovieById(movieId);
-        String targetStatus = (movie.getReleaseDate() != null && movie.getReleaseDate().isAfter(java.time.LocalDate.now()))
-                ? "Upcoming"
-                : "Now Showing";
+        String targetStatus = (movie.getReleaseDate() != null
+                && movie.getReleaseDate().isAfter(java.time.LocalDate.now()))
+                        ? "Upcoming"
+                        : "Now Showing";
         movieDao.updateStatus(movieId, targetStatus);
         return getMovieById(movieId);
     }
@@ -165,8 +169,7 @@ public class MovieService {
             if (upcomingShowtimes > 0) {
                 throw new MovieHasActiveShowtimesException(
                         "Không thể chuyển trạng thái phim sang " + normalized
-                                + " vì đang có " + upcomingShowtimes + " suất chiếu sắp diễn ra."
-                );
+                                + " vì đang có " + upcomingShowtimes + " suất chiếu sắp diễn ra.");
             }
         }
 
@@ -175,14 +178,16 @@ public class MovieService {
     }
 
     /**
-     * BR-07: Returns only movies available for showtime scheduling (Upcoming or Now Showing).
+     * BR-07: Returns only movies available for showtime scheduling (Upcoming or Now
+     * Showing).
      */
     public List<Movie> getAvailableMoviesForShowtimes() {
         return movieDao.findMoviesAvailableForShowtimes();
     }
 
     /**
-     * AC02 / BR-37: Deletes or archives a movie while ensuring no active upcoming showtimes exist.
+     * AC02 / BR-37: Deletes or archives a movie while ensuring no active upcoming
+     * showtimes exist.
      */
     @Transactional(rollbackFor = Exception.class)
     public void deleteMovie(int movieId) {
@@ -192,22 +197,21 @@ public class MovieService {
             throw new MovieHasActiveShowtimesException(
                     "Không thể xóa phim '" + movie.getTitle()
                             + "' vì đang có " + upcomingShowtimes
-                            + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước."
-            );
+                            + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước.");
         }
         int totalShowtimes = movieDao.countShowtimesByMovieId(movieId);
         if (totalShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
                     "Không thể xóa phim '" + movie.getTitle()
                             + "' vì đã có " + totalShowtimes
-                            + " suất chiếu trong lịch sử hệ thống. Bạn có thể chuyển phim sang trạng thái Lưu trữ (Archived)."
-            );
+                            + " suất chiếu trong lịch sử hệ thống. Bạn có thể chuyển phim sang trạng thái Lưu trữ (Archived).");
         }
         movieDao.delete(movieId);
     }
 
     /**
-     * AC04: Retrieves active movies for customer-facing views (Now Showing and Upcoming only, excluding Ended and Archived).
+     * AC04: Retrieves active movies for customer-facing views (Now Showing and
+     * Upcoming only, excluding Ended and Archived).
      */
     public List<Movie> getCustomerMovies() {
         return movieDao.findMoviesAvailableForShowtimes();
@@ -223,6 +227,13 @@ public class MovieService {
         if (form.getDuration() == null || form.getDuration() <= 0 || form.getDuration() > 600) {
             throw new IllegalArgumentException("Thời lượng phim phải từ 1 đến 600 phút.");
         }
+        if (form.getAgeRating() != null && !form.getAgeRating().isBlank()) {
+            String rating = form.getAgeRating().trim().toUpperCase();
+            if (!VALID_AGE_RATINGS.contains(rating)) {
+                throw new IllegalArgumentException("Độ tuổi quy định không hợp lệ: " + form.getAgeRating());
+            }
+            form.setAgeRating(rating);
+        }
         LocalDate today = LocalDate.now();
         if (isNew) {
             if (form.getReleaseDate() != null && !form.getReleaseDate().isAfter(today)) {
@@ -235,6 +246,21 @@ public class MovieService {
         if (form.getReleaseDate() != null && form.getEndDate() != null
                 && form.getEndDate().isBefore(form.getReleaseDate())) {
             throw new IllegalArgumentException("Ngày kết thúc không được diễn ra trước ngày khởi chiếu.");
+        }
+        if (form.getGenreIds() != null && !form.getGenreIds().isEmpty()) {
+            Set<Integer> distinctGenreIds = new LinkedHashSet<>();
+            for (Integer gid : form.getGenreIds()) {
+                if (gid == null || gid <= 0) {
+                    throw new IllegalArgumentException("Mã thể loại phim không hợp lệ.");
+                }
+                distinctGenreIds.add(gid);
+            }
+            int invalidGenreCount = movieDao.countInactiveOrMissingGenres(new ArrayList<>(distinctGenreIds));
+            if (invalidGenreCount > 0) {
+                throw new IllegalArgumentException(
+                        "Một hoặc nhiều thể loại được chọn không tồn tại hoặc đã ngừng hoạt động.");
+            }
+            form.setGenreIds(new ArrayList<>(distinctGenreIds));
         }
     }
 
@@ -249,7 +275,6 @@ public class MovieService {
             }
         }
         throw new InvalidMovieStatusException(
-                "Trạng thái '" + status + "' không hợp lệ. Chỉ chấp nhận: " + String.join(", ", VALID_STATUSES)
-        );
+                "Trạng thái '" + status + "' không hợp lệ. Chỉ chấp nhận: " + String.join(", ", VALID_STATUSES));
     }
 }

@@ -51,7 +51,7 @@ class RevenueReportApiControllerTest {
 
         when(revenueReportService.getReportData(any())).thenReturn(data);
 
-        mockMvc.perform(get("/api/manager/reports/data")
+        mockMvc.perform(get("/api/manager/reports/data").sessionAttr("userRole", "MANAGER")
                         .param("preset", "thismonth")
                         .param("reportType", "DAILY"))
                 .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class RevenueReportApiControllerTest {
         when(revenueReportService.getReportData(any()))
                 .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
 
-        mockMvc.perform(get("/api/manager/reports/data")
+        mockMvc.perform(get("/api/manager/reports/data").sessionAttr("userRole", "MANAGER")
                         .param("startDate", "2026-10-20")
                         .param("endDate", "2026-10-10"))
                 .andExpect(status().isBadRequest())
@@ -90,7 +90,7 @@ class RevenueReportApiControllerTest {
 
         when(revenueReportService.generateCsvReport(any())).thenReturn(csvBytes);
 
-        mockMvc.perform(get("/api/manager/reports/export")
+        mockMvc.perform(get("/api/manager/reports/export").sessionAttr("userRole", "MANAGER")
                         .param("preset", "thismonth")
                         .param("reportType", "DAILY"))
                 .andExpect(status().isOk())
@@ -105,7 +105,7 @@ class RevenueReportApiControllerTest {
         when(revenueReportService.generateCsvReport(any()))
                 .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
 
-        mockMvc.perform(get("/api/manager/reports/export")
+        mockMvc.perform(get("/api/manager/reports/export").sessionAttr("userRole", "MANAGER")
                         .param("startDate", "2026-10-30")
                         .param("endDate", "2026-10-01"))
                 .andExpect(status().isBadRequest())

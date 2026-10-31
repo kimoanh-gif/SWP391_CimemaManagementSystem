@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -18,6 +19,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +40,8 @@ class SeatTypeApiControllerTest {
         SeatType st = new SeatType(1, "VIP", "VIP Amber", "Central row", new BigDecimal("1.25"), "#F59E0B", "Active");
         when(pricingService.getAllSeatTypes(anyString())).thenReturn(List.of(st));
 
-        mockMvc.perform(get("/api/manager/seat-types"))
+        mockMvc.perform(get("/api/manager/seat-types")
+                .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].typeCode").value("VIP"));
@@ -51,9 +54,22 @@ class SeatTypeApiControllerTest {
         when(pricingService.updateSeatTypeMultiplier(anyInt(), any(BigDecimal.class))).thenReturn(st);
 
         mockMvc.perform(put("/api/manager/seat-types/1/multiplier")
-                        .param("multiplier", "1.30"))
+                .sessionAttr("userRole", "MANAGER")
+                .param("multiplier", "1.30"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.priceMultiplier").value(1.30));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/seat-types: Invalid SeatTypeForm returns 400 Bad Request")
+    void testCreateSeatType_ValidationError_Returns400() throws Exception {
+        String invalidJson = "{\"typeCode\":\"INVALID CODE!\",\"typeName\":\"\",\"priceMultiplier\":0.10,\"status\":\"Broken\"}";
+        mockMvc.perform(post("/api/manager/seat-types")
+                .sessionAttr("userRole", "MANAGER")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

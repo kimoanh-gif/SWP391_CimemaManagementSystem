@@ -1,5 +1,6 @@
 package com.cinema.controller;
 
+import com.cinema.dto.SeatUpdateForm;
 import com.cinema.model.Room;
 import com.cinema.model.Seat;
 import com.cinema.model.SeatType;
@@ -8,9 +9,13 @@ import com.cinema.service.SeatService;
 import com.cinema.service.TicketPricingService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -100,6 +105,11 @@ public class SeatController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
+        if (roomId <= 0) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Mã phòng chiếu không hợp lệ.");
+            return "redirect:/manager/seats";
+        }
+
         try {
             List<Seat> generated = seatService.generateDefaultLayout(roomId);
             redirectAttributes.addFlashAttribute("successMessage", "Đã khởi tạo thành công sơ đồ tiêu chuẩn (" + generated.size() + " ghế)!");
@@ -112,22 +122,38 @@ public class SeatController {
 
     @PostMapping("/update-seat")
     public String updateSeat(
-            @RequestParam int seatId,
-            @RequestParam int roomId,
-            @RequestParam String seatTypeName,
-            @RequestParam String status,
+            @Valid @ModelAttribute("seatUpdateForm") SeatUpdateForm form,
+            BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
             HttpServletRequest request
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
+        String redirectTarget = (form.getRoomId() != null && form.getRoomId() > 0)
+                ? "redirect:/manager/seats?roomId=" + form.getRoomId()
+                : "redirect:/manager/seats";
+
+        if (form.getSeatId() == null || form.getSeatId() <= 0 || form.getRoomId() == null || form.getRoomId() <= 0) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Mã ghế và mã phòng chiếu không được để trống.");
+            return redirectTarget;
+        }
+
+        if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .findFirst()
+                    .orElse("Dữ liệu cập nhật ghế không hợp lệ.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + errorMsg);
+            return redirectTarget;
+        }
+
         try {
-            seatService.updateSeat(seatId, seatTypeName, status);
+            seatService.updateSeat(form.getSeatId(), form.getSeatTypeName(), form.getStatus());
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin ghế thành công!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
         }
 
-        return "redirect:/manager/seats?roomId=" + roomId;
+        return redirectTarget;
     }
 }

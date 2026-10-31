@@ -40,6 +40,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Quick edit base price
+    const pricingFormEl = modal ? modal.querySelector("form") : null;
+    if (pricingFormEl) {
+        pricingFormEl.addEventListener("submit", (e) => {
+            const code = (document.getElementById("formPricingCode")?.value || "").trim();
+            const name = (document.getElementById("formRuleName")?.value || "").trim();
+            const basePrice = parseFloat(document.getElementById("formBasePrice")?.value || "0");
+            const surcharge = parseFloat(document.getElementById("formFormatSurcharge")?.value || "0");
+            if (!/^[A-Za-z0-9_-]{2,50}$/.test(code)) {
+                e.preventDefault();
+                alert("Mã quy tắc chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới (2-50 ký tự).");
+                return;
+            }
+            if (!name || name.length > 150) {
+                e.preventDefault();
+                alert("Tên quy tắc không được để trống và tối đa 150 ký tự.");
+                return;
+            }
+            if (isNaN(basePrice) || basePrice < 0 || basePrice > 10000000 || isNaN(surcharge) || surcharge < 0 || surcharge > 10000000) {
+                e.preventDefault();
+                alert("Giá cơ sở và phụ thu định dạng phải nằm trong khoảng 0 đến 10.000.000 VNĐ.");
+            }
+        });
+    }
+    const multFormEl = multModal ? multModal.querySelector("form") : null;
+    if (multFormEl) {
+        multFormEl.addEventListener("submit", (e) => {
+            const mult = parseFloat(document.getElementById("multInput")?.value || "0");
+            if (isNaN(mult) || mult < 0.5 || mult > 3.0) {
+                e.preventDefault();
+                alert("Hệ số giá ghế phải nằm trong khoảng 0.50 đến 3.00.");
+            }
+        });
+    }
     document.querySelectorAll(".btn-edit-rule").forEach(btn => {
         btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-id");

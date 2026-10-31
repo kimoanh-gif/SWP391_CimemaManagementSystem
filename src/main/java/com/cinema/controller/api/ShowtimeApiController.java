@@ -45,8 +45,7 @@ public class ShowtimeApiController {
             @RequestParam(required = false) Integer roomId,
             @RequestParam(required = false) Integer movieId,
             @RequestParam(required = false) String status,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Showtime> list = showtimeService.getAllShowtimes(date, roomId, movieId, status);
         return ResponseEntity.ok(ApiResponse.ok("Lấy danh sách suất chiếu thành công", list));
@@ -55,8 +54,7 @@ public class ShowtimeApiController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Showtime>> getShowtimeById(
             @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime st = showtimeService.getShowtimeById(id);
         return ResponseEntity.ok(ApiResponse.ok("Chi tiết suất chiếu", st));
@@ -65,8 +63,7 @@ public class ShowtimeApiController {
     @PostMapping
     public ResponseEntity<ApiResponse<Showtime>> createShowtime(
             @Valid @RequestBody ShowtimeForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime created = showtimeService.createShowtime(form);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -77,8 +74,7 @@ public class ShowtimeApiController {
     public ResponseEntity<ApiResponse<Showtime>> updateShowtime(
             @PathVariable int id,
             @Valid @RequestBody ShowtimeForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime updated = showtimeService.updateShowtime(id, form);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật suất chiếu thành công", updated));
@@ -87,8 +83,7 @@ public class ShowtimeApiController {
     @PostMapping("/{id}/stop")
     public ResponseEntity<ApiResponse<Showtime>> stopShowtime(
             @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime stopped = showtimeService.stopShowtime(id);
         return ResponseEntity.ok(ApiResponse.ok("Đã dừng suất chiếu thành công (BR-54)", stopped));
@@ -97,11 +92,20 @@ public class ShowtimeApiController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<Showtime>> cancelShowtime(
             @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime cancelled = showtimeService.cancelShowtime(id);
         return ResponseEntity.ok(ApiResponse.ok("Đã hủy lịch chiếu thành công", cancelled));
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(
+            org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(org.springframework.validation.FieldError::getDefaultMessage)
+                .toList();
+        String msg = errors.isEmpty() ? "Thông tin suất chiếu không hợp lệ" : errors.get(0);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 
     @ExceptionHandler(ShowtimeNotFoundException.class)

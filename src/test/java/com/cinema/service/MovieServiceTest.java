@@ -281,7 +281,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.deleteMovie(1))
                 .isInstanceOf(MovieHasActiveShowtimesException.class)
-                .hasMessageContaining("2 suất chiếu");
+                .hasMessageContaining("2 suất chiếu"); verify(movieDao, never()).delete(anyInt()); } @Test @DisplayName("createMovie: Should reject when genreIds contain inactive or non-existent genres") void testCreateMovie_InactiveOrMissingGenres_Rejected() { when(movieDao.countInactiveOrMissingGenres(anyList())).thenReturn(1); assertThatThrownBy(() -> movieService.createMovie(sampleForm)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("thể loại"); verify(movieDao, never()).insert(any()); } @Test void dummyEnd() {
         verify(movieDao, never()).delete(anyInt());
     }
 }

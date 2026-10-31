@@ -1,12 +1,18 @@
 package com.cinema.util;
 
 import com.cinema.exception.UnauthorizedManagerException;
+import com.cinema.model.AuthenticatedUser;
+import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * Utility for verifying Manager role authorization on Screen 55 endpoints.
- * Supports session attribute, header, or query parameter checks.
+ * Utility for verifying Manager role authorization on Manager endpoints.
+ * Resolves identity strictly from trusted server-side SecurityContext or HttpSession.
  */
 public final class ManagerSecurityUtils {
 
@@ -15,61 +21,64 @@ public final class ManagerSecurityUtils {
 
     /**
      * Verifies that the current request has Manager privileges.
-     * Throws UnauthorizedManagerException (403 Forbidden) if another role is provided.
+     * Throws UnauthorizedManagerException (403 Forbidden) if unauthenticated or another role is provided.
      */
     public static void verifyManagerAccess(HttpServletRequest request) {
         String role = resolveRole(request);
-        if (role != null && !role.trim().isEmpty()) {
-            if (!"MANAGER".equalsIgnoreCase(role.trim())) {
-                throw new UnauthorizedManagerException(
-                        "Access denied: Account with role '" + role
-                                + "' does not have permission to access the manager area."
-                );
-            }
+        if (role == null || !"MANAGER".equalsIgnoreCase(role.trim())) {
+            throw new UnauthorizedManagerException(
+                    "Access denied: Account with role '" + (role != null ? role : "UNAUTHENTICATED")
+                            + "' does not have permission to access the manager area."
+            );
         }
     }
 
     /**
-     * Resolves the current user's role from Session, Header, or Request Parameter.
+     * Resolves the current user's role strictly from SecurityContextHolder or trusted HttpSession attributes.
+     * Untrusted HTTP headers, query parameters, and silent default fallbacks are never used.
      */
     public static String resolveRole(HttpServletRequest request) {
-        if (request == null) {
-            return "MANAGER";
-        }
-
-        // 1. Check session
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            Object authenticated = session.getAttribute(com.cinema.service.SessionService.ATTR_USER);
-            if (authenticated instanceof com.cinema.model.AuthenticatedUser user) {
-                return user.getRole();
+        // 1. Check trusted Spring Security context first
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            if (auth.getPrincipal() instanceof AuthenticatedUser authUser
+                    && authUser.getRole() != null && !authUser.getRole().isBlank()) {
+                return authUser.getRole().trim();
             }
-            Object sessionRole = session.getAttribute("role");
-            if (sessionRole == null) {
-                sessionRole = session.getAttribute("userRole");
-            }
-            if (sessionRole instanceof String str && !str.isBlank()) {
-                return str.trim();
-            }
-            Object userObj = session.getAttribute("currentUser");
-            if (userObj instanceof com.cinema.model.AuthenticatedUser au && au.getRole() != null) {
-                return au.getRole().trim();
+            if (auth.getAuthorities() != null) {
+                for (GrantedAuthority authority : auth.getAuthorities()) {
+                    String granted = authority.getAuthority();
+                    if (granted != null && granted.startsWith("ROLE_") && granted.length() > 5) {
+                        return granted.substring(5).trim();
+                    }
+                }
             }
         }
 
-        // 2. Check HTTP Header
-        String headerRole = request.getHeader("X-User-Role");
-        if (headerRole != null && !headerRole.isBlank()) {
-            return headerRole.trim();
+        // 2. Check trusted server-side HttpSession
+        if (request != null) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Object authenticated = session.getAttribute(SessionService.ATTR_USER);
+                if (authenticated instanceof AuthenticatedUser user
+                        && user.getRole() != null && !user.getRole().isBlank()) {
+                    return user.getRole().trim();
+                }
+                Object sessionRole = session.getAttribute("role");
+                if (sessionRole == null) {
+                    sessionRole = session.getAttribute("userRole");
+                }
+                if (sessionRole instanceof String str && !str.isBlank()) {
+                    return str.trim();
+                }
+                Object userObj = session.getAttribute("currentUser");
+                if (userObj instanceof AuthenticatedUser au
+                        && au.getRole() != null && !au.getRole().isBlank()) {
+                    return au.getRole().trim();
+                }
+            }
         }
 
-        // 3. Check query parameter
-        String paramRole = request.getParameter("role");
-        if (paramRole != null && !paramRole.isBlank()) {
-            return paramRole.trim();
-        }
-
-        // Default: If no authentication session is present (dev environment), assume MANAGER for UI access
-        return "MANAGER";
+        return null;
     }
 }

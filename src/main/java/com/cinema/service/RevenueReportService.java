@@ -86,6 +86,14 @@ public class RevenueReportService {
         }
 
         // Validation: StartDate cannot be after EndDate
+        if (request.getPreset() != null && !request.getPreset().isBlank()
+                && !request.getPreset().trim().matches("(?i)^(today|last7days|thismonth|thisquarter|all|custom)$")) {
+            throw new IllegalArgumentException("Kỳ báo cáo (preset) không hợp lệ.");
+        }
+        if (request.getReportType() != null && !request.getReportType().isBlank()
+                && !request.getReportType().trim().matches("(?i)^(DAILY|MOVIE|TRANSACTIONS)$")) {
+            throw new IllegalArgumentException("Loại báo cáo chỉ nhận giá trị DAILY, MOVIE hoặc TRANSACTIONS.");
+        }
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
         }
@@ -277,6 +285,9 @@ public class RevenueReportService {
     private String escape(String value) {
         if (value == null) return "\"\"";
         String s = value.replace("\"", "\"\"");
+        if (s.length() > 1 && (s.charAt(0) == '=' || s.charAt(0) == '+' || s.charAt(0) == '-' || s.charAt(0) == '@')) {
+            s = "'" + s;
+        }
         return "\"" + s + "\"";
     }
 }

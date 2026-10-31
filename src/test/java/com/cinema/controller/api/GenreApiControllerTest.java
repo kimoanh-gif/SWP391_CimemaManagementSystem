@@ -43,7 +43,8 @@ class GenreApiControllerTest {
         Genre genre = new Genre(1, "Drama", "Emotional stories", "ACTIVE");
         when(genreService.getAllGenres(any(), any())).thenReturn(List.of(genre));
 
-        mockMvc.perform(get("/api/manager/genres"))
+        mockMvc.perform(get("/api/manager/genres")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].name").value("Drama"));
@@ -58,6 +59,7 @@ class GenreApiControllerTest {
         when(genreService.createGenre(any(GenreForm.class))).thenReturn(created);
 
         mockMvc.perform(post("/api/manager/genres")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isCreated())
@@ -74,6 +76,7 @@ class GenreApiControllerTest {
                 .thenThrow(new DuplicateGenreException("Thể loại 'Action' đã tồn tại trong hệ thống."));
 
         mockMvc.perform(post("/api/manager/genres")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isConflict())
@@ -87,6 +90,7 @@ class GenreApiControllerTest {
         GenreForm form = new GenreForm(null, "", "Invalid", "ACTIVE");
 
         mockMvc.perform(post("/api/manager/genres")
+                        .sessionAttr("userRole", "MANAGER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isBadRequest())
@@ -99,7 +103,8 @@ class GenreApiControllerTest {
         when(genreService.toggleStatus(anyInt()))
                 .thenThrow(new GenreAssociationException("Không thể hủy kích hoạt thể loại đang có phim đang chiếu."));
 
-        mockMvc.perform(patch("/api/manager/genres/1/toggle-status"))
+        mockMvc.perform(patch("/api/manager/genres/1/toggle-status")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -108,7 +113,7 @@ class GenreApiControllerTest {
     @DisplayName("GET /api/manager/genres: Should return 403 Forbidden when caller is not Manager")
     void testUnauthorizedApiAccess() throws Exception {
         mockMvc.perform(get("/api/manager/genres")
-                        .header("X-User-Role", "CUSTOMER"))
+                        .sessionAttr("userRole", "CUSTOMER"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
     }

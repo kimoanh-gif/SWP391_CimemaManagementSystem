@@ -38,7 +38,7 @@ class RevenueReportControllerTest {
 
         when(revenueReportService.getReportData(any())).thenReturn(data);
 
-        mockMvc.perform(get("/manager/reports"))
+        mockMvc.perform(get("/manager/reports").sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/reports"))
                 .andExpect(model().attributeExists("reportData"))
@@ -60,7 +60,7 @@ class RevenueReportControllerTest {
                 .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."))
                 .thenReturn(new RevenueReportData());
 
-        mockMvc.perform(get("/manager/reports")
+        mockMvc.perform(get("/manager/reports").sessionAttr("userRole", "MANAGER")
                         .param("startDate", "2026-10-25")
                         .param("endDate", "2026-10-10"))
                 .andExpect(status().isOk())

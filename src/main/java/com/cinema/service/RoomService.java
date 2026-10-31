@@ -10,14 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
 /**
  * Business logic for Room Management (Screen 56).
- * Enforces BR-08 (active rooms for showtimes) and BR-52 (cannot deactivate rooms with upcoming showtimes).
+ * Enforces BR-08 (active rooms for showtimes) and BR-52 (cannot deactivate
+ * rooms with upcoming showtimes).
  */
 @Service
 public class RoomService {
+
+    private static final Set<String> VALID_STATUSES = Set.of("Ready", "Screening", "Cleaning", "Maintenance");
 
     private final RoomDao roomDao;
     private final SeatDao seatDao;
@@ -36,35 +39,73 @@ public class RoomService {
     }
 
     public void validateCapacityAndLayout(RoomForm form) {
-        if (form == null) return;
+        if (form == null)
+            return;
         if (form.getCapacity() == null || form.getCapacity() <= 0) {
-            throw new IllegalArgumentException("Sức chứa phòng chiếu phải lớn hơn 0 (Please enter total room capacity greater than 0).");
+            throw new IllegalArgumentException(
+                    "Sức chứa phòng chiếu phải lớn hơn 0 (Please enter total room capacity greater than 0).");
         }
         boolean hasRows = form.getTotalRows() != null && form.getTotalRows() > 0;
         boolean hasSeatsPerRow = form.getSeatsPerRow() != null && form.getSeatsPerRow() > 0;
         if (!hasRows || !hasSeatsPerRow) {
-            throw new IllegalArgumentException("Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng lớn hơn 0 (Please enter vertical rows and horizontal seats greater than 0).");
+            throw new IllegalArgumentException(
+                    "Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng lớn hơn 0 (Please enter vertical rows and horizontal seats greater than 0).");
         }
         int expected = form.getTotalRows() * form.getSeatsPerRow();
         if (!form.getCapacity().equals(expected)) {
             throw new IllegalArgumentException(
                     "Tổng sức chứa (" + form.getCapacity() + " ghế) không khớp với số hàng ("
                             + form.getTotalRows() + ") × số ghế mỗi hàng ("
-                            + form.getSeatsPerRow() + " = " + expected + " ghế / phải bằng). Total room capacity must equal vertical rows multiplied by horizontal seats."
-            );
+                            + form.getSeatsPerRow() + " = " + expected
+                            + " ghế / phải bằng). Total room capacity must equal vertical rows multiplied by horizontal seats.");
+        }
+    }
+
+    private void validateUniquenessAndStatus(RoomForm form, Integer excludeRoomId) {
+        if (form == null)
+            return;
+        if (form.getRoomCode() != null && !form.getRoomCode().isBlank()) {
+            form.setRoomCode(form.getRoomCode().trim());
+            if (roomDao.existsByRoomCode(form.getRoomCode(), excludeRoomId)) {
+                throw new IllegalArgumentException(
+                        "Mã phòng chiếu đã tồn tại trong hệ thống. Vui lòng nhập mã phòng khác.");
+            }
+        }
+        if (form.getRoomName() != null && !form.getRoomName().isBlank()) {
+            form.setRoomName(form.getRoomName().trim());
+            if (roomDao.existsByRoomName(form.getRoomName(), excludeRoomId)) {
+                throw new IllegalArgumentException(
+                        "Tên phòng chiếu đã tồn tại trong hệ thống. Vui lòng đặt tên phòng khác.");
+            }
+        }
+        if (form.getStatus() != null && !form.getStatus().isBlank()) {
+            String trimmedStatus = form.getStatus().trim();
+            if (!VALID_STATUSES.contains(trimmedStatus)) {
+                throw new IllegalArgumentException("Trạng thái phòng không hợp lệ: " + trimmedStatus);
+            }
+            form.setStatus(trimmedStatus);
         }
     }
 
     @Transactional
     public void create(RoomForm form) {
         validateCapacityAndLayout(form);
+        validateUniquenessAndStatus(form, null);
         roomDao.insert(form);
     }
 
     @Transactional
     public void update(RoomForm form) {
-        getById(form.getRoomId());
+        Room existing = getById(form.getRoomId());
         validateCapacityAndLayout(form);
+        validateUniquenessAndStatus(form, form.getRoomId());
+
+        if ("Maintenance".equalsIgnoreCase(form.getStatus())
+                && (existing.getStatus() == null || !"Maintenance".equalsIgnoreCase(existing.getStatus()))
+                && roomDao.hasUpcomingShowtimes(form.getRoomId())) {
+            throw new RoomHasActiveShowtimesException(form.getRoomId());
+        }
+
         roomDao.update(form);
     }
 
@@ -95,7 +136,8 @@ public class RoomService {
 
     /**
      * Checks if a room is eligible for showtime scheduling:
-     * Room status must be Ready/Screening AND have at least 1 active usable seat (P1-01).
+     * Room status must be Ready/Screening AND have at least 1 active usable seat
+     * (P1-01).
      */
     public boolean isRoomReadyForShowtime(int roomId) {
         Room room = getById(roomId);
@@ -108,8 +150,8 @@ public class RoomService {
         int showtimes = roomDao.countTotalShowtimes(roomId);
         if (showtimes > 0) {
             throw new RoomHasActiveShowtimesException(
-                    "Không thể xóa phòng '" + room.getRoomName() + "' vì đang có " + showtimes + " suất chiếu liên kết. Vui lòng xóa các suất chiếu trước hoặc chuyển sang trạng thái Bảo trì."
-            );
+                    "Không thể xóa phòng '" + room.getRoomName() + "' vì đang có " + showtimes
+                            + " suất chiếu liên kết. Vui lòng xóa các suất chiếu trước hoặc chuyển sang trạng thái Bảo trì.");
         }
         roomDao.deleteSeatsByRoomId(roomId);
         roomDao.delete(roomId);

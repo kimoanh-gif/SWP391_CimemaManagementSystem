@@ -19,6 +19,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,7 +58,8 @@ class SeatControllerTest {
         when(seatService.getSeatsByRoomId(1)).thenReturn(List.of(s));
         when(pricingService.getAllSeatTypes(anyString())).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/manager/seats?roomId=1"))
+        mockMvc.perform(get("/manager/seats?roomId=1")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/seats"))
                 .andExpect(model().attributeExists("rooms"))
@@ -68,7 +71,7 @@ class SeatControllerTest {
     @Test
     @DisplayName("GET /manager/seats: Non-manager role should be rejected with 403 Forbidden")
     void testViewSeatLayout_Forbidden() throws Exception {
-        mockMvc.perform(get("/manager/seats").param("role", "CUSTOMER"))
+        mockMvc.perform(get("/manager/seats").sessionAttr("userRole", "CUSTOMER"))
                 .andExpect(status().isForbidden());
     }
 
@@ -79,6 +82,7 @@ class SeatControllerTest {
         when(seatService.updateSeat(anyInt(), anyString(), anyString())).thenReturn(s);
 
         mockMvc.perform(post("/manager/seats/update-seat")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("seatId", "1")
                         .param("roomId", "1")
                         .param("seatTypeName", "VIP")
@@ -86,5 +90,21 @@ class SeatControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/manager/seats?roomId=1"))
                 .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    @Test
+    @DisplayName("POST /manager/seats/update-seat: Invalid status rejected by Bean Validation")
+    void testUpdateSeat_InvalidStatus_RedirectsWithError() throws Exception {
+        mockMvc.perform(post("/manager/seats/update-seat")
+                        .sessionAttr("userRole", "MANAGER")
+                        .param("seatId", "1")
+                        .param("roomId", "1")
+                        .param("seatTypeName", "VIP")
+                        .param("status", "InvalidStatus"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/manager/seats?roomId=1"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        verify(seatService, never()).updateSeat(anyInt(), anyString(), anyString());
     }
 }

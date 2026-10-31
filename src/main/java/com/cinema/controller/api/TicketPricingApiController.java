@@ -46,8 +46,7 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getPricingData(
             @RequestParam(required = false) String dayType,
             @RequestParam(required = false) String status,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         List<TicketPricing> rules = pricingService.getAllPricingRules(dayType, status);
@@ -67,8 +66,7 @@ public class TicketPricingApiController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketPricing>> getPricingById(
             @PathVariable int id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing pricing = pricingService.getPricingById(id);
         return ResponseEntity.ok(ApiResponse.ok("Chi tiết cấu hình giá vé", pricing));
@@ -77,8 +75,7 @@ public class TicketPricingApiController {
     @PostMapping
     public ResponseEntity<ApiResponse<TicketPricing>> createPricing(
             @Valid @RequestBody TicketPricingForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing created = pricingService.createPricing(form);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -89,8 +86,7 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<TicketPricing>> updatePricing(
             @PathVariable int id,
             @Valid @RequestBody TicketPricingForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing updated = pricingService.updatePricing(id, form);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật cấu hình giá vé thành công", updated));
@@ -100,8 +96,7 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<TicketPricing>> updateBasePrice(
             @PathVariable int id,
             @RequestParam BigDecimal basePrice,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing updated = pricingService.updateBasePrice(id, basePrice);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật giá cơ sở thành công", updated));
@@ -111,8 +106,7 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<SeatType>> updateSeatTypeMultiplier(
             @PathVariable int id,
             @RequestParam BigDecimal multiplier,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeMultiplier(id, multiplier);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật hệ số giá ghế thành công", updated));
@@ -121,8 +115,7 @@ public class TicketPricingApiController {
     @PostMapping("/seat-type")
     public ResponseEntity<ApiResponse<SeatType>> createSeatType(
             @Valid @RequestBody SeatTypeForm form,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType created = pricingService.createSeatType(form);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -133,8 +126,7 @@ public class TicketPricingApiController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> calculatePrice(
             @RequestParam BigDecimal basePrice,
             @RequestParam BigDecimal multiplier,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         BigDecimal calculated = pricingService.calculateTicketUnitPrice(basePrice, multiplier);
         Map<String, Object> res = new HashMap<>();
@@ -160,13 +152,23 @@ public class TicketPricingApiController {
     }
 
     @ExceptionHandler(com.cinema.exception.DuplicatePricingRuleException.class)
-    public ResponseEntity<ApiResponse<Void>> handleDuplicatePricingRule(com.cinema.exception.DuplicatePricingRuleException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleDuplicatePricingRule(
+            com.cinema.exception.DuplicatePricingRuleException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(
+            org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(java.util.stream.Collectors.joining(", "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
     }
 
     @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)
