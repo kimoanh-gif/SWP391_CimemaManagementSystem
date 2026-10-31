@@ -238,7 +238,11 @@ public class StaffWorkspaceController {
             if (!StaffCounterSalesService.METHOD_CASH.equalsIgnoreCase(method)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select a payment method.");
             }
-            BigDecimal change = counterSalesService.payCash(accountId, bookingId, parseAmount(cashReceived), ageVerified);
+            BigDecimal received = parseAmount(cashReceived);
+            BigDecimal change = counterSalesService.payCash(accountId, bookingId, received, ageVerified);
+            // Cash tendered is not stored, so it reaches the receipt only on this first print.
+            redirectAttributes.addFlashAttribute("cashReceived", received);
+            redirectAttributes.addFlashAttribute("changeDue", change);
             return paymentCompleted(session, redirectAttributes, bookingId,
                     "Cash payment received. Change due: " + StaffCounterSalesService.formatVnd(change) + ".");
         } catch (ResponseStatusException exception) {
@@ -320,8 +324,9 @@ public class StaffWorkspaceController {
         session.removeAttribute(SESSION_SHOWTIME_ID);
         redirectAttributes.addFlashAttribute("successMessage", message + " Booking is now Confirmed.");
         AuthenticatedUser user = sessionService.getCurrentUser(session);
+        // Screen 5.4: Confirm & Paid opens the printing screen (UC24).
         return user != null && user.hasPermission("booking:read")
-                ? "redirect:/staff/bookings/" + bookingId : "redirect:/staff/sales";
+                ? "redirect:/staff/bookings/" + bookingId + "/print" : "redirect:/staff/sales";
     }
 
     private BigDecimal parseAmount(String value) {

@@ -118,6 +118,8 @@
                   <tr><td>Discount</td><td th:text="${print.discountAmount.signum() > 0 ? '-' : ''} + ${#numbers.formatDecimal(print.discountAmount,0,'COMMA',0,'POINT')}"></td></tr>
                   <tr class="receipt-grand"><td>TOTAL PAID</td><td th:text="${#numbers.formatDecimal(print.paidAmount != null ? print.paidAmount : print.totalAmount,0,'COMMA',0,'POINT') + ' VND'}"></td></tr>
                   <tr><td>Payment</td><td th:text="${print.paymentMethod != null ? print.paymentMethod : '-'}"></td></tr>
+                  <tr th:if="${cashReceived != null}"><td>Cash received</td><td th:text="${#numbers.formatDecimal(cashReceived,0,'COMMA',0,'POINT')}"></td></tr>
+                  <tr th:if="${changeDue != null}"><td>Change</td><td th:text="${#numbers.formatDecimal(changeDue,0,'COMMA',0,'POINT')}"></td></tr>
                 </tbody>
               </table>
               <footer class="receipt-foot">Thank you and enjoy the movie!</footer>
