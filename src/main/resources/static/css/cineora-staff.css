@@ -666,3 +666,54 @@ textarea.form-control { resize: vertical; }
 .payment-qr-demo { border: 6px solid #111; border-radius: 8px; font-size: 42px; font-weight: 800;
   background: repeating-linear-gradient(45deg, #fff 0 8px, #f1f1f1 8px 16px); }
 @media (max-width: 900px) { .payment-layout { grid-template-columns: 1fr; } }
+
+/* ---------- Ticket & Receipt Printing (UC24, screen 5.5) ---------- */
+.print-status { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; color: var(--text-muted); font-size: 12.5px; }
+.print-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #16A34A; box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+.print-layout { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
+.print-tickets { display: flex; flex-direction: column; gap: 14px; }
+.print-ticket-row { display: flex; align-items: center; gap: 12px; }
+.print-reprint { white-space: nowrap; font-size: 12px; padding: 7px 12px; }
+.print-ticket { flex: 1; display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
+  border: 1.5px dashed #BDAEAD; border-radius: 10px; background: #fff; color: #111; }
+.print-ticket-main { flex: 1; min-width: 0; }
+.print-ticket-head { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; letter-spacing: .08em; }
+.print-ticket-head strong { color: var(--cineora-red); }
+.print-ticket-movie { margin: 8px 0 10px; font-size: 16px; font-weight: 800; }
+.print-ticket-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 12.5px; }
+.print-ticket-info dt { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.print-ticket-foot { margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+.print-ticket-qr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+.ticket-qr { width: 104px; height: 104px; display: grid; place-items: center; }
+.print-receipt { width: 80mm; max-width: 100%; margin: 0 auto; padding: 14px 12px; background: #fff; color: #111;
+  border: 1px solid var(--border); font-family: "Courier New", monospace; font-size: 12px; line-height: 1.45; }
+.receipt-head { display: flex; flex-direction: column; align-items: center; padding-bottom: 8px; border-bottom: 1px dashed #999; }
+.receipt-head strong { font-size: 14px; }
+.receipt-meta { padding: 8px 0; border-bottom: 1px dashed #999; }
+.receipt-meta div { display: flex; justify-content: space-between; gap: 8px; }
+.receipt-movie { padding: 8px 0; border-bottom: 1px dashed #999; }
+.receipt-lines, .receipt-totals { width: 100%; border-collapse: collapse; }
+.receipt-lines td, .receipt-totals td { padding: 2px 0; vertical-align: top; }
+.receipt-lines td:last-child, .receipt-totals td:last-child { text-align: right; white-space: nowrap; padding-left: 8px; }
+.receipt-lines { padding: 6px 0; border-bottom: 1px dashed #999; }
+.receipt-totals { margin-top: 6px; }
+.receipt-grand td { padding-top: 6px; font-weight: 800; font-size: 13px; }
+.receipt-foot { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #999; text-align: center; }
+@media (max-width: 900px) { .print-layout { grid-template-columns: 1fr; } }
+
+@media print {
+  .staff-sidebar, .sidebar-toggle, .sidebar-overlay, .staff-topbar, .content-heading,
+  .print-status, .print-layout .panel-header, .print-reprint, .alert { display: none !important; }
+  body { background: #fff; }
+  .staff-main { margin-left: 0; }
+  .staff-content { padding: 0; max-width: none; }
+  .print-layout { display: block; }
+  .print-layout .panel { border: none; box-shadow: none; margin: 0; }
+  .print-layout .panel-body { padding: 0; }
+  .print-ticket-row { max-width: 120mm; }
+  .print-ticket { break-inside: avoid; page-break-after: always; border-style: solid; }
+  .print-receipt { border: none; margin: 0; }
+  /* Re-print: only the selected ticket goes to the printer. */
+  body[data-print-ticket] .print-ticket-row:not(:has(.print-selected)),
+  body[data-print-ticket] .print-receipt { display: none !important; }
+}
