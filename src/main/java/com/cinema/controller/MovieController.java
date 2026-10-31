@@ -102,7 +102,8 @@ public class MovieController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("movieForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            String firstError = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            redirectAttributes.addFlashAttribute("errorMessage", firstError);
             return "redirect:/manager/movies";
         }
 

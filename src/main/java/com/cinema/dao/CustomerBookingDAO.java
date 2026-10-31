@@ -723,6 +723,7 @@ public class CustomerBookingDAO {
      * Strictly protects confirmed, paid, or ticketed reservations.
      * Returns the count of released seat holds.
      */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public int releaseExpiredSeatReservations() {
         // 1. Expire pending payment attempts whose QR/session deadline passed.
         jdbcTemplate.update("""
@@ -770,6 +771,7 @@ public class CustomerBookingDAO {
                 """);
     }
 
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public void expireOldHolds() {
         releaseExpiredSeatReservations();
     }

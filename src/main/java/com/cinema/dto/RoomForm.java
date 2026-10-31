@@ -1,7 +1,6 @@
 package com.cinema.dto;
 
 import jakarta.validation.constraints.*;
-import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * DTO for creating/updating a Room.
@@ -12,6 +11,7 @@ public class RoomForm {
 
     @NotBlank(message = "Mã phòng không được để trống")
     @Size(max = 20, message = "Mã phòng không được vượt quá 20 ký tự")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Mã phòng chỉ được chứa chữ cái, chữ số, dấu gạch ngang hoặc gạch dưới")
     private String roomCode;
 
     @NotBlank(message = "Tên phòng không được để trống")
@@ -19,6 +19,7 @@ public class RoomForm {
     private String roomName;
 
     @NotBlank(message = "Loại phòng không được để trống")
+    @Size(max = 50, message = "Loại phòng không được vượt quá 50 ký tự")
     private String roomType; // expected values defined in SRS (IMAX Laser, ...)
 
     @NotNull(message = "Sức chứa không được để trống")
@@ -35,39 +36,128 @@ public class RoomForm {
     @Min(value = 1, message = "Số ghế mỗi hàng (hàng ngang) phải lớn hơn 0")
     @Max(value = 100, message = "Số ghế mỗi hàng không được vượt quá 100")
     private Integer seatsPerRow;
+
+    @Size(max = 100, message = "Thông tin máy chiếu không được vượt quá 100 ký tự")
     private String projector;
+
+    @Size(max = 100, message = "Thông tin hệ thống âm thanh không được vượt quá 100 ký tự")
     private String soundSystem;
+
+    @Size(max = 100, message = "Thông tin kích thước màn chiếu không được vượt quá 100 ký tự")
     private String screenSize;
 
     @NotBlank(message = "Trạng thái phòng không được để trống")
+    @Pattern(regexp = "^(Ready|Screening|Cleaning|Maintenance)$", message = "Trạng thái phòng không hợp lệ. Cho phép: Ready, Screening, Cleaning, Maintenance")
     private String status; // Screening, Ready, Cleaning, Maintenance
 
     @Size(max = 500, message = "Mô tả không được vượt quá 500 ký tự")
     private String description;
 
+    @AssertTrue(message = "Tổng sức chứa không khớp với số hàng × số ghế mỗi hàng")
+    public boolean isCapacityMatchingLayout() {
+        if (capacity == null || totalRows == null || seatsPerRow == null) {
+            return true;
+        }
+        if (capacity <= 0 || totalRows <= 0 || seatsPerRow <= 0) {
+            return true;
+        }
+        return capacity.equals(totalRows * seatsPerRow);
+    }
+
     // Getters & Setters
-    public Integer getRoomId() { return roomId; }
-    public void setRoomId(Integer roomId) { this.roomId = roomId; }
-    public String getRoomCode() { return roomCode; }
-    public void setRoomCode(String roomCode) { this.roomCode = roomCode; }
-    public String getRoomName() { return roomName; }
-    public void setRoomName(String roomName) { this.roomName = roomName; }
-    public String getRoomType() { return roomType; }
-    public void setRoomType(String roomType) { this.roomType = roomType; }
-    public Integer getCapacity() { return capacity; }
-    public void setCapacity(Integer capacity) { this.capacity = capacity; }
-    public Integer getTotalRows() { return totalRows; }
-    public void setTotalRows(Integer totalRows) { this.totalRows = totalRows; }
-    public Integer getSeatsPerRow() { return seatsPerRow; }
-    public void setSeatsPerRow(Integer seatsPerRow) { this.seatsPerRow = seatsPerRow; }
-    public String getProjector() { return projector; }
-    public void setProjector(String projector) { this.projector = projector; }
-    public String getSoundSystem() { return soundSystem; }
-    public void setSoundSystem(String soundSystem) { this.soundSystem = soundSystem; }
-    public String getScreenSize() { return screenSize; }
-    public void setScreenSize(String screenSize) { this.screenSize = screenSize; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public Integer getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(Integer roomId) {
+        this.roomId = roomId;
+    }
+
+    public String getRoomCode() {
+        return roomCode;
+    }
+
+    public void setRoomCode(String roomCode) {
+        this.roomCode = roomCode;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public Integer getTotalRows() {
+        return totalRows;
+    }
+
+    public void setTotalRows(Integer totalRows) {
+        this.totalRows = totalRows;
+    }
+
+    public Integer getSeatsPerRow() {
+        return seatsPerRow;
+    }
+
+    public void setSeatsPerRow(Integer seatsPerRow) {
+        this.seatsPerRow = seatsPerRow;
+    }
+
+    public String getProjector() {
+        return projector;
+    }
+
+    public void setProjector(String projector) {
+        this.projector = projector;
+    }
+
+    public String getSoundSystem() {
+        return soundSystem;
+    }
+
+    public void setSoundSystem(String soundSystem) {
+        this.soundSystem = soundSystem;
+    }
+
+    public String getScreenSize() {
+        return screenSize;
+    }
+
+    public void setScreenSize(String screenSize) {
+        this.screenSize = screenSize;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

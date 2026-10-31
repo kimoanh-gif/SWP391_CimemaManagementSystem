@@ -11,9 +11,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,5 +114,88 @@ class SeatServiceTest {
         List<Seat> result = seatService.generateDefaultLayout(1);
         assertNotNull(result);
         verify(seatDao, atLeastOnce()).insert(any(Seat.class));
+    }
+
+    @Test
+    @DisplayName("P0-01: Seat with active upcoming BOOKED reservation rejects seat type change")
+    void testUpdateSeat_BookedInUpcomingShowtime_RejectsSeatTypeChange() {
+        Seat existing = new Seat(10, 1, "Standard", "A", 1, 1, 1, "Active");
+        when(seatDao.findById(10)).thenReturn(Optional.of(existing));
+        when(seatDao.isSeatBookedInUpcomingShowtimes(10, 1)).thenReturn(true);
+
+        assertThrows(InvalidSeatLayoutException.class, () ->
+                seatService.updateSeat(10, "VIP", "Active")
+        );
+        verify(seatDao, never()).update(any(Seat.class));
+    }
+
+    @Test
+    @DisplayName("P0-01: Seat with active non-expired HELD reservation rejects Maintenance/Disabled status change")
+    void testUpdateSeat_HeldInUpcomingShowtime_RejectsStatusChangeToMaintenanceOrDisabled() {
+        Seat existing = new Seat(11, 1, "Standard", "A", 2, 1, 2, "Active");
+        when(seatDao.findById(11)).thenReturn(Optional.of(existing));
+        when(seatDao.isSeatBookedInUpcomingShowtimes(11, 1)).thenReturn(true);
+
+        assertThrows(InvalidSeatLayoutException.class, () ->
+                seatService.updateSeat(11, "Standard", "Maintenance")
+        );
+        assertThrows(InvalidSeatLayoutException.class, () ->
+                seatService.updateSeat(11, "Standard", "Disabled")
+        );
+        verify(seatDao, never()).update(any(Seat.class));
+    }
+
+    @Test
+    @DisplayName("P0-01: Seat with only past or cancelled/expired bookings allows update")
+    void testUpdateSeat_PastOrCancelledBookings_AllowsUpdate() {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        SeatDao realSeatDao = new SeatDao(jdbcTemplate);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(12), eq(1))).thenReturn(0);
+
+        assertFalse(realSeatDao.isSeatBookedInUpcomingShowtimes(12, 1));
+
+        Seat existing = new Seat(12, 1, "Standard", "A", 3, 1, 3, "Active");
+        when(seatDao.findById(12)).thenReturn(Optional.of(existing));
+        when(seatDao.isSeatBookedInUpcomingShowtimes(12, 1)).thenReturn(false);
+
+        Seat updated = seatService.updateSeat(12, "VIP", "Maintenance");
+        assertNotNull(updated);
+        verify(seatDao).update(any(Seat.class));
+    }
+
+    @Test
+    @DisplayName("P0-01: Seat with no bookings allows seat type and status update")
+    void testUpdateSeat_NoBookings_AllowsUpdate() {
+        Seat existing = new Seat(13, 1, "Standard", "B", 1, 2, 1, "Active");
+        when(seatDao.findById(13)).thenReturn(Optional.of(existing));
+        when(seatDao.isSeatBookedInUpcomingShowtimes(13, 1)).thenReturn(false);
+
+        Seat result = seatService.updateSeat(13, "Couple", "Active");
+        assertNotNull(result);
+        verify(seatDao).update(argThat(s -> s.getSeatId() == 13 && "Couple".equals(s.getSeatTypeName())));
+    }
+
+    @Test
+    @DisplayName("P0-01: SeatDao queries BookingSeat/Booking/Showtime and does not fail-open on SQL exception")
+    void testSeatDao_BookedCheckQueriesBookingSeatAndDoesNotSwallowExceptions() {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        SeatDao realSeatDao = new SeatDao(jdbcTemplate);
+
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        when(jdbcTemplate.queryForObject(sqlCaptor.capture(), eq(Integer.class), eq(15), eq(1))).thenReturn(1);
+
+        assertTrue(realSeatDao.isSeatBookedInUpcomingShowtimes(15, 1));
+        String executedSql = sqlCaptor.getValue();
+        assertTrue(executedSql.contains("BookingSeat"));
+        assertTrue(executedSql.contains("Booking"));
+        assertTrue(executedSql.contains("Showtime"));
+        assertFalse(executedSql.contains("FROM Ticket t"));
+
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(15), eq(1)))
+                .thenThrow(new DataAccessResourceFailureException("DB query failed"));
+
+        assertThrows(DataAccessResourceFailureException.class, () ->
+                realSeatDao.isSeatBookedInUpcomingShowtimes(15, 1)
+        );
     }
 }

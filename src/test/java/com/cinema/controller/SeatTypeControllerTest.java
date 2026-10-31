@@ -1,7 +1,6 @@
 package com.cinema.controller;
 
 import com.cinema.model.SeatType;
-import com.cinema.dto.SeatTypeForm;
 import com.cinema.service.TicketPricingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,8 @@ class SeatTypeControllerTest {
         SeatType st = new SeatType(1, "STD", "Standard", "Standard seat", new BigDecimal("1.00"), "#3B82F6", "Active");
         when(pricingService.getAllSeatTypes(anyString())).thenReturn(List.of(st));
 
-        mockMvc.perform(get("/manager/seat-types"))
+        mockMvc.perform(get("/manager/seat-types")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/seat-types"))
                 .andExpect(model().attributeExists("seatTypes"))
@@ -49,7 +49,7 @@ class SeatTypeControllerTest {
     @Test
     @DisplayName("GET /manager/seat-types: Non-manager role should be rejected with 403 Forbidden")
     void testListSeatTypes_Forbidden() throws Exception {
-        mockMvc.perform(get("/manager/seat-types").param("role", "CUSTOMER"))
+        mockMvc.perform(get("/manager/seat-types").sessionAttr("userRole", "CUSTOMER"))
                 .andExpect(status().isForbidden());
     }
 
@@ -60,6 +60,7 @@ class SeatTypeControllerTest {
         when(pricingService.updateSeatTypeMultiplier(anyInt(), any(BigDecimal.class))).thenReturn(st);
 
         mockMvc.perform(post("/manager/seat-types/multiplier")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("seatTypeId", "1")
                         .param("multiplier", "1.10"))
                 .andExpect(status().is3xxRedirection())

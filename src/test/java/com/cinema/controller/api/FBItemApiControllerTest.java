@@ -26,48 +26,58 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("local")
 public class FBItemApiControllerTest extends com.cinema.support.AuthenticatedMvcTestSupport {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private FBItemService fbItemService;
+        @MockBean
+        private FBItemService fbItemService;
 
-    @Test
-    void testGetAllItems_AuthorizedManager() throws Exception {
-        FBItem item = new FBItem(1, "CB-SOLO", "Combo Solo", "Combo",
-                "1 Bắp + 1 Nước", new BigDecimal("79000"), new BigDecimal("22000"),
-                "https://image.png", "Active");
+        @Test
+        void testGetAllItems_AuthorizedManager() throws Exception {
+                FBItem item = new FBItem(1, "CB-SOLO", "Combo Solo", "Combo",
+                                "1 Bắp + 1 Nước", new BigDecimal("79000"), new BigDecimal("22000"),
+                                "https://image.png", "Active");
 
-        when(fbItemService.getAllItems(any(), any(), any())).thenReturn(List.of(item));
+                when(fbItemService.getAllItems(any(), any(), any())).thenReturn(List.of(item));
 
-        mockMvc.perform(get("/api/manager/fb")
-                        .session(authSession("MANAGER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].itemCode").value("CB-SOLO"));
-    }
+                mockMvc.perform(get("/api/manager/fb")
+                                .session(authSession("MANAGER")))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.data[0].itemCode").value("CB-SOLO"));
+        }
 
-    @Test
-    void testGetAllItems_ForbiddenNonManager() throws Exception {
-        mockMvc.perform(get("/api/manager/fb")
-                        .session(authSession("STAFF")))
-                .andExpect(status().isForbidden());
-    }
+        @Test
+        void testGetAllItems_ForbiddenNonManager() throws Exception {
+                mockMvc.perform(get("/api/manager/fb")
+                                .session(authSession("STAFF")))
+                                .andExpect(status().isForbidden());
+        }
 
-    @Test
-    void testDeleteItemApi_AuthorizedManager() throws Exception {
-        doNothing().when(fbItemService).deleteItem(1);
+        @Test
+        void testDeleteItemApi_AuthorizedManager() throws Exception {
+                doNothing().when(fbItemService).deleteItem(1);
 
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/manager/fb/1")
-                        .session(authSession("MANAGER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-    }
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .delete("/api/manager/fb/1")
+                                .session(authSession("MANAGER")))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true));
+        }
 
-    @Test
-    void testDeleteItemApi_ForbiddenNonManager() throws Exception {
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/manager/fb/1")
-                        .session(authSession("CUSTOMER")))
-                .andExpect(status().isForbidden());
-    }
+        @Test
+        void testDeleteItemApi_ForbiddenNonManager() throws Exception {
+                String invalidJson = "{\"itemCode\":\"CB-LOSS\",\"itemName\":\"Combo Loss\",\"category\":\"Food\",\"sellingPrice\":20000,\"costPrice\":50000}";
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .post("/api/manager/fb")
+                                .session(authSession("MANAGER"))
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.success").value(false));
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .delete("/api/manager/fb/1")
+                                .session(authSession("CUSTOMER")))
+                                .andExpect(status().isForbidden());
+        }
 }

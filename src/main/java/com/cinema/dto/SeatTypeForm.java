@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ public class SeatTypeForm {
 
     @NotBlank(message = "Mã loại ghế không được để trống")
     @Size(max = 50, message = "Mã loại ghế tối đa 50 ký tự")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Mã loại ghế chỉ gồm chữ cái, chữ số, dấu gạch ngang hoặc gạch dưới")
     private String typeCode;
 
     @NotBlank(message = "Tên loại ghế không được để trống")
@@ -31,8 +33,11 @@ public class SeatTypeForm {
     @DecimalMax(value = "3.00", message = "Hệ số giá tối đa là 3.00")
     private BigDecimal priceMultiplier;
 
+    @Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", message = "Mã màu phải đúng định dạng HEX (ví dụ: #3B82F6)")
     private String colorCode = "#3B82F6";
 
+    @NotBlank(message = "Trạng thái không được để trống")
+    @Pattern(regexp = "^(Active|Inactive)$", message = "Trạng thái loại ghế phải là Active hoặc Inactive")
     private String status = "Active";
 
     public SeatTypeForm() {

@@ -1,23 +1,27 @@
 package com.cinema.controller.api;
 
+import com.cinema.dto.ReportFilterForm;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.report.RevenueReportData;
-import com.cinema.model.report.RevenueReportRequest;
 import com.cinema.service.RevenueReportService;
 import com.cinema.util.ManagerSecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 /**
  * REST API for Revenue Report & Export (Screen 47 & 49).
@@ -34,19 +38,25 @@ public class RevenueReportApiController {
 
     @GetMapping("/data")
     public ResponseEntity<ApiResponse<RevenueReportData>> getReportData(
-            @RequestParam(required = false) String preset,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate,
-            @RequestParam(required = false, defaultValue = "DAILY") String reportType,
+            @Valid @ModelAttribute ReportFilterForm reportRequest,
+            BindingResult bindingResult,
             HttpServletRequest request
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
-        RevenueReportRequest reportRequest = new RevenueReportRequest();
-        reportRequest.setPreset(preset != null ? preset : ((startDate != null || endDate != null) ? "custom" : "thismonth"));
-        reportRequest.setStartDate(startDate);
-        reportRequest.setEndDate(endDate);
-        reportRequest.setReportType(reportType);
+        if (reportRequest.getPreset() == null || reportRequest.getPreset().isBlank()) {
+            reportRequest.setPreset((reportRequest.getStartDate() != null || reportRequest.getEndDate() != null) ? "custom" : "thismonth");
+        }
+        if (reportRequest.getReportType() == null || reportRequest.getReportType().isBlank()) {
+            reportRequest.setReportType("DAILY");
+        }
+
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(ApiResponse.error(msg));
+        }
 
         try {
             RevenueReportData data = revenueReportService.getReportData(reportRequest);
@@ -58,19 +68,27 @@ public class RevenueReportApiController {
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportRevenueReport(
-            @RequestParam(required = false) String preset,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate,
-            @RequestParam(required = false, defaultValue = "DAILY") String reportType,
+            @Valid @ModelAttribute ReportFilterForm reportRequest,
+            BindingResult bindingResult,
             HttpServletRequest request
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
-        RevenueReportRequest reportRequest = new RevenueReportRequest();
-        reportRequest.setPreset(preset != null ? preset : ((startDate != null || endDate != null) ? "custom" : "thismonth"));
-        reportRequest.setStartDate(startDate);
-        reportRequest.setEndDate(endDate);
-        reportRequest.setReportType(reportType);
+        if (reportRequest.getPreset() == null || reportRequest.getPreset().isBlank()) {
+            reportRequest.setPreset((reportRequest.getStartDate() != null || reportRequest.getEndDate() != null) ? "custom" : "thismonth");
+        }
+        if (reportRequest.getReportType() == null || reportRequest.getReportType().isBlank()) {
+            reportRequest.setReportType("DAILY");
+        }
+
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+            HttpHeaders errorHeaders = new HttpHeaders();
+            errorHeaders.setContentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8));
+            return new ResponseEntity<>(msg.getBytes(StandardCharsets.UTF_8), errorHeaders, HttpStatus.BAD_REQUEST);
+        }
 
         try {
             byte[] csvBytes = revenueReportService.generateCsvReport(reportRequest);

@@ -39,7 +39,7 @@ class ManagerDashboardApiControllerTest {
 
         when(dashboardService.getDashboardStats()).thenReturn(stats);
 
-        mockMvc.perform(get("/api/manager/dashboard/stats"))
+        mockMvc.perform(get("/api/manager/dashboard/stats").sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalMovies").value(15))

@@ -132,7 +132,7 @@ public class GenreService {
         if (form == null || form.getName() == null || form.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên thể loại không được để trống.");
         }
-        if (form.getName().trim().length() > 100) {
+        if (form.getName().trim().length() < 2 || form.getName().trim().length() > 100) {
             throw new IllegalArgumentException("Tên thể loại không được vượt quá 100 ký tự.");
         }
     }

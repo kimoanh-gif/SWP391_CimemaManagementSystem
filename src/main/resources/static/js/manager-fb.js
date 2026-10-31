@@ -66,6 +66,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Quick edit product
+    const fbFormEl = modal ? modal.querySelector("form") : null;
+    if (fbFormEl) {
+        fbFormEl.addEventListener("submit", (e) => {
+            const code = (document.getElementById("formItemCode")?.value || "").trim();
+            const name = (document.getElementById("formItemName")?.value || "").trim();
+            const sellingPrice = parseFloat(document.getElementById("formSellingPrice")?.value || "0");
+            const costPrice = parseFloat(document.getElementById("formCostPrice")?.value || "0");
+            const category = document.getElementById("formCategory")?.value || "Combo";
+            const itemId = document.getElementById("formItemId")?.value || "";
+            if (!/^[A-Za-z0-9_-]{2,50}$/.test(code)) {
+                e.preventDefault();
+                alert("Mã sản phẩm (SKU) chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới (2-50 ký tự).");
+                return;
+            }
+            if (!name || name.length > 150) {
+                e.preventDefault();
+                alert("Tên sản phẩm không được để trống và tối đa 150 ký tự.");
+                return;
+            }
+            if (isNaN(sellingPrice) || sellingPrice < 0 || isNaN(costPrice) || costPrice < 0) {
+                e.preventDefault();
+                alert("Giá bán và giá vốn không được là số âm.");
+                return;
+            }
+            if (costPrice > sellingPrice) {
+                e.preventDefault();
+                alert("Giá vốn không được lớn hơn giá bán.");
+                return;
+            }
+            if (category === "Combo" && !itemId) {
+                const checked = fbFormEl.querySelectorAll(".combo-comp-cb:checked");
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    alert("Gói Combo phải chọn ít nhất 1 mặt hàng thành phần.");
+                }
+            }
+        });
+    }
     document.querySelectorAll(".btn-edit-fb").forEach(btn => {
         btn.addEventListener("click", () => {
             if (modalDeleteBtn) modalDeleteBtn.style.display = "inline-flex";

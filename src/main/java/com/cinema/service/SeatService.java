@@ -48,6 +48,10 @@ public class SeatService {
 
     @Transactional(rollbackFor = Exception.class)
     public Seat updateSeat(int seatId, String seatTypeName, String status) {
+        if ((seatTypeName == null || seatTypeName.isBlank()) && (status == null || status.isBlank())) {
+            throw new IllegalArgumentException("Phải cung cấp ít nhất loại ghế hoặc trạng thái ghế để cập nhật.");
+        }
+
         Seat seat = getSeatById(seatId);
 
         if (seatTypeName != null && !seatTypeName.isBlank()) {
@@ -294,10 +298,17 @@ public class SeatService {
 
     private void validateSeatType(String typeName) {
         List<SeatType> validTypes = seatTypeDao.findAll("Active");
-        boolean match = validTypes.stream().anyMatch(st ->
-                st.getTypeName().equalsIgnoreCase(typeName) || st.getTypeCode().equalsIgnoreCase(typeName)
-        );
-        if (!match && !"Standard".equalsIgnoreCase(typeName) && !"VIP".equalsIgnoreCase(typeName) && !"Couple".equalsIgnoreCase(typeName) && !"Front".equalsIgnoreCase(typeName)) {
+        if (validTypes != null && !validTypes.isEmpty()) {
+            boolean match = validTypes.stream().anyMatch(st ->
+                    (st.getTypeName() != null && st.getTypeName().equalsIgnoreCase(typeName))
+                            || (st.getTypeCode() != null && st.getTypeCode().equalsIgnoreCase(typeName))
+            );
+            if (!match) {
+                throw new InvalidSeatLayoutException("Loại ghế không hợp lệ hoặc đã ngừng hoạt động: '" + typeName + "'. Phải là loại ghế đã được kích hoạt.");
+            }
+            return;
+        }
+        if (!"Standard".equalsIgnoreCase(typeName) && !"VIP".equalsIgnoreCase(typeName) && !"Couple".equalsIgnoreCase(typeName) && !"Front".equalsIgnoreCase(typeName)) {
             throw new InvalidSeatLayoutException("Loại ghế không hợp lệ: '" + typeName + "'. Phải là loại ghế đã được kích hoạt.");
         }
     }

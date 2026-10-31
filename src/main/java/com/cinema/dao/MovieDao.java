@@ -38,7 +38,10 @@ public class MovieDao {
         movie.setMovieId(rs.getInt("MovieID"));
         movie.setTitle(rs.getString("Title"));
 
-        try { movie.setOriginalTitle(rs.getString("OriginalTitle")); } catch (Exception ignored) {}
+        try {
+            movie.setOriginalTitle(rs.getString("OriginalTitle"));
+        } catch (Exception ignored) {
+        }
         movie.setDuration(rs.getInt("Duration"));
 
         Date releaseDate = rs.getDate("ReleaseDate");
@@ -51,16 +54,41 @@ public class MovieDao {
             if (endDate != null) {
                 movie.setEndDate(endDate.toLocalDate());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
-        try { movie.setLanguage(rs.getString("Language")); } catch (Exception ignored) {}
-        try { movie.setDirector(rs.getString("Director")); } catch (Exception ignored) {}
-        try { movie.setActors(rs.getString("Actors")); } catch (Exception ignored) {}
-        try { movie.setAgeRating(rs.getString("AgeRating")); } catch (Exception ignored) {}
-        try { movie.setDescription(rs.getString("Description")); } catch (Exception ignored) {}
-        try { movie.setPoster(rs.getString("Poster")); } catch (Exception ignored) {}
-        try { movie.setBanner(rs.getString("Banner")); } catch (Exception ignored) {}
-        try { movie.setTrailer(rs.getString("Trailer")); } catch (Exception ignored) {}
+        try {
+            movie.setLanguage(rs.getString("Language"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setDirector(rs.getString("Director"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setActors(rs.getString("Actors"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setAgeRating(rs.getString("AgeRating"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setDescription(rs.getString("Description"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setPoster(rs.getString("Poster"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setBanner(rs.getString("Banner"));
+        } catch (Exception ignored) {
+        }
+        try {
+            movie.setTrailer(rs.getString("Trailer"));
+        } catch (Exception ignored) {
+        }
 
         movie.setStatus(rs.getString("Status"));
 
@@ -74,7 +102,8 @@ public class MovieDao {
             if (updatedAt != null) {
                 movie.setUpdatedAt(updatedAt.toLocalDateTime());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return movie;
     };
@@ -89,7 +118,8 @@ public class MovieDao {
     };
 
     /**
-     * Retrieves movies with multi-criteria filtering: search keyword, genre, age rating, and status.
+     * Retrieves movies with multi-criteria filtering: search keyword, genre, age
+     * rating, and status.
      */
     public List<Movie> findAll(String keyword, Integer genreId, String ageRating, String status) {
         StringBuilder sql = new StringBuilder("""
@@ -203,27 +233,32 @@ public class MovieDao {
     private volatile String writableTrailerColumn = null;
 
     private synchronized void resolveWritableColumns() {
-        if (writablePosterColumn != null) return;
+        if (writablePosterColumn != null)
+            return;
         try {
-            String posterCol = jdbcTemplate.queryForObject("""
-                SELECT CASE 
-                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 1)
-                    THEN 'Poster'
-                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 0)
-                    THEN 'PosterURL'
-                    ELSE 'Poster'
-                END
-                """, String.class);
+            String posterCol = jdbcTemplate.queryForObject(
+                    """
+                            SELECT CASE
+                                WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 1)
+                                THEN 'Poster'
+                                WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'PosterURL' AND is_computed = 0)
+                                THEN 'PosterURL'
+                                ELSE 'Poster'
+                            END
+                            """,
+                    String.class);
 
-            String trailerCol = jdbcTemplate.queryForObject("""
-                SELECT CASE 
-                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 1)
-                    THEN 'Trailer'
-                    WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 0)
-                    THEN 'TrailerURL'
-                    ELSE 'Trailer'
-                END
-                """, String.class);
+            String trailerCol = jdbcTemplate.queryForObject(
+                    """
+                            SELECT CASE
+                                WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 1)
+                                THEN 'Trailer'
+                                WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Movie') AND name = 'TrailerURL' AND is_computed = 0)
+                                THEN 'TrailerURL'
+                                ELSE 'Trailer'
+                            END
+                            """,
+                    String.class);
 
             writablePosterColumn = (posterCol != null && !posterCol.isBlank()) ? posterCol : "Poster";
             writableTrailerColumn = (trailerCol != null && !trailerCol.isBlank()) ? trailerCol : "Trailer";
@@ -330,8 +365,7 @@ public class MovieDao {
                 emptyToNull(form.getBanner()),
                 emptyToNull(form.getTrailer()),
                 form.getStatus() != null ? form.getStatus().trim() : "Upcoming",
-                movieId
-        );
+                movieId);
 
         // Update assigned genres
         assignGenres(movieId, form.getGenreIds());
@@ -409,7 +443,8 @@ public class MovieDao {
     }
 
     /**
-     * BR-07: Retrieves movies available for scheduling showtimes (Upcoming or Now Showing only).
+     * BR-07: Retrieves movies available for scheduling showtimes (Upcoming or Now
+     * Showing only).
      */
     public List<Movie> findMoviesAvailableForShowtimes() {
         String sql = """
@@ -443,7 +478,8 @@ public class MovieDao {
 
     /**
      * Counts how many upcoming/active showtimes are scheduled for this movie.
-     * Considers all active showtimes (Scheduled, Selling, etc.) except Cancelled or Stopped.
+     * Considers all active showtimes (Scheduled, Selling, etc.) except Cancelled or
+     * Stopped.
      */
     public int countUpcomingShowtimesByMovieId(int movieId) {
         String sql = """
@@ -600,14 +636,16 @@ public class MovieDao {
         }
 
         if (genreId != null && genreId > 0) {
-            sql.append(" AND EXISTS (SELECT 1 FROM dbo.MovieGenre mg WHERE mg.MovieID = m.MovieID AND mg.GenreID = ?) ");
+            sql.append(
+                    " AND EXISTS (SELECT 1 FROM dbo.MovieGenre mg WHERE mg.MovieID = m.MovieID AND mg.GenreID = ?) ");
             params.add(genreId);
         }
 
         if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
             if ("NOW_SHOWING".equalsIgnoreCase(status) || "now-showing".equalsIgnoreCase(status)) {
                 sql.append(" AND (UPPER(m.[Status]) IN ('NOW_SHOWING', 'NOW SHOWING', 'ACTIVE') ");
-                sql.append("      OR EXISTS (SELECT 1 FROM dbo.Showtime st WHERE st.MovieID = m.MovieID AND st.StartTime > SYSDATETIME() AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE'))) ");
+                sql.append(
+                        "      OR EXISTS (SELECT 1 FROM dbo.Showtime st WHERE st.MovieID = m.MovieID AND st.StartTime > SYSDATETIME() AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE'))) ");
             } else if ("COMING_SOON".equalsIgnoreCase(status)
                     || "coming-soon".equalsIgnoreCase(status)
                     || "upcoming".equalsIgnoreCase(status)) {
@@ -655,8 +693,27 @@ public class MovieDao {
         jdbcTemplate.update("DELETE FROM MovieGenre WHERE MovieID = ?", movieId);
         try {
             jdbcTemplate.update("DELETE FROM MovieReview WHERE MovieID = ?", movieId);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         jdbcTemplate.update("DELETE FROM Movie WHERE MovieID = ?", movieId);
+    }
+
+    public int countInactiveOrMissingGenres(List<Integer> genreIds) {
+        if (genreIds == null || genreIds.isEmpty())
+            return 0;
+        Set<Integer> distinctIds = new HashSet<>();
+        for (Integer id : genreIds) {
+            if (id != null && id > 0)
+                distinctIds.add(id);
+        }
+        if (distinctIds.isEmpty())
+            return 0;
+        String placeholders = String.join(",", distinctIds.stream().map(x -> "?").toList());
+        String sql = "SELECT COUNT(1) FROM Genre WHERE GenreID IN (" + placeholders
+                + ") AND UPPER([Status]) = 'ACTIVE'";
+        Integer activeCount = jdbcTemplate.queryForObject(sql, Integer.class, distinctIds.toArray());
+        int found = activeCount != null ? activeCount : 0;
+        return Math.max(0, distinctIds.size() - found);
     }
 
     private String emptyToNull(String value) {

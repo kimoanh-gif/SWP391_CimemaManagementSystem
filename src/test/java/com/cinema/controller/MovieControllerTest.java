@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +48,8 @@ class MovieControllerTest {
         when(movieService.getAllMovies(any(), any(), anyString(), anyString())).thenReturn(List.of(movie));
         when(genreService.getAllGenres(any(), anyString())).thenReturn(List.of(new Genre(1, "Sci-Fi", "Desc", "ACTIVE")));
 
-        mockMvc.perform(get("/manager/movies"))
+        mockMvc.perform(get("/manager/movies")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/movies"))
                 .andExpect(model().attributeExists("movies"))
@@ -61,7 +63,7 @@ class MovieControllerTest {
     @Test
     @DisplayName("GET /manager/movies: Non-Manager role should be rejected with 403 Forbidden")
     void testViewMovieList_ForbiddenForCustomer() throws Exception {
-        mockMvc.perform(get("/manager/movies").param("role", "CUSTOMER"))
+        mockMvc.perform(get("/manager/movies").sessionAttr("userRole", "CUSTOMER"))
                 .andExpect(status().isForbidden());
     }
 
@@ -75,6 +77,7 @@ class MovieControllerTest {
         when(movieService.createMovie(any(MovieForm.class))).thenReturn(created);
 
         mockMvc.perform(post("/manager/movies/save")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("title", "Oppenheimer")
                         .param("duration", "180")
                         .param("ageRating", "T18")
@@ -87,14 +90,29 @@ class MovieControllerTest {
     }
 
     @Test
-    @DisplayName("POST /manager/movies/save: Invalid input should redirect with error message")
+    @DisplayName("POST /manager/movies/save: Invalid input or endDate < releaseDate should redirect with error message")
     void testSaveMovie_ValidationFailure() throws Exception {
         mockMvc.perform(post("/manager/movies/save")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("title", "") // Blank title violates @NotBlank
                         .param("duration", "0")) // Invalid duration
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/manager/movies"))
                 .andExpect(flash().attributeExists("errorMessage"));
+
+        mockMvc.perform(post("/manager/movies/save")
+                        .sessionAttr("userRole", "MANAGER")
+                        .param("title", "Test Movie")
+                        .param("duration", "120")
+                        .param("ageRating", "T13")
+                        .param("status", "Upcoming")
+                        .param("releaseDate", "2027-06-20")
+                        .param("endDate", "2027-06-10")) // endDate < releaseDate violates @AssertTrue
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/manager/movies"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        verify(movieService, never()).createMovie(any(MovieForm.class));
     }
 
     @Test
@@ -107,7 +125,8 @@ class MovieControllerTest {
 
         when(movieService.deactivateMovie(5)).thenReturn(movie);
 
-        mockMvc.perform(post("/manager/movies/5/deactivate"))
+        mockMvc.perform(post("/manager/movies/5/deactivate")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/manager/movies"))
                 .andExpect(flash().attributeExists("successMessage"));
@@ -125,7 +144,8 @@ class MovieControllerTest {
 
         when(movieService.reactivateMovie(5)).thenReturn(movie);
 
-        mockMvc.perform(post("/manager/movies/5/reactivate"))
+        mockMvc.perform(post("/manager/movies/5/reactivate")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/manager/movies"))
                 .andExpect(flash().attributeExists("successMessage"));
