@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/cinema-header-footer :: metaHead('Policies & Support')}"><title>Policies | CINEORA</title></head>
-<body><div th:replace="~{fragments/cinema-header-footer :: header('policies')}"></div>
+<body class="cineora-catalog-page"><div th:replace="~{fragments/cinema-header-footer :: header('policies')}"></div>
 <main class="section-shell" style="padding:3rem 0 5rem;"><p class="section-eyebrow">POLICIES &amp; SUPPORT</p><h1 style="font-size:clamp(2rem,4vw,3.3rem);margin:.4rem 0 1rem;">Plan your CINEORA visit with confidence</h1><p style="color:var(--text-secondary);max-width:720px;">Clear information about rewards, bookings, tickets, vouchers and account privacy.</p>
 <div class="promo-grid" style="margin-top:2rem;"><article class="promo-card" th:each="p:${policies}"><div class="promo-body"><h2 class="promo-title" th:text="${p.title}">Policy</h2><p class="promo-desc" th:text="${p.summary}">Summary</p><a class="section-link" th:href="@{/policies/{slug}(slug=${p.slug})}">Read policy →</a></div></article></div></main>
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div><th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block></body></html>

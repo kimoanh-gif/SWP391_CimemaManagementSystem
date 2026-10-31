@@ -41,7 +41,10 @@ public class LoyaltyPointDAO {
                     WHERE parent_object_id=OBJECT_ID(N'dbo.LoyaltyTransaction')
                       AND definition LIKE '%TransactionType%';
                     IF @CheckName IS NOT NULL
-                        EXEC(N'ALTER TABLE dbo.LoyaltyTransaction DROP CONSTRAINT '+QUOTENAME(@CheckName));
+                    BEGIN
+                        DECLARE @DropCheckSql NVARCHAR(500)=N'ALTER TABLE dbo.LoyaltyTransaction DROP CONSTRAINT '+QUOTENAME(@CheckName);
+                        EXEC sys.sp_executesql @DropCheckSql;
+                    END;
                     ALTER TABLE dbo.LoyaltyTransaction WITH CHECK ADD CONSTRAINT CK_LoyaltyTransaction_Type
                         CHECK (TransactionType IN ('EARN','REDEEM','ADJUST','EXPIRE'));
                 END;

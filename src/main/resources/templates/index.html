@@ -340,7 +340,7 @@
         </div>
 
         <div class="promo-grid">
-            <article class="promo-card" th:each="promo : ${promotions}">
+            <article class="promo-card" th:each="promo, stat : ${promotions}" th:if="${stat.index < 3}">
                 <div class="promo-banner-wrap">
                     <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
