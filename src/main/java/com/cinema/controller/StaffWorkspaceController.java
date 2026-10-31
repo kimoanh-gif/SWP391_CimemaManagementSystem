@@ -5,6 +5,7 @@ import com.cinema.model.AuthenticatedUser;
 import com.cinema.model.PaymentView;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
+import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffNewsArticle;
 import com.cinema.service.CustomerBookingService;
 import com.cinema.service.SessionService;
@@ -14,6 +15,7 @@ import com.cinema.service.StaffOperationsService;
 import com.cinema.service.VnpayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,6 +48,9 @@ public class StaffWorkspaceController {
     private final StaffCounterSalesService counterSalesService;
     private final StaffOperationsService operationsService;
     private final VnpayService vnpayService;
+
+    @Value("${app.public-base-url:}")
+    private String publicBaseUrl;
 
     public StaffWorkspaceController(SessionService sessionService, StaffNewsService staffNewsService,
                                     StaffCounterSalesService counterSalesService,
@@ -359,6 +365,33 @@ public class StaffWorkspaceController {
         model.addAttribute("user", sessionService.getCurrentUser(session));
         model.addAttribute("booking", detail);
         return "staff/booking-detail";
+    }
+
+    @GetMapping("/bookings/{id}/print")
+    public String printBooking(@PathVariable int id, HttpSession session, Model model,
+                               RedirectAttributes redirectAttributes) {
+        Integer accountId = staffAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        StaffBookingPrint print;
+        try {
+            print = operationsService.printData(accountId, sessionService.currentRole(session), id);
+        } catch (ResponseStatusException exception) {
+            if (exception.getStatusCode() != HttpStatus.CONFLICT) throw exception;
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getReason());
+            return "redirect:/staff/bookings/" + id;
+        }
+        model.addAttribute("user", sessionService.getCurrentUser(session));
+        model.addAttribute("print", print);
+        model.addAttribute("ticketVerifyBaseUrl", ticketVerifyBaseUrl());
+        return "staff/booking-print";
+    }
+
+    // Printed QR codes carry the same verification link as the customer's e-ticket.
+    private String ticketVerifyBaseUrl() {
+        String base = publicBaseUrl != null && !publicBaseUrl.isBlank()
+                ? publicBaseUrl.trim().replaceAll("/+$", "")
+                : ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
+        return base + "/ticket/verify/";
     }
 
     @GetMapping("/check-in")
