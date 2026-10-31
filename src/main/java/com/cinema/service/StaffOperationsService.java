@@ -4,6 +4,7 @@ import com.cinema.dao.StaffNewsDAO;
 import com.cinema.dao.StaffOperationsDAO;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
+import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,19 @@ public class StaffOperationsService {
         return staffOperationsDAO.findBookingDetail(bookingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Booking was not found."));
+    }
+
+    /** Tickets and receipt for printing (UC24). Only a paid booking has valid tickets to print (BR-32). */
+    public StaffBookingPrint printData(int accountId, String role, int bookingId) {
+        requireBookingViewer(accountId, role);
+        StaffBookingPrint print = staffOperationsDAO.findBookingPrint(bookingId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Booking was not found."));
+        if (!print.printable()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only confirmed (paid) bookings have tickets to print.");
+        }
+        return print;
     }
 
     // Staff can view all bookings, online ones included, but only with an active staff profile.
