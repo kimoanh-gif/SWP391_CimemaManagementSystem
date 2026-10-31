@@ -3,6 +3,7 @@ package com.cinema.dao;
 import com.cinema.model.PublicShowtime;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingListItem;
+import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -171,7 +172,69 @@ public class StaffOperationsDAO {
                 rs.getString("RowLabel") + rs.getInt("SeatNumber"),
                 rs.getString("TypeName"), rs.getBigDecimal("UnitPrice"), rs.getString("Status")
         ), bookingId);
-        List<StaffBookingDetail.FoodLine> foods = jdbcTemplate.query("""
+        return Optional.of(new StaffBookingDetail(
+                header.bookingId(), header.bookingCode(), header.bookingType(), header.status(),
+                header.bookingTime(), header.customerName(), header.phone(), header.email(),
+                header.movieTitle(), header.roomName(), header.showtime(), header.subtotal(),
+                header.discountAmount(), header.totalAmount(), seats, findFoodLines(bookingId)
+        ));
+    }
+
+    public Optional<StaffBookingPrint> findBookingPrint(int bookingId) {
+        // Cashier is the staff who sold a counter booking; the latest PAID attempt is the settled payment (BR-41).
+        List<StaffBookingPrint> matches = jdbcTemplate.query("""
+                SELECT b.BookingID, b.BookingCode, b.BookingType, b.[Status], m.Title, r.RoomName,
+                       st.StartTime, b.Subtotal, b.DiscountAmount, b.TotalAmount,
+                       p.Method, p.Amount, p.PaidAt, cashier.FullName AS CashierName
+                FROM dbo.Booking b
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID = st.MovieID
+                JOIN dbo.Room r ON r.RoomID = st.RoomID
+                LEFT JOIN dbo.Staff s ON s.StaffID = b.StaffID
+                LEFT JOIN dbo.Account cashier ON cashier.AccountID = s.AccountID
+                OUTER APPLY (
+                    SELECT TOP 1 pay.Method, pay.Amount, pay.PaidAt
+                    FROM dbo.Payment pay
+                    WHERE pay.BookingID = b.BookingID AND UPPER(pay.[Status]) = 'PAID'
+                    ORDER BY pay.PaidAt DESC, pay.PaymentID DESC
+                ) p
+                WHERE b.BookingID = ?
+                """, (rs, rowNum) -> new StaffBookingPrint(
+                rs.getInt("BookingID"), rs.getString("BookingCode"), rs.getString("BookingType"),
+                rs.getString("Status"), rs.getString("Title"), rs.getString("RoomName"),
+                rs.getObject("StartTime", java.time.LocalDateTime.class),
+                rs.getBigDecimal("Subtotal"), rs.getBigDecimal("DiscountAmount"),
+                rs.getBigDecimal("TotalAmount"), rs.getString("Method"), rs.getBigDecimal("Amount"),
+                rs.getObject("PaidAt", java.time.LocalDateTime.class), rs.getString("CashierName"),
+                List.of(), List.of()
+        ), bookingId);
+        if (matches.isEmpty()) return Optional.empty();
+        StaffBookingPrint header = matches.get(0);
+        List<StaffBookingPrint.TicketLine> tickets = jdbcTemplate.query("""
+                SELECT t.TicketID, t.QRCode, s.RowLabel, s.SeatNumber, sty.TypeName,
+                       bs.UnitPrice, t.TicketStatus
+                FROM dbo.Ticket t
+                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
+                JOIN dbo.Seat s ON s.SeatID = bs.SeatID
+                JOIN dbo.SeatType sty ON sty.SeatTypeID = s.SeatTypeID
+                WHERE bs.BookingID = ?
+                ORDER BY s.GridRow, s.GridColumn
+                """, (rs, rowNum) -> new StaffBookingPrint.TicketLine(
+                rs.getInt("TicketID"), rs.getString("QRCode"),
+                rs.getString("RowLabel") + rs.getInt("SeatNumber"), rs.getString("TypeName"),
+                rs.getBigDecimal("UnitPrice"), rs.getString("TicketStatus")
+        ), bookingId);
+        return Optional.of(new StaffBookingPrint(
+                header.bookingId(), header.bookingCode(), header.bookingType(), header.status(),
+                header.movieTitle(), header.roomName(), header.showtime(), header.subtotal(),
+                header.discountAmount(), header.totalAmount(), header.paymentMethod(),
+                header.paidAmount(), header.paidAt(), header.cashierName(), tickets,
+                findFoodLines(bookingId)
+        ));
+    }
+
+    private List<StaffBookingDetail.FoodLine> findFoodLines(int bookingId) {
+        return jdbcTemplate.query("""
                 SELECT item.[Name], bfb.Quantity, bfb.UnitPrice,
                        bfb.Quantity * bfb.UnitPrice AS Subtotal
                 FROM dbo.BookingFoodBeverage bfb
@@ -182,12 +245,6 @@ public class StaffOperationsDAO {
                 rs.getString("Name"), rs.getInt("Quantity"),
                 rs.getBigDecimal("UnitPrice"), rs.getBigDecimal("Subtotal")
         ), bookingId);
-        return Optional.of(new StaffBookingDetail(
-                header.bookingId(), header.bookingCode(), header.bookingType(), header.status(),
-                header.bookingTime(), header.customerName(), header.phone(), header.email(),
-                header.movieTitle(), header.roomName(), header.showtime(), header.subtotal(),
-                header.discountAmount(), header.totalAmount(), seats, foods
-        ));
     }
 
     public int checkInBooking(String bookingCode) {

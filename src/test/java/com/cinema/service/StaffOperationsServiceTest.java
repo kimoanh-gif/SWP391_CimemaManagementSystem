@@ -4,6 +4,7 @@ import com.cinema.dao.StaffNewsDAO;
 import com.cinema.dao.StaffOperationsDAO;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
+import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,6 +79,41 @@ class StaffOperationsServiceTest {
     }
 
     @Test
+    void loadsTicketsAndReceiptForAConfirmedBooking() {
+        StaffBookingPrint.TicketLine ticket = new StaffBookingPrint.TicketLine(
+                123, "CINEORA-abc", "E5", "VIP", new BigDecimal("120000"), "VALID");
+        when(staffNewsDAO.findActiveStaffId(15)).thenReturn(Optional.of(6));
+        when(operationsDAO.findBookingPrint(40)).thenReturn(Optional.of(print("CONFIRMED", List.of(ticket))));
+
+        StaffBookingPrint print = service.printData(15, "STAFF", 40);
+
+        assertEquals(1, print.tickets().size());
+        assertEquals("TK-00000123", print.tickets().get(0).ticketCode());
+        assertEquals("CASH", print.paymentMethod());
+    }
+
+    @Test
+    void refusesToPrintAnUnpaidBooking() {
+        when(staffNewsDAO.findActiveStaffId(15)).thenReturn(Optional.of(6));
+        when(operationsDAO.findBookingPrint(41)).thenReturn(Optional.of(print("PAYMENT_PENDING", List.of())));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.printData(15, "STAFF", 41));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    }
+
+    @Test
+    void reportsMissingBookingWhenPrinting() {
+        when(operationsDAO.findBookingPrint(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.printData(1, "MANAGER", 99));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    @Test
     void bookingSearchRequiresAnActiveStaffProfile() {
         when(staffNewsDAO.findActiveStaffId(15)).thenReturn(Optional.empty());
 
@@ -97,6 +133,12 @@ class StaffOperationsServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verifyNoInteractions(operationsDAO);
+    }
+
+    private static StaffBookingPrint print(String status, List<StaffBookingPrint.TicketLine> tickets) {
+        return new StaffBookingPrint(40, "BK40", "COUNTER", status, "Movie", "Room 1", null,
+                new BigDecimal("120000"), BigDecimal.ZERO, new BigDecimal("120000"),
+                "CASH", new BigDecimal("120000"), null, "Staff Name", tickets, List.of());
     }
 
     @Test
