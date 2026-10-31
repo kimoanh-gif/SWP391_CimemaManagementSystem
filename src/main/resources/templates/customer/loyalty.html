@@ -89,8 +89,19 @@
                 </div>
 
                 <p class="loyalty-muted loyalty-rule" style="margin-top:20px;font-size:.8rem;">
-                    Earn 1 point for every 10,000 VND successfully paid, multiplied by your current rank rate. Rewards are recorded once per booking and cannot be edited manually.
+                    Earn 1 point for every 10,000 VND successfully paid, multiplied by your current rank rate. Each earning batch expires at the end of its second month.
                 </p>
+                <div th:if="${loyalty.upcomingExpiry}" style="margin-top:12px;padding:14px 16px;border-radius:12px;background:#fff6df;border:1px solid #f3c96b;color:#6b4700;">
+                    <strong style="display:block;margin-bottom:4px;">Points expiring soon</strong>
+                    <span><b th:text="${#numbers.formatInteger(loyalty.nextExpiringPoints(),1,'COMMA')}">120</b> points will expire on
+                        <b th:text="${#temporals.format(loyalty.nextExpiryDate(),'MMMM d, yyyy')}">March 31, 2027</b>.
+                        Use them before they expire.</span>
+                </div>
+                <div th:unless="${loyalty.upcomingExpiry}" style="margin-top:12px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.55);border:1px solid var(--border-subtle);">
+                    <strong style="display:block;margin-bottom:4px;">No points expiring soon</strong>
+                    <span class="loyalty-muted">You currently have no active point batch with an upcoming expiry date.</span>
+                </div>
+                <a th:href="@{/policies/rewards}" class="profile-button" style="display:inline-flex;margin-top:12px;">Learn how CINEORA Rewards works →</a>
             </section>
 
             <!-- Rank Benefits -->
@@ -129,7 +140,7 @@
         </section>
 
         <section th:if="${loyalty != null}" class="profile-card loyalty-card loyalty-how" style="margin-top:22px;">
-            <div><p class="profile-eyebrow">HOW IT WORKS</p><h3>Earn rewards automatically</h3><p class="loyalty-muted">Complete a payment and your points are added immediately. Cancelled, failed, expired, or unpaid bookings never earn points.</p></div>
+            <div><p class="profile-eyebrow">HOW IT WORKS</p><h3>Earn rewards automatically</h3><p class="loyalty-muted">Complete a payment and your points are added immediately. Membership tiers are reviewed in two cycles: Jan–Jun and Jul–Dec. You move up immediately when eligible; a new cycle resets tier points and may return your tier to Standard.</p></div>
             <div class="loyalty-steps"><span><b>1</b> Pay successfully</span><span><b>2</b> Earn points</span><span><b>3</b> Unlock higher ranks</span></div>
         </section>
     </div>

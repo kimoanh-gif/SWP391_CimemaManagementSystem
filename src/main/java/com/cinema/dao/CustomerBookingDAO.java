@@ -530,13 +530,20 @@ public class CustomerBookingDAO {
 
     private void awardLoyaltyPoints(int bookingId) {
         jdbcTemplate.update("""
+                DECLARE @CycleStart DATE=DATEFROMPARTS(YEAR(GETDATE()),CASE WHEN MONTH(GETDATE())<=6 THEN 1 ELSE 7 END,1);
+                UPDATE c SET TierPoints=0,TierCycleStart=@CycleStart,RankID=(
+                    SELECT TOP 1 RankID FROM dbo.MembershipRank WHERE IsActive=1 ORDER BY MinPoints)
+                FROM dbo.Customer c JOIN dbo.Booking b ON b.CustomerID=c.CustomerID
+                WHERE b.BookingID=? AND c.TierCycleStart<>@CycleStart;
+
                 DECLARE @Award TABLE (CustomerID INT, Points INT);
-                INSERT dbo.LoyaltyTransaction(CustomerID,BookingID,Points,TransactionType,[Description])
+                INSERT dbo.LoyaltyTransaction(CustomerID,BookingID,Points,TransactionType,[Description],ExpiresAt)
                 OUTPUT inserted.CustomerID,inserted.Points INTO @Award(CustomerID,Points)
                 SELECT b.CustomerID,b.BookingID,
                        CONVERT(INT,FLOOR((b.TotalAmount / 10000.0) * COALESCE(
                            CASE WHEN ISJSON(mr.Benefits)=1 THEN TRY_CONVERT(DECIMAL(8,2),JSON_VALUE(mr.Benefits,'$.pointsRate')) END,1))),
-                       'EARN',CONCAT(N'Points earned from booking ',b.BookingCode)
+                       'EARN',CONCAT(N'Points earned from booking ',b.BookingCode),
+                       DATEADD(NANOSECOND,-100,DATEADD(DAY,1,CONVERT(DATETIME2,EOMONTH(SYSDATETIME(),2))))
                 FROM dbo.Booking b
                 JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
                 LEFT JOIN dbo.MembershipRank mr ON mr.RankID=c.RankID
@@ -551,7 +558,7 @@ public class CustomerBookingDAO {
                 FROM dbo.Customer c JOIN @Award a ON a.CustomerID=c.CustomerID
                 CROSS APPLY (SELECT TOP 1 mr.RankID FROM dbo.MembershipRank mr
                              WHERE mr.IsActive=1 AND mr.MinPoints<=c.TierPoints ORDER BY mr.MinPoints DESC) ranked;
-                """, bookingId);
+                """, bookingId, bookingId);
     }
 
     private void ensureLoyaltySchema() {
@@ -563,6 +570,7 @@ public class CustomerBookingDAO {
                         LoyaltyTransactionID INT IDENTITY(1,1) PRIMARY KEY,CustomerID INT NOT NULL,
                         BookingID INT NULL,Points INT NOT NULL,TransactionType VARCHAR(20) NOT NULL,
                         [Description] NVARCHAR(250) NOT NULL,CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+                        ExpiresAt DATETIME2 NULL,ExpiredAt DATETIME2 NULL,
                         CONSTRAINT FK_LoyaltyTx_Customer FOREIGN KEY(CustomerID) REFERENCES dbo.Customer(CustomerID),
                         CONSTRAINT FK_LoyaltyTx_Booking FOREIGN KEY(BookingID) REFERENCES dbo.Booking(BookingID));
                       CREATE UNIQUE INDEX UX_LoyaltyTransaction_BookingEarn ON dbo.LoyaltyTransaction(BookingID,TransactionType)

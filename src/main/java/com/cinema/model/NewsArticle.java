@@ -18,7 +18,7 @@ public class NewsArticle {
     private LocalDateTime createdAt;
     private LocalDateTime publishedAt;
     private String authorName;
-    private String category = "Điện Ảnh";
+    private String category = "Cinema News";
 
     public NewsArticle() {
     }
@@ -107,7 +107,7 @@ public class NewsArticle {
     }
 
     public String getCategory() {
-        return category != null ? category : "Tin Điện Ảnh";
+        return category != null ? category : "Cinema News";
     }
 
     public void setCategory(String category) {

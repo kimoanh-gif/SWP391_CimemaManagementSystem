@@ -101,6 +101,7 @@ public class SecurityConfig {
                         "/showtimes", "/showtimes/**",
                         "/promotions-news", "/promotions-news/**",
                         "/promotions/**", "/news/**",
+                        "/policies", "/policies/**",
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/error", "/favicon.ico",
                         "/oauth2/**", "/login/oauth2/**",

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title th:text="'Error ' + ${status} + ' | CINEORA'">Error | CINEORA</title>
@@ -12,14 +12,14 @@
 <header class="topbar"><a class="brand" href="/"><img src="/images/cineora-logo.png" alt="CINEORA"><span><strong>CINEORA</strong><small>EVERY STORY BEGINS HERE</small></span></a></header>
 <main class="shell"><section class="card">
   <div class="visual"><p class="code" th:text="${status}">404</p><span>REQUEST INTERRUPTED</span></div>
-  <div class="content"><p class="eyebrow">CINEORA SYSTEM NOTICE</p><h1 th:text="${headline}">Không tìm thấy trang</h1><p class="message" th:text="${message}">Trang bạn yêu cầu không tồn tại.</p>
-    <section class="diagnostic" aria-label="Error details"><header><span>THÔNG TIN LỖI</span><span th:text="${errorType}">HTTP 404</span></header>
+  <div class="content"><p class="eyebrow">CINEORA SYSTEM NOTICE</p><h1 th:text="${headline}">Page not found</h1><p class="message" th:text="${message}">The requested page does not exist.</p>
+    <section class="diagnostic" aria-label="Error details"><header><span>ERROR DETAILS</span><span th:text="${errorType}">HTTP 404</span></header>
       <div class="log-row"><b>Status</b><span th:text="${status + ' · ' + error}">404 · Not Found</span></div>
       <div class="log-row" th:if="${path}"><b>Request</b><span th:text="${path}">/unknown</span></div>
       <div class="log-row"><b>Error</b><span th:text="${errorDetail}">Not Found</span></div>
       <div class="log-row" th:if="${rootCause != null and !#strings.isEmpty(rootCause)}"><b>Root cause</b><span th:text="${rootCause}">Cause</span></div>
     </section>
-    <div class="actions"><a class="button primary" href="/">Về trang chủ</a><a class="button" href="javascript:history.back()">Quay lại</a></div><p class="meta"><span th:text="${timestamp}">2026-01-01 00:00:00 UTC</span></p>
+    <div class="actions"><a class="button primary" href="/">Return home</a><a class="button" href="javascript:history.back()">Go back</a></div><p class="meta"><span th:text="${timestamp}">2026-01-01 00:00:00 UTC</span></p>
   </div>
 </section></main>
 </body></html>

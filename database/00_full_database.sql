@@ -158,6 +158,8 @@ BEGIN
         [Address] NVARCHAR(255) NULL,
         AvailablePoints INT NOT NULL CONSTRAINT DF_Customer_AvailablePoints DEFAULT 0,
         TierPoints INT NOT NULL CONSTRAINT DF_Customer_TierPoints DEFAULT 0,
+        TierCycleStart DATE NOT NULL CONSTRAINT DF_Customer_TierCycleStart DEFAULT
+            (DATEFROMPARTS(YEAR(GETDATE()), CASE WHEN MONTH(GETDATE()) <= 6 THEN 1 ELSE 7 END, 1)),
         ReceivePromotionEmail BIT NOT NULL CONSTRAINT DF_Customer_PromotionEmail DEFAULT 0,
         CONSTRAINT FK_Customer_Account FOREIGN KEY (AccountID) REFERENCES dbo.Account(AccountID),
         CONSTRAINT FK_Customer_MembershipRank FOREIGN KEY (RankID) REFERENCES dbo.MembershipRank(RankID),
@@ -585,12 +587,39 @@ BEGIN
         TransactionType VARCHAR(20) NOT NULL,
         [Description] NVARCHAR(250) NOT NULL,
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_LoyaltyTransaction_CreatedAt DEFAULT SYSDATETIME(),
+        ExpiresAt DATETIME2 NULL,
+        ExpiredAt DATETIME2 NULL,
         CONSTRAINT FK_LoyaltyTransaction_Customer FOREIGN KEY (CustomerID) REFERENCES dbo.Customer(CustomerID),
         CONSTRAINT FK_LoyaltyTransaction_Booking FOREIGN KEY (BookingID) REFERENCES dbo.Booking(BookingID),
         CONSTRAINT CK_LoyaltyTransaction_Points CHECK (Points <> 0),
-        CONSTRAINT CK_LoyaltyTransaction_Type CHECK (TransactionType IN ('EARN','REDEEM','ADJUST'))
+        CONSTRAINT CK_LoyaltyTransaction_Type CHECK (TransactionType IN ('EARN','REDEEM','ADJUST','EXPIRE'))
     );
 END;
+GO
+
+/* Shopee-style loyalty lifecycle: spendable points expire by earning batch and
+   membership tier points are earned inside Jan-Jun / Jul-Dec cycles. */
+IF COL_LENGTH(N'dbo.Customer', N'TierCycleStart') IS NULL
+BEGIN
+    EXEC(N'ALTER TABLE dbo.Customer ADD TierCycleStart DATE NULL');
+    EXEC(N'UPDATE dbo.Customer SET TierCycleStart = DATEFROMPARTS(YEAR(GETDATE()), CASE WHEN MONTH(GETDATE()) <= 6 THEN 1 ELSE 7 END, 1) WHERE TierCycleStart IS NULL');
+    EXEC(N'ALTER TABLE dbo.Customer ALTER COLUMN TierCycleStart DATE NOT NULL');
+    EXEC(N'ALTER TABLE dbo.Customer ADD CONSTRAINT DF_Customer_TierCycleStart DEFAULT (DATEFROMPARTS(YEAR(GETDATE()), CASE WHEN MONTH(GETDATE()) <= 6 THEN 1 ELSE 7 END, 1)) FOR TierCycleStart');
+END;
+IF COL_LENGTH(N'dbo.LoyaltyTransaction', N'ExpiresAt') IS NULL
+    ALTER TABLE dbo.LoyaltyTransaction ADD ExpiresAt DATETIME2 NULL;
+IF COL_LENGTH(N'dbo.LoyaltyTransaction', N'ExpiredAt') IS NULL
+    ALTER TABLE dbo.LoyaltyTransaction ADD ExpiredAt DATETIME2 NULL;
+
+DECLARE @LoyaltyTypeCheck SYSNAME;
+SELECT TOP (1) @LoyaltyTypeCheck = cc.[name]
+FROM sys.check_constraints cc
+WHERE cc.parent_object_id = OBJECT_ID(N'dbo.LoyaltyTransaction')
+  AND cc.definition LIKE '%TransactionType%';
+IF @LoyaltyTypeCheck IS NOT NULL
+    EXEC(N'ALTER TABLE dbo.LoyaltyTransaction DROP CONSTRAINT ' + QUOTENAME(@LoyaltyTypeCheck));
+ALTER TABLE dbo.LoyaltyTransaction WITH CHECK ADD CONSTRAINT CK_LoyaltyTransaction_Type
+    CHECK (TransactionType IN ('EARN','REDEEM','ADJUST','EXPIRE'));
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.LoyaltyTransaction') AND [name]=N'UX_LoyaltyTransaction_BookingEarn')
@@ -1272,7 +1301,7 @@ DECLARE @DemoNewsStaffID INT = (
 );
 
 IF @DemoNewsStaffID IS NOT NULL
-   AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title = N'Lịch chiếu và ưu đãi tuần này')
+   AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title IN (N'Lịch chiếu và ưu đãi tuần này',N'Weekly Showtimes and Member Offers'))
 BEGIN
     INSERT dbo.News (
         CreatedByStaffID, ReviewedByAccountID, Title, Content,
@@ -1293,7 +1322,18 @@ SET Title=N'Weekly Showtimes and Member Offers',
     Content=N'Explore this week''s newest showtimes and enjoy exclusive benefits when booking with your CINEORA member account.',
     ThumbnailURL=N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop&q=85'
 WHERE Title=N'Lịch chiếu và ưu đãi tuần này'
-   OR ThumbnailURL LIKE N'%photo-1489599849927%';
+;
+
+;WITH DuplicateNews AS (
+    SELECT NewsID,ROW_NUMBER() OVER (PARTITION BY Title ORDER BY COALESCE(PublishedAt,CreatedAt),NewsID) AS DuplicateNumber
+    FROM dbo.News WHERE Title=N'Weekly Showtimes and Member Offers' AND UPPER([Status])='PUBLISHED'
+)
+UPDATE n SET [Status]='ARCHIVED'
+FROM dbo.News n JOIN DuplicateNews d ON d.NewsID=n.NewsID
+WHERE d.DuplicateNumber>1;
+
+UPDATE dbo.News SET ThumbnailURL=N'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&auto=format&fit=crop&q=85'
+WHERE Title=N'Weekly Showtimes and Member Offers';
 
 UPDATE dbo.News
 SET Title=N'October Movies You Should Not Miss',
@@ -1304,9 +1344,72 @@ WHERE Title LIKE N'%Demo:%';
 IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Experience Movies with Dolby Atmos')
     INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
     VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),N'Experience Movies with Dolby Atmos',N'Discover immersive, multidimensional sound in our premium Dolby Atmos auditorium.',N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1000','PUBLISHED',SYSDATETIME(),SYSDATETIME(),SYSDATETIME());
+UPDATE dbo.News SET ThumbnailURL=N'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=1200&auto=format&fit=crop&q=85'
+WHERE Title=N'Experience Movies with Dolby Atmos';
 IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Five Tips for the Perfect Cinema Night')
     INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
     VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),N'Five Tips for the Perfect Cinema Night',N'Book early, choose your preferred seats, arrive on time, and complete the experience with your favorite cinema snacks.',N'https://images.unsplash.com/photo-1586899028174-e7098604235b?w=1000','PUBLISHED',SYSDATETIME(),SYSDATETIME(),SYSDATETIME());
+
+IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Introducing CINEORA Rewards: Earn Points and Unlock More Benefits')
+    INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
+    VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),
+    N'Introducing CINEORA Rewards: Earn Points and Unlock More Benefits',
+    N'Welcome to CINEORA Rewards, our membership program created to make every movie experience more rewarding.
+
+HOW TO EARN POINTS
+Eligible, successfully paid bookings earn 1 point for every 10,000 VND. Your earning rate may be multiplied according to your current membership rank. Failed, unpaid, expired or cancelled bookings do not earn points.
+
+AVAILABLE POINTS AND TIER POINTS
+Available Points may be used for supported rewards and offers. Tier Points determine your membership rank during the current ranking cycle.
+
+POINT EXPIRATION
+Each batch of Available Points expires at the end of the second month after it is earned. For example, points earned on January 17 expire on March 31. Your Membership & Rewards page shows the nearest point expiry date.
+
+MEMBERSHIP RANKS
+Rank names, thresholds, earning rates and benefits are configured by CINEORA administrators. When your Tier Points reach the next active threshold, you are upgraded immediately.
+
+RANKING CYCLES
+CINEORA Rewards has two cycles each year: January–June and July–December. Tier Points reset at the start of a new cycle, and members return to the lowest active rank until they qualify for a higher rank again.
+
+Visit Membership & Rewards from your account menu to follow your balance, rank progress, benefits and eligible vouchers.',
+    N'https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=1200&auto=format&fit=crop&q=85','PUBLISHED',SYSDATETIME(),SYSDATETIME(),SYSDATETIME());
+
+IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Before You Book: Seat Holds, Payments and Digital Tickets')
+    INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
+    VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),
+    N'Before You Book: Seat Holds, Payments and Digital Tickets',
+    N'Planning your next cinema visit is easier when you know how booking works.
+
+SEAT HOLDS
+After seats are selected, they are held only for the checkout time configured by CINEORA. If payment is not completed before the hold expires, the seats may become available to other customers.
+
+PAYMENT CONFIRMATION
+A booking becomes confirmed only after payment succeeds for the exact final amount. Failed or incomplete payment attempts never issue a valid ticket.
+
+DIGITAL TICKETS
+Every successfully paid seat receives a digital ticket with a unique QR code. The ticket belongs to the movie, showtime, room and seat shown in the booking and can be checked in only once.
+
+AGE RATINGS
+Customers attending an age-restricted movie must meet its age requirement and may be asked to provide suitable identification.
+
+CANCELLATIONS AND REFUNDS
+The current online service does not support customer-requested cancellation, exchange or refund after successful payment. Always review the movie, cinema time, seats, food items and final amount before paying.',
+    N'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?w=1200&auto=format&fit=crop&q=85','PUBLISHED',SYSDATETIME(),SYSDATETIME(),DATEADD(MINUTE,-1,SYSDATETIME()));
+
+IF @DemoNewsStaffID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.News WHERE Title=N'Using CINEORA Vouchers: Eligibility and Usage Rules')
+    INSERT dbo.News (CreatedByStaffID,ReviewedByAccountID,Title,Content,ThumbnailURL,[Status],SubmittedAt,ReviewedAt,PublishedAt)
+    VALUES (@DemoNewsStaffID,(SELECT AccountID FROM dbo.Account WHERE Email='manager@cinema.com'),
+    N'Using CINEORA Vouchers: Eligibility and Usage Rules',
+    N'CINEORA vouchers help make eligible cinema bookings even better. Please check these conditions before applying a code.
+
+A voucher must be active and used within its displayed validity period. Total campaign limits, per-account limits, minimum booking values and membership-rank requirements may apply.
+
+Only one voucher can be applied to a booking. The system checks eligibility again against the current booking before calculating the final discount.
+
+Your final payable amount includes the ticket subtotal and any selected food and beverage items, less the valid voucher discount and plus applicable tax when enabled. A voucher that is expired, inactive, exhausted or outside its conditions cannot be applied.
+
+Open Promotions & News to see currently available offers and read the terms attached to each voucher.',
+    N'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&auto=format&fit=crop&q=85','PUBLISHED',SYSDATETIME(),SYSDATETIME(),DATEADD(MINUTE,-2,SYSDATETIME()));
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey = 'BOOKING_HOLD_MINUTES')

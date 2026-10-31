@@ -1,0 +1,6 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/cinema-header-footer :: metaHead(${policy.title})}"><title>Policy | CINEORA</title></head>
+<body><div th:replace="~{fragments/cinema-header-footer :: header('policies')}"></div>
+<main class="section-shell" style="padding:3rem 0 5rem;max-width:920px;"><a th:href="@{/policies}" class="section-link">← All policies</a><p class="section-eyebrow" style="margin-top:1.5rem;">CINEORA POLICY</p><h1 style="font-size:clamp(2rem,4vw,3.2rem);margin:.4rem 0 1rem;" th:text="${policy.title}">Policy</h1><p style="font-size:1.05rem;color:var(--text-secondary);" th:text="${policy.summary}">Summary</p>
+<section class="profile-card" style="margin-top:2rem;padding:2rem;"><div th:each="s,iter:${policy.sections}" th:style="${!iter.last} ? 'padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border-subtle)' : ''"><h2 style="font-size:1.2rem;margin:0 0 .6rem;" th:text="${s.heading}">Heading</h2><p style="color:var(--text-secondary);line-height:1.75;margin:0;" th:text="${s.body}">Body</p></div></section></main>
+<div th:replace="~{fragments/cinema-header-footer :: footer}"></div><th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block></body></html>
