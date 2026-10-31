@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Print Tickets | CINEORA Staff</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script th:src="@{/js/staff-print.js}" defer></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('bookings')}"></div>
+
+  <div class="staff-main">
+    <div th:replace="~{fragments/staff-layout :: topbar('Ticket & Receipt Printing', '')}"></div>
+
+    <div class="staff-content">
+
+      <div class="content-heading">
+        <div>
+          <p class="eyebrow">CINEORA / STAFF / PRINTING</p>
+          <h1 th:text="'Print Booking ' + ${print.bookingCode}">Print Booking</h1>
+          <p>Check the preview, then print all tickets and the receipt for the customer.</p>
+        </div>
+        <div class="heading-actions">
+          <a class="btn btn-secondary" th:href="@{/staff/bookings/{id}(id=${print.bookingId})}">← Booking Details</a>
+          <button class="btn btn-primary" type="button" id="printAll">🖨 Print All</button>
+        </div>
+      </div>
+
+      <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}" role="status"></div>
+
+      <p class="print-status" role="status">
+        <span class="print-status-dot" aria-hidden="true"></span>
+        Printer: prints through the browser to this computer's default (POS) printer.
+        Paper or connection problems are reported by the print dialog.
+      </p>
+
+      <div class="print-layout">
+
+        <!-- I. Physical ticket preview: one admission ticket per seat -->
+        <section class="panel" aria-labelledby="ticketPreviewTitle">
+          <div class="panel-header">
+            <div>
+              <h2 id="ticketPreviewTitle">Tickets</h2>
+              <p th:text="${print.tickets.size()} + ' admission ticket(s)'">0 admission ticket(s)</p>
+            </div>
+          </div>
+          <div class="panel-body print-tickets">
+            <div class="print-ticket-row" th:each="ticket : ${print.tickets}">
+              <article class="print-ticket" th:id="'ticket-' + ${ticket.ticketId}">
+                <div class="print-ticket-main">
+                  <div class="print-ticket-head">
+                    <strong>CINEORA</strong>
+                    <span th:text="${ticket.ticketCode()}">TK-00000000</span>
+                  </div>
+                  <p class="print-ticket-movie" th:text="${print.movieTitle}">Movie</p>
+                  <dl class="print-ticket-info">
+                    <div><dt>Showtime</dt><dd th:text="${#temporals.format(print.showtime, 'HH:mm dd/MM/yyyy')}"></dd></div>
+                    <div><dt>Room</dt><dd th:text="${print.roomName}"></dd></div>
+                    <div><dt>Seat</dt><dd><strong th:text="${ticket.seatLabel}">A1</strong> <span th:text="${ticket.seatType}"></span></dd></div>
+                    <div><dt>Price</dt><dd th:text="${#numbers.formatDecimal(ticket.price,0,'COMMA',0,'POINT') + ' VND'}"></dd></div>
+                  </dl>
+                  <p class="print-ticket-foot" th:text="'Booking ' + ${print.bookingCode}">Booking</p>
+                </div>
+                <div class="print-ticket-qr">
+                  <div class="ticket-qr" th:attr="data-qr=${ticketVerifyBaseUrl + ticket.qrCode}"
+                       th:aria-label="'Entry QR code for seat ' + ${ticket.seatLabel}"></div>
+                  <small>Scan at entrance</small>
+                </div>
+              </article>
+              <button class="btn btn-secondary print-reprint" type="button"
+                      th:attr="data-ticket-id=${ticket.ticketId}"
+                      th:aria-label="'Re-print ticket for seat ' + ${ticket.seatLabel}">Re-print Ticket</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- II. 80mm thermal receipt preview -->
+        <section class="panel" aria-labelledby="receiptPreviewTitle">
+          <div class="panel-header"><div><h2 id="receiptPreviewTitle">Receipt</h2><p>80mm thermal format</p></div></div>
+          <div class="panel-body">
+            <article class="print-receipt" id="receipt">
+              <header class="receipt-head">
+                <strong>CINEORA CINEMA</strong>
+                <span>Sales Receipt</span>
+              </header>
+              <dl class="receipt-meta">
+                <div><dt>Booking</dt><dd th:text="${print.bookingCode}"></dd></div>
+                <div><dt>Paid at</dt><dd th:text="${print.paidAt != null ? #temporals.format(print.paidAt, 'HH:mm dd/MM/yyyy') : '-'}"></dd></div>
+                <div><dt>Cashier</dt><dd th:text="${print.cashierName != null ? print.cashierName : 'Online booking'}"></dd></div>
+              </dl>
+              <p class="receipt-movie">
+                <strong th:text="${print.movieTitle}">Movie</strong><br>
+                <span th:text="${#temporals.format(print.showtime, 'HH:mm dd/MM/yyyy') + ' · ' + print.roomName}"></span>
+              </p>
+              <table class="receipt-lines">
+                <tbody>
+                  <tr th:each="ticket : ${print.tickets}">
+                    <td th:text="'Ticket ' + ${ticket.seatLabel} + ' (' + ${ticket.seatType} + ')'">Ticket</td>
+                    <td th:text="${#numbers.formatDecimal(ticket.price,0,'COMMA',0,'POINT')}">0</td>
+                  </tr>
+                  <tr th:each="food : ${print.foods}">
+                    <td th:text="${food.quantity} + ' x ' + ${food.name}">Item</td>
+                    <td th:text="${#numbers.formatDecimal(food.subtotal,0,'COMMA',0,'POINT')}">0</td>
+                  </tr>
+                </tbody>
+              </table>
+              <table class="receipt-totals">
+                <tbody>
+                  <tr><td>Subtotal</td><td th:text="${#numbers.formatDecimal(print.subtotal,0,'COMMA',0,'POINT')}"></td></tr>
+                  <tr><td>Discount</td><td th:text="${print.discountAmount.signum() > 0 ? '-' : ''} + ${#numbers.formatDecimal(print.discountAmount,0,'COMMA',0,'POINT')}"></td></tr>
+                  <tr class="receipt-grand"><td>TOTAL PAID</td><td th:text="${#numbers.formatDecimal(print.paidAmount != null ? print.paidAmount : print.totalAmount,0,'COMMA',0,'POINT') + ' VND'}"></td></tr>
+                  <tr><td>Payment</td><td th:text="${print.paymentMethod != null ? print.paymentMethod : '-'}"></td></tr>
+                </tbody>
+              </table>
+              <footer class="receipt-foot">Thank you and enjoy the movie!</footer>
+            </article>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{fragments/staff-layout :: sidebar-scripts}"></div>
+</body>
+</html>
