@@ -1,5 +1,6 @@
 package com.cinema.model;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -13,6 +14,8 @@ public record LoyaltyInfo(
         MembershipRank nextRank,
         int pointsToNextRank,
         int progressPercent,
+        int nextExpiringPoints,
+        LocalDate nextExpiryDate,
         List<String> rankBenefits,
         List<LoyaltyVoucher> availableVouchers
 ) {
@@ -27,6 +30,10 @@ public record LoyaltyInfo(
 
     public boolean isTopRank() {
         return nextRank == null;
+    }
+
+    public boolean hasUpcomingExpiry() {
+        return nextExpiringPoints > 0 && nextExpiryDate != null;
     }
 
     private static String rankName(MembershipRank rank, String fallback) {

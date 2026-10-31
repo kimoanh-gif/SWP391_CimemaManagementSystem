@@ -43,6 +43,7 @@
                     <span>Promotions &amp; News</span>
                 </a>
             </li>
+            <li><a th:href="@{/policies}" class="nav-link" th:classappend="${activeNav == 'policies'} ? 'active'"><span>Policies</span></a></li>
         </ul>
     </nav>
 
@@ -131,9 +132,9 @@
             <h4>Policies &amp; Support</h4>
             <ul class="footer-links">
                 <li><a th:href="@{/promotions-news?tab=news}">Cinema News</a></li>
-                <li><a href="#">Reward Point Policy</a></li>
-                <li><a href="#">Ticket Exchange Policy</a></li>
-                <li><a href="#">Privacy Policy</a></li>
+                <li><a th:href="@{/policies/rewards}">Reward Point Policy</a></li>
+                <li><a th:href="@{/policies/booking-tickets}">Booking &amp; Ticket Policy</a></li>
+                <li><a th:href="@{/policies/privacy}">Privacy Policy</a></li>
             </ul>
         </div>
         <div class="footer-col">

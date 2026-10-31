@@ -1,6 +1,7 @@
 package com.cinema.service;
 
 import com.cinema.dao.MembershipRankDAO;
+import com.cinema.dao.LoyaltyPointDAO;
 import com.cinema.dao.VoucherDAO;
 import com.cinema.model.CustomerProfile;
 import com.cinema.model.LoyaltyInfo;
@@ -32,12 +33,17 @@ class LoyaltyServiceTest {
 
     @Mock
     private VoucherDAO voucherDAO;
+    @Mock
+    private LoyaltyPointDAO loyaltyPointDAO;
 
     private LoyaltyService service;
 
     @BeforeEach
     void setUp() {
-        service = new LoyaltyService(customerProfileService, membershipRankDAO, voucherDAO, new MembershipRankCalculator());
+        service = new LoyaltyService(customerProfileService, membershipRankDAO, voucherDAO,
+                new MembershipRankCalculator(), loyaltyPointDAO);
+        org.mockito.Mockito.lenient().when(loyaltyPointDAO.findNextExpiry(org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(java.util.Optional.empty());
     }
 
     @Test

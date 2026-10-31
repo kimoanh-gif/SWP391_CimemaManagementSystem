@@ -25,7 +25,7 @@ class CustomErrorControllerTest {
     void notFoundUsesCinemaErrorPage() {
         Model model = new ConcurrentModel();
         assertEquals("error", controller.handleError(requestWithStatus(404), model));
-        assertEquals("Không tìm thấy trang", model.getAttribute("headline"));
+        assertEquals("Page not found", model.getAttribute("headline"));
         assertFalse(model.containsAttribute("rayId"));
     }
 
@@ -33,7 +33,7 @@ class CustomErrorControllerTest {
     void otherServerErrorsDoNotUseThe500Page() {
         Model model = new ConcurrentModel();
         assertEquals("error", controller.handleError(requestWithStatus(503), model));
-        assertEquals("Hệ thống đang bảo trì", model.getAttribute("headline"));
+        assertEquals("Service temporarily unavailable", model.getAttribute("headline"));
     }
 
     private MockHttpServletRequest requestWithStatus(int status) {

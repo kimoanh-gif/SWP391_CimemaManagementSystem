@@ -90,14 +90,14 @@ public class CustomErrorController implements ErrorController {
 
     private ErrorCopy errorCopy(int statusCode, String reason) {
         return switch (statusCode) {
-            case 400 -> new ErrorCopy("Yêu cầu chưa hợp lệ", "Thông tin gửi lên chưa đúng định dạng. Vui lòng kiểm tra và thử lại.");
-            case 401 -> new ErrorCopy("Bạn cần đăng nhập", "Phiên đăng nhập có thể đã hết hạn. Hãy đăng nhập để tiếp tục.");
-            case 403 -> new ErrorCopy("Không có quyền truy cập", "Tài khoản của bạn không được phép mở khu vực này.");
-            case 404 -> new ErrorCopy("Không tìm thấy trang", "Suất chiếu này có vẻ đã kết thúc, hoặc địa chỉ bạn mở không tồn tại.");
-            case 405 -> new ErrorCopy("Thao tác không được hỗ trợ", "Trang này không chấp nhận phương thức vừa được sử dụng.");
-            case 429 -> new ErrorCopy("Bạn thao tác hơi nhanh", "Vui lòng nghỉ một chút rồi thử lại.");
-            case 503 -> new ErrorCopy("Hệ thống đang bảo trì", "Dịch vụ tạm thời chưa sẵn sàng. Vui lòng quay lại sau ít phút.");
-            default -> new ErrorCopy(reason, "Đã có sự cố ngoài dự kiến. Vui lòng quay lại trang chủ hoặc thử lại.");
+            case 400 -> new ErrorCopy("Invalid request", "The submitted information is not valid. Check it and try again.");
+            case 401 -> new ErrorCopy("Sign-in required", "Your session may have expired. Sign in to continue.");
+            case 403 -> new ErrorCopy("Access denied", "Your account does not have permission to open this area.");
+            case 404 -> new ErrorCopy("Page not found", "The requested page may have moved, expired, or does not exist.");
+            case 405 -> new ErrorCopy("Action not supported", "This page does not accept the request method that was used.");
+            case 429 -> new ErrorCopy("Too many requests", "Wait a moment before trying again.");
+            case 503 -> new ErrorCopy("Service temporarily unavailable", "The service is not ready right now. Try again in a few minutes.");
+            default -> new ErrorCopy(reason, "An unexpected error occurred. Return home or try again.");
         };
     }
 

@@ -1,6 +1,7 @@
 package com.cinema.service;
 
 import com.cinema.dao.MembershipRankDAO;
+import com.cinema.dao.LoyaltyPointDAO;
 import com.cinema.dao.VoucherDAO;
 import com.cinema.model.CustomerProfile;
 import com.cinema.model.LoyaltyInfo;
@@ -37,15 +38,18 @@ public class LoyaltyService {
     private final MembershipRankDAO membershipRankDAO;
     private final VoucherDAO voucherDAO;
     private final MembershipRankCalculator rankCalculator;
+    private final LoyaltyPointDAO loyaltyPointDAO;
 
     public LoyaltyService(CustomerProfileService customerProfileService,
                           MembershipRankDAO membershipRankDAO,
                           VoucherDAO voucherDAO,
-                          MembershipRankCalculator rankCalculator) {
+                          MembershipRankCalculator rankCalculator,
+                          LoyaltyPointDAO loyaltyPointDAO) {
         this.customerProfileService = customerProfileService;
         this.membershipRankDAO = membershipRankDAO;
         this.voucherDAO = voucherDAO;
         this.rankCalculator = rankCalculator;
+        this.loyaltyPointDAO = loyaltyPointDAO;
     }
 
     public LoyaltyInfo getLoyaltyInfo(int accountId) {
@@ -57,6 +61,7 @@ public class LoyaltyService {
         MembershipRank next = rankCalculator.nextRank(ranks, tierPoints).orElse(null);
         int pointsToNext = next != null && next.getMinPoints() != null
                 ? Math.max(0, next.getMinPoints() - tierPoints) : 0;
+        LoyaltyPointDAO.ExpiringPoints expiry = loyaltyPointDAO.findNextExpiry(profile.getCustomerId()).orElse(null);
 
         return new LoyaltyInfo(
                 profile.getFullName(),
@@ -66,6 +71,8 @@ public class LoyaltyService {
                 next,
                 pointsToNext,
                 rankCalculator.progressPercent(current, next, tierPoints),
+                expiry != null ? expiry.points() : 0,
+                expiry != null ? expiry.expiresAt().toLocalDate() : null,
                 describeBenefits(current),
                 findRankVouchers(profile.getCustomerId(), tierPoints)
         );
