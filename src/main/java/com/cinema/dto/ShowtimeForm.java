@@ -1,7 +1,10 @@
 package com.cinema.dto;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
@@ -15,9 +18,11 @@ public class ShowtimeForm {
     private Integer showtimeId;
 
     @NotNull(message = "Vui lòng chọn phim")
+    @Positive(message = "Mã phim phải lớn hơn 0")
     private Integer movieId;
 
     @NotNull(message = "Vui lòng chọn phòng chiếu")
+    @Positive(message = "Mã phòng chiếu phải lớn hơn 0")
     private Integer roomId;
 
     @NotNull(message = "Vui lòng chọn thời gian bắt đầu")
@@ -29,8 +34,13 @@ public class ShowtimeForm {
 
     @NotNull(message = "Vui lòng nhập giá vé cơ sở")
     @DecimalMin(value = "0.0", message = "Giá vé cơ sở không được âm")
+    @DecimalMax(value = "10000000.0", message = "Giá vé cơ sở không được vượt quá 10,000,000 VNĐ")
     private BigDecimal baseTicketPrice;
 
+    @Pattern(
+            regexp = "^(Scheduled|Showing|Ended|Cancelled|Stopped)$",
+            message = "Trạng thái suất chiếu không hợp lệ"
+    )
     private String status = "Scheduled";
 
     public ShowtimeForm() {

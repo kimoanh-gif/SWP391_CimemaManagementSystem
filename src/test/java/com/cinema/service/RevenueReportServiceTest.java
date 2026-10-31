@@ -68,6 +68,9 @@ class RevenueReportServiceTest {
     @Test
     @DisplayName("resolveAndValidateDates: Throws IllegalArgumentException when startDate > endDate")
     void testResolveDates_InvalidRange() {
+        RevenueReportRequest badType = new RevenueReportRequest();
+        badType.setReportType("INVALID_TYPE");
+        assertThrows(IllegalArgumentException.class, () -> revenueReportService.resolveAndValidateDates(badType));
         RevenueReportRequest req = new RevenueReportRequest();
         req.setPreset("custom");
         req.setStartDate(LocalDate.of(2026, 10, 20));
@@ -194,6 +197,13 @@ class RevenueReportServiceTest {
         String text = new String(csvBytes, 3, csvBytes.length - 3, StandardCharsets.UTF_8);
 
         assertTrue(text.contains("BK-ROYAL-001"));
+        TransactionRevenueItem maliciousTx = new TransactionRevenueItem();
+        maliciousTx.setBookingCode("=CMD|' /C calc'!A0");
+        maliciousTx.setCustomerName("+MaliciousUser");
+        when(revenueReportDao.getTransactions(start, end)).thenReturn(List.of(maliciousTx));
+        String safeCsv = new String(revenueReportService.generateCsvReport(req), 3, revenueReportService.generateCsvReport(req).length - 3, StandardCharsets.UTF_8);
+        assertTrue(safeCsv.contains("\"'=CMD|' /C calc'!A0\""));
+        assertTrue(safeCsv.contains("\"'+MaliciousUser\""));
         assertTrue(text.contains("Nguyen Van A"));
         assertTrue(text.contains("230,000"));
     }

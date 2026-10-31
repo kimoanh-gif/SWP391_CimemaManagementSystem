@@ -8,7 +8,9 @@ import com.cinema.util.ManagerSecurityUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -43,22 +45,28 @@ public class RoomController {
     public String save(@Valid @ModelAttribute("roomForm") RoomForm form,
                        BindingResult result,
                        Model model,
+                       RedirectAttributes redirectAttributes,
                        jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         if (result.hasErrors()) {
-            model.addAttribute("errorMessage", "Dữ liệu nhập không hợp lệ");
-            return "manager/rooms"; // redisplay list with error
+            String errorMsg = result.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .findFirst()
+                    .orElse("Dữ liệu nhập không hợp lệ");
+            model.addAttribute("rooms", roomService.getAll(null, null));
+            model.addAttribute("errorMessage", errorMsg);
+            return "manager/rooms"; // redisplay list with error and required model attributes
         }
         try {
             if (form.getRoomId() == null) {
                 roomService.create(form);
-                model.addAttribute("successMessage", "Tạo phòng thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo phòng thành công");
             } else {
                 roomService.update(form);
-                model.addAttribute("successMessage", "Cập nhật phòng thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phòng thành công");
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/manager/rooms"; // PRG pattern
     }

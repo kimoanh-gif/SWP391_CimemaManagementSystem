@@ -67,8 +67,10 @@ public class P2BusinessFlowTest {
     @DisplayName("P2-01: F&B Business Consistency & Combo Rules")
     class FBBusinessConsistencyTests {
 
-        @Mock private FBItemDao fbItemDao;
-        @InjectMocks private FBItemService fbItemService;
+        @Mock
+        private FBItemDao fbItemDao;
+        @InjectMocks
+        private FBItemService fbItemService;
 
         private FBItem singleFood;
         private FBItem singleDrink;
@@ -77,10 +79,14 @@ public class P2BusinessFlowTest {
 
         @BeforeEach
         void setUp() {
-            singleFood = new FBItem(10, "PC-01", "Bắp Phô Mai", "Food", "Bắp ngọt", new BigDecimal("55000"), new BigDecimal("15000"), null, "Active");
-            singleDrink = new FBItem(11, "DR-01", "Coca-Cola 32oz", "Drink", "Nước ngọt", new BigDecimal("32000"), new BigDecimal("8000"), null, "Active");
-            inactiveDrink = new FBItem(12, "DR-02", "Sprite 32oz", "Drink", "Tạm hết", new BigDecimal("32000"), new BigDecimal("8000"), null, "Inactive");
-            existingCombo = new FBItem(20, "CB-01", "Combo Solo", "Combo", "1 Bắp + 1 Nước", new BigDecimal("79000"), new BigDecimal("23000"), null, "Active");
+            singleFood = new FBItem(10, "PC-01", "Bắp Phô Mai", "Food", "Bắp ngọt", new BigDecimal("55000"),
+                    new BigDecimal("15000"), null, "Active");
+            singleDrink = new FBItem(11, "DR-01", "Coca-Cola 32oz", "Drink", "Nước ngọt", new BigDecimal("32000"),
+                    new BigDecimal("8000"), null, "Active");
+            inactiveDrink = new FBItem(12, "DR-02", "Sprite 32oz", "Drink", "Tạm hết", new BigDecimal("32000"),
+                    new BigDecimal("8000"), null, "Inactive");
+            existingCombo = new FBItem(20, "CB-01", "Combo Solo", "Combo", "1 Bắp + 1 Nước", new BigDecimal("79000"),
+                    new BigDecimal("23000"), null, "Active");
         }
 
         @Test
@@ -98,7 +104,8 @@ public class P2BusinessFlowTest {
 
             when(fbItemDao.findById(20)).thenReturn(Optional.of(existingCombo));
 
-            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.updateItem(20, form));
+            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
+                    () -> fbItemService.updateItem(20, form));
             assertTrue(ex.getMessage().contains("chính nó"));
         }
 
@@ -116,7 +123,8 @@ public class P2BusinessFlowTest {
 
             when(fbItemDao.findById(20)).thenReturn(Optional.of(existingCombo));
 
-            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.createItem(form));
+            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
+                    () -> fbItemService.createItem(form));
             assertTrue(ex.getMessage().contains("không thể lồng Combo"));
         }
 
@@ -132,7 +140,8 @@ public class P2BusinessFlowTest {
             form.setComponentItemIds(List.of(10));
             form.setComponentQuantities(List.of(0)); // 0 quantity
 
-            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.createItem(form));
+            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
+                    () -> fbItemService.createItem(form));
             assertTrue(ex.getMessage().contains("lớn hơn 0"));
         }
 
@@ -150,14 +159,16 @@ public class P2BusinessFlowTest {
 
             when(fbItemDao.findById(12)).thenReturn(Optional.of(inactiveDrink));
 
-            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.createItem(form));
+            InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
+                    () -> fbItemService.createItem(form));
             assertTrue(ex.getMessage().contains("đang ngừng bán"));
         }
 
         @Test
         @DisplayName("AC05: Combo with deactivated component is marked as not available for sale")
         void testComboAvailabilityWhenComponentDeactivated() {
-            FBItem combo = new FBItem(30, "CB-DUO", "Combo Duo", "Combo", "2 Bắp + 2 Nước", new BigDecimal("120000"), new BigDecimal("35000"), null, "Active");
+            FBItem combo = new FBItem(30, "CB-DUO", "Combo Duo", "Combo", "2 Bắp + 2 Nước", new BigDecimal("120000"),
+                    new BigDecimal("35000"), null, "Active");
             FBItem.ComboComponent comp1 = new FBItem.ComboComponent(10, "Bắp Phô Mai", 2, "Active");
             FBItem.ComboComponent comp2 = new FBItem.ComboComponent(12, "Sprite 32oz", 2, "Inactive"); // Deactivated!
             combo.setComboComponents(List.of(comp1, comp2));
@@ -180,12 +191,17 @@ public class P2BusinessFlowTest {
     @DisplayName("P2-02: Movie Lifecycle & Showtime Scheduling Protection")
     class MovieLifecycleTests {
 
-        @Mock private MovieDao movieDao;
-        @Mock private ShowtimeDao showtimeDao;
-        @Mock private RoomDao roomDao;
-        @Mock private SeatDao seatDao;
+        @Mock
+        private MovieDao movieDao;
+        @Mock
+        private ShowtimeDao showtimeDao;
+        @Mock
+        private RoomDao roomDao;
+        @Mock
+        private SeatDao seatDao;
 
-        @InjectMocks private MovieService movieService;
+        @InjectMocks
+        private MovieService movieService;
         private ShowtimeService showtimeService;
 
         private Movie activeMovie;
@@ -215,7 +231,8 @@ public class P2BusinessFlowTest {
             form.setStartTime(LocalDateTime.now().plusDays(2));
             form.setBaseTicketPrice(new BigDecimal("100000"));
 
-            InvalidShowtimeException ex = assertThrows(InvalidShowtimeException.class, () -> showtimeService.validateShowtime(form, null));
+            InvalidShowtimeException ex = assertThrows(InvalidShowtimeException.class,
+                    () -> showtimeService.validateShowtime(form, null));
             assertTrue(ex.getMessage().contains("BR-07"));
         }
 
@@ -227,14 +244,12 @@ public class P2BusinessFlowTest {
 
             MovieHasActiveShowtimesException ex = assertThrows(
                     MovieHasActiveShowtimesException.class,
-                    () -> movieService.deactivateMovie(1)
-            );
+                    () -> movieService.deactivateMovie(1));
             assertTrue(ex.getMessage().contains("4 suất chiếu sắp diễn ra"));
 
             assertThrows(
                     MovieHasActiveShowtimesException.class,
-                    () -> movieService.deleteMovie(1)
-            );
+                    () -> movieService.deleteMovie(1));
         }
 
         @Test
@@ -256,7 +271,8 @@ public class P2BusinessFlowTest {
             List<Movie> customerMovies = movieService.getCustomerMovies();
             assertEquals(1, customerMovies.size());
             assertEquals("Now Showing", customerMovies.get(0).getStatus());
-            assertTrue(customerMovies.stream().noneMatch(m -> "Archived".equalsIgnoreCase(m.getStatus()) || "Ended".equalsIgnoreCase(m.getStatus())));
+            assertTrue(customerMovies.stream().noneMatch(
+                    m -> "Archived".equalsIgnoreCase(m.getStatus()) || "Ended".equalsIgnoreCase(m.getStatus())));
         }
     }
 
@@ -267,17 +283,27 @@ public class P2BusinessFlowTest {
     @DisplayName("P2-03: Validation and HTTP Exception Standardization")
     class ExceptionStandardizationTests {
 
-        @Mock private MovieService movieService;
-        @Mock private RoomService roomService;
-        @Mock private ShowtimeService showtimeService;
-        @Mock private TicketPricingService pricingService;
-        @Mock private GenreService genreService;
+        @Mock
+        private MovieService movieService;
+        @Mock
+        private RoomService roomService;
+        @Mock
+        private ShowtimeService showtimeService;
+        @Mock
+        private TicketPricingService pricingService;
+        @Mock
+        private GenreService genreService;
 
-        @InjectMocks private MovieApiController movieApiController;
-        @InjectMocks private RoomApiController roomApiController;
-        @InjectMocks private ShowtimeApiController showtimeApiController;
-        @InjectMocks private TicketPricingApiController pricingApiController;
-        @InjectMocks private GenreApiController genreApiController;
+        @InjectMocks
+        private MovieApiController movieApiController;
+        @InjectMocks
+        private RoomApiController roomApiController;
+        @InjectMocks
+        private ShowtimeApiController showtimeApiController;
+        @InjectMocks
+        private TicketPricingApiController pricingApiController;
+        @InjectMocks
+        private GenreApiController genreApiController;
 
         @Test
         @DisplayName("AC01: MovieHasActiveShowtimesException returns HTTP 409 CONFLICT")
@@ -306,7 +332,8 @@ public class P2BusinessFlowTest {
         @Test
         @DisplayName("AC04: DuplicatePricingRuleException returns HTTP 409 CONFLICT")
         void testDuplicatePricingReturnsConflict() {
-            com.cinema.exception.DuplicatePricingRuleException ex = new com.cinema.exception.DuplicatePricingRuleException("Duplicate pricing");
+            com.cinema.exception.DuplicatePricingRuleException ex = new com.cinema.exception.DuplicatePricingRuleException(
+                    "Duplicate pricing");
             ResponseEntity<ApiResponse<Void>> response = pricingApiController.handleDuplicatePricingRule(ex);
             assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         }
@@ -327,15 +354,31 @@ public class P2BusinessFlowTest {
     @DisplayName("P2-04: Manager UX Workflow & Contextual Navigation")
     class ManagerUXWorkflowTests {
 
-        @Mock private ShowtimeService showtimeService;
-        @Mock private MovieService movieService;
-        @Mock private RoomService roomService;
-        @Mock private SeatService seatService;
-        @Mock private TicketPricingService pricingService;
-        @Mock private HttpServletRequest request;
+        @Mock
+        private ShowtimeService showtimeService;
+        @Mock
+        private MovieService movieService;
+        @Mock
+        private RoomService roomService;
+        @Mock
+        private SeatService seatService;
+        @Mock
+        private TicketPricingService pricingService;
+        @Mock
+        private HttpServletRequest request;
 
-        @InjectMocks private ShowtimeController showtimeController;
-        @InjectMocks private SeatController seatController;
+        @InjectMocks
+        private ShowtimeController showtimeController;
+        @InjectMocks
+        private SeatController seatController;
+        @Mock
+        private jakarta.servlet.http.HttpSession session;
+
+        @BeforeEach
+        void setUpManagerSession() {
+            lenient().when(request.getSession(false)).thenReturn(session);
+            lenient().when(session.getAttribute("userRole")).thenReturn("MANAGER");
+        }
 
         @Test
         @DisplayName("AC01: Navigating to Showtime with movieId pre-fills showtimeForm")

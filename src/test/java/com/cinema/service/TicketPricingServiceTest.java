@@ -145,6 +145,10 @@ public class TicketPricingServiceTest {
 
     @Test
     void testDeleteSeatType_ReferencedBySeats_ThrowsException() {
+        assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.updatePricingStatus(1, "InvalidStatus"));
+        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
+        when(seatTypeDao.isReferencedBySeats(2)).thenReturn(true);
+        assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.updateSeatTypeStatus(2, "Inactive"));
         when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
         when(seatTypeDao.isReferencedBySeats(2)).thenReturn(true);
 

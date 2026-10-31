@@ -124,7 +124,8 @@ public class ShowtimeController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.showtimeForm", bindingResult);
             redirectAttributes.addFlashAttribute("showtimeForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin suất chiếu không hợp lệ. Vui lòng kiểm tra lại.");
+            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Thông tin suất chiếu không hợp lệ. Vui lòng kiểm tra lại.");
+            redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return redirectUrl;
         }
 

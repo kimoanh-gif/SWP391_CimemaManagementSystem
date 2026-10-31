@@ -6,6 +6,8 @@ import com.cinema.exception.RoomHasActiveShowtimesException;
 import com.cinema.exception.RoomNotFoundException;
 import com.cinema.model.Room;
 import com.cinema.dto.RoomForm;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -30,9 +32,12 @@ class RoomServiceTest {
     @InjectMocks
     private RoomService roomService;
 
+    private Validator validator;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test
@@ -122,6 +127,24 @@ class RoomServiceTest {
     }
 
     @Test
+    void create_duplicateRoomCode_shouldThrow() {
+        RoomForm form = new RoomForm();
+        form.setRoomCode("ROOM-01");
+        form.setRoomName("Unique Room");
+        form.setRoomType("IMAX Laser");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(10);
+        form.setCapacity(100);
+        form.setStatus("Ready");
+
+        when(roomDao.existsByRoomCode("ROOM-01", null)).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
+        assertTrue(ex.getMessage().contains("Mã phòng chiếu đã tồn tại"));
+        verify(roomDao, never()).insert(any());
+    }
+
+    @Test
     void create_mismatchCapacityLayout_shouldThrow() {
         RoomForm form = new RoomForm();
         form.setTotalRows(10);
@@ -160,5 +183,45 @@ class RoomServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.update(form));
         assertTrue(ex.getMessage().contains("không khớp"));
         verify(roomDao, never()).update(any());
+    }
+
+    @Test
+    void update_toMaintenanceWithUpcomingShowtimes_shouldThrow() {
+        Room existing = new Room();
+        existing.setRoomId(15);
+        existing.setStatus("Ready");
+        when(roomDao.findById(15)).thenReturn(Optional.of(existing));
+        when(roomDao.hasUpcomingShowtimes(15)).thenReturn(true);
+
+        RoomForm form = new RoomForm();
+        form.setRoomId(15);
+        form.setRoomCode("ROOM-15");
+        form.setRoomName("Room 15");
+        form.setRoomType("IMAX Laser");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(10);
+        form.setCapacity(100);
+        form.setStatus("Maintenance");
+
+        assertThrows(RoomHasActiveShowtimesException.class, () -> roomService.update(form));
+        verify(roomDao, never()).update(any());
+    }
+
+    @Test
+    void roomForm_beanValidation_detectsInvalidCodeStatusAndMismatchCapacity() {
+        RoomForm form = new RoomForm();
+        form.setRoomCode("INVALID CODE!");
+        form.setRoomName("Room 01");
+        form.setRoomType("IMAX Laser");
+        form.setTotalRows(10);
+        form.setSeatsPerRow(10);
+        form.setCapacity(80);
+        form.setStatus("InvalidStatus");
+
+        var violations = validator.validate(form);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("roomCode")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("status")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("capacityMatchingLayout")));
     }
 }

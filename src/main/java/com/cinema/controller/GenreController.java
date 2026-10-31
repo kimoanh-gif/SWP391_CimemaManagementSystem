@@ -89,7 +89,8 @@ public class GenreController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("genreForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return "redirect:/manager/genres";
         }
 

@@ -32,13 +32,14 @@ class GenreControllerTest {
     private GenreService genreService;
 
     @Test
-    @DisplayName("GET /manager/genres: Should load genre list page with default manager role")
+    @DisplayName("GET /manager/genres: Should load genre list page with manager role")
     void testViewGenreList_Success() throws Exception {
         Genre genre = new Genre(1, "Sci-Fi", "Science fiction", "ACTIVE");
         genre.setMovieCount(3);
         when(genreService.getAllGenres(any(), anyString())).thenReturn(List.of(genre));
 
-        mockMvc.perform(get("/manager/genres"))
+        mockMvc.perform(get("/manager/genres")
+                        .sessionAttr("userRole", "MANAGER"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager/genres"))
                 .andExpect(model().attributeExists("genres"))
@@ -49,7 +50,7 @@ class GenreControllerTest {
     @Test
     @DisplayName("GET /manager/genres: Non-Manager role should be denied with 403 Forbidden")
     void testViewGenreList_Unauthorized() throws Exception {
-        mockMvc.perform(get("/manager/genres").param("role", "CUSTOMER"))
+        mockMvc.perform(get("/manager/genres").sessionAttr("userRole", "CUSTOMER"))
                 .andExpect(status().isForbidden());
     }
 
@@ -60,6 +61,7 @@ class GenreControllerTest {
         when(genreService.createGenre(any(GenreForm.class))).thenReturn(created);
 
         mockMvc.perform(post("/manager/genres/save")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("name", "Thriller")
                         .param("description", "Suspenseful stories")
                         .param("status", "ACTIVE"))
@@ -74,6 +76,7 @@ class GenreControllerTest {
     @DisplayName("POST /manager/genres/save: Blank name should fail validation and redirect with error")
     void testSaveGenre_InvalidForm_RedirectsWithError() throws Exception {
         mockMvc.perform(post("/manager/genres/save")
+                        .sessionAttr("userRole", "MANAGER")
                         .param("name", "") // Blank
                         .param("status", "ACTIVE"))
                 .andExpect(status().is3xxRedirection())
