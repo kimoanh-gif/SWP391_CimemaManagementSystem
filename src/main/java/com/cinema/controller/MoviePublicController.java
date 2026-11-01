@@ -100,15 +100,18 @@ public class MoviePublicController {
         Movie movie = movieOpt.get();
         model.addAttribute("movie", movie);
 
-        // Date selection for showtimes
-        if (showDate == null) {
-            showDate = LocalDate.now();
-        }
-        model.addAttribute("selectedDate", showDate);
-
         // Upcoming available dates for this movie
         List<LocalDate> availableDates = showtimeService.getAvailableDatesForMovie(movieId);
         model.addAttribute("availableDates", availableDates);
+
+        // Date selection for showtimes: without an explicit date, open the first date
+        // that really has showtimes so the highlighted tab matches the list below it.
+        if (showDate == null) {
+            showDate = availableDates.contains(LocalDate.now()) || availableDates.isEmpty()
+                    ? LocalDate.now()
+                    : availableDates.get(0);
+        }
+        model.addAttribute("selectedDate", showDate);
 
         // Showtimes on selected date
         List<PublicShowtime> showtimes = showtimeService.getShowtimesForMovie(movieId, showDate);
