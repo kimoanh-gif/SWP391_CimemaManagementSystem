@@ -127,6 +127,32 @@ class RolePermissionAccessTest {
         org.junit.jupiter.api.Assertions.assertThrows(com.cinema.exception.UnauthorizedManagerException.class,
                 () -> com.cinema.util.ManagerSecurityUtils.verifyManagerAccess(request));
     }
+    @Test void managerGrantRevocationAndRestoreApplyOnTheNextRequestInTheSameSession() throws Exception {
+        var session = login("MANAGER", "movie:manage");
+        mvc.perform(get("/manager/movies").session(session)).andExpect(status().isOk());
+        when(snapshots.refresh(session)).thenReturn(new AuthenticatedUser(1,"user","u@example.com","User",null,
+                "MANAGER",Set.of("report:view"),true,"PASSWORD"));
+        mvc.perform(get("/manager/movies").session(session)).andExpect(status().isForbidden());
+        mvc.perform(post("/api/manager/movies").session(session)).andExpect(status().isForbidden());
+        when(snapshots.refresh(session)).thenReturn(new AuthenticatedUser(1,"user","u@example.com","User",null,
+                "MANAGER",Set.of("movie:manage"),true,"PASSWORD"));
+        mvc.perform(get("/manager/movies").session(session)).andExpect(status().isOk());
+        mvc.perform(post("/api/manager/movies").session(session)).andExpect(status().isOk());
+    }
+    @Test void roleAdministrationRequiresAdminRoleAndAccountManagementPermission() throws Exception {
+        for (String role : List.of("CUSTOMER","STAFF","MANAGER")) {
+            var session = login(role,"account:manage");
+            mvc.perform(get("/api/admin/roles").session(session)).andExpect(status().isForbidden());
+            mvc.perform(post("/api/admin/roles/1/permissions/add").session(session)).andExpect(status().isForbidden());
+            mvc.perform(post("/api/admin/roles/1/permissions/remove").session(session)).andExpect(status().isForbidden());
+        }
+        mvc.perform(get("/admin/roles").session(login("ADMIN"))).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/roles").session(login("ADMIN","account:manage"))).andExpect(status().isOk());
+        mvc.perform(get("/api/admin/roles").session(login("ADMIN","account:manage"))).andExpect(status().isOk());
+        mvc.perform(post("/api/admin/roles/1/permissions/add").session(login("ADMIN","account:manage"))).andExpect(status().isOk());
+        mvc.perform(post("/api/admin/roles/1/permissions/remove").session(login("ADMIN","account:manage"))).andExpect(status().isOk());
+        mvc.perform(get("/api/admin/roles")).andExpect(status().is3xxRedirection());
+    }
     @Configuration @EnableWebMvc @Import(SecurityConfig.class)
     static class Config {
         @Bean AuthorizationSnapshotService snapshots() { return mock(AuthorizationSnapshotService.class); }
@@ -140,6 +166,7 @@ class RolePermissionAccessTest {
                 "/customer/booking/history", "/customer/booking/checkout", "/manager/showtimes", "/api/manager/showtimes",
                 "/staff/check-in", "/staff/sales", "/movies", "/staff/news", "/staff/bookings", "/api/staff/news",
                 "/manager", "/manager/", "/admin/dashboard", "/api/manager/dashboard/stats",
+                "/admin/roles", "/api/admin/roles", "/api/admin/roles/1/permissions/add", "/api/admin/roles/1/permissions/remove",
                 "/manager/{module}", "/api/manager/{module}"})
         String ok() { return "ok"; }
     }

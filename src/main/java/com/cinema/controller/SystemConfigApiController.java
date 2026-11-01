@@ -31,7 +31,9 @@ public class SystemConfigApiController {
      */
     @GetMapping("/settings")
     public ResponseEntity<?> listSettings() {
-        Map<String, List<SystemSetting>> settings = service.getAllSettingsGrouped();
+        Map<String, List<SystemSetting>> settings = service.getAllSettingsGrouped().entrySet().stream()
+                .filter(e -> canConfigure(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "data", settings
@@ -44,6 +46,7 @@ public class SystemConfigApiController {
      */
     @GetMapping("/settings/category/{category}")
     public ResponseEntity<?> getSettingsByCategory(@PathVariable String category) {
+        requireCategory(category);
         List<SystemSetting> settings = service.getSettingsByCategory(category.toUpperCase());
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -57,6 +60,7 @@ public class SystemConfigApiController {
      */
     @GetMapping("/settings/{id}")
     public ResponseEntity<?> getSetting(@PathVariable int id) {
+        requireSetting(id);
         return service.getSettingById(id)
                 .<ResponseEntity<?>>map(setting -> ResponseEntity.ok(Map.of(
                         "success", true,
@@ -80,6 +84,7 @@ public class SystemConfigApiController {
             @PathVariable int id,
             @RequestBody Map<String, String> body) {
         
+        requireSetting(id);
         String newValue = body.get("value");
         
         // Get current value for response
@@ -132,6 +137,7 @@ public class SystemConfigApiController {
                         Map.Entry::getValue
                 ));
 
+        intKeyedMap.keySet().forEach(this::requireSetting);
         var results = service.updateSettings(intKeyedMap);
         
         int successCount = (int) results.stream().filter(SystemConfigService.OperationResult::success).count();
@@ -157,6 +163,7 @@ public class SystemConfigApiController {
      */
     @PostMapping("/settings/{id}/reset")
     public ResponseEntity<?> resetSetting(@PathVariable int id) {
+        requireSetting(id);
         var result = service.resetToDefault(id);
         
         return result.success()
@@ -180,6 +187,7 @@ public class SystemConfigApiController {
      */
     @GetMapping("/membership/ranks")
     public ResponseEntity<?> listRanks() {
+        requireCategory("MEMBERSHIP");
         List<MembershipRank> ranks = service.getAllRanks();
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -199,6 +207,7 @@ public class SystemConfigApiController {
             @PathVariable int id,
             @RequestBody com.fasterxml.jackson.databind.JsonNode body) {
         
+        requireCategory("MEMBERSHIP");
         var points = body == null ? null : body.get("minPoints");
         if (points == null || !points.isIntegralNumber() || !points.canConvertToInt() || points.intValue() < 0) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -260,6 +269,7 @@ public class SystemConfigApiController {
             @PathVariable int id,
             @RequestBody Map<String, String> body) {
         
+        requireCategory("MEMBERSHIP");
         String benefits = body.get("benefits");
         if (benefits == null || benefits.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -296,7 +306,7 @@ public class SystemConfigApiController {
         int settingId = (int) body.get("settingId");
         String newValue = (String) body.get("value");
 
-        var setting = service.getSettingByKey(String.valueOf(settingId));
+        var setting = service.getSettingById(settingId);
         if (setting.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
@@ -305,6 +315,7 @@ public class SystemConfigApiController {
             ));
         }
 
+        requireCategory(setting.get().getCategory());
         var validation = service.validateSetting(setting.get(), newValue);
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -312,5 +323,23 @@ public class SystemConfigApiController {
                 "errorCode", validation.errorCode() != null ? validation.errorCode() : "",
                 "errorMessage", validation.errorMessage() != null ? validation.errorMessage() : ""
         ));
+    }
+    private boolean canConfigure(String category) {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || category == null) return false;
+        String permission = switch (category.toUpperCase(java.util.Locale.ROOT)) {
+            case "VOUCHER" -> "voucher:configure";
+            case "MEMBERSHIP" -> "membership:configure";
+            case "SYSTEM" -> "system:configure";
+            default -> "";
+        };
+        var authorities = auth.getAuthorities().stream().map(a -> a.getAuthority()).toList();
+        return authorities.contains("ROLE_ADMIN") && authorities.contains(permission);
+    }
+    private void requireCategory(String category) {
+        if (!canConfigure(category)) throw new org.springframework.security.access.AccessDeniedException("Configuration permission required");
+    }
+    private void requireSetting(int id) {
+        service.getSettingById(id).ifPresent(setting -> requireCategory(setting.getCategory()));
     }
 }

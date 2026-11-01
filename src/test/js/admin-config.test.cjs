@@ -202,3 +202,18 @@ test('system settings use whole-number inputs with unit hints and reject fractio
  f.element('input-9').value='2';f.run('handleInputChange(9,"2")');await f.run('saveCategory("SYSTEM")');
  assert.equal(f.calls.length,1);assert.deepEqual(JSON.parse(f.calls[0].options.body),{value:'2'});
 });
+
+test('configuration tabs require their distinct admin permissions',()=>{
+  for (const category of ['voucher','membership','system']) {
+    assert.ok(html.includes("permissionUser.hasPermission('" + category + ":configure')"));
+  }
+});
+test('loading without membership permission skips the protected ranks endpoint',async()=>{
+  const f=fixture();
+  f.context.document.querySelector=()=>null;
+  f.replies.push({success:true,data:{}});
+  await f.run('loadAllData()');
+  assert.equal(f.calls.length,1);
+  assert.equal(f.calls[0].url,'/api/admin/config/settings');
+  assert.equal(f.run('membershipRanks.length'),0);
+});

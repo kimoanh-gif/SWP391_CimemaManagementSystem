@@ -156,9 +156,9 @@
 
       <!-- Category Tabs -->
       <div class="category-tabs">
-        <button class="tab-btn active" onclick="switchTab('voucher', this)">Voucher Settings</button>
-        <button class="tab-btn" onclick="switchTab('membership', this)">Membership Ranks</button>
-        <button class="tab-btn" onclick="switchTab('system', this)">System Settings</button>
+        <button class="tab-btn active" data-config-tab="voucher" th:if="${permissionUser != null and permissionUser.hasPermission('voucher:configure')}" onclick="switchTab('voucher', this)">Voucher Settings</button>
+        <button class="tab-btn" data-config-tab="membership" th:if="${permissionUser != null and permissionUser.hasPermission('membership:configure')}" onclick="switchTab('membership', this)">Membership Ranks</button>
+        <button class="tab-btn" data-config-tab="system" th:if="${permissionUser != null and permissionUser.hasPermission('system:configure')}" onclick="switchTab('system', this)">System Settings</button>
       </div>
 
       <!-- Loading -->
@@ -204,6 +204,13 @@ let currentValues = {};
 let savingCategory = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  const firstTab = document.querySelector('[data-config-tab]');
+  document.querySelectorAll('.config-section').forEach(sec => sec.classList.remove('active'));
+  if (firstTab) switchTab(firstTab.dataset.configTab, firstTab);
+  else {
+    document.getElementById('loadingIndicator').textContent = 'You do not have configuration permissions.';
+    return;
+  }
   loadAllData();
 });
 
@@ -213,7 +220,9 @@ async function loadAllData() {
   try {
     const [settingsResp, ranksResp] = await Promise.all([
       fetch('/api/admin/config/settings', { headers: getCsrfHeaders() }),
-      fetch('/api/admin/config/membership/ranks', { headers: getCsrfHeaders() })
+      document.querySelector('[data-config-tab=membership]')
+        ? fetch('/api/admin/config/membership/ranks', { headers: getCsrfHeaders() })
+        : Promise.resolve({ok: true, json: async () => ({success: true, data: []})})
     ]);
     
     const settingsJson = await settingsResp.json();

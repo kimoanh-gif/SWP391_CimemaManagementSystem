@@ -12,12 +12,15 @@ public final class RolePermissionPolicy {
             "MANAGER", Set.of("movie:read", "showtime:manage", "report:view", "booking:read",
                     "movie:manage", "genre:manage", "room:manage", "seat:manage", "pricing:manage",
                     "fb:manage", "voucher:manage", "promotion:manage", "news:approve"),
-            "ADMIN", Set.of("movie:read", "booking:create", "ticket:checkin",
+            "ADMIN", Set.of("voucher:configure", "membership:configure", "system:configure", "movie:read", "booking:create", "ticket:checkin",
                     "showtime:manage", "report:view", "account:manage", "booking:read", "news:manage", "news:approve",
                     "movie:manage", "genre:manage", "room:manage", "seat:manage", "pricing:manage",
                     "fb:manage", "voucher:manage", "promotion:manage"));
     /** New permissions seeded once; later revocations are preserved across restarts. */
     public static final Map<String, String> ADDITIONAL = Map.ofEntries(
+            Map.entry("voucher:configure", "Configure voucher settings"),
+            Map.entry("membership:configure", "Configure membership ranks"),
+            Map.entry("system:configure", "Configure system settings"),
             Map.entry("booking:read", "Xem danh sách và chi tiết đặt vé"),
             Map.entry("news:manage", "Soạn và quản lý bài viết"),
             Map.entry("news:approve", "Duyệt và xuất bản bài viết"),

@@ -6,6 +6,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 class SystemConfigRankApiTest {
+    @org.junit.jupiter.api.BeforeEach void configurationPermissions() {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("admin", "",
+                java.util.stream.Stream.of("ROLE_ADMIN", "voucher:configure", "membership:configure", "system:configure")
+                    .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new).toList()));
+    }
+    @org.junit.jupiter.api.AfterEach void clearConfigurationPermissions() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
     @Test void rejectsMissingNullFractionalStringsNegativeAndOverflowBeforeService() throws Exception {
         var service=mock(SystemConfigService.class);var controller=new SystemConfigApiController();
         ReflectionTestUtils.setField(controller,"service",service);var mapper=new ObjectMapper();
