@@ -85,6 +85,20 @@ class MovieCatalogServiceTest {
         assertEquals(0, result.get(1).getReviewCount());
     }
 
+    @Test
+    void searchFiltersByAgeRatingAndSortsByRating() {
+        Movie a = movie(1, "A", "T16", null);
+        Movie b = movie(2, "B", "T16", null);
+        Movie c = movie(3, "C", "P", null);
+        when(movieDAO.searchMovies(null, null, "all", "rating")).thenReturn(List.of(a, b, c));
+        when(movieReviewDAO.findRatingSummaries()).thenReturn(java.util.Map.of(1, new double[]{3.0, 2}, 2, new double[]{4.5, 4}));
+
+        List<Movie> result = movieCatalogService.searchMovies(null, null, "all", "rating", "t16");
+        assertEquals(2, result.size());
+        assertEquals("B", result.get(0).getTitle());
+        assertEquals("A", result.get(1).getTitle());
+    }
+
     private static Movie movie(int id, String title, String ageRating, java.time.LocalDate releaseDate) {
         Movie m = new Movie();
         m.setMovieId(id);
