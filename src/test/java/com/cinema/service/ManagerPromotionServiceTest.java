@@ -141,6 +141,31 @@ class ManagerPromotionServiceTest {
         assertEquals("1,840 bookings", ManagerPromotionRow.count(1840, "booking", "bookings"));
     }
 
+    @Test
+    void createRejectsSameStartAndEnd() {
+        LocalDateTime at = LocalDateTime.now().plusDays(3);
+        PromotionAdminException ex = assertThrows(PromotionAdminException.class,
+                () -> service.create(form("Deal", at, at)));
+        assertTrue(ex.getFieldErrors().containsKey("endDate"));
+        verify(promotionDAO, never()).insert(any());
+    }
+
+    @Test
+    void createRejectsPeriodThatHasAlreadyEnded() {
+        PromotionForm form = form("Old Deal", LocalDateTime.now().minusDays(20), LocalDateTime.now().minusDays(10));
+        form.setStatus("DRAFT");
+        PromotionAdminException ex = assertThrows(PromotionAdminException.class, () -> service.create(form));
+        assertEquals("The end date must be in the future.", ex.getFieldErrors().get("endDate"));
+        verify(promotionDAO, never()).insert(any());
+    }
+
+    @Test
+    void expiredPromotionCanBeReactivatedAfterExtendingEndDate() {
+        ManagerPromotionService.checkTransition("EXPIRED", "ACTIVE", LocalDateTime.now().plusDays(5));
+        assertThrows(PromotionAdminException.class,
+                () -> ManagerPromotionService.checkTransition("EXPIRED", "ACTIVE", LocalDateTime.now().minusDays(1)));
+    }
+
     private static PromotionForm form(String name, LocalDateTime start, LocalDateTime end) {
         PromotionForm f = new PromotionForm();
         f.setName(name);
