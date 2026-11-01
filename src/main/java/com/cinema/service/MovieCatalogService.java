@@ -12,6 +12,7 @@ import com.cinema.model.ReviewableMovie;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -31,33 +32,48 @@ public class MovieCatalogService {
     }
 
     public List<Movie> getFeaturedMovies(int limit) {
-        return movieDAO.findFeatured(limit);
+        return withRatings(movieDAO.findFeatured(limit));
     }
 
     public List<Movie> getNowShowingMovies(int limit) {
-        return movieDAO.findNowShowing(limit);
+        return withRatings(movieDAO.findNowShowing(limit));
     }
 
     public List<Movie> getComingSoonMovies(int limit) {
-        return movieDAO.findComingSoon(limit);
+        return withRatings(movieDAO.findComingSoon(limit));
     }
 
     public List<Movie> getUpcomingMovies(int limit) {
-        return movieDAO.findUpcomingByReleaseDate(limit);
+        return withRatings(movieDAO.findUpcomingByReleaseDate(limit));
     }
 
     public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy) {
-        return movieDAO.searchMovies(keyword, genreId, status, sortBy);
+        return withRatings(movieDAO.searchMovies(keyword, genreId, status, sortBy));
     }
 
     public Optional<Movie> getMovieById(int movieId) {
         Optional<Movie> movieOpt = movieDAO.findById(movieId);
-        movieOpt.ifPresent(m -> m.setGenreList(genreDAO.findByMovieId(movieId)));
+        movieOpt.ifPresent(m -> {
+            m.setGenreList(genreDAO.findByMovieId(movieId));
+            withRatings(List.of(m));
+        });
         return movieOpt;
     }
 
     public List<Movie> getRelatedMovies(int movieId, int limit) {
-        return movieDAO.findRelated(movieId, limit);
+        return withRatings(movieDAO.findRelated(movieId, limit));
+    }
+
+    /** Fills the real average rating and review count (ACTIVE reviews only). */
+    private List<Movie> withRatings(List<Movie> movies) {
+        if (movies == null || movies.isEmpty()) return movies;
+        Map<Integer, double[]> summaries = movieReviewDAO.findRatingSummaries();
+        for (Movie m : movies) {
+            double[] summary = summaries == null || m.getMovieId() == null ? null : summaries.get(m.getMovieId());
+            m.setAverageRating(summary != null ? summary[0] : 0.0);
+            m.setReviewCount(summary != null ? (int) summary[1] : 0);
+        }
+        return movies;
     }
 
     public List<Genre> getAllGenres() {

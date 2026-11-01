@@ -43,8 +43,11 @@
                     <span class="meta-pill"><span aria-hidden="true">◷</span> <span th:text="${movie.formattedDuration}">1h 58m</span></span>
                     <span class="meta-pill" th:text="${movie.genresFormatted}">Action, Adventure</span>
                     <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
-                        ⭐ <strong th:text="${movie.averageRating}">4.8</strong> / 5.0
-                        <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ' reviews)'}">(12 reviews)</span>
+                        <th:block th:if="${movie.reviewCount != null && movie.reviewCount > 0}">
+                            ⭐ <strong th:text="${#numbers.formatDecimal(movie.averageRating, 1, 1)}">4.8</strong> / 5.0
+                            <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + (movie.reviewCount == 1 ? ' review)' : ' reviews)')}">(12 reviews)</span>
+                        </th:block>
+                        <span th:unless="${movie.reviewCount != null && movie.reviewCount > 0}">⭐ No reviews yet</span>
                     </span>
                 </div>
 
