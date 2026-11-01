@@ -69,6 +69,25 @@ class ShowtimePublicControllerTest {
     }
 
     @Test
+    void roomTypeFilterUsesSharedRoomDataAndIgnoresUnknownValues() {
+        LocalDate today = LocalDate.now();
+        when(showtimeService.getUpcomingDates(14)).thenReturn(List.of(today));
+        when(showtimeService.getRoomTypes()).thenReturn(List.of("2D Digital", "Dolby Atmos", "VIP Recliner"));
+        when(movieService.searchMovies(null, null, "ALL", "title")).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        controller.listShowtimes(today, null, "dolby atmos", "ALL", null, null, session, model);
+        org.mockito.Mockito.verify(showtimeService).getShowtimes(today, null, "Dolby Atmos", "ALL");
+        assertEquals("Dolby Atmos", model.getAttribute("selectedRoomType"));
+        assertEquals(List.of("2D Digital", "Dolby Atmos", "VIP Recliner"), model.getAttribute("roomTypes"));
+
+        Model model2 = new ConcurrentModel();
+        controller.listShowtimes(today, null, "3D", "ALL", null, null, session, model2);
+        org.mockito.Mockito.verify(showtimeService).getShowtimes(today, null, "ALL", "ALL");
+        assertEquals("ALL", model2.getAttribute("selectedRoomType"));
+    }
+
+    @Test
     void showtimesCanBeFilteredByGenreAndAgeRating() {
         LocalDate today = LocalDate.now();
         PublicShowtime horrorT18 = new PublicShowtime();
