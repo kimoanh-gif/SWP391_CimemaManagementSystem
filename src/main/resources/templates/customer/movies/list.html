@@ -18,17 +18,17 @@
     </div>
     <form th:action="@{/movies}" method="get" class="filter-toolbar">
         <div class="filter-tabs">
-            <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
+            <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'all' || selectedType == null} ? 'active'">
                 All Movies
             </a>
-            <a th:href="@{/movies(type='now-showing', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
+            <a th:href="@{/movies(type='now-showing', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'now-showing'} ? 'active'">
                 Now Showing
             </a>
-            <a th:href="@{/movies(type='coming-soon', genreId=${selectedGenreId}, q=${keyword}, sort=${sortBy})}"
+            <a th:href="@{/movies(type='coming-soon', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
                class="filter-tab"
                th:classappend="${selectedType == 'coming-soon'} ? 'active'">
                 Coming Soon
@@ -49,6 +49,15 @@
                     Action
                 </option>
             </select>
+            <select name="ageRating" class="filter-select" onchange="this.form.submit()" aria-label="Age rating">
+                <option value="">All Age Ratings</option>
+                <option th:each="ar : ${ageRatings}"
+                        th:value="${ar}"
+                        th:text="${ar}"
+                        th:selected="${selectedAgeRating == ar}">
+                    T13
+                </option>
+            </select>
             <select name="sort" class="filter-select" onchange="this.form.submit()">
                 <option value="newest" th:selected="${sortBy == 'newest'}">Newest</option>
                 <option value="rating" th:selected="${sortBy == 'rating'}">Highest Rated</option>
@@ -59,7 +68,7 @@
             <button type="submit" class="btn-card-book" style="padding:8px 16px;cursor:pointer;">
                 Apply
             </button>
-            <a th:if="${(keyword != null && !keyword.isEmpty()) || selectedGenreId != null || (selectedType != null && selectedType != 'all')}"
+            <a th:if="${(keyword != null && !keyword.isEmpty()) || selectedGenreId != null || (selectedType != null && selectedType != 'all') || (selectedAgeRating != null && !selectedAgeRating.isEmpty())}"
                th:href="@{/movies}" class="btn-card-detail" style="padding:8px 12px;font-size:0.85rem;" title="Clear filters">
                 ✕ Clear
             </a>
@@ -96,8 +105,11 @@
                 <div class="movie-card-genres" th:text="${movie.genresFormatted}">Action, Adventure</div>
                 <div class="movie-card-meta">
                     <span class="movie-rating-stars">
-                        ⭐ <span th:text="${movie.averageRating}">4.8</span>
-                        <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ')'}">(12)</span>
+                        <th:block th:if="${movie.reviewCount != null && movie.reviewCount > 0}">
+                            ⭐ <span th:text="${#numbers.formatDecimal(movie.averageRating, 1, 1)}">4.8</span>
+                            <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ')'}">(12)</span>
+                        </th:block>
+                        <span th:unless="${movie.reviewCount != null && movie.reviewCount > 0}" style="font-size:0.8rem;color:var(--text-muted);">No reviews yet</span>
                     </span>
                     <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
                 </div>

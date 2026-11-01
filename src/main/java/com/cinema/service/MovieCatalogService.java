@@ -11,7 +11,11 @@ import com.cinema.model.MovieReview;
 import com.cinema.model.ReviewableMovie;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -31,33 +35,73 @@ public class MovieCatalogService {
     }
 
     public List<Movie> getFeaturedMovies(int limit) {
-        return movieDAO.findFeatured(limit);
+        return withRatings(movieDAO.findFeatured(limit));
     }
 
     public List<Movie> getNowShowingMovies(int limit) {
-        return movieDAO.findNowShowing(limit);
+        return withRatings(movieDAO.findNowShowing(limit));
     }
 
     public List<Movie> getComingSoonMovies(int limit) {
-        return movieDAO.findComingSoon(limit);
+        return withRatings(movieDAO.findComingSoon(limit));
     }
 
     public List<Movie> getUpcomingMovies(int limit) {
-        return movieDAO.findUpcomingByReleaseDate(limit);
+        return withRatings(movieDAO.findUpcomingByReleaseDate(limit));
     }
 
     public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy) {
-        return movieDAO.searchMovies(keyword, genreId, status, sortBy);
+        return searchMovies(keyword, genreId, status, sortBy, null);
+    }
+
+    /** Movie List (Screen 22): keyword, genre, age rating, now showing / coming soon, sort. */
+    public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy, String ageRating) {
+        List<Movie> movies = withRatings(movieDAO.searchMovies(keyword, genreId, status, sortBy));
+        if (ageRating != null && !ageRating.isBlank() && !"ALL".equalsIgnoreCase(ageRating.trim())) {
+            String wanted = ageRating.trim();
+            movies = new ArrayList<>(movies.stream()
+                    .filter(m -> m.getAgeRating() != null && m.getAgeRating().trim().equalsIgnoreCase(wanted))
+                    .toList());
+        }
+        if ("rating".equalsIgnoreCase(sortBy)) {
+            movies = new ArrayList<>(movies);
+            movies.sort(Comparator.comparing((Movie m) -> m.getReviewCount() != null && m.getReviewCount() > 0
+                            ? m.getAverageRating() : 0.0).reversed()
+                    .thenComparing(m -> m.getReviewCount() == null ? 0 : m.getReviewCount(), Comparator.reverseOrder()));
+        }
+        return movies;
     }
 
     public Optional<Movie> getMovieById(int movieId) {
         Optional<Movie> movieOpt = movieDAO.findById(movieId);
-        movieOpt.ifPresent(m -> m.setGenreList(genreDAO.findByMovieId(movieId)));
+        movieOpt.ifPresent(m -> {
+            m.setGenreList(genreDAO.findByMovieId(movieId));
+            withRatings(List.of(m));
+        });
         return movieOpt;
     }
 
+    /** "More Movies Now Showing" on Movie Details: only movies already released, never the current one. */
     public List<Movie> getRelatedMovies(int movieId, int limit) {
-        return movieDAO.findRelated(movieId, limit);
+        LocalDate today = LocalDate.now();
+        List<Movie> nowShowing = movieDAO.findNowShowing(0).stream()
+                .filter(m -> m.getMovieId() != null && m.getMovieId() != movieId)
+                .filter(m -> m.getReleaseDate() == null || !m.getReleaseDate().isAfter(today))
+                .limit(limit > 0 ? limit : Long.MAX_VALUE)
+                .toList();
+        return withRatings(nowShowing);
+    }
+
+    /** Fills the real average rating and review count (ACTIVE reviews only). */
+    private List<Movie> withRatings(List<Movie> movies) {
+        if (movies == null || movies.isEmpty()) return movies;
+        Map<Integer, double[]> summaries = movieReviewDAO.findRatingSummaries();
+        for (Movie m : movies) {
+            double[] summary = summaries == null || m.getMovieId() == null ? null : summaries.get(m.getMovieId());
+            m.setAverageRating(summary != null ? summary[0] : 0.0);
+            m.setReviewCount(summary != null ? (int) summary[1] : 0);
+        }
+        return movies;
     }
 
     public List<Genre> getAllGenres() {
