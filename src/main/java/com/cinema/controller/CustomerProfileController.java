@@ -38,6 +38,8 @@ public class CustomerProfileController {
     private final CustomerProfileService customerProfileService;
     private final SessionService sessionService;
     private final AuthService authService;
+    @org.springframework.web.bind.annotation.ModelAttribute("passwordMinLength")
+    public int passwordMinLength() { return Math.max(8, authService.passwordMinimumLength()); }
 
     public CustomerProfileController(CustomerProfileService customerProfileService,
                                      SessionService sessionService,
@@ -202,6 +204,8 @@ public class CustomerProfileController {
         Integer accountId = customerAccountId(session);
         if (accountId == null) return ResponseEntity.status(401).body(Map.of("success", false, "message", "Please sign in again."));
         if (!newPassword.equals(confirmPassword)) return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Password confirmation does not match."));
+        if (newPassword.length() < passwordMinLength()) return ResponseEntity.badRequest().body(Map.of("success", false,
+                "message", "Password must contain at least " + passwordMinLength() + " characters."));
         CustomerProfile profile = getProfile(accountId);
         boolean success;
         if (profile.isGoogleLinked() && !profile.isPasswordSet()) {

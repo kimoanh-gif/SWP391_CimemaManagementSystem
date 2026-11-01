@@ -35,15 +35,18 @@ public class OtpService {
     private final SecureRandom random = new SecureRandom();
 
     @Value("${app.auth.otp.ttl-seconds:300}")
-    private int otpTtlSeconds;
+    private int otpTtlSeconds = 300;
 
     /** Resend cooldown in seconds. */
     @Value("${app.auth.otp.resend-cooldown-seconds:60}")
-    private int resendCooldownSeconds;
+    private int resendCooldownSeconds = 60;
 
     /** Maximum OTP codes that can be sent per email per day. */
     @Value("${app.auth.otp.max-send-daily:5}")
-    private int maxSendDaily;
+    private int maxSendDaily = 5;
+    private SystemSecuritySettings securitySettings;
+    @Autowired public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
+    private int policy(String key, int fallback) { return securitySettings == null ? fallback : securitySettings.read(key, fallback); }
 
     /** Brand / display name shown in the email. */
     @Value("${app.auth.brand:CinemaSystem}")
@@ -58,16 +61,30 @@ public class OtpService {
         this.otpTokenDAO = otpTokenDAO;
     }
 
-    public int getOtpTtlSeconds() { return otpTtlSeconds; }
-    public int getResendCooldownSeconds() { return resendCooldownSeconds; }
-    public int getMaxAttemptsDefault() { return 5; }
-    public int getMaxSendDaily() { return maxSendDaily; }
+    public int getOtpTtlSeconds() { return policy("SYSTEM_OTP_EXPIRY_MINUTES", Math.max(1, otpTtlSeconds / 60)) * 60; }
+    public int getResendCooldownSeconds() { return policy("SYSTEM_OTP_RESEND_COOLDOWN", resendCooldownSeconds); }
+    public int getMaxAttemptsDefault() { return policy("SYSTEM_OTP_MAX_ATTEMPTS", 5); }
+    public int getMaxSendDaily() { return policy("SYSTEM_OTP_MAX_SEND_DAILY", maxSendDaily); }
 
     /**
      * Check if OTP can be sent to this email today.
      * Returns null if OK, or an error message if limit exceeded.
      */
     public String canSendOtp(String email, String purpose) {
+        var latest = otpTokenDAO.findLatestByEmailAndPurpose(email, purpose);
+        if (latest.isPresent() && latest.get().getAttemptCount() != null
+                && latest.get().getAttemptCount() >= getMaxAttemptsDefault()) {
+            var lockedAt = latest.get().getConsumedAt() != null ? latest.get().getConsumedAt() : latest.get().getLastSentAt();
+            int minutes = policy("SYSTEM_OTP_LOCKOUT_MINUTES", 15);
+            if (lockedAt != null && LocalDateTime.now().isBefore(lockedAt.plusMinutes(minutes)))
+                return "OTP verification is locked. Please try again after " + minutes + " minutes.";
+        }
+        if (latest.isPresent() && !canResend(latest.get().getLastSentAt()))
+            return "Please wait " + secondsUntilNextResend(latest.get().getLastSentAt()) + " seconds before requesting another code.";
+        int hourly = policy("SYSTEM_OTP_MAX_EMAIL_REQUESTS_PER_HOUR", 3);
+        if (otpTokenDAO.getHourlySendCount(email) >= hourly)
+            return "You have reached the hourly limit of " + hourly + " verification codes. Please try again later.";
+        int maxSendDaily = getMaxSendDaily();
         int todayCount = otpTokenDAO.getTodaySendCount(email, purpose);
         if (todayCount >= maxSendDaily) {
             return "You have reached the daily limit of " + maxSendDaily + " verification codes. Please try again tomorrow.";
@@ -80,7 +97,7 @@ public class OtpService {
      */
     public int getRemainingSends(String email, String purpose) {
         int todayCount = otpTokenDAO.getTodaySendCount(email, purpose);
-        return Math.max(0, maxSendDaily - todayCount);
+        return Math.max(0, getMaxSendDaily() - todayCount);
     }
 
     /** Generates a 6-digit numeric code as a zero-padded String. */
@@ -105,12 +122,12 @@ public class OtpService {
     /** Returns true if a new code may be sent now (no resend cooldown in effect). */
     public boolean canResend(LocalDateTime lastSentAt) {
         if (lastSentAt == null) return true;
-        return LocalDateTime.now().isAfter(lastSentAt.plusSeconds(resendCooldownSeconds));
+        return !LocalDateTime.now().isBefore(lastSentAt.plusSeconds(getResendCooldownSeconds()));
     }
 
     public int secondsUntilNextResend(LocalDateTime lastSentAt) {
         if (lastSentAt == null) return 0;
-        LocalDateTime allowed = lastSentAt.plusSeconds(resendCooldownSeconds);
+        LocalDateTime allowed = lastSentAt.plusSeconds(getResendCooldownSeconds());
         long diff = java.time.Duration.between(LocalDateTime.now(), allowed).getSeconds();
         return (int) Math.max(0, diff);
     }
@@ -121,6 +138,7 @@ public class OtpService {
      */
     public boolean sendByEmail(String to, String code, String purpose) {
         if (to == null || to.isBlank() || code == null) return false;
+        int otpTtlSeconds = getOtpTtlSeconds();
         int minutes = Math.max(1, otpTtlSeconds / 60);
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 

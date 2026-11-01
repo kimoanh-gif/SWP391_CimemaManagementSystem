@@ -64,6 +64,14 @@ public class AuthService {
 
     @Value("${app.auth.login.max-failures-per-ip:20}")
     private int maxLoginFailuresPerIp = 20;
+    private SystemSecuritySettings securitySettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
+    private int policy(String key, int fallback) { return securitySettings == null ? fallback : securitySettings.read(key, fallback); }
+    public int passwordMinimumLength() { return policy("SYSTEM_PASSWORD_MIN_LENGTH", 8); }
+    private boolean validPassword(String value) {
+        return value != null && value.length() >= passwordMinimumLength() && PASSWORD_RE.matcher(value).matches();
+    }
 
     public AuthService(AccountDAO accountDAO, RoleDAO roleDAO, CustomerDAO customerDAO,
                        OtpTokenDAO otpTokenDAO, LoginAttemptDAO loginAttemptDAO,
@@ -121,7 +129,7 @@ public class AuthService {
             return RegisterResult.invalidFullname();
         if (phone != null && !phone.isBlank() && !PHONE_RE.matcher(phone.trim()).matches())
             return RegisterResult.invalidPhone();
-        if (rawPassword == null || !PASSWORD_RE.matcher(rawPassword).matches())
+        if (!validPassword(rawPassword))
             return RegisterResult.invalidPassword();
 
         email = email.trim().toLowerCase(Locale.ROOT);
@@ -234,6 +242,8 @@ public class AuthService {
     @Transactional
     public LoginResult login(String identifier, String rawPassword,
                              String ipAddress, String userAgent) {
+        int lockoutMinutes = policy("SYSTEM_LOGIN_LOCKOUT_MINUTES", this.lockoutMinutes);
+        int maxLoginFailures = policy("SYSTEM_LOGIN_ATTEMPTS", this.maxLoginFailures);
         if (identifier == null || rawPassword == null
                 || identifier.isBlank() || rawPassword.isEmpty()) {
             throw new IllegalArgumentException("Thiếu thông tin đăng nhập.");
@@ -301,6 +311,7 @@ public class AuthService {
     }
 
     private int computeRetryAfterSeconds(String identifier) {
+        int lockoutMinutes = policy("SYSTEM_LOGIN_LOCKOUT_MINUTES", this.lockoutMinutes);
         LocalDateTime last = loginAttemptDAO.findLastFailureTime(identifier);
         if (last == null) return lockoutMinutes * 60;
         long elapsed = Duration.between(last, LocalDateTime.now()).getSeconds();
@@ -345,7 +356,7 @@ public class AuthService {
 
     @Transactional
     public OtpResult resetPassword(String email, String code, String newPassword) {
-        if (newPassword == null || !PASSWORD_RE.matcher(newPassword).matches()) {
+        if (!validPassword(newPassword)) {
             return OtpResult.INVALID_OR_EXPIRED;
         }
         return verifyOtpAndConsume(email, code, OtpToken.PURPOSE_RESET_PASSWORD,
@@ -358,7 +369,7 @@ public class AuthService {
     // =================================================== change password (logged-in)
     @Transactional
     public boolean changePassword(int accountId, String oldPassword, String newPassword) {
-        if (newPassword == null || !PASSWORD_RE.matcher(newPassword).matches()) return false;
+        if (!validPassword(newPassword)) return false;
         Account acc = accountDAO.findById(accountId).orElse(null);
         if (acc == null || acc.getPasswordHash() == null) return false;
         if (!passwordEncoder.matches(oldPassword, acc.getPasswordHash())) return false;
@@ -368,7 +379,7 @@ public class AuthService {
 
     @Transactional
     public boolean setInitialGooglePassword(int accountId, String newPassword) {
-        if (newPassword == null || !PASSWORD_RE.matcher(newPassword).matches()) return false;
+        if (!validPassword(newPassword)) return false;
         Account account = accountDAO.findById(accountId).orElse(null);
         if (account == null || account.getPasswordHash() != null) return false;
         boolean googleLinked = oAuthAccountDAO.findAllByAccountId(accountId).stream()
@@ -383,12 +394,16 @@ public class AuthService {
         if (email == null || code == null) return OtpResult.INVALID_OR_EXPIRED;
         OtpToken t = otpTokenDAO.findActiveByEmailAndPurpose(email.trim(), purpose).orElse(null);
         if (t == null) return OtpResult.NO_PENDING_TOKEN;
-        if (t.getAttemptCount() != null && t.getAttemptCount() >= maxOtpAttempts) {
+        if (t.getAttemptCount() != null && t.getAttemptCount() >= policy("SYSTEM_OTP_MAX_ATTEMPTS", maxOtpAttempts)) {
             otpTokenDAO.markConsumed(t.getOtpTokenId());
             return OtpResult.TOO_MANY_ATTEMPTS;
         }
         if (!otpService.verify(code, t.getCodeHash())) {
             otpTokenDAO.incrementAttempt(t.getOtpTokenId());
+            if ((t.getAttemptCount() == null ? 0 : t.getAttemptCount()) + 1 >= policy("SYSTEM_OTP_MAX_ATTEMPTS", maxOtpAttempts)) {
+                otpTokenDAO.markConsumed(t.getOtpTokenId());
+                return OtpResult.TOO_MANY_ATTEMPTS;
+            }
             return OtpResult.INVALID_OR_EXPIRED;
         }
         return OtpResult.SUCCESS;
@@ -422,12 +437,16 @@ public class AuthService {
         if (email == null || code == null) return OtpResult.INVALID_OR_EXPIRED;
         OtpToken t = otpTokenDAO.findActiveByEmailAndPurpose(email.trim(), purpose).orElse(null);
         if (t == null) return OtpResult.NO_PENDING_TOKEN;
-        if (t.getAttemptCount() != null && t.getAttemptCount() >= maxOtpAttempts) {
+        if (t.getAttemptCount() != null && t.getAttemptCount() >= policy("SYSTEM_OTP_MAX_ATTEMPTS", maxOtpAttempts)) {
             otpTokenDAO.markConsumed(t.getOtpTokenId());
             return OtpResult.TOO_MANY_ATTEMPTS;
         }
         if (!otpService.verify(code, t.getCodeHash())) {
             otpTokenDAO.incrementAttempt(t.getOtpTokenId());
+            if ((t.getAttemptCount() == null ? 0 : t.getAttemptCount()) + 1 >= policy("SYSTEM_OTP_MAX_ATTEMPTS", maxOtpAttempts)) {
+                otpTokenDAO.markConsumed(t.getOtpTokenId());
+                return OtpResult.TOO_MANY_ATTEMPTS;
+            }
             return OtpResult.INVALID_OR_EXPIRED;
         }
         otpTokenDAO.markConsumed(t.getOtpTokenId());

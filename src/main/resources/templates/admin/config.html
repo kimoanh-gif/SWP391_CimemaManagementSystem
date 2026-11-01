@@ -29,7 +29,6 @@
 .setting-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
 .setting-badge.voucher { background: #FEF3C7; color: #92400E; }
 .setting-badge.membership { background: #DBEAFE; color: #1E40AF; }
-.setting-badge.booking { background: #D1FAE5; color: #065F46; }
 .setting-badge.system { background: #EDE9FE; color: #6D28D9; }
 
 /* Setting Item */
@@ -159,7 +158,6 @@
       <div class="category-tabs">
         <button class="tab-btn active" onclick="switchTab('voucher', this)">Voucher Settings</button>
         <button class="tab-btn" onclick="switchTab('membership', this)">Membership Ranks</button>
-        <button class="tab-btn" onclick="switchTab('booking', this)">Booking Rules</button>
         <button class="tab-btn" onclick="switchTab('system', this)">System Settings</button>
       </div>
 
@@ -179,10 +177,6 @@
         <div id="membership-ranks" class="membership-policy"></div>
       </div>
 
-      <!-- BOOKING RULES -->
-      <div class="config-section" id="section-booking">
-        <div class="settings-grid" id="booking-settings"></div>
-      </div>
 
       <!-- SYSTEM SETTINGS -->
       <div class="config-section" id="section-system">
@@ -248,7 +242,7 @@ async function loadAllData() {
 function renderAllSections() {
   renderVoucherSettings();
   renderMembershipRanks();
-  renderBookingSettings();
+
   renderSystemSettings();
 }
 
@@ -295,30 +289,6 @@ function renderVoucherSettings() {
   </div>`;
 }
 
-function renderBookingSettings() {
-  const container = document.getElementById('booking-settings');
-  const bookingSettings = settings['BOOKING'] || [];
-  
-  if (bookingSettings.length === 0) {
-    container.innerHTML = '<div class="loading">No booking settings found.</div>';
-    return;
-  }
-  
-  container.innerHTML = `
-    <div class="setting-card">
-      <div class="setting-card-header">
-        <div>
-          <h3>Booking Rules</h3>
-          <p class="setting-desc">Configure booking limits and cancellation rules</p>
-        </div>
-        <span class="setting-badge booking">BOOKING</span>
-      </div>
-      ${bookingSettings.map(s => renderSettingItem(s)).join('')}
-      ${renderSaveBar('BOOKING')}
-    </div>
-  `;
-}
-
 function renderSystemSettings() {
   const container = document.getElementById('system-settings');
   const systemSettings = settings['SYSTEM'] || [];
@@ -333,7 +303,7 @@ function renderSystemSettings() {
       <div class="setting-card-header">
         <div>
           <h3>System Settings</h3>
-          <p class="setting-desc">Configure security and authentication rules</p>
+          <p class="setting-desc">Configure security and authentication rules. Saved values apply to new requests; issued OTP codes keep their original expiry.</p>
         </div>
         <span class="setting-badge system">SYSTEM</span>
       </div>
@@ -356,7 +326,7 @@ function renderSaveBar(category) {
 function renderSettingItem(setting) {
   const inputType = getInputType(setting);
   const isDiscountCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT';
-  const hint = isDiscountCap ? 'Whole VND amount. 0 = no system-wide cap. Applies to percentage vouchers. Lower voucher limits still apply.' : getValidationHint(setting);
+  const hint = isDiscountCap ? 'Whole VND amount. 0 = no system-wide cap. Applies to percentage vouchers. Lower voucher limits still apply.' : getValidationHint(setting) + (setting.category === 'SYSTEM' ? ' · ' + (setting.description || '') : '');
   const readonly = (setting.validationRules || '').includes('readonly');
   const value = currentValues[setting.settingId] ?? setting.value ?? '';
   const min = (setting.validationRules || '').match(/min:([\d.-]+)/)?.[1];
@@ -371,7 +341,7 @@ function renderSettingItem(setting) {
         ${inputType === 'checkbox' ? `<input type="checkbox" class="setting-checkbox" id="input-${setting.settingId}"
           ${value === 'true' || value === '1' ? 'checked' : ''} ${readonly ? 'disabled' : ''}
           onchange="handleInputChange(${setting.settingId}, this.checked ? 'true' : 'false')">` :
-        `<input type="${inputType}" ${inputType === 'number' ? (isDiscountCap ? 'step="1"' : 'step="any"') : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
+        `<input type="${inputType}" ${inputType === 'number' ? (isDiscountCap || setting.category === 'SYSTEM' ? 'step="1"' : 'step="any"') : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
           aria-describedby="${hint ? 'hint-' + setting.settingId + ' ' : ''}error-${setting.settingId}" ${readonly ? 'disabled' : ''}
           ${min !== undefined ? `min="${min}"` : ''} ${max !== undefined ? `max="${max}"` : ''}
           oninput="handleInputChange(${setting.settingId}, this.value)">`}
@@ -471,7 +441,8 @@ async function saveCategory(category) {
   for (const setting of changes) {
     const input = document.getElementById('input-' + setting.settingId);
     const invalidCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT' && !/^[0-9]{1,12}$/.test(input.value);
-    if (invalidCap || !input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
+    const invalidSystem = setting.category === 'SYSTEM' && !/^[0-9]{1,9}$/.test(input.value);
+    if (invalidSystem || invalidCap || !input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
       showSettingError(setting.settingId, input.validationMessage || 'Enter a valid number.');
       if (!invalid) input.focus();
       invalid = true;

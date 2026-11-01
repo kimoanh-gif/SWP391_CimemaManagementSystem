@@ -30,6 +30,9 @@ public class SessionService {
 
     private final RoleDAO       roleDAO;
     private final PermissionDAO permissionDAO;
+    private SystemSecuritySettings securitySettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
 
     public SessionService(RoleDAO roleDAO, PermissionDAO permissionDAO) {
         this.roleDAO = roleDAO;
@@ -62,6 +65,7 @@ public class SessionService {
                 authMethod == null ? AUTH_METHOD_PASSWORD : authMethod);
 
         session.setAttribute(ATTR_USER, user);
+        session.setMaxInactiveInterval((securitySettings == null ? 30 : securitySettings.read("SYSTEM_SESSION_TIMEOUT_MINUTES", 30)) * 60);
     }
 
     public void logout(HttpSession session) {

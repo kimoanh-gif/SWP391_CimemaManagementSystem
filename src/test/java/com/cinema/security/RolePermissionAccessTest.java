@@ -37,6 +37,17 @@ class RolePermissionAccessTest {
         mvc.perform(get("/admin/customers").session(session)).andExpect(status().isForbidden());
         mvc.perform(get("/api/admin/customers").session(session)).andExpect(status().isForbidden());
     }
+    @Test void onlyAdminCanReadAndUpdateSecurityConfiguration() throws Exception {
+        for (String role : List.of("MANAGER", "STAFF", "CUSTOMER")) {
+            var session = login(role, "account:manage");
+            mvc.perform(get("/api/admin/config/settings").session(session)).andExpect(status().isForbidden());
+            mvc.perform(put("/api/admin/config/settings/1").session(session)
+                    .contentType("application/json").content("{\"value\":\"5\"}")).andExpect(status().isForbidden());
+        }
+        mvc.perform(get("/api/admin/config/settings").session(login("ADMIN"))).andExpect(status().isOk());
+        mvc.perform(put("/api/admin/config/settings/1").session(login("ADMIN"))
+                .contentType("application/json").content("{\"value\":\"5\"}")).andExpect(status().isOk());
+    }
     @Test void bookingPermissionControlsGetAndPostWithoutBlockingPersonalFunctions() throws Exception {
         var session = login("CUSTOMER", "movie:read");
         mvc.perform(get("/customer/booking").session(session)).andExpect(status().isForbidden());
@@ -123,6 +134,8 @@ class RolePermissionAccessTest {
         @Bean Endpoints endpoints() { return new Endpoints(); }
     }
     @RestController static class Endpoints {
+        @RequestMapping({"/api/admin/config/settings", "/api/admin/config/settings/1"})
+        String config() { return "ok"; }
         @RequestMapping({"/admin/customers", "/api/admin/customers", "/customer/booking", "/customer/profile",
                 "/customer/booking/history", "/customer/booking/checkout", "/manager/showtimes", "/api/manager/showtimes",
                 "/staff/check-in", "/staff/sales", "/movies", "/staff/news", "/staff/bookings", "/api/staff/news",

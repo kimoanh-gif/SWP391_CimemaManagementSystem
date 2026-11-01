@@ -190,3 +190,15 @@ test('minimum order errors appear on the money field rather than min points',()=
  assert.equal(f.element('rank-minBookingAmount-error-1').textContent,'');
  assert.equal(f.element('save-rank-1').disabled,false);
 });
+
+test('system settings use whole-number inputs with unit hints and reject fractional saves',async()=>{
+ const f=fixture();
+ f.run('settings.SYSTEM=[{settingId:9,category:"SYSTEM",settingKey:"SYSTEM_OTP_EXPIRY_MINUTES",settingName:"OTP Expiry Time",valueType:"NUMBER",value:"5",description:"minutes",validationRules:"min:1,max:30"}];currentValues[9]="5";');
+ const rendered=f.run('renderSettingItem(settings.SYSTEM[0])');assert.match(rendered,/step="1"/);assert.match(rendered,/minutes/);
+ for(const value of ['1.5','1e1','NaN','Infinity','']) {
+  f.element('input-9').value=value;f.run('handleInputChange(9,'+JSON.stringify(value)+')');await f.run('saveCategory("SYSTEM")');
+ }
+ assert.equal(f.calls.length,0);
+ f.element('input-9').value='2';f.run('handleInputChange(9,"2")');await f.run('saveCategory("SYSTEM")');
+ assert.equal(f.calls.length,1);assert.deepEqual(JSON.parse(f.calls[0].options.body),{value:'2'});
+});

@@ -51,6 +51,10 @@ public class SystemConfigService implements CommandLineRunner {
      */
     public Map<String, List<SystemSetting>> getAllSettingsGrouped() {
         List<SystemSetting> all = systemSettingDAO.findActive();
+        var system = SystemSecuritySettings.editable(all.stream().filter(s -> "SYSTEM".equalsIgnoreCase(s.getCategory())).toList());
+        all = new ArrayList<>(all);
+        all.removeIf(s -> "SYSTEM".equalsIgnoreCase(s.getCategory()));
+        all.addAll(system);
         return all.stream()
                 .collect(Collectors.groupingBy(SystemSetting::getCategory));
     }
@@ -66,7 +70,8 @@ public class SystemConfigService implements CommandLineRunner {
      * Get settings by category.
      */
     public List<SystemSetting> getSettingsByCategory(String category) {
-        return systemSettingDAO.findByCategory(category);
+        var rows = systemSettingDAO.findByCategory(category);
+        return "SYSTEM".equalsIgnoreCase(category) ? SystemSecuritySettings.editable(rows) : rows;
     }
 
     /**
@@ -75,6 +80,8 @@ public class SystemConfigService implements CommandLineRunner {
     public Optional<SystemSetting> getSettingByKey(String key) {
         return systemSettingDAO.findByKey(key);
     }
+
+    public Optional<SystemSetting> getSettingById(int id) { return systemSettingDAO.findById(id); }
 
     /**
      * Get setting value as string.
@@ -109,6 +116,14 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E5: Invalid Configuration Value
      */
     public ValidationResult validateSetting(SystemSetting setting, String newValue) {
+        if ("SYSTEM".equalsIgnoreCase(setting.getCategory())) {
+            if (Boolean.FALSE.equals(setting.getIsActive())) return ValidationResult.error("INACTIVE_SETTING", "This setting is inactive.");
+            var rule = SystemSecuritySettings.ruleFor(setting);
+            if (rule == null) return ValidationResult.error("UNSUPPORTED_SETTING", "This setting is not used by the application.");
+            if (!SystemSecuritySettings.valid(rule, newValue)) return ValidationResult.error("INVALID_VALUE",
+                    "Enter a whole number from " + rule.min() + " to " + rule.max() + " (" + rule.unit() + ").");
+            return ValidationResult.success();
+        }
         if ("VOUCHER_MAX_DISCOUNT_AMOUNT".equals(setting.getSettingKey())
                 && (newValue == null || !newValue.matches("[0-9]{1,12}"))) {
             return ValidationResult.error("INVALID_AMOUNT", "Enter a whole VND amount between 0 and 999999999999. Use 0 for no system-wide cap.");

@@ -55,6 +55,9 @@ public class AuthController {
         return googleOAuthEnabled;
     }
 
+    @ModelAttribute("passwordMinLength")
+    public int passwordMinLength() { return Math.max(8, authService.passwordMinimumLength()); }
+
     // Home route is handled by HomeController (Screen 21 - Home Page).
 
     // ============================================================= REGISTER
@@ -100,7 +103,7 @@ public class AuthController {
             case "INVALID_EMAIL"      -> { model.addAttribute("emailError", "Email không hợp lệ."); return "auth/register"; }
             case "INVALID_USERNAME"   -> { model.addAttribute("usernameError", "Tên đăng nhập phải 4-50 ký tự, chỉ chứa chữ, số, '.', '_' hoặc '-'."); return "auth/register"; }
             case "INVALID_PHONE"      -> { model.addAttribute("phoneError", "Số điện thoại không hợp lệ."); return "auth/register"; }
-            case "INVALID_PASSWORD"   -> { model.addAttribute("passwordError", "Mật khẩu phải ≥ 8 ký tự, có chữ và số."); return "auth/register"; }
+            case "INVALID_PASSWORD"   -> { model.addAttribute("passwordError", "Mật khẩu phải ≥ " + passwordMinLength() + " ký tự, có chữ và số."); return "auth/register"; }
             case "INVALID_FULLNAME"  -> { model.addAttribute("fullNameError", "Họ tên không hợp lệ (2-100 ký tự)."); return "auth/register"; }
             case "ROLE_NOT_CONFIGURED" -> { model.addAttribute("formError", "Hệ thống chưa cấu hình role CUSTOMER."); return "auth/register"; }
             case "OTP_DELIVERY_FAILED" -> {
@@ -459,6 +462,10 @@ public class AuthController {
             return "auth/reset-password";
         }
 
+        if (form.getPassword().length() < passwordMinLength()) {
+            model.addAttribute("passwordError", "Mật khẩu phải có ít nhất " + passwordMinLength() + " ký tự.");
+            return "auth/reset-password";
+        }
         AuthService.OtpResult r = authService.resetPassword(email, otp, form.getPassword());
         switch (r) {
             case SUCCESS -> {

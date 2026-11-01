@@ -22,6 +22,9 @@ public class AdminPasswordResetService {
     private final SecureRandom random = new SecureRandom();
     private final ConcurrentHashMap<Integer,Long> nextResetAt = new ConcurrentHashMap<>();
     private final Clock clock;
+    private SystemSecuritySettings securitySettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
     private static final long COOLDOWN_MS = 60_000;
     @Value("${app.auth.mail.from:${spring.mail.username:}}")
     private String from;
@@ -90,7 +93,7 @@ public class AdminPasswordResetService {
     private String generatePassword() {
         String upper="ABCDEFGHJKLMNPQRSTUVWXYZ",lower="abcdefghjkmnpqrstuvwxyz",digits="23456789",special="!@#$%";
         String all=upper+lower+digits+special;
-        char[] value=new char[16];
+        char[] value=new char[Math.max(16, securitySettings == null ? 8 : securitySettings.read("SYSTEM_PASSWORD_MIN_LENGTH",8))];
         value[0]=upper.charAt(random.nextInt(upper.length()));
         value[1]=lower.charAt(random.nextInt(lower.length()));
         value[2]=digits.charAt(random.nextInt(digits.length()));

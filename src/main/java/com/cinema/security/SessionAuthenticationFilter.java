@@ -33,6 +33,9 @@ import java.util.List;
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
     private final java.util.function.Supplier<com.cinema.service.AuthorizationSnapshotService> snapshots;
+    private com.cinema.service.SystemSecuritySettings securitySettings;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setSecuritySettings(com.cinema.service.SystemSecuritySettings settings) { securitySettings = settings; }
 
     public SessionAuthenticationFilter(com.cinema.service.AuthorizationSnapshotService snapshots) {
         this.snapshots = () -> snapshots;
@@ -48,6 +51,13 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         SecurityContextHolder.clearContext();
+        if (session != null && session.getAttribute(SessionService.ATTR_USER) != null && securitySettings != null) {
+            int seconds = securitySettings.read("SYSTEM_SESSION_TIMEOUT_MINUTES", 30) * 60;
+            if (System.currentTimeMillis() - session.getLastAccessedTime() >= seconds * 1000L) {
+                session.invalidate();
+                session = null;
+            } else session.setMaxInactiveInterval(seconds);
+        }
         Object value = session == null || session.getAttribute(SessionService.ATTR_USER) == null
                 ? null : snapshots.get().refresh(session);
         

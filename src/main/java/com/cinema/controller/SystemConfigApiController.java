@@ -57,7 +57,7 @@ public class SystemConfigApiController {
      */
     @GetMapping("/settings/{id}")
     public ResponseEntity<?> getSetting(@PathVariable int id) {
-        return service.getSettingByKey(String.valueOf(id))
+        return service.getSettingById(id)
                 .<ResponseEntity<?>>map(setting -> ResponseEntity.ok(Map.of(
                         "success", true,
                         "data", setting
@@ -83,7 +83,7 @@ public class SystemConfigApiController {
         String newValue = body.get("value");
         
         // Get current value for response
-        var currentSetting = service.getSettingByKey(String.valueOf(id));
+        var currentSetting = service.getSettingById(id);
         String oldValue = currentSetting.map(SystemSetting::getValue).orElse("");
         String settingName = currentSetting.map(SystemSetting::getSettingName).orElse("");
 

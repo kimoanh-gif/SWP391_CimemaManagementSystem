@@ -67,8 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
       showPasswordMessage("Password confirmation does not match.", "error");
       return;
     }
-    if (newPassword.length < 8) {
-      showPasswordMessage("Password must contain at least 8 characters.", "error");
+    const minLength = Math.max(8, document.getElementById("new-password").minLength || 8);
+    if (newPassword.length < minLength) {
+      showPasswordMessage("Password must contain at least " + minLength + " characters.", "error");
       return;
     }
     const body = new URLSearchParams({
