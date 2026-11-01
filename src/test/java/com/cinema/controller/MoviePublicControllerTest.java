@@ -102,6 +102,27 @@ class MoviePublicControllerTest {
     }
 
     @Test
+    void movieDetailsUsesDisplayedReviewsForRatingSummary() {
+        Movie movie = new Movie();
+        movie.setMovieId(5);
+        MovieReview first = new MovieReview();
+        first.setRating(4);
+        MovieReview second = new MovieReview();
+        second.setRating(5);
+
+        when(movieService.getMovieById(5)).thenReturn(Optional.of(movie));
+        when(showtimeService.getAvailableDatesForMovie(5)).thenReturn(List.of());
+        when(showtimeService.getShowtimesForMovie(eq(5), any(LocalDate.class))).thenReturn(List.of());
+        when(movieService.getMovieReviews(5)).thenReturn(List.of(first, second));
+        when(movieService.getRelatedMovies(5, 4)).thenReturn(List.of());
+
+        controller.movieDetails(5, null, null, session, new ConcurrentModel(), new RedirectAttributesModelMap());
+
+        assertEquals(2, movie.getReviewCount());
+        assertEquals(4.5, movie.getAverageRating());
+    }
+
+    @Test
     void testMovieDetailsNotFoundRedirects() {
         when(movieService.getMovieById(999)).thenReturn(Optional.empty());
 

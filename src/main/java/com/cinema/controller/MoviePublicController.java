@@ -125,6 +125,10 @@ public class MoviePublicController {
 
         // Movie Reviews
         List<MovieReview> reviews = movieService.getMovieReviews(movieId);
+        movie.setReviewCount(reviews.size());
+        movie.setAverageRating(reviews.isEmpty()
+                ? 0.0
+                : reviews.stream().mapToInt(MovieReview::getRating).average().orElse(0.0));
         model.addAttribute("reviews", reviews);
 
         // Related movies

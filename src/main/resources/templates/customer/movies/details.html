@@ -41,7 +41,9 @@
                 <div class="movie-meta-pills">
                     <span class="badge-rating" th:classappend="${movie.ageRatingBadgeClass}" th:text="${movie.ageRating}">T13</span>
                     <span class="meta-pill"><span aria-hidden="true">◷</span> <span th:text="${movie.formattedDuration}">1h 58m</span></span>
-                    <span class="meta-pill" th:text="${movie.genresFormatted}">Action, Adventure</span>
+                    <span class="meta-pill"
+                          th:if="${movie.genresFormatted != null && !movie.genresFormatted.isBlank()}"
+                          th:text="${movie.genresFormatted}">Action, Adventure</span>
                     <span class="meta-pill" style="color:var(--gold);display:inline-flex;align-items:center;gap:4px;">
                         <th:block th:if="${movie.reviewCount != null && movie.reviewCount > 0}">
                             ⭐ <strong th:text="${#numbers.formatDecimal(movie.averageRating, 1, 1)}">4.8</strong> / 5.0
