@@ -63,7 +63,7 @@
 .membership-count { padding: 7px 13px; background: #fff0e8; color: #92400e; border-radius: 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .membership-rule { padding: 12px 16px; margin-bottom: 20px; background: #fff0e8; border-radius: 10px; font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
 .membership-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: var(--shadow-sm); }
-.membership-table { border-collapse: collapse; width: 100%; min-width: 970px; font-size: 12px; }
+.membership-table { border-collapse: collapse; width: 100%; min-width: 1250px; font-size: 12px; }
 .membership-table th { padding: 15px 16px; text-align: left; color: var(--text-secondary); background: var(--surface-raised); border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
 .membership-table td { padding: 20px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
 .membership-table tbody tr:last-child td { border-bottom: 0; }

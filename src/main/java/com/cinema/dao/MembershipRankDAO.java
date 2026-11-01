@@ -19,7 +19,7 @@ public class MembershipRankDAO {
     private final RowMapper<MembershipRank> rowMapper = (rs, rowNum) -> mapResultSetToModel(rs);
     private static final String SELECT_COLUMNS = """
             SELECT RankID, [Name], DisplayName, MinPoints, MaxPoints,
-                   Benefits, DiscountPercent, IsActive
+                   Benefits, DiscountPercent, IsActive, DiscountUsageLimit, MinBookingAmount, MaxDiscountAmount
             """;
 
     @Autowired
@@ -38,6 +38,9 @@ public class MembershipRankDAO {
         r.setBenefits(rs.getString("Benefits"));
         r.setDiscountPercent(rs.getString("DiscountPercent"));
         r.setIsActive(rs.getBoolean("IsActive"));
+        r.setDiscountUsageLimit(rs.getInt("DiscountUsageLimit"));
+        r.setMinBookingAmount(rs.getBigDecimal("MinBookingAmount"));
+        r.setMaxDiscountAmount(rs.getBigDecimal("MaxDiscountAmount"));
         return r;
     }
 
@@ -118,6 +121,20 @@ public class MembershipRankDAO {
 
     public void lockThresholds() {
         jdbcTemplate.queryForList("SELECT RankID FROM dbo.MembershipRank WITH (UPDLOCK, HOLDLOCK) ORDER BY RankID");
+    }
+
+    public int updatePolicy(int id, int min, Integer max, java.math.BigDecimal percent,
+                            int limit, java.math.BigDecimal minimum, java.math.BigDecimal cap) {
+        return jdbcTemplate.update("""
+                UPDATE dbo.MembershipRank SET MinPoints=?,MaxPoints=?,DiscountPercent=?,
+                    DiscountUsageLimit=?,MinBookingAmount=?,MaxDiscountAmount=? WHERE RankID=?
+                """, min, max, percent, limit, minimum, cap, id);
+    }
+
+    public int updateThreshold(int rankId, int minPoints, Integer maxPoints) {
+        return jdbcTemplate.update(
+                "UPDATE dbo.MembershipRank SET MinPoints = ?, MaxPoints = ? WHERE RankID = ?",
+                minPoints, maxPoints, rankId);
     }
 
     public int delete(int rankId) {

@@ -85,7 +85,7 @@ test('saving a rank preserves another rank draft and refreshes real data',async(
  const f=ranksFixture();f.run('handleRankInput(2,"600");handleRankInput(3,"2500")');
  f.replies.push({success:true},{success:true,data:[{rankId:1,name:'SILVER',minPoints:0,maxPoints:499},{rankId:2,name:'GOLD',minPoints:600,maxPoints:1999},{rankId:3,name:'PLATINUM',minPoints:2000,maxPoints:null}]});
  await f.run('updateRankThreshold(2)');
- assert.deepEqual(JSON.parse(f.calls[0].options.body),{minPoints:600});
+ assert.deepEqual(JSON.parse(f.calls[0].options.body),{minPoints:600,maxPoints:1999,discountPercent:0,discountUsageLimit:0,minBookingAmount:0,maxDiscountAmount:0});
  assert.equal(f.run('rankInputs[2]'),undefined);assert.equal(f.run('rankInputs[3]'),'2500');
  assert.equal(f.element('rank-3').disabled,false);
 });
@@ -96,6 +96,36 @@ test('rank server error preserves draft and discard returns to saved threshold',
  f.run('discardRank(2)');assert.equal(f.run('rankInputs[2]'),undefined);assert.equal(f.element('rank-2').value,500);
 });
 
+test('maximum validation rejects invalid integers, inverted ranges, overlaps and unlimited lower ranks', async()=>{
+ const f=ranksFixture();
+ for(const max of ['-1','1.5','1e3','2147483648','499','2000','']) {
+  f.run('handleRankMaxInput(2,'+JSON.stringify(max)+')');
+  assert.equal(f.element('save-rank-2').disabled,true,max);
+  await f.run('updateRankThreshold(2)');
+ }
+ assert.equal(f.calls.length,0);
+ f.run('handleRankMaxInput(2,"1800")');assert.equal(f.element('save-rank-2').disabled,false);
+ f.run('discardRank(2)');assert.equal(f.element('rank-max-2').value,1999);
+ assert.equal(f.run('rankMaxInputs[2]'),undefined);
+});
+
+test('maximum-only edits save both bounds and highest rank can become unlimited',async()=>{
+ const f=ranksFixture(); f.run('handleRankMaxInput(2,"1800")');
+ f.replies.push({success:true},{success:true,data:[{rankId:1,minPoints:0,maxPoints:499},{rankId:2,minPoints:500,maxPoints:1800},{rankId:3,minPoints:2000,maxPoints:null}]});
+ await f.run('updateRankThreshold(2)');
+ assert.deepEqual(JSON.parse(f.calls[0].options.body),{minPoints:500,maxPoints:1800,discountPercent:0,discountUsageLimit:0,minBookingAmount:0,maxDiscountAmount:0});
+ assert.equal(f.run('rankMaxInputs[2]'),undefined);
+ f.run('handleRankMaxInput(3,"3000");handleRankMaxInput(3,"")');
+ assert.equal(f.run('rankInputs[3]'),undefined);
+ f.run('handleRankMaxInput(3,"3000")');
+ f.replies.push({success:false,message:'Conflict'});await f.run('updateRankThreshold(3)');
+ assert.equal(f.run('rankMaxInputs[3]'),'3000');
+ f.run('membershipRanks[2].maxPoints=3000;rankMaxInputs={};rankInputs={};handleRankMaxInput(3,"")');
+ f.replies.push({success:true},{success:true,data:[{rankId:1,minPoints:0,maxPoints:499},{rankId:2,minPoints:500,maxPoints:1800},{rankId:3,minPoints:2000,maxPoints:null}]});
+ await f.run('updateRankThreshold(3)');
+ assert.deepEqual(JSON.parse(f.calls.at(-2).options.body),{minPoints:2000,maxPoints:null,discountPercent:0,discountUsageLimit:0,minBookingAmount:0,maxDiscountAmount:0});
+});
+
 test('maximum discount amount rejects fractional input and saves whole VND through the existing API', async()=>{
  const f=fixture(); f.run('settings.VOUCHER[0].settingKey="VOUCHER_MAX_DISCOUNT_AMOUNT";');
  f.element('input-1').value='1.5'; f.run('handleInputChange(1,"1.5")');
@@ -103,4 +133,60 @@ test('maximum discount amount rejects fractional input and saves whole VND throu
  f.element('input-1').value='100000';f.run('handleInputChange(1,"100000")');
  await f.run('saveCategory("VOUCHER")');assert.equal(f.calls.length,1);
  assert.deepEqual(JSON.parse(f.calls[0].options.body),{value:'100000'});
+});
+
+
+test('membership editor exposes point bounds and all discount controls',()=>{
+ const f=ranksFixture();f.run('renderMembershipRanks()');
+ const html=f.element('membership-ranks').innerHTML;
+ assert.match(html,/Minimum points/);assert.match(html,/Maximum points/);
+ assert.equal((html.match(/<th scope="col">/g)||[]).length,8);
+ for(const field of ['rank-discountPercent-','discountUsageLimit','minBookingAmount','maxDiscountAmount']) assert.equal(html.includes(field),true);
+});
+
+test('policy validation rejects malformed numbers and saves enabled discount limits together',async()=>{
+ const f=ranksFixture();
+ for(const [field,badValues] of Object.entries({discountPercent:['','-1','100.01','1.555','1e1','Infinity'],discountUsageLimit:['','-1','1.5','2147483648'],minBookingAmount:['','-1','1.5','1000000000000'],maxDiscountAmount:['','-1','1.5','1000000000000']})) {
+  for(const value of badValues) {
+   f.run('handleRankPolicyInput(2,'+JSON.stringify(field)+','+JSON.stringify(value)+')');
+   assert.equal(f.element('save-rank-2').disabled,true,field+' '+value);
+   await f.run('updateRankThreshold(2)');
+  }
+  f.run('discardRank(2)');
+ }
+ assert.equal(f.calls.length,0);
+ f.run('handleRankPolicyInput(2,"discountUsageLimit","3")');assert.equal(f.element('save-rank-2').disabled,true);
+ f.run('handleRankPolicyInput(2,"discountPercent","10");handleRankPolicyInput(2,"minBookingAmount","100000");handleRankPolicyInput(2,"maxDiscountAmount","50000")');
+ assert.equal(f.element('save-rank-2').disabled,false);
+ f.replies.push({success:false,message:'Conflict'});await f.run('updateRankThreshold(2)');
+ assert.equal(f.run('rankPolicyInputs[2].discountUsageLimit'),'3');
+ f.replies.push({success:true},{success:true,data:[{rankId:1,minPoints:0,maxPoints:499},{rankId:2,minPoints:500,maxPoints:1999,discountPercent:10,discountUsageLimit:3,minBookingAmount:100000,maxDiscountAmount:50000},{rankId:3,minPoints:2000,maxPoints:null}]});
+ await f.run('updateRankThreshold(2)');
+ assert.deepEqual(JSON.parse(f.calls.at(-2).options.body),{minPoints:500,maxPoints:1999,discountPercent:10,discountUsageLimit:3,minBookingAmount:100000,maxDiscountAmount:50000});
+ assert.equal(f.run('rankPolicyInputs[2]'),undefined);
+ assert.equal(f.element('rank-discountUsageLimit-2').disabled,false);
+});
+
+test('Standard min points 0 or 1 and minimum order 0 or 1 are valid',()=>{
+ const f=ranksFixture();
+ for(const points of ['0','1']) {
+  for(const minimum of ['0','1']) {
+   f.run('handleRankPolicyInput(1,"minBookingAmount",'+JSON.stringify(minimum)+')');
+   assert.equal(f.run('rankValidationMessage(1,'+JSON.stringify(points)+')'),'');
+  }
+ }
+ f.run('membershipRanks[0].minBookingAmount="0.00";rankPolicyInputs={};');
+ assert.equal(f.run('rankValidationMessage(1,"1")'),'');
+});
+
+test('minimum order errors appear on the money field rather than min points',()=>{
+ const f=ranksFixture();
+ f.run('handleRankPolicyInput(1,"minBookingAmount","");handleRankInput(1,"1")');
+ assert.equal(f.element('rank-error-1').textContent,'');
+ assert.equal(f.element('rank-1').attrs['aria-invalid'],'false');
+ assert.match(f.element('rank-minBookingAmount-error-1').textContent,/Minimum order/);
+ assert.equal(f.element('rank-minBookingAmount-1').attrs['aria-invalid'],'true');
+ f.run('handleRankPolicyInput(1,"minBookingAmount","0")');
+ assert.equal(f.element('rank-minBookingAmount-error-1').textContent,'');
+ assert.equal(f.element('save-rank-1').disabled,false);
 });

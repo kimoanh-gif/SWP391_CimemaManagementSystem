@@ -38,6 +38,9 @@ public class StaffCounterSalesService {
     private final CustomerBookingService customerBookingService;
     private final MemberLookupDAO memberLookupDAO;
     private final StaffNewsDAO staffNewsDAO;
+    private MembershipDiscountService membershipDiscountService;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setMembershipDiscountService(MembershipDiscountService service) { membershipDiscountService = service; }
 
     public StaffCounterSalesService(CustomerBookingDAO bookingDAO,
                                     CustomerBookingService customerBookingService,
@@ -125,6 +128,8 @@ public class StaffCounterSalesService {
     /** Checkout also accepts orders that already have a VNPay QR waiting to be paid. */
     @Transactional
     public BookingSummary checkoutBooking(int accountId, int bookingId) {
+        openOrder(accountId, bookingId, true);
+        if (membershipDiscountService != null) membershipDiscountService.refreshCounter(bookingId, requireStaffId(accountId));
         return openOrder(accountId, bookingId, true);
     }
 

@@ -226,7 +226,8 @@ public class CustomerBookingDAO {
         jdbcTemplate.update("""
                 UPDATE b
                 SET Subtotal = totals.Subtotal,
-                    TotalAmount = totals.Subtotal - b.DiscountAmount
+                    DiscountAmount = CASE WHEN b.DiscountAmount > totals.Subtotal THEN totals.Subtotal ELSE b.DiscountAmount END,
+                    TotalAmount = CASE WHEN b.DiscountAmount > totals.Subtotal THEN 0 ELSE totals.Subtotal - b.DiscountAmount END
                 FROM dbo.Booking b
                 CROSS APPLY (
                     SELECT

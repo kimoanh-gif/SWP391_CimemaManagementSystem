@@ -169,6 +169,7 @@
                 <dt>Promo code</dt>
                 <dd th:text="${voucherCode}"></dd>
               </div>
+              <div th:if="${summary.seatTotal + summary.foodTotal > summary.totalAmount}"><dt>Discount</dt><dd th:text="${'-' + #numbers.formatDecimal(summary.seatTotal + summary.foodTotal - summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"></dd></div>
             </dl>
             <div class="total-row">
               <span>Total Payment</span

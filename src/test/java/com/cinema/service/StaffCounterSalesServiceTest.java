@@ -182,6 +182,15 @@ class StaffCounterSalesServiceTest {
         verify(bookingDAO, never()).confirmCounterPayment(anyInt());
     }
 
+    @Test void memberPolicyIsRefreshedAtCounterCheckout() {
+        var discount = org.mockito.Mockito.mock(MembershipDiscountService.class);
+        service.setMembershipDiscountService(discount);
+        when(staffNewsDAO.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        when(bookingDAO.findCounterBookingSummary(31, 4)).thenReturn(Optional.of(activeBooking()));
+        service.checkoutBooking(12, 31);
+        verify(discount).refreshCounter(31, 4);
+    }
+
     private BookingSummary activeBooking() {
         BookingSummary summary = new BookingSummary();
         summary.setStatus("PENDING");

@@ -89,7 +89,7 @@
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/cineora-admin.css" th:href="@{/css/cineora-admin.css}">
-<link rel="stylesheet" th:href="@{/css/cineora-admin-config.css}" href="/css/cineora-admin-config.css">
+<link rel="stylesheet" th:href="@{/css/cineora-admin-config.css(v='20261101-membership-policy')}" href="/css/cineora-admin-config.css">
 </head>
 <body>
 
@@ -518,145 +518,178 @@ function orderedRanks() {
   return [...membershipRanks].sort((a, b) => a.minPoints - b.minPoints || a.rankId - b.rankId);
 }
 
-function rankBenefitsSummary(rank) {
-  const benefits = parseBenefits(rank.benefits);
-  const items = [];
-  if (benefits.pointsRate != null) items.push('Points multiplier ×' + benefits.pointsRate);
-  if (benefits.birthdayBonus) items.push('Birthday benefits');
-  if (benefits.priorityBooking) items.push('Priority booking');
-  if (benefits.freeSnacks) items.push('Complimentary snacks');
-  return items.length ? items.map(escHtml).join('<br>') : 'No benefits configured';
-}
-
 function renderMembershipRanks() {
-  const container = document.getElementById('membership-ranks');
   const ranks = orderedRanks();
-  container.innerHTML = `<div class="membership-heading">
-    <div><span class="voucher-eyebrow">MEMBERSHIP RANKS</span><h2>Membership ranks</h2><p>Configure rank thresholds. Changes do not modify individual customer point balances.</p></div>
+  document.getElementById('membership-ranks').innerHTML = `<div class="membership-heading">
+    <div><span class="voucher-eyebrow">MEMBERSHIP RANKS</span><h2>Membership ranks</h2><p>Configure rank points and member discounts.</p></div>
     <span class="membership-count">${ranks.length} ranks</span>
   </div>
-  <div class="membership-rule">Minimum points must be non-negative whole numbers in ascending rank order. Click Save on each row to apply changes.</div>
+  <div class="membership-rule">Points must be non-negative whole numbers. Maximum must be at least minimum, and rank ranges must not overlap. Leave maximum blank for unlimited on the highest rank only. Uses are per customer per rank with no reset; 0 disables member discounts. Money is whole VND. Member discounts do not stack with vouchers. Click Save on each row.</div>
   <div class="membership-table-wrap"><table class="membership-table">
-    <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th><th scope="col">Benefits</th><th scope="col">Discount</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+    <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th>${rankPolicyFields.map(f => `<th scope="col">${f.label}</th>`).join('')}<th scope="col">Actions</th></tr></thead>
     <tbody>${ranks.length ? ranks.map(rank => `<tr>
       <td><span class="membership-code">${escHtml(rank.name)}</span><strong class="membership-name">${escHtml(rank.displayName || rank.name)}</strong></td>
       <td class="membership-threshold"><label class="sr-only" for="rank-${rank.rankId}">Minimum points for ${escHtml(rank.displayName || rank.name)}</label>
-        <input type="number" class="setting-input" id="rank-${rank.rankId}" min="0" max="2147483647" step="1"
+        <input type="number" class="setting-input" id="rank-${rank.rankId}" min="0" max="2147483647" step="1" required
           value="${escHtml(rankInputs[rank.rankId] ?? rank.minPoints)}" aria-describedby="rank-error-${rank.rankId}"
           oninput="handleRankInput(${rank.rankId}, this.value)" ${savingRankId !== null ? 'disabled' : ''}>
         <div class="setting-error" role="alert" id="rank-error-${rank.rankId}"></div></td>
-      <td class="membership-number">${rank.maxPoints == null ? '<span class="membership-unlimited">Unlimited</span>' : escHtml(Number(rank.maxPoints).toLocaleString('en-US'))}</td>
-      <td class="membership-benefits">${rankBenefitsSummary(rank)}</td>
-      <td><span class="membership-discount">${escHtml(rank.discountPercent ?? '0')}%</span></td>
-      <td><span class="membership-state ${rank.isActive ? 'active' : 'inactive'}">${rank.isActive ? 'Active' : 'Inactive'}</span></td>
+      <td class="membership-threshold"><label class="sr-only" for="rank-max-${rank.rankId}">Maximum points for ${escHtml(rank.displayName || rank.name)}</label>
+        <input type="number" class="setting-input" id="rank-max-${rank.rankId}" min="0" max="2147483647" step="1" placeholder="Unlimited"
+          value="${escHtml(rankMaxInputs[rank.rankId] ?? rank.maxPoints ?? '')}" aria-describedby="rank-max-error-${rank.rankId}"
+          oninput="handleRankMaxInput(${rank.rankId}, this.value)" ${savingRankId !== null ? 'disabled' : ''}>
+        <div class="setting-error" role="alert" id="rank-max-error-${rank.rankId}"></div></td>
+      ${rankPolicyFields.map(f => `<td class="membership-threshold"><label class="sr-only" for="rank-${f.key}-${rank.rankId}">${f.label} for ${escHtml(rank.displayName || rank.name)}</label><input type="number" class="setting-input" id="rank-${f.key}-${rank.rankId}" min="0" max="${f.max}" step="${f.step}" required value="${escHtml(rankPolicyValue(rank,f.key))}" aria-describedby="rank-${f.key}-error-${rank.rankId}" oninput="handleRankPolicyInput(${rank.rankId}, '${f.key}', this.value)" ${savingRankId !== null ? 'disabled' : ''}><div class="setting-error" role="alert" id="rank-${f.key}-error-${rank.rankId}"></div></td>`).join('')}
       <td><div class="membership-actions">
         <button type="button" class="btn btn-primary btn-sm" id="save-rank-${rank.rankId}" onclick="updateRankThreshold(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Save</button>
         <button type="button" class="btn btn-secondary btn-sm" id="discard-rank-${rank.rankId}" onclick="discardRank(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Discard</button>
       </div></td>
-    </tr>`).join('') : '<tr><td colspan="7" class="membership-empty">No membership ranks found.</td></tr>'}</tbody>
+    </tr>`).join('') : '<tr><td colspan="8" class="membership-empty">No membership ranks found.</td></tr>'}</tbody>
   </table></div>`;
 }
 
-function parseBenefits(benefitsJson) {
-  try {
-    const value = JSON.parse(benefitsJson || '{}');
-    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-  } catch (e) {
-    return {};
-  }
-}
-
 let rankInputs = {};
+let rankMaxInputs = {};
+let rankPolicyInputs = {};
+const rankPolicyFields = [
+  {key:'discountPercent', label:'Discount (%)', max:100, step:'0.01'},
+  {key:'discountUsageLimit', label:'Uses / customer', max:2147483647, step:'1'},
+  {key:'minBookingAmount', label:'Minimum order (VND)', max:999999999999, step:'1'},
+  {key:'maxDiscountAmount', label:'Maximum discount (VND)', max:999999999999, step:'1'}
+];
 let savingRankId = null;
-
+function rankPolicyValue(rank, field) {
+  if (rankPolicyInputs[rank.rankId]?.[field] !== undefined) return rankPolicyInputs[rank.rankId][field];
+  const saved = rank[field] ?? 0;
+  // Legacy responses may contain whole-VND values as decimal strings, e.g. "0.00".
+  return /^\d+(\.\d+)?$/.test(String(saved)) && Number.isFinite(Number(saved)) ? String(Number(saved)) : String(saved);
+}
 function rankValidationMessage(rankId, raw) {
   const value = String(raw).trim();
-  if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) > 2147483647) {
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) > 2147483647)
     return 'Enter a whole number between 0 and 2,147,483,647.';
-  }
   const ranks = orderedRanks();
   const index = ranks.findIndex(rank => rank.rankId === rankId);
   if (index < 0) return 'Membership rank not found.';
-  const points = Number(value);
-  if (ranks[index].maxPoints != null && points > ranks[index].maxPoints) return 'Minimum points must not exceed this rank’s maximum (' + ranks[index].maxPoints + ').';
-  if (index > 0 && ranks[index - 1].maxPoints != null && points <= ranks[index - 1].maxPoints) return 'Points must exceed the previous rank’s maximum (' + ranks[index - 1].maxPoints + ').';
-  if (index > 0 && points <= ranks[index - 1].minPoints) {
-    return 'Points must exceed the threshold of ' + ranks[index - 1].minPoints + ' for ' + (ranks[index - 1].displayName || ranks[index - 1].name) + '.';
+  for (const field of rankPolicyFields) {
+    const raw = rankPolicyValue(ranks[index], field.key);
+    const pattern = field.key === 'discountPercent' ? /^\d+(\.\d{1,2})?$/ : /^\d+$/;
+    if (!pattern.test(raw) || !Number.isFinite(Number(raw)) || Number(raw) > field.max)
+      return field.label + ': enter a non-negative number up to ' + field.max + (field.key === 'discountPercent' ? ' with at most two decimals.' : ' (whole numbers only).');
   }
-  if (index < ranks.length - 1 && points >= ranks[index + 1].minPoints) {
-    return 'Points must be below the threshold of ' + ranks[index + 1].minPoints + ' for ' + (ranks[index + 1].displayName || ranks[index + 1].name) + '.';
+  const draft = rankPolicyInputs[rankId] ?? {};
+  if (Number(draft.discountUsageLimit ?? ranks[index].discountUsageLimit ?? 0) > 0
+      && (Number(draft.discountPercent ?? ranks[index].discountPercent ?? 0) === 0
+      || Number(draft.maxDiscountAmount ?? ranks[index].maxDiscountAmount ?? 0) === 0))
+    return 'Enabled discounts require a positive percentage and maximum discount. Set uses to 0 to disable.';
+  const rawMax = String(rankMaxInputs[rankId] ?? ranks[index].maxPoints ?? '').trim();
+  if (rawMax !== '' && (!/^\d+$/.test(rawMax) || !Number.isSafeInteger(Number(rawMax)) || Number(rawMax) > 2147483647))
+    return 'Maximum must be a whole number from 0 to 2,147,483,647, or blank for unlimited.';
+  const points = Number(value), maximum = rawMax === '' ? null : Number(rawMax);
+  if (maximum !== null && maximum < points) return 'Maximum points must be greater than or equal to minimum points.';
+  for (let i = 0; i < index; i++) {
+    if (ranks[i].maxPoints == null || points <= ranks[i].maxPoints || points <= ranks[i].minPoints)
+      return 'Minimum points must exceed all lower ranks’ maximum points.';
   }
+  if (index < ranks.length - 1 && (maximum === null || maximum >= ranks[index + 1].minPoints))
+    return 'Maximum must be below the next rank’s minimum. Only the highest rank may be unlimited.';
   return '';
 }
-
 function showRankError(rankId, message) {
-  const error = document.getElementById('rank-error-' + rankId);
-  error.textContent = message;
-  error.classList.toggle('show', Boolean(message));
-  const input = document.getElementById('rank-' + rankId);
-  input.classList.toggle('error', Boolean(message));
-  input.setAttribute('aria-invalid', String(Boolean(message)));
+  const field = rankPolicyFields.find(f => message.startsWith(f.label + ':'));
+  const target = field ? field.key : message.startsWith('Enabled discounts') ? 'discountUsageLimit' : message.startsWith('Maximum') ? 'max' : 'min';
+  const fields = [{key:'min',input:'rank-',error:'rank-error-'}, {key:'max',input:'rank-max-',error:'rank-max-error-'},
+    ...rankPolicyFields.map(f => ({key:f.key,input:'rank-' + f.key + '-',error:'rank-' + f.key + '-error-'}))];
+  for (const item of fields) {
+    const invalid = Boolean(message) && item.key === target;
+    const error = document.getElementById(item.error + rankId);
+    error.textContent = invalid ? message : '';
+    error.classList.toggle('show', invalid);
+    const input = document.getElementById(item.input + rankId);
+    input.classList.toggle('error', invalid);
+    input.setAttribute('aria-invalid', String(invalid));
+  }
 }
-
 function handleRankInput(rankId, value) {
   const saved = membershipRanks.find(rank => rank.rankId === rankId);
-  if (saved && String(saved.minPoints) === value) delete rankInputs[rankId];
+  if (saved && String(saved.minPoints) === value && rankMaxInputs[rankId] === undefined && rankPolicyInputs[rankId] === undefined) delete rankInputs[rankId];
   else rankInputs[rankId] = value;
   const message = rankValidationMessage(rankId, value);
   showRankError(rankId, message);
   document.getElementById('save-rank-' + rankId).disabled = savingRankId !== null || rankInputs[rankId] === undefined || Boolean(message);
   document.getElementById('discard-rank-' + rankId).disabled = savingRankId !== null || rankInputs[rankId] === undefined;
 }
-
+function handleRankMaxInput(rankId, value) {
+  const saved = membershipRanks.find(rank => rank.rankId === rankId);
+  if (String(saved.maxPoints ?? '') === value) delete rankMaxInputs[rankId];
+  else rankMaxInputs[rankId] = value;
+  handleRankInput(rankId, rankInputs[rankId] ?? String(saved.minPoints));
+}
 function discardRank(rankId) {
   if (savingRankId !== null) return;
   const saved = membershipRanks.find(rank => rank.rankId === rankId);
   if (!saved) return;
+  delete rankInputs[rankId]; delete rankMaxInputs[rankId];
+  delete rankPolicyInputs[rankId];
+  for (const field of rankPolicyFields) document.getElementById('rank-' + field.key + '-' + rankId).value = rankPolicyValue(saved,field.key);
   document.getElementById('rank-' + rankId).value = saved.minPoints;
-  delete rankInputs[rankId];
+  document.getElementById('rank-max-' + rankId).value = saved.maxPoints ?? '';
   showRankError(rankId, '');
   document.getElementById('save-rank-' + rankId).disabled = true;
   document.getElementById('discard-rank-' + rankId).disabled = true;
 }
-
 async function updateRankThreshold(rankId) {
   if (savingRankId !== null || rankInputs[rankId] === undefined) return;
   const value = rankInputs[rankId];
+  const rawMax = rankMaxInputs[rankId] ?? membershipRanks.find(rank => rank.rankId === rankId).maxPoints;
+  const maximum = rawMax == null || rawMax === '' ? null : Number(rawMax);
+  const policy = Object.fromEntries(rankPolicyFields.map(f => [f.key, Number(rankPolicyInputs[rankId]?.[f.key] ?? membershipRanks.find(r => r.rankId === rankId)[f.key] ?? 0)]));
   const message = rankValidationMessage(rankId, value);
-  if (message) { showRankError(rankId, message); document.getElementById('rank-' + rankId).focus(); return; }
+  if (message) { showRankError(rankId, message); return; }
   savingRankId = rankId;
-  const controls = [...document.getElementById('membership-ranks').querySelectorAll('input, button')];
-  controls.forEach(control => control.disabled = true);
+  document.getElementById('membership-ranks').querySelectorAll('input, button').forEach(control => control.disabled = true);
   document.getElementById('save-rank-' + rankId).textContent = 'Saving…';
   try {
     const response = await fetch('/api/admin/config/membership/ranks/' + rankId + '/threshold', {
       method: 'PUT', headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
-      body: JSON.stringify({ minPoints: Number(value) })
+      body: JSON.stringify({ minPoints: Number(value), maxPoints: maximum, ...policy })
     });
     const result = await response.json();
-    if (!response.ok || !result.success) throw new Error(result.message || 'Unable to save the rank threshold.');
-    membershipRanks.find(rank => rank.rankId === rankId).minPoints = Number(value);
-    delete rankInputs[rankId];
-    showToast('Rank threshold saved successfully.', 'success');
+    if (!response.ok || !result.success) throw new Error(result.message || 'Unable to save rank thresholds.');
+    Object.assign(membershipRanks.find(rank => rank.rankId === rankId), {minPoints:Number(value), maxPoints:maximum, ...policy});
+    delete rankInputs[rankId]; delete rankMaxInputs[rankId];
+    delete rankPolicyInputs[rankId];
+    showToast('Rank thresholds saved successfully.', 'success');
     await loadMembershipRanks();
   } catch (error) {
-    showRankError(rankId, error.message || 'Connection failed. Please try again.');
+    showRankError(rankId, error.message || 'Unable to save changes.');
     showToast('Changes could not be saved. Please check the fields and try again.', 'error');
   } finally {
     savingRankId = null;
-    controls.forEach(control => control.disabled = false);
     for (const rank of membershipRanks) {
       const draft = rankInputs[rank.rankId];
-      document.getElementById('save-rank-' + rank.rankId).textContent = 'Save';
       const validation = draft === undefined ? '' : rankValidationMessage(rank.rankId, draft);
       if (validation) showRankError(rank.rankId, validation);
+      document.getElementById('save-rank-' + rank.rankId).textContent = 'Save';
       document.getElementById('save-rank-' + rank.rankId).disabled = draft === undefined || Boolean(validation);
       document.getElementById('discard-rank-' + rank.rankId).disabled = draft === undefined;
       document.getElementById('rank-' + rank.rankId).disabled = false;
+      document.getElementById('rank-max-' + rank.rankId).disabled = false;
+      for (const field of rankPolicyFields) document.getElementById('rank-' + field.key + '-' + rank.rankId).disabled = false;
     }
   }
 }
-
+function handleRankPolicyInput(rankId, field, value) {
+  const saved = membershipRanks.find(r => r.rankId === rankId);
+  const meta = rankPolicyFields.find(f => f.key === field);
+  if (!saved || !meta) return;
+  rankPolicyInputs[rankId] ??= {};
+  const pattern = field === 'discountPercent' ? /^\d+(\.\d{1,2})?$/ : /^\d+$/;
+  if (pattern.test(value) && Number(value) === Number(saved[field] ?? 0)) delete rankPolicyInputs[rankId][field];
+  else rankPolicyInputs[rankId][field] = value;
+  if (!Object.keys(rankPolicyInputs[rankId]).length) delete rankPolicyInputs[rankId];
+  handleRankInput(rankId, rankInputs[rankId] ?? String(saved.minPoints));
+}
 async function loadMembershipRanks() {
   try {
     const response = await fetch('/api/admin/config/membership/ranks', { headers: getCsrfHeaders() });

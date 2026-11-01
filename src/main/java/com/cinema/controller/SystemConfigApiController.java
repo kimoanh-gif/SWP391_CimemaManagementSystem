@@ -191,14 +191,15 @@ public class SystemConfigApiController {
      * PUT /api/admin/config/membership/ranks/{id}/threshold
      * Alternative Flow A5: Configure Membership Rank Thresholds.
      * 
-     * Body: { "minPoints": 500 }
+     * Requires minPoints, maxPoints (nullable), discountPercent, discountUsageLimit,
+     * minBookingAmount and maxDiscountAmount. Usage 0 disables the discount.
      */
     @PutMapping("/membership/ranks/{id}/threshold")
     public ResponseEntity<?> updateRankThreshold(
             @PathVariable int id,
             @RequestBody com.fasterxml.jackson.databind.JsonNode body) {
         
-        var points = body.get("minPoints");
+        var points = body == null ? null : body.get("minPoints");
         if (points == null || !points.isIntegralNumber() || !points.canConvertToInt() || points.intValue() < 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
@@ -207,7 +208,25 @@ public class SystemConfigApiController {
             ));
         }
 
-        var result = service.updateRankThreshold(id, points.intValue());
+        var maximum = body.get("maxPoints");
+        if (maximum == null || (!maximum.isNull() && (!maximum.isIntegralNumber()
+                || !maximum.canConvertToInt() || maximum.intValue() < 0))) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "code", "INVALID_REQUEST",
+                    "message", "maxPoints must be null (unlimited) or a whole number between 0 and 2147483647."));
+        }
+        java.math.BigDecimal discount, minimum, cap;
+        var limit = body.get("discountUsageLimit");
+        try {
+            discount = policyNumber(body.get("discountPercent"), 2, new java.math.BigDecimal("100"));
+            minimum = policyNumber(body.get("minBookingAmount"), 0, new java.math.BigDecimal("999999999999"));
+            cap = policyNumber(body.get("maxDiscountAmount"), 0, new java.math.BigDecimal("999999999999"));
+            if (limit == null || !limit.isIntegralNumber() || !limit.canConvertToInt() || limit.intValue() < 0) throw new IllegalArgumentException();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "code", "INVALID_POLICY",
+                    "message", "Provide discount 0–100% (up to 2 decimals), a whole non-negative usage limit, and whole-VND minimum order/maximum discount (0–999999999999)."));
+        }
+        var result = service.updateRankPolicy(id, points.intValue(), maximum.isNull() ? null : maximum.intValue(),
+                discount, limit.intValue(), minimum, cap);
         
         return result.success()
                 ? ResponseEntity.ok(Map.of(
@@ -221,6 +240,13 @@ public class SystemConfigApiController {
                         "code", result.code(),
                         "message", result.message()
                 ));
+    }
+
+    private static java.math.BigDecimal policyNumber(com.fasterxml.jackson.databind.JsonNode node, int scale, java.math.BigDecimal max) {
+        if (node == null || !node.isNumber()) throw new IllegalArgumentException();
+        var value = new java.math.BigDecimal(node.asText());
+        if (value.signum() < 0 || value.compareTo(max) > 0 || value.stripTrailingZeros().scale() > scale) throw new IllegalArgumentException();
+        return value;
     }
 
     /**
