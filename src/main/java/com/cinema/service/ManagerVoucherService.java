@@ -39,6 +39,8 @@ public class ManagerVoucherService {
 
     private static final Pattern CODE = Pattern.compile("^[A-Z0-9_-]{3,50}$");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    /** Upper bound for a fixed-amount voucher (VND); a booking of 10 seats plus F&amp;B stays well below it. */
+    static final BigDecimal MAX_FIXED_DISCOUNT = BigDecimal.valueOf(1_000_000);
 
     private final ManagerVoucherDAO voucherDAO;
     private final ManagerPromotionDAO promotionDAO;
@@ -145,6 +147,8 @@ public class ManagerVoucherService {
             errors.put("discountValue", "The discount value must be greater than 0.");
         } else if (percent && f.getDiscountValue().compareTo(HUNDRED) > 0) {
             errors.put("discountValue", "A percentage discount must be between 1 and 100.");
+        } else if (!percent && f.getDiscountValue().compareTo(MAX_FIXED_DISCOUNT) > 0) {
+            errors.put("discountValue", "A fixed discount cannot exceed 1,000,000 VND.");
         }
         if (f.getMaxDiscountAmount() != null && f.getMaxDiscountAmount().signum() < 0) {
             errors.put("maxDiscountAmount", "The maximum discount cannot be negative.");
