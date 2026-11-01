@@ -63,6 +63,10 @@
                     <div class="info-label">Language:</div>
                     <div class="info-val" th:text="${movie.language != null ? movie.language : 'To be updated'}">Language</div>
 
+                    <div class="info-label">Genre:</div>
+                    <div class="info-val"
+                         th:text="${movie.genresFormatted != null && !movie.genresFormatted.isBlank() ? movie.genresFormatted : 'To be updated'}">Action, Adventure</div>
+
                     <div class="info-label">Release Date:</div>
                     <div class="info-val" th:text="${movie.formattedReleaseDate}">18/10/2026</div>
 

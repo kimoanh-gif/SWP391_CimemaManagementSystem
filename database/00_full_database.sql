@@ -1118,6 +1118,23 @@ INSERT @MovieGenreSeed VALUES
     (N'The Secret House', N'Horror');
 
 INSERT @MovieGenreSeed VALUES
+    (N'Street Fighter',N'Action'),
+    (N'Street Fighter',N'Adventure'),
+    (N'Heart of the Beast',N'Action'),
+    (N'Heart of the Beast',N'Adventure'),
+    (N'Heart of the Beast',N'Thriller'),
+    (N'The Almost Perfect Murder',N'Comedy'),
+    (N'The Almost Perfect Murder',N'Romance'),
+    (N'The Almost Perfect Murder',N'Thriller'),
+    (N'Whale Fall',N'Adventure'),
+    (N'Whale Fall',N'Thriller'),
+    (N'Death Whisperer: Saming the Werebeast',N'Action'),
+    (N'Death Whisperer: Saming the Werebeast',N'Fantasy'),
+    (N'Death Whisperer: Saming the Werebeast',N'Horror'),
+    (N'Bambi: The Reckoning',N'Horror'),
+    (N'Bambi: The Reckoning',N'Thriller'),
+    (N'The Curse 2026',N'Horror'),
+    (N'The Curse 2026',N'Thriller'),
     (N'Clayface',N'Horror'),
     (N'Godzilla Minus Zero',N'Action'),
     (N'Godzilla Minus Zero',N'Sci-Fi'),
