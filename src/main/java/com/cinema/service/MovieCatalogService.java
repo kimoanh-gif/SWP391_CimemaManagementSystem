@@ -11,6 +11,7 @@ import com.cinema.model.MovieReview;
 import com.cinema.model.ReviewableMovie;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -80,8 +81,15 @@ public class MovieCatalogService {
         return movieOpt;
     }
 
+    /** "More Movies Now Showing" on Movie Details: only movies already released, never the current one. */
     public List<Movie> getRelatedMovies(int movieId, int limit) {
-        return withRatings(movieDAO.findRelated(movieId, limit));
+        LocalDate today = LocalDate.now();
+        List<Movie> nowShowing = movieDAO.findNowShowing(0).stream()
+                .filter(m -> m.getMovieId() != null && m.getMovieId() != movieId)
+                .filter(m -> m.getReleaseDate() == null || !m.getReleaseDate().isAfter(today))
+                .limit(limit > 0 ? limit : Long.MAX_VALUE)
+                .toList();
+        return withRatings(nowShowing);
     }
 
     /** Fills the real average rating and review count (ACTIVE reviews only). */

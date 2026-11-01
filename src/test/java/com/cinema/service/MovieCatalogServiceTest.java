@@ -99,6 +99,18 @@ class MovieCatalogServiceTest {
         assertEquals("A", result.get(1).getTitle());
     }
 
+    @Test
+    void relatedMoviesExcludeCurrentAndComingSoon() {
+        Movie current = movie(5, "Current", "P", java.time.LocalDate.now().minusDays(3));
+        Movie upcoming = movie(6, "Upcoming", "P", java.time.LocalDate.now().plusDays(30));
+        Movie showing = movie(7, "Showing", "P", java.time.LocalDate.now().minusDays(1));
+        when(movieDAO.findNowShowing(0)).thenReturn(List.of(current, upcoming, showing));
+
+        List<Movie> result = movieCatalogService.getRelatedMovies(5, 4);
+        assertEquals(1, result.size());
+        assertEquals("Showing", result.get(0).getTitle());
+    }
+
     private static Movie movie(int id, String title, String ageRating, java.time.LocalDate releaseDate) {
         Movie m = new Movie();
         m.setMovieId(id);
