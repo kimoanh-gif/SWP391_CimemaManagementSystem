@@ -50,10 +50,6 @@ public class MovieCatalogService {
         return withRatings(movieDAO.findUpcomingByReleaseDate(limit));
     }
 
-    public List<Movie> getUpcomingMovies(int limit) {
-        return movieDAO.findUpcomingByReleaseDate(limit);
-    }
-
     public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy) {
         return searchMovies(keyword, genreId, status, sortBy, null);
     }

@@ -48,10 +48,6 @@ public class OtpService {
     @Autowired public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
     private int policy(String key, int fallback) { return securitySettings == null ? fallback : securitySettings.read(key, fallback); }
 
-    /** Maximum OTP codes that can be sent per email per day. */
-    @Value("${app.auth.otp.max-send-daily:5}")
-    private int maxSendDaily;
-
     /** Brand / display name shown in the email. */
     @Value("${app.auth.brand:CinemaSystem}")
     private String brand;
