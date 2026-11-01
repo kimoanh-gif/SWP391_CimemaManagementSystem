@@ -35,6 +35,9 @@ import java.util.Optional;
 @RequestMapping("/movies")
 public class MoviePublicController {
 
+    /** Vietnamese film classification used by the Movie List and Showtime List filters. */
+    static final List<String> AGE_RATINGS = List.of("P", "K", "T13", "T16", "T18");
+
     private final MovieCatalogService movieService;
     private final PublicShowtimeService showtimeService;
     private final SessionService sessionService;
@@ -59,14 +62,17 @@ public class MoviePublicController {
             @RequestParam(name = "genreId", required = false) Integer genreId,
             @RequestParam(name = "q", required = false) String keyword,
             @RequestParam(name = "sort", required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(name = "ageRating", required = false) String ageRating,
             HttpSession session,
             Model model
     ) {
-        List<Movie> movies = movieService.searchMovies(keyword, genreId, type, sortBy);
+        List<Movie> movies = movieService.searchMovies(keyword, genreId, type, sortBy, ageRating);
         List<Genre> genres = movieService.getAllGenres();
 
         model.addAttribute("movies", movies);
         model.addAttribute("genres", genres);
+        model.addAttribute("ageRatings", AGE_RATINGS);
+        model.addAttribute("selectedAgeRating", ageRating != null ? ageRating.trim() : "");
         model.addAttribute("selectedType", type);
         model.addAttribute("selectedGenreId", genreId);
         model.addAttribute("keyword", keyword != null ? keyword.trim() : "");

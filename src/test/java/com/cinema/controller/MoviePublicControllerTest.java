@@ -52,13 +52,14 @@ class MoviePublicControllerTest {
 
     @Test
     void testListMoviesReturnsListView() {
-        when(movieService.searchMovies(null, null, "all", "newest")).thenReturn(List.of());
+        when(movieService.searchMovies(null, null, "all", "newest", null)).thenReturn(List.of());
         when(movieService.getAllGenres()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
-        String view = controller.listMovies("all", null, null, "newest", session, model);
+        String view = controller.listMovies("all", null, null, "newest", null, session, model);
 
         assertEquals("customer/movies/list", view);
+        assertTrue(model.containsAttribute("ageRatings"));
         assertTrue(model.containsAttribute("movies"));
         assertTrue(model.containsAttribute("genres"));
     }

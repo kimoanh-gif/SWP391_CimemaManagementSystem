@@ -11,6 +11,8 @@ import com.cinema.model.MovieReview;
 import com.cinema.model.ReviewableMovie;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +50,25 @@ public class MovieCatalogService {
     }
 
     public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy) {
-        return withRatings(movieDAO.searchMovies(keyword, genreId, status, sortBy));
+        return searchMovies(keyword, genreId, status, sortBy, null);
+    }
+
+    /** Movie List (Screen 22): keyword, genre, age rating, now showing / coming soon, sort. */
+    public List<Movie> searchMovies(String keyword, Integer genreId, String status, String sortBy, String ageRating) {
+        List<Movie> movies = withRatings(movieDAO.searchMovies(keyword, genreId, status, sortBy));
+        if (ageRating != null && !ageRating.isBlank() && !"ALL".equalsIgnoreCase(ageRating.trim())) {
+            String wanted = ageRating.trim();
+            movies = new ArrayList<>(movies.stream()
+                    .filter(m -> m.getAgeRating() != null && m.getAgeRating().trim().equalsIgnoreCase(wanted))
+                    .toList());
+        }
+        if ("rating".equalsIgnoreCase(sortBy)) {
+            movies = new ArrayList<>(movies);
+            movies.sort(Comparator.comparing((Movie m) -> m.getReviewCount() != null && m.getReviewCount() > 0
+                            ? m.getAverageRating() : 0.0).reversed()
+                    .thenComparing(m -> m.getReviewCount() == null ? 0 : m.getReviewCount(), Comparator.reverseOrder()));
+        }
+        return movies;
     }
 
     public Optional<Movie> getMovieById(int movieId) {
