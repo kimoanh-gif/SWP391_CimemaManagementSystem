@@ -72,6 +72,29 @@ class MovieCatalogServiceTest {
     }
 
     @Test
+    void moviesShowRealAverageRatingAndNoFakeFiveStars() {
+        Movie reviewed = movie(1, "Reviewed", "T16", java.time.LocalDate.now().minusDays(5));
+        Movie fresh = movie(2, "Fresh", "P", java.time.LocalDate.now().minusDays(1));
+        when(movieDAO.findNowShowing(0)).thenReturn(List.of(reviewed, fresh));
+        when(movieReviewDAO.findRatingSummaries()).thenReturn(java.util.Map.of(1, new double[]{4.3, 3}));
+
+        List<Movie> result = movieCatalogService.getNowShowingMovies(0);
+        assertEquals(4.3, result.get(0).getAverageRating());
+        assertEquals(3, result.get(0).getReviewCount());
+        assertEquals(0.0, result.get(1).getAverageRating());
+        assertEquals(0, result.get(1).getReviewCount());
+    }
+
+    private static Movie movie(int id, String title, String ageRating, java.time.LocalDate releaseDate) {
+        Movie m = new Movie();
+        m.setMovieId(id);
+        m.setTitle(title);
+        m.setAgeRating(ageRating);
+        m.setReleaseDate(releaseDate);
+        return m;
+    }
+
+    @Test
     void testAddReviewSuccess() {
         Customer customer = new Customer();
         customer.setCustomerId(99);

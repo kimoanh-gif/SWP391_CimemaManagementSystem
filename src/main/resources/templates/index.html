@@ -24,7 +24,7 @@
                         <span class="badge-rating" th:classappend="${hero.ageRatingBadgeClass}" th:text="${hero.ageRating}">T13</span>
                         <div class="hero-meta-item"><span>◷</span><span th:text="${hero.formattedDuration}">1h 58m</span></div>
                         <div class="hero-meta-item"><span>◆</span><span th:text="${hero.genresFormatted}">Action, Adventure</span></div>
-                        <div class="hero-meta-item"><span>★</span><span th:text="${hero.averageRating + ' / 5.0'}">4.8 / 5.0</span></div>
+                        <div class="hero-meta-item"><span>★</span><span th:text="${hero.reviewCount != null && hero.reviewCount > 0 ? #numbers.formatDecimal(hero.averageRating, 1, 1) + ' / 5.0' : 'No reviews yet'}">4.8 / 5.0</span></div>
                     </div>
                     <p class="hero-description" th:text="${hero.description}">A spectacular cinematic experience.</p>
                     <div class="hero-actions">
@@ -200,7 +200,7 @@
                     <div class="movie-card-genres" th:text="${movie.genresFormatted}">Action, Adventure</div>
                     <div class="movie-card-meta">
                         <span class="movie-rating-stars">
-                            Rating <span th:text="${movie.averageRating}">4.8</span>
+                            Rating <span th:text="${movie.reviewCount != null && movie.reviewCount > 0 ? #numbers.formatDecimal(movie.averageRating, 1, 1) : 'New'}">4.8</span>
                         </span>
                         <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
                     </div>

@@ -96,8 +96,11 @@
                 <div class="movie-card-genres" th:text="${movie.genresFormatted}">Action, Adventure</div>
                 <div class="movie-card-meta">
                     <span class="movie-rating-stars">
-                        ⭐ <span th:text="${movie.averageRating}">4.8</span>
-                        <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ')'}">(12)</span>
+                        <th:block th:if="${movie.reviewCount != null && movie.reviewCount > 0}">
+                            ⭐ <span th:text="${#numbers.formatDecimal(movie.averageRating, 1, 1)}">4.8</span>
+                            <span style="font-size:0.75rem;color:var(--text-muted);" th:text="${'(' + movie.reviewCount + ')'}">(12)</span>
+                        </th:block>
+                        <span th:unless="${movie.reviewCount != null && movie.reviewCount > 0}" style="font-size:0.8rem;color:var(--text-muted);">No reviews yet</span>
                     </span>
                     <span th:text="${movie.formattedReleaseDate}">18/10/2026</span>
                 </div>

@@ -36,6 +36,24 @@ public class MovieReviewDAO {
                 """, rowMapper, movieId);
     }
 
+    /**
+     * Average rating and number of ACTIVE reviews per movie, keyed by MovieID.
+     * Value: [0] = average rating (1 decimal), [1] = review count.
+     */
+    public java.util.Map<Integer, double[]> findRatingSummaries() {
+        java.util.Map<Integer, double[]> result = new java.util.HashMap<>();
+        jdbcTemplate.query("""
+                SELECT r.MovieID, CAST(AVG(CAST(r.Rating AS DECIMAL(5,2))) AS DECIMAL(5,2)) AS AvgRating, COUNT(1) AS Total
+                FROM dbo.MovieReview r
+                WHERE UPPER(r.[Status])='ACTIVE'
+                GROUP BY r.MovieID
+                """, (org.springframework.jdbc.core.RowCallbackHandler) rs -> {
+            result.put(rs.getInt("MovieID"), new double[]{
+                    Math.round(rs.getDouble("AvgRating") * 10.0) / 10.0, rs.getInt("Total")});
+        });
+        return result;
+    }
+
     public Integer findEligibleBookingId(int accountId, int movieId, Integer requestedBookingId) {
         List<Integer> ids = jdbcTemplate.query("""
                 SELECT TOP 1 b.BookingID FROM dbo.Booking b
