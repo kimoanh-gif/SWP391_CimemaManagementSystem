@@ -83,6 +83,24 @@ class MoviePublicControllerTest {
     }
 
     @Test
+    void movieDetailsOpensFirstDateThatHasShowtimesWhenTodayHasNone() {
+        Movie movie = new Movie();
+        movie.setMovieId(5);
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        when(movieService.getMovieById(5)).thenReturn(Optional.of(movie));
+        when(showtimeService.getAvailableDatesForMovie(5)).thenReturn(List.of(tomorrow, tomorrow.plusDays(1)));
+        when(showtimeService.getShowtimesForMovie(5, tomorrow)).thenReturn(List.of());
+        when(movieService.getMovieReviews(5)).thenReturn(List.of());
+        when(movieService.getRelatedMovies(5, 4)).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        controller.movieDetails(5, null, null, session, model, new RedirectAttributesModelMap());
+
+        assertEquals(tomorrow, model.getAttribute("selectedDate"));
+    }
+
+    @Test
     void testMovieDetailsNotFoundRedirects() {
         when(movieService.getMovieById(999)).thenReturn(Optional.empty());
 
