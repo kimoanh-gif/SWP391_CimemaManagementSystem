@@ -51,6 +51,10 @@ public class SystemConfigService implements CommandLineRunner {
      */
     public Map<String, List<SystemSetting>> getAllSettingsGrouped() {
         List<SystemSetting> all = systemSettingDAO.findActive();
+        var system = SystemSecuritySettings.editable(all.stream().filter(s -> "SYSTEM".equalsIgnoreCase(s.getCategory())).toList());
+        all = new ArrayList<>(all);
+        all.removeIf(s -> "SYSTEM".equalsIgnoreCase(s.getCategory()));
+        all.addAll(system);
         return all.stream()
                 .collect(Collectors.groupingBy(SystemSetting::getCategory));
     }
@@ -66,7 +70,8 @@ public class SystemConfigService implements CommandLineRunner {
      * Get settings by category.
      */
     public List<SystemSetting> getSettingsByCategory(String category) {
-        return systemSettingDAO.findByCategory(category);
+        var rows = systemSettingDAO.findByCategory(category);
+        return "SYSTEM".equalsIgnoreCase(category) ? SystemSecuritySettings.editable(rows) : rows;
     }
 
     /**
@@ -75,6 +80,8 @@ public class SystemConfigService implements CommandLineRunner {
     public Optional<SystemSetting> getSettingByKey(String key) {
         return systemSettingDAO.findByKey(key);
     }
+
+    public Optional<SystemSetting> getSettingById(int id) { return systemSettingDAO.findById(id); }
 
     /**
      * Get setting value as string.
@@ -109,6 +116,14 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E5: Invalid Configuration Value
      */
     public ValidationResult validateSetting(SystemSetting setting, String newValue) {
+        if ("SYSTEM".equalsIgnoreCase(setting.getCategory())) {
+            if (Boolean.FALSE.equals(setting.getIsActive())) return ValidationResult.error("INACTIVE_SETTING", "This setting is inactive.");
+            var rule = SystemSecuritySettings.ruleFor(setting);
+            if (rule == null) return ValidationResult.error("UNSUPPORTED_SETTING", "This setting is not used by the application.");
+            if (!SystemSecuritySettings.valid(rule, newValue)) return ValidationResult.error("INVALID_VALUE",
+                    "Enter a whole number from " + rule.min() + " to " + rule.max() + " (" + rule.unit() + ").");
+            return ValidationResult.success();
+        }
         if ("VOUCHER_MAX_DISCOUNT_AMOUNT".equals(setting.getSettingKey())
                 && (newValue == null || !newValue.matches("[0-9]{1,12}"))) {
             return ValidationResult.error("INVALID_AMOUNT", "Enter a whole VND amount between 0 and 999999999999. Use 0 for no system-wide cap.");
@@ -362,6 +377,64 @@ public class SystemConfigService implements CommandLineRunner {
         } else {
             return OperationResult.error("UPDATE_FAILED", "Failed to update rank threshold.");
         }
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public OperationResult updateRankThreshold(int rankId, int minPoints, Integer maxPoints) {
+        membershipRankDAO.lockThresholds();
+        var rank = membershipRankDAO.findById(rankId);
+        if (rank.isEmpty()) return OperationResult.error("NOT_FOUND", "Membership rank not found.");
+        var validation = validateMembershipThreshold(rankId, minPoints, maxPoints);
+        if (!validation.valid()) return OperationResult.error(validation.errorCode(), validation.errorMessage());
+        int updated = membershipRankDAO.updateThreshold(rankId, minPoints, maxPoints);
+        if (updated == 0) return OperationResult.error("UPDATE_FAILED", "Failed to update rank thresholds.");
+        return OperationResult.success("Rank point range saved successfully.", rank.get().getName(),
+                rank.get().getMinPoints() + " - " + rank.get().getMaxPoints(), minPoints + " - " + maxPoints);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public OperationResult updateRankPolicy(int id, int min, Integer max, java.math.BigDecimal percent,
+            int limit, java.math.BigDecimal minimum, java.math.BigDecimal cap) {
+        if (percent == null || percent.signum() < 0 || percent.compareTo(java.math.BigDecimal.valueOf(100)) > 0
+                || percent.stripTrailingZeros().scale() > 2)
+            return OperationResult.error("INVALID_DISCOUNT", "Discount must be 0–100%, with at most two decimal places.");
+        for (var amount : java.util.Arrays.asList(minimum, cap)) {
+            if (amount == null || amount.signum() < 0 || amount.stripTrailingZeros().scale() > 0
+                    || amount.compareTo(new java.math.BigDecimal("999999999999")) > 0)
+                return OperationResult.error("INVALID_POLICY", "Money must be whole VND from 0 to 999,999,999,999.");
+        }
+        if (limit < 0 || (limit > 0 && (percent.signum() == 0 || cap.signum() == 0)))
+            return OperationResult.error("INVALID_POLICY", "Usage must be non-negative. Enabled discounts need a positive percentage and cap. Set uses to 0 to disable.");
+        membershipRankDAO.lockThresholds();
+        var rank = membershipRankDAO.findById(id);
+        if (rank.isEmpty()) return OperationResult.error("NOT_FOUND", "Membership rank not found.");
+        var valid = validateMembershipThreshold(id, min, max);
+        if (!valid.valid()) return OperationResult.error(valid.errorCode(), valid.errorMessage());
+        int updated = membershipRankDAO.updatePolicy(id, min, max, percent.setScale(2), limit, minimum.setScale(0), cap.setScale(0));
+        return updated == 0 ? OperationResult.error("UPDATE_FAILED", "Failed to save membership policy.")
+                : OperationResult.success("Membership policy saved.", rank.get().getName(),
+                rank.get().getMinPoints() + "-" + rank.get().getMaxPoints() + ", " + rank.get().getDiscountPercent() + "%",
+                min + "-" + max + ", " + percent + "%, uses=" + limit + ", minimum=" + minimum + ", cap=" + cap);
+    }
+
+    public ValidationResult validateMembershipThreshold(int rankId, int minPoints, Integer maxPoints) {
+        var ranks = new ArrayList<>(membershipRankDAO.findAll());
+        ranks.sort(Comparator.comparingInt(MembershipRank::getMinPoints));
+        int index = -1;
+        for (int i = 0; i < ranks.size(); i++) if (ranks.get(i).getRankId() == rankId) index = i;
+        if (index < 0) return ValidationResult.error("NOT_FOUND", "Membership rank not found.");
+        if (minPoints < 0 || (maxPoints != null && maxPoints < 0))
+            return ValidationResult.error("INVALID_THRESHOLD", "Points must be non-negative whole numbers.");
+        if (maxPoints != null && maxPoints < minPoints)
+            return ValidationResult.error("INVALID_THRESHOLD", "Maximum points must be greater than or equal to minimum points.");
+        for (int i = 0; i < ranks.size(); i++) {
+            if (i < index && (ranks.get(i).getMaxPoints() == null || minPoints <= ranks.get(i).getMaxPoints()
+                    || minPoints <= ranks.get(i).getMinPoints()))
+                return ValidationResult.error("INVALID_THRESHOLD", "Minimum points must exceed all lower ranks' maximum points.");
+            if (i > index && (maxPoints == null || maxPoints >= ranks.get(i).getMinPoints()))
+                return ValidationResult.error("INVALID_THRESHOLD", "Maximum points must be below the next rank's minimum. Only the highest rank can be unlimited.");
+        }
+        return ValidationResult.success();
     }
 
     /**

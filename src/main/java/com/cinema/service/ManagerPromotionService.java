@@ -75,7 +75,11 @@ public class ManagerPromotionService {
         if (!Set.of(PromotionLifecycle.ACTIVE, PromotionLifecycle.DRAFT).contains(form.getStatus())) {
             form.setStatus(PromotionLifecycle.ACTIVE);
         }
-        throwIfInvalid(validate(form));
+        Map<String, String> errors = validate(form);
+        if (!errors.containsKey("endDate") && form.getEndDate() != null && !form.getEndDate().isAfter(LocalDateTime.now())) {
+            errors.put("endDate", "The end date must be in the future.");
+        }
+        throwIfInvalid(errors);
         return promotionDAO.insert(form);
     }
 
@@ -130,6 +134,8 @@ public class ManagerPromotionService {
         if (form.getEndDate() == null) errors.put("endDate", "Please choose the end date.");
         if (form.getStartDate() != null && form.getEndDate() != null && form.getEndDate().isBefore(form.getStartDate())) {
             errors.put("endDate", "The end date must not be earlier than the start date.");
+        } else if (form.getStartDate() != null && form.getEndDate() != null && form.getEndDate().isEqual(form.getStartDate())) {
+            errors.put("endDate", "The end date must be later than the start date.");
         }
         return errors;
     }

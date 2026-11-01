@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,8 @@ public class ShowtimePublicController {
             @RequestParam(name = "movieId", required = false) Integer movieId,
             @RequestParam(name = "roomType", required = false, defaultValue = "ALL") String roomType,
             @RequestParam(name = "timeSlot", required = false, defaultValue = "ALL") String timeSlot,
+            @RequestParam(name = "genreId", required = false) Integer genreId,
+            @RequestParam(name = "ageRating", required = false) String ageRating,
             HttpSession session,
             Model model
     ) {
@@ -65,6 +68,18 @@ public class ShowtimePublicController {
 
         // Fetch showtimes matching filter
         List<PublicShowtime> showtimes = showtimeService.getShowtimes(selectedDate, movieId, roomType, timeSlot);
+        if (genreId != null && genreId > 0) {
+            Set<Integer> movieIdsInGenre = movieService.searchMovies(null, genreId, "ALL", "title").stream()
+                    .map(Movie::getMovieId)
+                    .collect(Collectors.toSet());
+            showtimes = showtimes.stream().filter(st -> movieIdsInGenre.contains(st.getMovieId())).toList();
+        }
+        String cleanAgeRating = ageRating == null ? "" : ageRating.trim();
+        if (!cleanAgeRating.isEmpty() && !"ALL".equalsIgnoreCase(cleanAgeRating)) {
+            showtimes = showtimes.stream()
+                    .filter(st -> st.getMovieAgeRating() != null && st.getMovieAgeRating().trim().equalsIgnoreCase(cleanAgeRating))
+                    .toList();
+        }
         model.addAttribute("showtimes", showtimes);
 
         // Group showtimes by Movie Title/ID for intuitive cinema schedule layout
@@ -80,6 +95,10 @@ public class ShowtimePublicController {
         model.addAttribute("selectedMovieId", movieId);
         model.addAttribute("selectedRoomType", roomType);
         model.addAttribute("selectedTimeSlot", timeSlot);
+        model.addAttribute("genres", movieService.getAllGenres());
+        model.addAttribute("selectedGenreId", genreId);
+        model.addAttribute("ageRatings", MoviePublicController.AGE_RATINGS);
+        model.addAttribute("selectedAgeRating", cleanAgeRating);
 
         // Session user info
         AuthenticatedUser user = sessionService.getCurrentUser(session);

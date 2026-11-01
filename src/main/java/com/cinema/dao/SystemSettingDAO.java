@@ -216,23 +216,18 @@ public class SystemSettingDAO {
     }
 
     private void seedSystemSettings() {
-        seedIfNotExists("SYSTEM_PASSWORD_MIN_LENGTH", "Password Minimum Length", "SYSTEM", "NUMBER",
-                "8", "8", "Minimum password length", "min:6,max:32");
-        seedIfNotExists("SYSTEM_OTP_EXPIRY_MINUTES", "OTP Expiry Time", "SYSTEM", "NUMBER",
-                "5", "5", "OTP validity in minutes", "min:1,max:30");
-        seedIfNotExists("SYSTEM_OTP_MAX_SEND_DAILY", "OTP Max Sends Per Day", "SYSTEM", "NUMBER",
-                "5", "5", "Maximum OTP codes that can be sent per email per day", "min:1,max:20");
-        seedIfNotExists("SYSTEM_OTP_RESEND_COOLDOWN", "OTP Resend Cooldown", "SYSTEM", "NUMBER",
-                "60", "60", "Seconds to wait between OTP resends", "min:10,max:300");
-        seedIfNotExists("SYSTEM_SESSION_TIMEOUT_MINUTES", "Session Timeout", "SYSTEM", "NUMBER",
-                "30", "30", "Session timeout in minutes", "min:5,max:480");
-        seedIfNotExists("SYSTEM_LOGIN_ATTEMPTS", "Max Login Attempts", "SYSTEM", "NUMBER",
-                "5", "5", "Maximum failed login attempts before lockout", "min:1,max:10");
+        for (var rule : com.cinema.service.SystemSecuritySettings.RULES) {
+            seedIfNotExists(rule.key(), rule.name(), "SYSTEM", "NUMBER", String.valueOf(rule.defaultValue()),
+                    String.valueOf(rule.defaultValue()), rule.unit(), "min:" + rule.min() + ",max:" + rule.max());
+        }
     }
-
     private void seedIfNotExists(String key, String name, String category, String valueType,
                                  String value, String defaultValue, String description, String validationRules) {
         if (!existsByKey(key)) {
+            if ("SYSTEM".equals(category) && findByCategory(category).stream().anyMatch(s -> {
+                var rule = com.cinema.service.SystemSecuritySettings.ruleFor(s);
+                return rule != null && rule.key().equals(key);
+            })) return;
             SystemSetting setting = new SystemSetting();
             setting.setSettingKey(key);
             setting.setSettingName(name);

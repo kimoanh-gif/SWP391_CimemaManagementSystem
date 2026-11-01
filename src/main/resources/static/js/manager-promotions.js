@@ -44,7 +44,7 @@
             if (unit) unit.textContent = percent ? '%' : 'VND';
             if (percentOnly) percentOnly.hidden = !percent;
             if (valueInput) {
-                if (percent) valueInput.max = '100'; else valueInput.removeAttribute('max');
+                valueInput.max = percent ? '100' : '1000000';
             }
         };
         typeSelect.addEventListener('change', sync);

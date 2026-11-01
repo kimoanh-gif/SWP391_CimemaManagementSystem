@@ -305,7 +305,7 @@ public class CustomerBookingController {
         Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
         if (bookingId == null) return "redirect:/customer/booking/seats";
         try {
-            model.addAttribute("summary", bookingService.getActiveBooking(bookingId, accountId));
+            model.addAttribute("summary", bookingService.prepareCheckout(bookingId, accountId));
             model.addAttribute("voucherCode", session.getAttribute("customerBookingVoucherCode"));
             model.addAttribute("activeStep", 5);
             return "customer/booking/checkout";

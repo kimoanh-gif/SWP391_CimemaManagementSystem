@@ -52,13 +52,14 @@ class MoviePublicControllerTest {
 
     @Test
     void testListMoviesReturnsListView() {
-        when(movieService.searchMovies(null, null, "all", "newest")).thenReturn(List.of());
+        when(movieService.searchMovies(null, null, "all", "newest", null)).thenReturn(List.of());
         when(movieService.getAllGenres()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
-        String view = controller.listMovies("all", null, null, "newest", session, model);
+        String view = controller.listMovies("all", null, null, "newest", null, session, model);
 
         assertEquals("customer/movies/list", view);
+        assertTrue(model.containsAttribute("ageRatings"));
         assertTrue(model.containsAttribute("movies"));
         assertTrue(model.containsAttribute("genres"));
     }
@@ -80,6 +81,24 @@ class MoviePublicControllerTest {
 
         assertEquals("customer/movies/details", view);
         assertEquals(movie, model.getAttribute("movie"));
+    }
+
+    @Test
+    void movieDetailsOpensFirstDateThatHasShowtimesWhenTodayHasNone() {
+        Movie movie = new Movie();
+        movie.setMovieId(5);
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        when(movieService.getMovieById(5)).thenReturn(Optional.of(movie));
+        when(showtimeService.getAvailableDatesForMovie(5)).thenReturn(List.of(tomorrow, tomorrow.plusDays(1)));
+        when(showtimeService.getShowtimesForMovie(5, tomorrow)).thenReturn(List.of());
+        when(movieService.getMovieReviews(5)).thenReturn(List.of());
+        when(movieService.getRelatedMovies(5, 4)).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        controller.movieDetails(5, null, null, session, model, new RedirectAttributesModelMap());
+
+        assertEquals(tomorrow, model.getAttribute("selectedDate"));
     }
 
     @Test

@@ -18,6 +18,9 @@ import java.util.Optional;
  */
 @Service
 public class StaffAccountService {
+    private SystemSecuritySettings securitySettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
 
     private final AccountDAO accountDAO;
     private final RoleDAO roleDAO;
@@ -127,8 +130,9 @@ public class StaffAccountService {
         if (validation != null) {
             return OperationResult.error(validation, getErrorMessage(validation));
         }
-        if (password == null || !AccountValidation.PASSWORD.matcher(password).matches()) {
-            return OperationResult.error("INVALID_PASSWORD", "Password must be 8-128 characters with at least one letter and one number.");
+        int minLength = securitySettings == null ? 8 : securitySettings.read("SYSTEM_PASSWORD_MIN_LENGTH", 8);
+        if (password == null || password.length() < minLength || !AccountValidation.PASSWORD.matcher(password).matches()) {
+            return OperationResult.error("INVALID_PASSWORD", "Password must be " + minLength + "-128 characters with at least one letter and one number.");
         }
 
         Optional<Role> role = roleDAO.findByName(roleName);

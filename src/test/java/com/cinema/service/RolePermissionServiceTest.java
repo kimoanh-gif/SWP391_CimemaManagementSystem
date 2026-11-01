@@ -84,4 +84,35 @@ class RolePermissionServiceTest {
         service.removeInvalidAssignments();
         verify(permissions).updateRolePermissions(9, List.of(1));
     }
+    @Test void mandatoryPermissionsCannotBeRemovedForAnyRoleEvenWithBulkUpdate() {
+        var names = new TreeSet<String>();
+        com.cinema.security.RolePermissionPolicy.ALLOWED.values().forEach(names::addAll);
+        var catalog = new ArrayList<Permission>(); int permissionId = 1;
+        for (String name : names) catalog.add(new Permission(permissionId++,name,name));
+        when(permissions.findAll()).thenReturn(catalog);
+        int roleId = 50;
+        for (var entry : com.cinema.security.RolePermissionPolicy.REQUIRED.entrySet()) {
+            final int id = roleId++;
+            when(roles.findById(id)).thenReturn(Optional.of(new Role(id,entry.getKey(),entry.getKey())));
+            for (String required : entry.getValue()) {
+                var changed = new HashSet<>(entry.getValue()); changed.remove(required);
+                assertEquals("MANDATORY_PERMISSION",service.updateRolePermissions(id,changed).getCode(),entry.getKey()+required);
+            }
+        }
+        verify(permissions,never()).updateRolePermissions(anyInt(),anyList());
+    }
+    @Test void adminConfigurationPermissionsAreSeededOnceAndRemainRevocable() {
+        var config = new Permission(20, "voucher:configure", "Voucher settings");
+        when(roles.findAll()).thenReturn(List.of(new Role(10, "ADMIN", "Admin")));
+        when(permissions.findAll()).thenReturn(List.of(read, manage, config));
+        when(permissions.findAllByRoleId(10)).thenReturn(List.of(read, manage));
+        when(permissions.insertIfMissing(eq(config.getName()), anyString())).thenReturn(true);
+        service.removeInvalidAssignments();
+        verify(permissions).updateRolePermissions(eq(10), argThat(ids -> ids.size() == 3 && ids.contains(20)));
+        clearInvocations(permissions);
+        when(permissions.insertIfMissing(eq(config.getName()), anyString())).thenReturn(false);
+        service.removeInvalidAssignments();
+        verify(permissions, never()).updateRolePermissions(anyInt(), anyList());
+        assertFalse(com.cinema.security.RolePermissionPolicy.allowed("MANAGER").contains(config.getName()));
+    }
 }

@@ -103,8 +103,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
             </svg>
-            <input id="password" type="password" th:field="*{password}" autocomplete="new-password" maxlength="128"
-                   placeholder="Min. 8 characters with letters and numbers" required>
+            <input id="password" type="password" th:field="*{password}" autocomplete="new-password" maxlength="128" th:minlength="${passwordMinLength != null ? passwordMinLength : 8}"
+                   placeholder="Min. 8 characters with letters and numbers" th:placeholder="${'Min. ' + (passwordMinLength != null ? passwordMinLength : 8) + ' characters with letters and numbers'}" required>
             <button class="auth-show-pw" type="button" id="togglePassword" aria-label="Show password">
               <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>
@@ -112,7 +112,7 @@
             </button>
           </div>
           <div class="pwd-policy" id="pwdPolicy" aria-live="polite">
-            <div class="req" data-req="len">At least 8 characters</div>
+            <div class="req" data-req="len" th:text="${'At least ' + (passwordMinLength != null ? passwordMinLength : 8) + ' characters'}">At least 8 characters</div>
             <div class="req" data-req="letter">At least one letter</div>
             <div class="req" data-req="digit">At least one number</div>
           </div>
@@ -126,7 +126,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
             </svg>
-            <input id="confirmPassword" type="password" name="confirmPassword" autocomplete="new-password" maxlength="128"
+            <input id="confirmPassword" type="password" name="confirmPassword" autocomplete="new-password" maxlength="128" th:minlength="${passwordMinLength != null ? passwordMinLength : 8}"
                    placeholder="Re-enter your password" required>
             <button class="auth-show-pw" type="button" id="toggleConfirmPassword" aria-label="Show password">
               <svg id="eyeIconConfirm" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -174,7 +174,7 @@
   if (pw && policy) {
     const check = () => {
       const v = pw.value;
-      policy.querySelector('[data-req="len"]').classList.toggle('ok', v.length >= 8);
+      policy.querySelector('[data-req="len"]').classList.toggle('ok', v.length >= Math.max(8, pw.minLength || 8));
       policy.querySelector('[data-req="letter"]').classList.toggle('ok', /[A-Za-z]/.test(v));
       policy.querySelector('[data-req="digit"]').classList.toggle('ok', /\d/.test(v));
     };

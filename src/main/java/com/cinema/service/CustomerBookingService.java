@@ -31,6 +31,9 @@ public class CustomerBookingService {
     public static final int PAYMENT_QR_MINUTES = 3;
 
     private final CustomerBookingDAO bookingDAO;
+    private MembershipDiscountService membershipDiscountService;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setMembershipDiscountService(MembershipDiscountService service) { membershipDiscountService = service; }
 
     public CustomerBookingService(CustomerBookingDAO bookingDAO) {
         this.bookingDAO = bookingDAO;
@@ -136,6 +139,13 @@ public class CustomerBookingService {
     }
 
     @Transactional
+    public BookingSummary prepareCheckout(int bookingId, int accountId) {
+        getActiveBooking(bookingId, accountId);
+        if (membershipDiscountService != null) membershipDiscountService.refreshOnline(bookingId, accountId);
+        return getActiveBooking(bookingId, accountId);
+    }
+
+    @Transactional
     public void saveFoodSelections(int bookingId, int accountId,
                                    List<Integer> itemIds, List<Integer> quantities) {
         getActiveBooking(bookingId, accountId);
@@ -179,6 +189,8 @@ public class CustomerBookingService {
     @Transactional
     public int startSimulatedPayment(int bookingId, int accountId, String paymentMethod) {
         BookingSummary booking = getActiveBooking(bookingId, accountId);
+        if (membershipDiscountService != null && prepareCheckout(bookingId, accountId).getTotalAmount().compareTo(booking.getTotalAmount()) != 0)
+            throw new BookingException("Your membership discount changed. Please review the updated total before paying.");
         String requestedMethod = paymentMethod == null ? "VNPAY" : paymentMethod.toUpperCase();
         String method = switch (requestedMethod) {
             case "MOMO", "ZALOPAY", "NAPAS" -> requestedMethod;

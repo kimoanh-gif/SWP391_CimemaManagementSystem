@@ -13,6 +13,15 @@ public class MembershipRank {
     private String benefits;       // JSON string of benefits
     private String discountPercent; // Discount percentage for this rank
     private Boolean isActive;
+    private Integer discountUsageLimit = 0;
+    private java.math.BigDecimal minBookingAmount = java.math.BigDecimal.ZERO;
+    private java.math.BigDecimal maxDiscountAmount = java.math.BigDecimal.ZERO;
+    public Integer getDiscountUsageLimit() { return discountUsageLimit; }
+    public void setDiscountUsageLimit(Integer v) { discountUsageLimit = v; }
+    public java.math.BigDecimal getMinBookingAmount() { return minBookingAmount; }
+    public void setMinBookingAmount(java.math.BigDecimal v) { minBookingAmount = v; }
+    public java.math.BigDecimal getMaxDiscountAmount() { return maxDiscountAmount; }
+    public void setMaxDiscountAmount(java.math.BigDecimal v) { maxDiscountAmount = v; }
 
     public MembershipRank() {}
 

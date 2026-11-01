@@ -133,10 +133,18 @@ public class OtpTokenDAO {
             SELECT COUNT(*)
             FROM dbo.OtpToken
             WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(?)))
-              AND Purpose = ?
               AND CONVERT(DATE, CreatedAt) = CONVERT(DATE, SYSDATETIME())
-            """, Integer.class, email, purpose);
+            """, Integer.class, email);
         return count != null ? count : 0;
+    }
+
+    public int getHourlySendCount(String email) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM dbo.OtpToken
+                WHERE LOWER(LTRIM(RTRIM(Email)))=LOWER(LTRIM(RTRIM(?)))
+                  AND CreatedAt > DATEADD(HOUR,-1,SYSDATETIME())
+                """, Integer.class, email);
+        return count == null ? 0 : count;
     }
 
     public int deleteAllByEmailAndPurpose(String email, String purpose) {

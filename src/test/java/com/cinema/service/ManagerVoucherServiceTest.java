@@ -151,6 +151,26 @@ class ManagerVoucherServiceTest {
         assertFalse(row(6, "NEW", 0).isLocked());
     }
 
+    @Test
+    void fixedDiscountAboveOneMillionIsRejected() {
+        org.mockito.Mockito.lenient().when(promotionDAO.findById(1)).thenReturn(Optional.of(ManagerPromotionServiceTest.row(1, "ACTIVE", 0)));
+        org.mockito.Mockito.lenient().when(voucherDAO.codeExists("HUGE1", null)).thenReturn(false);
+
+        PromotionAdminException ex = assertThrows(PromotionAdminException.class,
+                () -> service.create(form("HUGE1", "FIXED", "999999999999")));
+        assertTrue(ex.getFieldErrors().containsKey("discountValue"));
+        verify(voucherDAO, never()).insert(any());
+    }
+
+    @Test
+    void fixedDiscountOfExactlyOneMillionIsAccepted() {
+        when(promotionDAO.findById(1)).thenReturn(Optional.of(ManagerPromotionServiceTest.row(1, "ACTIVE", 0)));
+        when(voucherDAO.codeExists("MAX1M", null)).thenReturn(false);
+        when(voucherDAO.insert(any(VoucherForm.class))).thenReturn(3);
+
+        assertEquals(3, service.create(form("MAX1M", "FIXED", "1000000")));
+    }
+
     private static VoucherForm form(String code, String type, String value) {
         VoucherForm f = new VoucherForm();
         f.setPromotionId(1);

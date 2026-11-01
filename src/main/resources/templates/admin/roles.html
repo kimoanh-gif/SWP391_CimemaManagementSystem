@@ -182,6 +182,9 @@ function getCsrfHeaders() {
 // Presentation labels only; database descriptions and permission codes are unchanged.
 const roleLabels = { CUSTOMER: 'Customer', STAFF: 'Staff member', MANAGER: 'Cinema manager', ADMIN: 'System administrator' };
 const permissionLabels = {
+  'voucher:configure': 'Configure voucher settings',
+  'membership:configure': 'Configure membership ranks',
+  'system:configure': 'Configure system settings',
   'movie:read': 'View movies and showtimes', 'booking:create': 'Create bookings',
   'ticket:checkin': 'Check in tickets', 'showtime:manage': 'Manage showtimes',
   'account:manage': 'Manage accounts', 'report:view': 'View reports',
@@ -214,6 +217,10 @@ async function loadData() {
     
     const rolesJson = await rolesResp.json();
     const permsJson = await permsResp.json();
+    if (!rolesResp.ok || !permsResp.ok || !rolesJson.success || !permsJson.success
+        || !Array.isArray(rolesJson.data) || !Array.isArray(permsJson.data)) {
+      throw new Error('Unable to load roles and permissions.');
+    }
     
     roles = rolesJson.data || [];
     allPermissions = permsJson.data || [];
@@ -376,7 +383,7 @@ async function addPermission(roleId, permissionName) {
     
     const json = await resp.json();
     
-    if (json.success) {
+    if (resp.ok && json.success) {
       showToast(`Permission '${permissionName}' added successfully.`, 'success');
       await refreshRoleData(roleId);
     } else {
@@ -409,7 +416,7 @@ async function removePermission(roleId, permissionName) {
     
     const json = await resp.json();
     
-    if (json.success) {
+    if (resp.ok && json.success) {
       showToast(`Permission '${permissionName}' removed successfully.`, 'success');
       await refreshRoleData(roleId);
     } else {
@@ -429,6 +436,10 @@ async function refreshRoleData(roleId) {
     
     const rolesJson = await rolesResp.json();
     const permsJson = await permsResp.json();
+    if (!rolesResp.ok || !permsResp.ok || !rolesJson.success || !permsJson.success
+        || !Array.isArray(rolesJson.data) || !Array.isArray(permsJson.data)) {
+      throw new Error('Unable to load roles and permissions.');
+    }
     
     roles = rolesJson.data || [];
     allPermissions = permsJson.data || [];
@@ -442,6 +453,7 @@ async function refreshRoleData(roleId) {
       }
     }
   } catch (e) {
+    showToast('Could not refresh permissions. Please reload the page to confirm the saved state.', 'error');
     console.error('Failed to refresh data:', e);
   }
 }

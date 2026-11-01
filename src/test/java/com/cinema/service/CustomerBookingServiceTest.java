@@ -89,6 +89,22 @@ class CustomerBookingServiceTest {
         verify(bookingDAO, never()).recalculateBookingTotal(9);
     }
 
+    @Test void membershipPriceChangesRequireReviewBeforePaymentStarts() {
+        var discount = org.mockito.Mockito.mock(MembershipDiscountService.class);
+        customerBookingService.setMembershipDiscountService(discount);
+        var before = new BookingSummary();
+        before.setStatus("PENDING"); before.setHeldUntil(LocalDateTime.now().plusMinutes(5));
+        before.setTotalAmount(new java.math.BigDecimal("100000"));
+        var after = new BookingSummary();
+        after.setStatus("PENDING"); after.setHeldUntil(before.getHeldUntil());
+        after.setTotalAmount(new java.math.BigDecimal("90000"));
+        when(bookingDAO.findBookingSummary(9, 1)).thenReturn(Optional.of(before), Optional.of(before), Optional.of(after));
+        assertThrows(CustomerBookingService.BookingException.class, () -> customerBookingService.startSimulatedPayment(9, 1, "VNPAY"));
+        verify(discount).refreshOnline(9, 1);
+        verify(bookingDAO, never()).createPayment(org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
+    }
+
     private ShowtimeOption futureShowtime() {
         ShowtimeOption showtime = new ShowtimeOption();
         showtime.setShowtimeId(5);
