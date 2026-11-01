@@ -66,8 +66,16 @@ public class ShowtimePublicController {
         model.addAttribute("upcomingDates", upcomingDates);
         model.addAttribute("selectedDate", selectedDate);
 
+        // Room types come from the shared Room data; an unknown value falls back to all formats (BR-ST-07)
+        List<String> roomTypes = showtimeService.getRoomTypes();
+        String selectedRoomType = roomTypes.stream()
+                .filter(rt -> roomType != null && rt.equalsIgnoreCase(roomType.trim()))
+                .findFirst()
+                .orElse("ALL");
+        model.addAttribute("roomTypes", roomTypes);
+
         // Fetch showtimes matching filter
-        List<PublicShowtime> showtimes = showtimeService.getShowtimes(selectedDate, movieId, roomType, timeSlot);
+        List<PublicShowtime> showtimes = showtimeService.getShowtimes(selectedDate, movieId, selectedRoomType, timeSlot);
         if (genreId != null && genreId > 0) {
             Set<Integer> movieIdsInGenre = movieService.searchMovies(null, genreId, "ALL", "title").stream()
                     .map(Movie::getMovieId)
@@ -93,7 +101,7 @@ public class ShowtimePublicController {
 
         // Filter parameters for view state
         model.addAttribute("selectedMovieId", movieId);
-        model.addAttribute("selectedRoomType", roomType);
+        model.addAttribute("selectedRoomType", selectedRoomType);
         model.addAttribute("selectedTimeSlot", timeSlot);
         model.addAttribute("genres", movieService.getAllGenres());
         model.addAttribute("selectedGenreId", genreId);
