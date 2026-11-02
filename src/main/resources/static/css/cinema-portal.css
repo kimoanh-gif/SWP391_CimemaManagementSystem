@@ -57,6 +57,13 @@
     padding: 0;
 }
 
+/* The global reset above removes the user-agent `margin: auto` that centers
+   native modal dialogs opened with showModal(). Restore it once here so every
+   customer dialog stays centered instead of being pinned to the top-left. */
+dialog[open] {
+    margin: auto;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
