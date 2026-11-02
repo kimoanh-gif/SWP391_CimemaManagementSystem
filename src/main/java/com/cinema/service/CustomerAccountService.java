@@ -19,6 +19,10 @@ public class CustomerAccountService {
     private final CustomerAccountDAO dao;
     private final AdminPasswordResetService passwordResetService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private SystemSecuritySettings securitySettings;
+
+    @Autowired
+    public void setSecuritySettings(SystemSecuritySettings settings) { securitySettings = settings; }
 
     @Autowired
     public CustomerAccountService(CustomerAccountDAO dao, AdminPasswordResetService passwordResetService) {
@@ -72,8 +76,8 @@ public class CustomerAccountService {
         if (username == null || username.trim().isEmpty()) {
             return "EMPTY_USERNAME"; // handled separately
         }
-        if (username.trim().length() < 3) {
-            return "INVALID_USERNAME_LENGTH";
+        if (!AccountValidation.USERNAME.matcher(username.trim()).matches()) {
+            return "INVALID_USERNAME";
         }
         if (email == null || email.trim().isEmpty()) {
             return "EMPTY_EMAIL";
@@ -81,7 +85,7 @@ public class CustomerAccountService {
 
         // ── E4: Format validation ──
         String emailTrimmed = email.trim();
-        if (!emailTrimmed.matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$")) {
+        if (emailTrimmed.length() > 255 || !AccountValidation.EMAIL.matcher(emailTrimmed).matches()) {
             return "INVALID_EMAIL"; // "Invalid email format."
         }
         String phoneTrimmed = normalizePhone(phone);
@@ -106,12 +110,16 @@ public class CustomerAccountService {
 
     public OperationResult createAccount(String username, String email, String password,
                                           String fullName, String phone) {
+        if (fullName == null || fullName.trim().length() < 2 || fullName.trim().length() > 100) {
+            return OperationResult.error("INVALID_FULLNAME", "Full name must be 2-100 characters.");
+        }
         String validation = validateAccount(username, email, phone, null);
         if (validation != null) {
             return OperationResult.error(validation, getErrorMessage(validation));
         }
-        if (password == null || password.length() < 6) {
-            return OperationResult.error("INVALID_PASSWORD", "Password must be at least 6 characters.");
+        int minLength = securitySettings == null ? 8 : securitySettings.read("SYSTEM_PASSWORD_MIN_LENGTH", 8);
+        if (password == null || password.length() < minLength || !AccountValidation.PASSWORD.matcher(password).matches()) {
+            return OperationResult.error("INVALID_PASSWORD", "Password must be " + minLength + "-128 characters with at least one letter and one number.");
         }
 
         String hash = passwordEncoder.encode(password);
@@ -129,6 +137,10 @@ public class CustomerAccountService {
         Optional<CustomerAccount> existing = dao.findById(accountId);
         if (existing.isEmpty()) {
             return OperationResult.error("NOT_FOUND", "Account not found."); // E5
+        }
+
+        if (fullName == null || fullName.trim().length() < 2 || fullName.trim().length() > 100) {
+            return OperationResult.error("INVALID_FULLNAME", "Full name must be 2-100 characters.");
         }
 
         String validation = validateAccount(username, email, phone, accountId);
@@ -207,7 +219,7 @@ public class CustomerAccountService {
     private String getErrorMessage(String code) {
         return switch (code) {
             case "EMPTY_USERNAME"          -> "Username is required.";
-            case "INVALID_USERNAME_LENGTH" -> "Username must be at least 3 characters.";
+            case "INVALID_USERNAME" -> "Username must be 4-50 characters using letters, numbers, dots, underscores or hyphens.";
             case "EMPTY_EMAIL"             -> "Email is required.";
             case "INVALID_EMAIL"           -> "Invalid email format.";
             case "EMPTY_PHONE"             -> "Phone number is required.";

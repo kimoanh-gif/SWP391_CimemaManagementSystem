@@ -144,10 +144,6 @@ tbody tr:hover td { background: var(--purple-50); }
           <div class="stat-label">Total Staff</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num green" id="stat-admin">0</div>
-          <div class="stat-label">Administrators</div>
-        </div>
-        <div class="stat-card">
           <div class="stat-num blue" id="stat-manager">0</div>
           <div class="stat-label">Managers</div>
         </div>
@@ -291,7 +287,6 @@ async function loadStats() {
       const json = await resp.json();
       if (json.success) {
         document.getElementById('stat-total').textContent = json.data.total;
-        document.getElementById('stat-admin').textContent = json.data.admin;
         document.getElementById('stat-manager').textContent = json.data.manager;
         document.getElementById('stat-staff').textContent = json.data.staff;
       }

@@ -229,12 +229,12 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
         <input type="hidden" id="formAccountId">
         <div class="form-group">
           <label for="fUsername">Username *</label>
-          <input type="text" id="fUsername" required minlength="3" placeholder="e.g. johndoe123" autocomplete="off">
+          <input type="text" id="fUsername" required minlength="4" maxlength="50" pattern="[A-Za-z0-9_.-]{4,50}" placeholder="e.g. johndoe123" autocomplete="off">
           <div class="field-error" id="errUsername">Username already exists.</div>
         </div>
         <div class="form-group">
           <label for="fFullName">Full Name *</label>
-          <input type="text" id="fFullName" required placeholder="e.g. John Doe" autocomplete="name">
+          <input type="text" id="fFullName" required minlength="2" maxlength="100" placeholder="e.g. John Doe" autocomplete="name">
           <div class="field-error" id="errFullName">Full name is required.</div>
         </div>
         <div class="form-row">
@@ -245,8 +245,8 @@ td .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
           </div>
           <div class="form-group" id="pwGroup">
             <label for="fPassword">Password *</label>
-            <input type="password" id="fPassword" placeholder="Min. 6 characters">
-            <div class="field-error" id="errPassword">Password must be at least 6 characters.</div>
+            <input type="password" id="fPassword" minlength="8" maxlength="128" placeholder="8-128 characters, letters and numbers">
+            <div class="field-error" id="errPassword">Use 8-128 characters with letters and numbers. System minimum also applies.</div>
           </div>
         </div>
         <div class="form-group">
@@ -550,14 +550,14 @@ async function submitForm(e) {
   };
 
   if (!payload.username) { markError('fUsername','errUsername'); showToast('Username is required.','error'); return; }
-  if (payload.username.length < 3) { markError('fUsername','errUsername'); showToast('Username must be at least 3 characters.','error'); return; }
-  if (!payload.fullName) { markError('fFullName','errFullName'); showToast('Full name is required.','error'); return; }
+  if (!/^[A-Za-z0-9_.-]{4,50}$/.test(payload.username)) { markError('fUsername','errUsername'); showToast('Username must be 4-50 characters using letters, numbers, dots, underscores or hyphens.','error'); return; }
+  if (payload.fullName.length < 2 || payload.fullName.length > 100) { markError('fFullName','errFullName'); showToast('Full name must be 2-100 characters.','error'); return; }
   if (!payload.email || !/^[^\s@]+@[^\s@]+\.\w+/.test(payload.email)) { markError('fEmail','errEmail'); showToast('Invalid email format.','error'); return; }
   if (payload.phone && !/^(0|\+84)[0-9]{9,10}$/.test(payload.phone)) { markError('fPhone','errPhone'); showToast('Phone must start with 0 or +84 followed by 9-10 digits.','error'); return; }
 
   if (!editMode) {
     payload.password = document.getElementById('fPassword').value;
-    if (!payload.password || payload.password.length < 6) { markError('fPassword','errPassword'); showToast('Password must be at least 6 characters.','error'); return; }
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(payload.password)) { markError('fPassword','errPassword'); showToast('Password must be 8-128 characters with at least one letter and one number.','error'); return; }
   }
 
   const url = editMode ? `/api/admin/customers/${accountId}` : '/api/admin/customers';

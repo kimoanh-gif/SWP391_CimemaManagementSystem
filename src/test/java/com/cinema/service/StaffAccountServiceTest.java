@@ -21,16 +21,18 @@ class StaffAccountServiceTest {
     private AccountDAO accounts;
     private RoleDAO roles;
     private StaffAccountService service;
+    private AdminPasswordResetService reset;
 
     @BeforeEach
     void setUp() {
         accounts = mock(AccountDAO.class);
         roles = mock(RoleDAO.class);
-        service = new StaffAccountService(accounts, roles, mock(AdminPasswordResetService.class));
+        reset = mock(AdminPasswordResetService.class);
+        service = new StaffAccountService(accounts, roles, reset);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"ADMIN", "MANAGER", "STAFF"})
+    @ValueSource(strings = {"MANAGER", "STAFF"})
     void includesDatabaseRoleInListSearchAndDetails(String roleName) {
         Account account = new Account();
         account.setAccountId(42);
@@ -47,6 +49,30 @@ class StaffAccountServiceTest {
         assertEquals(roleName, service.searchStaffs("user", 1, 10).get(0).getRole());
         account.setRole(null);
         assertEquals(roleName, service.getStaffById(42).orElseThrow().getRole());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ADMIN", "CUSTOMER", "OTHER"})
+    void excludesOtherRolesFromAllReadsAndMutations(String roleName) {
+        Account account = new Account();
+        account.setAccountId(42);
+        account.setRoleId(7);
+        account.setStatus("ACTIVE");
+        when(roles.findById(7)).thenReturn(Optional.of(new Role(7, roleName, roleName)));
+        when(accounts.findAll()).thenReturn(java.util.List.of(account));
+        when(accounts.searchByKeyword("user")).thenReturn(java.util.List.of(account));
+        when(accounts.findById(42)).thenReturn(Optional.of(account));
+        assertTrue(service.getAllStaffs().isEmpty());
+        assertTrue(service.searchStaffs("user").isEmpty());
+        assertTrue(service.getStaffById(42).isEmpty());
+        assertEquals(0, service.getTotalCount());
+        assertEquals("NOT_FOUND", service.updateAccount(42,"user","user@example.com","User Name","0912345678","STAFF").getCode());
+        assertEquals("NOT_FOUND", service.suspendAccount(42).getCode());
+        assertEquals("NOT_FOUND", service.reactivateAccount(42).getCode());
+        assertEquals("NOT_FOUND", service.resetPassword(42).getCode());
+        verify(accounts, never()).updateStatus(anyInt(), anyString());
+        verify(accounts, never()).updateStaffAccount(anyInt(), any(), any(), any(), any(), anyInt());
+        verifyNoInteractions(reset);
     }
 
     @ParameterizedTest

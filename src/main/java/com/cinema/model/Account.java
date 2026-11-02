@@ -53,6 +53,7 @@ public class Account {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 

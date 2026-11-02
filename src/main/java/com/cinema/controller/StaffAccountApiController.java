@@ -150,7 +150,6 @@ public class StaffAccountApiController {
                 "success", true,
                 "data", Map.of(
                         "total", service.getTotalCount(),
-                        "admin", service.getAdminCount(),
                         "manager", service.getManagerCount(),
                         "staff", service.getStaffCount()
                 )

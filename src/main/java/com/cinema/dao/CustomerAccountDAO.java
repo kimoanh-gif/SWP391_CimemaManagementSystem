@@ -154,7 +154,7 @@ public class CustomerAccountDAO {
     public Optional<CustomerAccount> findById(int accountId) {
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(baseSql() + """
-                WHERE a.AccountID = ?
+                WHERE a.AccountID = ? AND UPPER(LTRIM(RTRIM(r.Name))) = 'CUSTOMER'
                 """, rowMapper, accountId));
         } catch (org.springframework.dao.EmptyResultDataAccessException ex) {
             return Optional.empty();
@@ -227,7 +227,8 @@ public class CustomerAccountDAO {
         return jdbcTemplate.update("""
             UPDATE dbo.Account
             SET FullName = ?, Phone = ?, Email = ?, Username = ?
-            WHERE AccountID = ?
+            WHERE AccountID = ? AND RoleID IN
+                (SELECT RoleID FROM dbo.[Role] WHERE UPPER(LTRIM(RTRIM(Name))) = 'CUSTOMER')
             """, fullName, phone, email, username, accountId);
     }
 
@@ -236,7 +237,7 @@ public class CustomerAccountDAO {
      */
     public int suspendAccount(int accountId) {
         return jdbcTemplate.update(
-                "UPDATE dbo.Account SET Status = 'SUSPENDED' WHERE AccountID = ?",
+                "UPDATE dbo.Account SET Status = 'SUSPENDED' WHERE AccountID = ? AND RoleID IN (SELECT RoleID FROM dbo.[Role] WHERE UPPER(LTRIM(RTRIM(Name))) = 'CUSTOMER')",
                 accountId);
     }
 
@@ -245,7 +246,7 @@ public class CustomerAccountDAO {
      */
     public int reactivateAccount(int accountId) {
         return jdbcTemplate.update(
-                "UPDATE dbo.Account SET Status = 'ACTIVE' WHERE AccountID = ?",
+                "UPDATE dbo.Account SET Status = 'ACTIVE' WHERE AccountID = ? AND RoleID IN (SELECT RoleID FROM dbo.[Role] WHERE UPPER(LTRIM(RTRIM(Name))) = 'CUSTOMER')",
                 accountId);
     }
 
@@ -255,7 +256,7 @@ public class CustomerAccountDAO {
      */
     public int resetPassword(int accountId, String newPasswordHash) {
         return jdbcTemplate.update(
-                "UPDATE dbo.Account SET PasswordHash = ? WHERE AccountID = ?",
+                "UPDATE dbo.Account SET PasswordHash = ? WHERE AccountID = ? AND RoleID IN (SELECT RoleID FROM dbo.[Role] WHERE UPPER(LTRIM(RTRIM(Name))) = 'CUSTOMER')",
                 newPasswordHash, accountId);
     }
 

@@ -37,7 +37,7 @@ public class StaffAccountService {
     public List<Account> getAllStaffs() {
         return accountDAO.findAll().stream()
                 .map(this::withRole)
-                .filter(a -> !isCustomerRole(a.getRoleId()))
+                .filter(this::isStaffOrManager)
                 .toList();
     }
 
@@ -47,7 +47,7 @@ public class StaffAccountService {
         }
         return accountDAO.searchByKeyword(keyword.trim()).stream()
                 .map(this::withRole)
-                .filter(a -> !isCustomerRole(a.getRoleId()))
+                .filter(this::isStaffOrManager)
                 .toList();
     }
 
@@ -65,7 +65,7 @@ public class StaffAccountService {
 
     public Optional<Account> getStaffById(int accountId) {
         return accountDAO.findById(accountId).map(this::withRole)
-                .filter(a -> !isCustomerRole(a.getRoleId()));
+                .filter(this::isStaffOrManager);
     }
 
     private Account withRole(Account account) {
@@ -74,9 +74,9 @@ public class StaffAccountService {
         return account;
     }
 
-    private boolean isCustomerRole(int roleId) {
-        Optional<Role> role = roleDAO.findById(roleId);
-        return role.map(r -> "CUSTOMER".equalsIgnoreCase(r.getName())).orElse(false);
+    private boolean isStaffOrManager(Account account) {
+        return "STAFF".equalsIgnoreCase(account.getRole())
+                || "MANAGER".equalsIgnoreCase(account.getRole());
     }
 
     public String validateAccount(String username, String email, String phone, Integer excludeId) {
