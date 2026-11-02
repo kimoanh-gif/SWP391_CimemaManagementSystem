@@ -147,6 +147,17 @@ public class OtpTokenDAO {
         return count == null ? 0 : count;
     }
 
+    /** Keep recent send/verification history for rate limits and lockout checks. */
+    public int deleteExpiredHistoryBatch() {
+        return jdbcTemplate.update("""
+                DELETE TOP (1000) FROM dbo.OtpToken
+                WHERE ExpiresAt < DATEADD(DAY, -7, SYSDATETIME())
+                  AND CreatedAt < DATEADD(DAY, -7, SYSDATETIME())
+                  AND (LastSentAt IS NULL OR LastSentAt < DATEADD(DAY, -7, SYSDATETIME()))
+                  AND (ConsumedAt IS NULL OR ConsumedAt < DATEADD(DAY, -7, SYSDATETIME()))
+                """);
+    }
+
     public int deleteAllByEmailAndPurpose(String email, String purpose) {
         return jdbcTemplate.update(
                 """

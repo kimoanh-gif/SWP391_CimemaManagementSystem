@@ -37,6 +37,15 @@ public class PromotionDAO {
 
     private final JdbcTemplate jdbcTemplate;
 
+    /** BannerURL is optional: the shared Promotion schema and Manager editor do not require it. */
+    private String promotionColumns() {
+        Integer length = jdbcTemplate.queryForObject(
+                "SELECT COL_LENGTH('dbo.Promotion', 'BannerURL')", Integer.class);
+        return length == null
+                ? PROMOTION_COLUMNS.replace("p.BannerURL", "CAST(NULL AS NVARCHAR(500)) AS BannerURL")
+                : PROMOTION_COLUMNS;
+    }
+
     public PromotionDAO(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -90,7 +99,7 @@ public class PromotionDAO {
 
     /** All promotions that are currently public, newest first. */
     public List<Promotion> findActivePromotions() {
-        String sql = PROMOTION_COLUMNS + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
+        String sql = promotionColumns() + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
         return attachVouchers(jdbcTemplate.query(sql, promoMapper));
     }
 
@@ -99,10 +108,8 @@ public class PromotionDAO {
         if (limit <= 0) {
             return findActivePromotions();
         }
-        String sql = """
-                SELECT TOP (?) p.PromotionID, p.[Name], p.[Description], p.BannerURL, p.StartDate, p.EndDate, p.[Status]
-                FROM dbo.Promotion p
-                """ + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
+        String sql = promotionColumns().replace("SELECT p.PromotionID", "SELECT TOP (?) p.PromotionID")
+                + PUBLIC_PROMOTION_FILTER + " ORDER BY p.StartDate DESC";
         return attachVouchers(jdbcTemplate.query(sql, promoMapper, limit));
     }
 
@@ -111,7 +118,7 @@ public class PromotionDAO {
      * Expired / inactive promotions cannot be opened by typing the ID in the URL (BR-PN-05).
      */
     public Optional<Promotion> findPublicById(int promotionId) {
-        String sql = PROMOTION_COLUMNS + PUBLIC_PROMOTION_FILTER + " AND p.PromotionID = ?";
+        String sql = promotionColumns() + PUBLIC_PROMOTION_FILTER + " AND p.PromotionID = ?";
         try {
             Promotion p = jdbcTemplate.queryForObject(sql, promoMapper, promotionId);
             if (p != null) {
@@ -125,7 +132,7 @@ public class PromotionDAO {
 
     /** Any promotion by ID regardless of status (kept for back-office use). */
     public Optional<Promotion> findById(int promotionId) {
-        String sql = PROMOTION_COLUMNS + " WHERE p.PromotionID = ?";
+        String sql = promotionColumns() + " WHERE p.PromotionID = ?";
         try {
             Promotion p = jdbcTemplate.queryForObject(sql, promoMapper, promotionId);
             if (p != null) {
