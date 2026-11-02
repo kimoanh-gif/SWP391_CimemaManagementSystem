@@ -89,6 +89,9 @@
                 <p>Enter the code printed on your voucher or choose one from the list below. Only one voucher can be used per booking.</p>
               </div>
             </div>
+            <p th:if="${memberDiscountHint != null}" class="member-discount-hint" role="note"
+               style="margin:0 0 16px;padding:12px 14px;border-radius:12px;background:#fff6df;border:1px solid #f3c96b;color:#6b4700;font-size:.9rem;"
+               th:text="${memberDiscountHint}">Your Gold Member benefit: 5% member discount… applying a voucher replaces it.</p>
 
             <!-- Voucher Code + Apply -->
             <form th:action="@{/customer/booking/promotions/apply}" method="post">
