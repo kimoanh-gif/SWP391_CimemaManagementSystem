@@ -38,7 +38,8 @@ class BookingEmailServiceTest {
 
     BookingEmailDetails details(String email) {
         return new BookingEmailDetails(42, "BK-QA42", email, "Nguyễn An", "Phim thử nghiệm", "Phòng 2",
-                LocalDateTime.of(2026, 11, 3, 19, 30), "A1, A2", new BigDecimal("200000"));
+                LocalDateTime.of(2026, 11, 3, 19, 30), "A1, A2", "2 x Large Coca-Cola, 1 x Cheese Popcorn",
+                new BigDecimal("200000"));
     }
 
     @Test void sendsCorrectShowtimeAndDoesNotRepeatAfterRecoveryOrRestart() {
@@ -55,7 +56,8 @@ class BookingEmailServiceTest {
         assertEquals("cinema@example.com", message.getFrom());
         assertTrue(message.getSubject().contains("BK-QA42"));
         for (String value : List.of("Nguyễn An", "Phim thử nghiệm", "03/11/2026", "19:30", "UTC+7",
-                "Phòng 2", "A1, A2", "200.000", "https://cinema.example.com/customer/booking/tickets/42")) {
+                "Phòng 2", "A1, A2", "2 x Large Coca-Cola", "1 x Cheese Popcorn", "200.000",
+                "https://cinema.example.com/customer/booking/tickets/42")) {
             assertTrue(message.getText().contains(value), value);
         }
     }

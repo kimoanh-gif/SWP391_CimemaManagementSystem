@@ -196,7 +196,6 @@ public class CustomerBookingService {
             throw new BookingException("Your membership discount changed. Please review the updated total before paying.");
         String requestedMethod = paymentMethod == null ? "VNPAY" : paymentMethod.toUpperCase();
         String method = switch (requestedMethod) {
-            case "MOMO", "ZALOPAY", "NAPAS" -> requestedMethod;
             default -> "VNPAY";
         };
         LocalDateTime qrExpiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);

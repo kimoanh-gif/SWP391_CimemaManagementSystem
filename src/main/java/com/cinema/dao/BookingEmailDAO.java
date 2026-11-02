@@ -28,7 +28,11 @@ public class BookingEmailDAO {
                     (SELECT STRING_AGG(CONCAT(s.RowLabel,s.SeatNumber), ', ')
                             WITHIN GROUP (ORDER BY s.RowLabel,s.SeatNumber)
                      FROM dbo.BookingSeat bs JOIN dbo.Seat s ON s.SeatID=bs.SeatID
-                     WHERE bs.BookingID=b.BookingID AND UPPER(bs.[Status])='BOOKED') Seats
+                     WHERE bs.BookingID=b.BookingID AND UPPER(bs.[Status])='BOOKED') Seats,
+                    (SELECT STRING_AGG(CONCAT(bfb.Quantity, N' x ', fbi.[Name]), N', ')
+                     FROM dbo.BookingFoodBeverage bfb
+                     JOIN dbo.FoodBeverageItem fbi ON fbi.FoodBeverageItemID=bfb.FoodBeverageItemID
+                     WHERE bfb.BookingID=b.BookingID AND bfb.Quantity > 0) FoodAndDrinks
                 FROM dbo.Booking b JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
                 JOIN dbo.Account a ON a.AccountID=c.AccountID
                 JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
@@ -37,7 +41,7 @@ public class BookingEmailDAO {
                 """ + ELIGIBLE, (rs, n) -> new BookingEmailDetails(rs.getInt("BookingID"),
                 rs.getString("BookingCode"), rs.getString("Email"), rs.getString("FullName"),
                 rs.getString("Title"), rs.getString("RoomName"), rs.getObject("StartTime", LocalDateTime.class),
-                rs.getString("Seats"), rs.getBigDecimal("TotalAmount")), bookingId).stream().findFirst();
+                rs.getString("Seats"), rs.getString("FoodAndDrinks"), rs.getBigDecimal("TotalAmount")), bookingId).stream().findFirst();
     }
 
     /** Recovery for missed after-commit events and temporary SMTP failures. */

@@ -55,7 +55,7 @@
       if (foodTotal) foodTotal.textContent = formatCurrency(amount);
       if (grandTotal)
         grandTotal.textContent = formatCurrency(seatTotal + amount);
-      if (continueButton) continueButton.hidden = amount <= 0;
+      if (continueButton) continueButton.disabled = amount <= 0;
     };
 
     document.querySelectorAll(".quantity-minus").forEach((button) => {

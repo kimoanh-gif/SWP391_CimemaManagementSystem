@@ -1166,16 +1166,22 @@ IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO')
     INSERT dbo.FoodBeverageItem (ItemCode, [Name], [Description], ItemType, Price, CostPrice, ImageURL, [Status])
     VALUES (N'CB-SOLO', N'Solo Cine Combo', N'1 Sweet popcorn 24oz and 1 Carbonated drink 22oz', N'Combo', 79000, 22000, N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=400', N'Active');
 
-UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Caramel Popcorn', [Description]=N'Freshly popped corn coated with caramel', ImageURL=N'https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=600' WHERE ItemCode=N'PC-CARAMEL';
-UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Coca-Cola', [Description]=N'Chilled 32 oz Coca-Cola', ImageURL=N'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600' WHERE ItemCode=N'DR-COKE';
-UPDATE dbo.FoodBeverageItem SET [Name]=N'Solo Movie Combo', [Description]=N'One large caramel popcorn and one Coca-Cola', ImageURL=N'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?w=600' WHERE ItemCode=N'CB-SOLO';
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Caramel Popcorn', [Description]=N'Freshly popped corn coated with caramel', ImageURL=N'/images/fb/caramel-popcorn.png' WHERE ItemCode=N'PC-CARAMEL';
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Large Coca-Cola', [Description]=N'Chilled 32 oz Coca-Cola', ImageURL=N'/images/fb/large-cola.png' WHERE ItemCode=N'DR-COKE';
+UPDATE dbo.FoodBeverageItem SET [Name]=N'Solo Movie Combo', [Description]=N'One large caramel popcorn and one Coca-Cola', ImageURL=N'/images/fb/solo-combo.png' WHERE ItemCode=N'CB-SOLO';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode=N'PC-CHEESE')
     INSERT dbo.FoodBeverageItem (ItemCode,[Name],[Description],ItemType,Price,CostPrice,ImageURL,[Status]) VALUES
-    (N'PC-CHEESE',N'Cheese Popcorn',N'Large popcorn with rich cheese seasoning',N'Food',59000,17000,N'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=600',N'Active');
+    (N'PC-CHEESE',N'Cheese Popcorn',N'Large popcorn with rich cheese seasoning',N'Food',59000,17000,N'/images/fb/cheese-popcorn.png',N'Active');
 IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode=N'CB-COUPLE')
     INSERT dbo.FoodBeverageItem (ItemCode,[Name],[Description],ItemType,Price,CostPrice,ImageURL,[Status]) VALUES
-    (N'CB-COUPLE',N'Couple Movie Combo',N'One large popcorn and two soft drinks',N'Combo',129000,39000,N'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600',N'Active');
+    (N'CB-COUPLE',N'Couple Movie Combo',N'One large popcorn and two soft drinks',N'Combo',129000,39000,N'/images/fb/couple-combo.png',N'Active');
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/cheese-popcorn.png' WHERE ItemCode=N'PC-CHEESE';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/couple-combo.png' WHERE ItemCode=N'CB-COUPLE';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/cheese-popcorn.png' WHERE ItemCode=N'FB-001';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/large-cola.png' WHERE ItemCode=N'FB-002';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/solo-combo.png' WHERE ItemCode=N'FB-003';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/couple-combo.png' WHERE ItemCode=N'FB-004';
 
 DECLARE @ComboID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO');
 DECLARE @PopcornID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'PC-CARAMEL');

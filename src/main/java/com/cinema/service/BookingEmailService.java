@@ -85,6 +85,7 @@ public class BookingEmailService {
                 Giờ chiếu: %s (giờ Việt Nam, UTC+7)
                 Phòng chiếu: %s
                 Ghế: %s
+                Đồ ăn & thức uống: %s
                 Tổng thanh toán: %s VND
                 %s
                 Vui lòng đến rạp trước giờ chiếu khoảng 15 phút và mở vé điện tử có mã QR
@@ -96,6 +97,7 @@ public class BookingEmailService {
                 b.bookingCode(), b.movieTitle(), b.startTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 b.startTime().format(DateTimeFormatter.ofPattern("HH:mm")), b.roomName(),
                 b.seats() == null ? "Xem trong vé điện tử" : b.seats(),
+                b.foodAndDrinks() == null || b.foodAndDrinks().isBlank() ? "Không có" : b.foodAndDrinks(),
                 NumberFormat.getNumberInstance(Locale.forLanguageTag("vi-VN")).format(b.totalAmount()), ticketLink));
         return message;
     }

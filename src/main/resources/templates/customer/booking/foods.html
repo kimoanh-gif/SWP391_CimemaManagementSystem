@@ -69,6 +69,10 @@
           <section>
             <div class="food-grid" th:if="${!#lists.isEmpty(items)}">
               <article class="panel food-card" th:each="item : ${items}">
+                <header class="food-card-heading">
+                  <span class="item-type" th:text="${item.itemType}">COMBO</span>
+                  <h2 th:text="${item.name}">Combo</h2>
+                </header>
                 <div class="food-image">
                   <img
                     th:if="${item.imageUrl != null and !#strings.isEmpty(item.imageUrl)}"
@@ -82,10 +86,6 @@
                   >
                 </div>
                 <div class="food-content">
-                  <span class="item-type" th:text="${item.itemType}"
-                    >COMBO</span
-                  >
-                  <h2 th:text="${item.name}">Combo</h2>
                   <p
                     th:text="${item.description ?: 'Available at the cinema.'}"
                   ></p>
@@ -178,7 +178,7 @@
               id="food-continue-button"
               class="button primary full"
               type="submit"
-              th:hidden="${summary.foodTotal == null or summary.foodTotal.signum() == 0}"
+              th:disabled="${summary.foodTotal == null or summary.foodTotal.signum() == 0}"
             >
               Continue
               <span class="material-symbols-outlined">arrow_forward</span>
