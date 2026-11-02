@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.dao.CustomerDAO;
 import com.cinema.model.Movie;
+import com.cinema.model.MovieReview;
 import com.cinema.service.MovieCatalogService;
 import com.cinema.service.PublicShowtimeService;
 import com.cinema.service.SessionService;
