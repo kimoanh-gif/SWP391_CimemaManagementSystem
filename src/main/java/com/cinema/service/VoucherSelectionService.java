@@ -168,6 +168,10 @@ public class VoucherSelectionService {
         LocalDateTime now = LocalDateTime.now(clock);
         BigDecimal subtotal = pricing.subtotal() != null ? pricing.subtotal() : BigDecimal.ZERO;
 
+        // Marked EXPIRED by JOB-03 (Update Expired Promotions & Vouchers): report it as expired, not inactive.
+        if ("EXPIRED".equalsIgnoreCase(v.status()) || "EXPIRED".equalsIgnoreCase(v.promotionStatus())) {
+            return reject(option, VoucherOption.EXPIRED, "This voucher has expired.");
+        }
         if (!"ACTIVE".equalsIgnoreCase(v.status()) || !"ACTIVE".equalsIgnoreCase(v.promotionStatus())) {
             return reject(option, VoucherOption.INVALID, "This voucher is not active.");
         }
