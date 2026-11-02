@@ -123,6 +123,20 @@ class MoviePublicControllerTest {
     }
 
     @Test
+    void archivedMovieIsNotPubliclyViewable() {
+        Movie movie = new Movie();
+        movie.setMovieId(9);
+        movie.setStatus("Archived");
+        when(movieService.getMovieById(9)).thenReturn(Optional.of(movie));
+
+        RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
+        String view = controller.movieDetails(9, null, null, session, new ConcurrentModel(), ra);
+
+        assertEquals("redirect:/movies", view);
+        assertEquals("This movie is no longer available.", ra.getFlashAttributes().get("errorMessage"));
+    }
+
+    @Test
     void testMovieDetailsNotFoundRedirects() {
         when(movieService.getMovieById(999)).thenReturn(Optional.empty());
 
