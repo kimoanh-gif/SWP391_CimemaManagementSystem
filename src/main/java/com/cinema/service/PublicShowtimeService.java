@@ -23,6 +23,11 @@ public class PublicShowtimeService {
         return showtimeDAO.findShowtimes(date, movieId, roomType, timeSlot);
     }
 
+    /** Room types offered by the Showtime List filter, taken from the shared Room data (e.g. 2D Digital, Dolby Atmos, VIP Recliner). */
+    public List<String> getRoomTypes() {
+        return showtimeDAO.findActiveRoomTypes();
+    }
+
     public List<PublicShowtime> getShowtimesForMovie(int movieId, LocalDate date) {
         if (date == null) date = LocalDate.now();
         return showtimeDAO.findShowtimesByMovieAndDate(movieId, date);

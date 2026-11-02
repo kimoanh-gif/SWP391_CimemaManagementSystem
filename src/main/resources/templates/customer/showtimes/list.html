@@ -61,11 +61,14 @@
                     T13
                 </option>
             </select>
-            <select name="roomType" class="filter-select" onchange="this.form.submit()">
+            <select name="roomType" class="filter-select" onchange="this.form.submit()" aria-label="Room type">
                 <option value="ALL" th:selected="${selectedRoomType == 'ALL'}">All Formats</option>
-                <option value="2D" th:selected="${selectedRoomType == '2D'}">2D Standard</option>
-                <option value="3D" th:selected="${selectedRoomType == '3D'}">3D Laser</option>
-                <option value="VIP" th:selected="${selectedRoomType == 'VIP'}">VIP Recliner</option>
+                <option th:each="rt : ${roomTypes}"
+                        th:value="${rt}"
+                        th:text="${rt}"
+                        th:selected="${selectedRoomType == rt}">
+                    2D Digital
+                </option>
             </select>
             <select name="timeSlot" class="filter-select" onchange="this.form.submit()">
                 <option value="ALL" th:selected="${selectedTimeSlot == 'ALL'}">All Times</option>

@@ -103,7 +103,7 @@ public class PublicShowtimeDAO {
         }
 
         if (roomType != null && !roomType.isBlank() && !"ALL".equalsIgnoreCase(roomType)) {
-            sql.append(" AND UPPER(r.RoomType) = ? ");
+            sql.append(" AND UPPER(LTRIM(RTRIM(r.RoomType))) = ? ");
             params.add(roomType.trim().toUpperCase());
         }
 
@@ -119,6 +119,18 @@ public class PublicShowtimeDAO {
 
         sql.append(" ORDER BY m.Title ASC, st.StartTime ASC ");
         return jdbcTemplate.query(sql.toString(), rowMapper, params.toArray());
+    }
+
+    /** Distinct room types of the rooms that can host public showtimes, as stored in dbo.Room. */
+    public List<String> findActiveRoomTypes() {
+        String sql = """
+                SELECT DISTINCT LTRIM(RTRIM(r.RoomType)) AS RoomType
+                FROM dbo.Room r
+                WHERE UPPER(r.[Status]) IN ('ACTIVE', 'READY', 'SCREENING')
+                  AND r.RoomType IS NOT NULL AND LTRIM(RTRIM(r.RoomType)) <> ''
+                ORDER BY RoomType
+                """;
+        return jdbcTemplate.queryForList(sql, String.class);
     }
 
     public List<PublicShowtime> findShowtimesByMovieAndDate(int movieId, LocalDate date) {

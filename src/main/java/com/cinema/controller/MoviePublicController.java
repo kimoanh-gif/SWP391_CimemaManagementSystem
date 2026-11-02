@@ -104,6 +104,11 @@ public class MoviePublicController {
             return "redirect:/movies";
         }
         Movie movie = movieOpt.get();
+        if (movie.isArchived()) {
+            // UC02 E1 / BR-MI-01: a movie removed from public display cannot be opened by its link.
+            redirectAttributes.addFlashAttribute("errorMessage", "This movie is no longer available.");
+            return "redirect:/movies";
+        }
         model.addAttribute("movie", movie);
 
         // Upcoming available dates for this movie

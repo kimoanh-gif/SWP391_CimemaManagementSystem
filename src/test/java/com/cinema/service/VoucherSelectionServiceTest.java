@@ -107,6 +107,23 @@ class VoucherSelectionServiceTest {
     }
 
     @Test
+    void voucherMarkedExpiredByTheJobIsReportedAsExpired() {
+        VoucherCandidate markedByJob = new VoucherCandidate(1, "OLD", "PERCENT", BigDecimal.TEN, null, null,
+                NOW.minusDays(10), NOW.minusDays(1), null, null, "EXPIRED",
+                "Promo", null, "ACTIVE", NOW.minusDays(10), NOW.plusDays(10), null, null, null);
+        VoucherCandidate promotionMarkedByJob = new VoucherCandidate(2, "OLD2", "PERCENT", BigDecimal.TEN, null, null,
+                NOW.minusDays(10), NOW.plusDays(1), null, null, "ACTIVE",
+                "Promo", null, "EXPIRED", NOW.minusDays(10), NOW.minusDays(1), null, null, null);
+
+        VoucherOption a = service.evaluate(markedByJob, pricing(300_000, 0));
+        VoucherOption b = service.evaluate(promotionMarkedByJob, pricing(300_000, 0));
+
+        assertEquals(VoucherOption.EXPIRED, a.getStatus());
+        assertEquals("This voucher has expired.", a.getReason());
+        assertEquals(VoucherOption.EXPIRED, b.getStatus());
+    }
+
+    @Test
     void minimumBookingAmountIsRequired() {
         VoucherOption option = service.evaluate(voucher("WELCOME10", "PERCENT", 10, 50_000, 100_000), pricing(80_000, 0));
 

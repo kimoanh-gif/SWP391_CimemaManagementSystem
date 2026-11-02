@@ -2,6 +2,7 @@ package com.cinema.controller;
 
 import com.cinema.dao.CustomerDAO;
 import com.cinema.model.Movie;
+import com.cinema.model.MovieReview;
 import com.cinema.service.MovieCatalogService;
 import com.cinema.service.PublicShowtimeService;
 import com.cinema.service.SessionService;
@@ -120,6 +121,20 @@ class MoviePublicControllerTest {
 
         assertEquals(2, movie.getReviewCount());
         assertEquals(4.5, movie.getAverageRating());
+    }
+
+    @Test
+    void archivedMovieIsNotPubliclyViewable() {
+        Movie movie = new Movie();
+        movie.setMovieId(9);
+        movie.setStatus("Archived");
+        when(movieService.getMovieById(9)).thenReturn(Optional.of(movie));
+
+        RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
+        String view = controller.movieDetails(9, null, null, session, new ConcurrentModel(), ra);
+
+        assertEquals("redirect:/movies", view);
+        assertEquals("This movie is no longer available.", ra.getFlashAttributes().get("errorMessage"));
     }
 
     @Test

@@ -16,6 +16,9 @@
         <h1 style="font-size:2.5rem;font-weight:900;">Movies at CINEORA</h1>
         <p style="color:var(--text-secondary);margin-top:6px;">Discover the latest movies now showing and coming soon at CINEORA.</p>
     </div>
+    <div th:if="${errorMessage != null}" role="alert" style="background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.4);color:#ef4444;padding:12px 16px;border-radius:10px;margin-bottom:1.5rem;font-weight:600;">
+        <span th:text="${errorMessage}">The requested movie could not be found.</span>
+    </div>
     <form th:action="@{/movies}" method="get" class="filter-toolbar">
         <div class="filter-tabs">
             <a th:href="@{/movies(type='all', genreId=${selectedGenreId}, ageRating=${selectedAgeRating}, q=${keyword}, sort=${sortBy})}"
