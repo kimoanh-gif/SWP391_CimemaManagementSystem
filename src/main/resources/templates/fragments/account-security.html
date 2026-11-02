@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="security">
+  <link rel="stylesheet" th:href="@{/css/account-profile.css}" href="/css/account-profile.css">
+  <section class="account-security" id="account-security" th:data-min-length="${passwordMinLength != null ? passwordMinLength : 8}">
+    <p class="account-eyebrow">ACCOUNT SECURITY</p>
+    <h2>Change password</h2>
+    <p class="account-description">We will send a verification code to your registered email. You can update your password here and stay signed in.</p>
+    <p class="security-message" id="security-message" role="status" aria-live="polite"></p>
+    <div class="security-send-row"><button type="button" class="account-button account-secondary" id="security-send">Send verification code</button><span id="security-cooldown" aria-live="polite"></span></div>
+    <form id="security-form" hidden>
+      <div class="account-field"><label for="security-otp">Email verification code</label><input id="security-otp" name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code" required><small id="security-expiry"></small></div>
+      <div class="account-password-grid">
+        <div class="account-field"><label for="security-password">New password</label><div class="account-password-input"><input id="security-password" name="password" type="password" th:minlength="${passwordMinLength != null ? passwordMinLength : 8}" minlength="8" maxlength="128" autocomplete="new-password" required aria-describedby="security-policy"><button type="button" class="account-eye" data-toggle-password="security-password" aria-label="Show new password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="account-eye-slash" d="m3 3 18 18"/></svg></button></div></div>
+        <div class="account-field"><label for="security-confirm">Confirm new password</label><div class="account-password-input"><input id="security-confirm" name="confirmPassword" type="password" maxlength="128" autocomplete="new-password" required><button type="button" class="account-eye" data-toggle-password="security-confirm" aria-label="Show confirm password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="account-eye-slash" d="m3 3 18 18"/></svg></button></div></div>
+      </div>
+      <p class="security-policy" id="security-policy" th:text="${'Use ' + (passwordMinLength != null ? passwordMinLength : 8) + '–128 characters with at least one letter and one number.'}">Use 8–128 characters with at least one letter and one number.</p>
+      <button class="account-button account-primary" type="submit" id="security-save">Update password</button>
+    </form>
+    <input type="hidden" id="security-csrf-header" th:value="${_csrf != null ? _csrf.headerName : 'X-XSRF-TOKEN'}">
+    <input type="hidden" id="security-csrf-token" th:value="${_csrf != null ? _csrf.token : ''}">
+  </section>
+  <script th:src="@{/js/account-security.js}" src="/js/account-security.js" defer></script>
+</th:block>
+</body></html>

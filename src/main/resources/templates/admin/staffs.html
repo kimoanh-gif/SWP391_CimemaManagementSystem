@@ -54,6 +54,30 @@ tbody tr:hover td { background: var(--purple-50); }
 .form-group .field-error { color: var(--error-icon); font-size: 12px; margin-top: 4px; display: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
 
+#formModal .modal { width: 640px; }
+#formModal .modal-header h2 { margin: 0; }
+.staff-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.staff-form-grid .form-group { margin: 0; min-width: 0; }
+.staff-form-grid .form-wide { grid-column: 1 / -1; }
+.staff-form-grid .form-wide select { width: calc((100% - 20px) / 2); }
+.staff-form-grid input, .staff-form-grid select { box-sizing: border-box; height: 46px; min-width: 0; }
+.password-control { position: relative; }
+.staff-form-grid .password-control input { padding-right: 48px; }
+.password-toggle { position: absolute; top: 50%; right: 7px; transform: translateY(-50%); display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.password-toggle:hover { background: #FFF0EB; color: #B3001F; }
+.password-toggle:focus-visible { outline: 2px solid #D92332; outline-offset: 2px; }
+.password-toggle svg { width: 19px; height: 19px; }
+.password-toggle .eye-slash { display: none; }
+.password-toggle[aria-pressed="true"] .eye-slash { display: block; }
+.password-hint { grid-column: 1 / -1; margin: -10px 0 0; font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+@media (max-width: 560px) {
+  .staff-form-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .staff-form-grid .form-wide select { width: 100%; }
+  #formModal .modal-header, #formModal .modal-body, #formModal .modal-footer { padding: 20px; }
+  #formModal .modal-footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #formModal .modal-footer .btn { min-width: 0; white-space: nowrap; padding-left: 12px; padding-right: 12px; }
+}
+
 /* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; z-index: 2000; display: none; min-width: 280px; }
 .toast.show { display: block; animation: slideUp .3s ease; }
@@ -107,6 +131,7 @@ tbody tr:hover td { background: var(--purple-50); }
       </a>
     </nav>
     <div class="sidebar-footer">
+      <a class="sidebar-link" th:href="@{/account/profile}" href="/account/profile"><span class="link-icon">☻</span><span>My Profile</span></a>
       <div class="sidebar-user">
         <div class="sidebar-user-avatar" th:text="${adminDisplayName.substring(0,1).toUpperCase()}">A</div>
         <div class="sidebar-user-info">
@@ -131,7 +156,7 @@ tbody tr:hover td { background: var(--purple-50); }
       <div class="topbar-actions">
         <button class="btn btn-primary" onclick="openCreateModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Staff
+          New Account
         </button>
       </div>
     </div>
@@ -208,13 +233,13 @@ tbody tr:hover td { background: var(--purple-50); }
 
 <!-- CREATE / EDIT MODAL -->
 <div class="modal-overlay" id="formModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-header">
-      <h2 id="modalTitle">New Staff Account</h2>
-      <button class="modal-close" onclick="closeFormModal()">&times;</button>
+      <h2 id="modalTitle">New Account</h2>
+      <button type="button" class="modal-close" onclick="closeFormModal()" aria-label="Close account form">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="staffForm" onsubmit="submitForm(event)">
+      <form id="staffForm" class="staff-form-grid" onsubmit="submitForm(event)">
         <input type="hidden" id="formAccountId">
         <div class="form-group">
           <label for="fUsername">Username *</label>
@@ -224,7 +249,6 @@ tbody tr:hover td { background: var(--purple-50); }
           <label for="fFullName">Full Name *</label>
           <input type="text" id="fFullName" required minlength="2" maxlength="100" placeholder="e.g. John Doe" autocomplete="name">
         </div>
-        <div class="form-row">
           <div class="form-group">
             <label for="fEmail">Email *</label>
             <input type="email" id="fEmail" required placeholder="john@cinema.com">
@@ -233,9 +257,7 @@ tbody tr:hover td { background: var(--purple-50); }
             <label for="fPhone">Phone *</label>
             <input type="tel" id="fPhone" required maxlength="13" pattern="(0|\+84)[0-9]{9,10}" title="0 or +84 followed by 9-10 digits" placeholder="0912345678">
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
+          <div class="form-group form-wide">
             <label for="fRole">Role *</label>
             <select id="fRole" required>
               <option value="STAFF">Staff</option>
@@ -244,13 +266,23 @@ tbody tr:hover td { background: var(--purple-50); }
           </div>
           <div class="form-group" id="pwGroup">
             <label for="fPassword">Password *</label>
-            <input type="password" id="fPassword" minlength="8" maxlength="128" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,128}" title="8-128 characters with at least one letter and one number" autocomplete="new-password" placeholder="8-128 characters with letters and numbers">
+            <div class="password-control">
+              <input type="password" id="fPassword" minlength="8" maxlength="128" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,128}" title="8-128 characters with at least one letter and one number" autocomplete="new-password" placeholder="Enter password" aria-describedby="passwordHint">
+              <button type="button" class="password-toggle" aria-label="Show password" aria-controls="fPassword" aria-pressed="false" onclick="togglePasswordVisibility('fPassword', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg>
+              </button>
+            </div>
           </div>
-        </div>
         <div class="form-group" id="confirmPwGroup">
           <label for="fConfirmPassword">Confirm Password *</label>
-          <input type="password" id="fConfirmPassword" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Re-enter password">
+          <div class="password-control">
+            <input type="password" id="fConfirmPassword" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Re-enter password" aria-describedby="passwordHint">
+            <button type="button" class="password-toggle" aria-label="Show confirm password" aria-controls="fConfirmPassword" aria-pressed="false" onclick="togglePasswordVisibility('fConfirmPassword', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/></svg>
+            </button>
+          </div>
         </div>
+        <p class="password-hint" id="passwordHint">Use 8–128 characters with at least one letter and one number. Your system's minimum length also applies.</p>
       </form>
     </div>
     <div class="modal-footer">
@@ -401,9 +433,27 @@ function renderPagination() {
 function openSidebar() { document.getElementById('adminSidebar').classList.add('mobile-open'); document.getElementById('sidebarOverlay').classList.add('show'); }
 function closeSidebar() { document.getElementById('adminSidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
 
+function togglePasswordVisibility(inputId, button) {
+  const input = document.getElementById(inputId);
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  button.setAttribute('aria-pressed', String(visible));
+  const label = inputId === 'fConfirmPassword' ? 'confirm password' : 'password';
+  button.setAttribute('aria-label', (visible ? 'Hide ' : 'Show ') + label);
+}
+
+function resetPasswordVisibility() {
+  document.querySelectorAll('#staffForm .password-toggle').forEach(button => {
+    const input = document.getElementById(button.getAttribute('aria-controls'));
+    input.type = 'password';
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', input.id === 'fConfirmPassword' ? 'Show confirm password' : 'Show password');
+  });
+}
+
 function openCreateModal() {
   editMode = false;
-  document.getElementById('modalTitle').textContent = 'New Staff Account';
+  document.getElementById('modalTitle').textContent = 'New Account';
   document.getElementById('formSubmitBtn').textContent = 'Create Account';
   document.getElementById('pwGroup').style.display = 'block';
   document.getElementById('fPassword').required = true;
@@ -412,6 +462,8 @@ function openCreateModal() {
   document.getElementById('fPassword').disabled = false;
   document.getElementById('fConfirmPassword').disabled = false;
   document.getElementById('staffForm').reset();
+  resetPasswordVisibility();
+  document.getElementById('passwordHint').hidden = false;
   document.getElementById('formAccountId').value = '';
   document.getElementById('formModal').classList.add('show');
 }
@@ -420,6 +472,8 @@ function openEditModal(accountId) {
   editMode = true;
   const s = staffs.find(x => x.accountId === accountId);
   if (!s) { showToast('Staff not found.', 'error'); return; }
+  resetPasswordVisibility();
+  document.getElementById('passwordHint').hidden = true;
   
   document.getElementById('modalTitle').textContent = 'Edit Staff Account';
   document.getElementById('formSubmitBtn').textContent = 'Save Changes';
@@ -441,6 +495,9 @@ function openEditModal(accountId) {
 }
 
 function closeFormModal() {
+  resetPasswordVisibility();
+  document.getElementById('fPassword').value = '';
+  document.getElementById('fConfirmPassword').value = '';
   document.getElementById('formModal').classList.remove('show');
 }
 

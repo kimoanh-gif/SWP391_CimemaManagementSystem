@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>My Profile | CINEORA</title><link rel="stylesheet" th:href="@{/css/account-profile.css}" href="/css/account-profile.css"></head>
+<body class="account-page">
+  <header class="account-header"><a th:href="${dashboardUrl}" class="account-brand">CINEORA <span th:text="${roleName}">ADMIN</span></a><a th:href="${dashboardUrl}" class="account-back">Back to workspace</a></header>
+  <main class="account-container">
+    <div class="account-heading"><p class="account-eyebrow">YOUR ACCOUNT</p><h1>My profile</h1><p>Your account details and password settings, all in one place.</p></div>
+    <div class="account-layout">
+      <section class="account-card account-information"><div class="account-avatar" th:text="${account.fullName != null and !#strings.isEmpty(account.fullName) ? #strings.substring(account.fullName,0,1) : 'U'}">A</div><h2 th:text="${account.fullName}">Account name</h2><span class="account-role" th:text="${roleName}">ADMIN</span><dl class="account-details"><div><dt>Username</dt><dd th:text="${account.username}"></dd></div><div><dt>Email</dt><dd th:text="${account.email}"></dd></div><div><dt>Phone</dt><dd th:text="${account.phone != null and !#strings.isEmpty(account.phone) ? account.phone : 'Not provided'}"></dd></div><div><dt>Status</dt><dd th:text="${account.status}"></dd></div></dl></section>
+      <div class="account-card"><th:block th:replace="~{fragments/account-security :: security}"></th:block></div>
+    </div>
+  </main>
+</body></html>

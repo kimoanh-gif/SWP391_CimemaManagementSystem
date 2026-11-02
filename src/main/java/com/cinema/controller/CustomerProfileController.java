@@ -5,7 +5,6 @@ import com.cinema.dto.ProfileUpdateForm;
 import com.cinema.service.CustomerProfileService;
 import com.cinema.service.SessionService;
 import com.cinema.service.AuthService;
-import com.cinema.model.OtpToken;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -180,55 +177,12 @@ public class CustomerProfileController {
         }
     }
 
-    @PostMapping("/password/request")
-    @ResponseBody
-    public ResponseEntity<Map<String,Object>> requestPasswordChange(HttpSession session) {
-        Integer accountId = customerAccountId(session);
-        if (accountId == null) return ResponseEntity.status(401).body(Map.of("success", false, "message", "Please sign in again."));
-        CustomerProfile profile = getProfile(accountId);
-        if (profile.isGoogleLinked() && !profile.isPasswordSet()) {
-            return ResponseEntity.ok(Map.of("success", true, "firstGoogleSetup", true,
-                    "message", "Create your first password. Email verification is not required this time."));
-        }
-        authService.requestPasswordReset(profile.getEmail());
-        return ResponseEntity.ok(Map.of("success", true, "firstGoogleSetup", false,
-                "message", "A verification code has been sent to " + maskEmail(profile.getEmail()) + "."));
-    }
-
-    @PostMapping("/password/update")
-    @ResponseBody
-    public ResponseEntity<Map<String,Object>> updatePassword(@RequestParam(required = false) String otp,
-                                                              @RequestParam String newPassword,
-                                                              @RequestParam String confirmPassword,
-                                                              HttpSession session) {
-        Integer accountId = customerAccountId(session);
-        if (accountId == null) return ResponseEntity.status(401).body(Map.of("success", false, "message", "Please sign in again."));
-        if (!newPassword.equals(confirmPassword)) return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Password confirmation does not match."));
-        if (newPassword.length() < passwordMinLength()) return ResponseEntity.badRequest().body(Map.of("success", false,
-                "message", "Password must contain at least " + passwordMinLength() + " characters."));
-        CustomerProfile profile = getProfile(accountId);
-        boolean success;
-        if (profile.isGoogleLinked() && !profile.isPasswordSet()) {
-            success = authService.setInitialGooglePassword(accountId, newPassword);
-        } else {
-            success = authService.resetPassword(profile.getEmail(), otp, newPassword) == AuthService.OtpResult.SUCCESS;
-        }
-        if (!success) return ResponseEntity.badRequest().body(Map.of("success", false, "message", "The verification code is invalid, expired, or the password does not meet the requirements."));
-        return ResponseEntity.ok(Map.of("success", true, "message", "Password updated successfully."));
-    }
-
     private void deletePreviousAvatar(String avatarUrl, Path directory) {
         if (avatarUrl == null || !avatarUrl.startsWith("/uploads/avatars/")) return;
         try {
             Path previous = directory.resolve(avatarUrl.substring(avatarUrl.lastIndexOf('/') + 1)).normalize();
             if (previous.startsWith(directory)) Files.deleteIfExists(previous);
         } catch (Exception ignored) { }
-    }
-
-    private String maskEmail(String email) {
-        int at = email == null ? -1 : email.indexOf('@');
-        if (at < 1) return "your email";
-        return email.substring(0, Math.min(2, at)) + "***" + email.substring(at);
     }
 
     private Integer customerAccountId(HttpSession session) {

@@ -73,6 +73,44 @@ public class AuthService {
         return value != null && value.length() >= passwordMinimumLength() && PASSWORD_RE.matcher(value).matches();
     }
 
+    public boolean isPasswordValid(String value) { return validPassword(value); }
+
+    /** Personal password changes use the same dispatch policy as forgot-password. */
+    @Transactional
+    public RegisterResult requestProfilePasswordOtp(int accountId) {
+        Account account = accountDAO.findById(accountId).orElse(null);
+        if (account == null || !"ACTIVE".equalsIgnoreCase(account.getStatus()))
+            return new RegisterResult("INACTIVE_ACCOUNT", "Your account is not active. Please sign in again.");
+        if (account.getEmail() == null || !EMAIL_RE.matcher(account.getEmail().trim()).matches())
+            return new RegisterResult("INVALID_EMAIL", "Your account needs a valid registered email address.");
+        return dispatchOtp(accountId, account.getEmail(), OtpToken.PURPOSE_RESET_PASSWORD);
+    }
+
+    public int profileOtpCooldownSeconds(int accountId) {
+        return accountDAO.findById(accountId).flatMap(a ->
+                otpTokenDAO.findLatestByEmailAndPurpose(a.getEmail(), OtpToken.PURPOSE_RESET_PASSWORD))
+                .map(token -> otpService.secondsUntilNextResend(token.getLastSentAt())).orElse(0);
+    }
+
+    /** The recipient/account come only from the authenticated AccountID, never client input. */
+    @Transactional
+    public OtpResult updateProfilePassword(int accountId, String code, String password) {
+        if (!validPassword(password) || code == null || !code.trim().matches("[0-9]{6}"))
+            return OtpResult.INVALID_OR_EXPIRED;
+        Account account = accountDAO.findById(accountId).orElse(null);
+        if (account == null || !"ACTIVE".equalsIgnoreCase(account.getStatus()) || account.getEmail() == null)
+            return OtpResult.INVALID_OR_EXPIRED;
+        OtpToken token = otpTokenDAO.findActiveByEmailAndPurpose(account.getEmail(), OtpToken.PURPOSE_RESET_PASSWORD).orElse(null);
+        if (token == null) return OtpResult.NO_PENDING_TOKEN;
+        if (!Integer.valueOf(accountId).equals(token.getAccountId())) return OtpResult.INVALID_OR_EXPIRED;
+        OtpResult check = checkTokenCode(token, code.trim());
+        if (check != OtpResult.SUCCESS) return check;
+        if (otpTokenDAO.consumeIfActive(token.getOtpTokenId()) != 1) return OtpResult.NO_PENDING_TOKEN;
+        if (accountDAO.updatePasswordHash(accountId, passwordEncoder.encode(password)) != 1)
+            throw new org.springframework.dao.DataAccessResourceFailureException("Password update failed");
+        return OtpResult.SUCCESS;
+    }
+
     public AuthService(AccountDAO accountDAO, RoleDAO roleDAO, CustomerDAO customerDAO,
                        OtpTokenDAO otpTokenDAO, LoginAttemptDAO loginAttemptDAO,
                        OAuthAccountDAO oAuthAccountDAO, OtpService otpService,
@@ -394,6 +432,10 @@ public class AuthService {
         if (email == null || code == null) return OtpResult.INVALID_OR_EXPIRED;
         OtpToken t = otpTokenDAO.findActiveByEmailAndPurpose(email.trim(), purpose).orElse(null);
         if (t == null) return OtpResult.NO_PENDING_TOKEN;
+        return checkTokenCode(t, code);
+    }
+
+    private OtpResult checkTokenCode(OtpToken t, String code) {
         if (t.getAttemptCount() != null && t.getAttemptCount() >= policy("SYSTEM_OTP_MAX_ATTEMPTS", maxOtpAttempts)) {
             otpTokenDAO.markConsumed(t.getOtpTokenId());
             return OtpResult.TOO_MANY_ATTEMPTS;
@@ -449,8 +491,8 @@ public class AuthService {
             }
             return OtpResult.INVALID_OR_EXPIRED;
         }
-        otpTokenDAO.markConsumed(t.getOtpTokenId());
-        
+        if (otpTokenDAO.consumeIfActive(t.getOtpTokenId()) != 1) return OtpResult.NO_PENDING_TOKEN;
+
         // If AccountID is NULL in OtpToken, try to find account by email as backup
         Integer accountId = t.getAccountId();
         if (accountId == null) {

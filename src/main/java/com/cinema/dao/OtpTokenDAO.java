@@ -106,6 +106,14 @@ public class OtpTokenDAO {
                 Timestamp.valueOf(LocalDateTime.now()), otpTokenId);
     }
 
+    /** Atomic claim prevents two concurrent profile requests from reusing one OTP. */
+    public int consumeIfActive(long otpTokenId) {
+        return jdbcTemplate.update("""
+                UPDATE dbo.OtpToken SET ConsumedAt=SYSDATETIME()
+                WHERE OtpTokenID=? AND ConsumedAt IS NULL AND ExpiresAt>SYSDATETIME()
+                """, otpTokenId);
+    }
+
     public int touchLastSent(long otpTokenId) {
         return jdbcTemplate.update(
                 "UPDATE dbo.OtpToken SET LastSentAt = SYSDATETIME() WHERE OtpTokenID = ?",
