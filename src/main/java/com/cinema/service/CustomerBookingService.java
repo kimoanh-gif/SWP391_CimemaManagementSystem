@@ -31,12 +31,15 @@ public class CustomerBookingService {
     public static final int PAYMENT_QR_MINUTES = 3;
 
     private final CustomerBookingDAO bookingDAO;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private MembershipDiscountService membershipDiscountService;
     @org.springframework.beans.factory.annotation.Autowired
     public void setMembershipDiscountService(MembershipDiscountService service) { membershipDiscountService = service; }
 
-    public CustomerBookingService(CustomerBookingDAO bookingDAO) {
+    public CustomerBookingService(CustomerBookingDAO bookingDAO,
+                                  org.springframework.context.ApplicationEventPublisher events) {
         this.bookingDAO = bookingDAO;
+        this.events = events;
     }
 
     @Transactional
@@ -231,6 +234,7 @@ public class CustomerBookingService {
         PaymentView payment = getPayment(paymentId, accountId);
         try {
             bookingDAO.confirmSimulatedPayment(paymentId, accountId);
+            events.publishEvent(new com.cinema.model.BookingPaidEvent(payment.bookingId()));
             return payment.bookingId();
         } catch (IllegalStateException exception) {
             throw new BookingException(exception.getMessage());

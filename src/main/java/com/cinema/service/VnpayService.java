@@ -27,10 +27,13 @@ public class VnpayService {
 
     private final VnpayProperties properties;
     private final CustomerBookingDAO bookingDAO;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
-    public VnpayService(VnpayProperties properties, CustomerBookingDAO bookingDAO) {
+    public VnpayService(VnpayProperties properties, CustomerBookingDAO bookingDAO,
+                        org.springframework.context.ApplicationEventPublisher events) {
         this.properties = properties;
         this.bookingDAO = bookingDAO;
+        this.events = events;
     }
 
     public boolean isReady() { return properties.isReady(); }
@@ -95,6 +98,7 @@ public class VnpayService {
                 parameters.get("vnp_TransactionNo"), parameters.get("vnp_ResponseCode"),
                 parameters.get("vnp_TransactionStatus"), parameters.get("vnp_BankCode"),
                 parameters.get("vnp_CardType"));
+        if (successful) events.publishEvent(new com.cinema.model.BookingPaidEvent(payment.bookingId()));
         return "00";
     }
 

@@ -33,7 +33,8 @@ class CustomerBookingServiceTest {
 
     @BeforeEach
     void setUp() {
-        customerBookingService = new CustomerBookingService(bookingDAO);
+        customerBookingService = new CustomerBookingService(bookingDAO,
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test

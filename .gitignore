@@ -54,6 +54,9 @@ target/
 # Logs
 *.log
 
+# Runtime-only email delivery ledger (no database schema changes)
+/var/booking-email/
+
 # OS
 .DS_Store
 Thumbs.db
