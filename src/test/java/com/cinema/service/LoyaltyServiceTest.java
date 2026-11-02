@@ -58,7 +58,8 @@ class LoyaltyServiceTest {
         assertEquals("Platinum Member", info.getNextRankName());
         assertEquals(1200, info.pointsToNextRank());
         assertEquals(20, info.progressPercent()); // (800-500)/(2000-500)
-        assertTrue(info.rankBenefits().contains("5% member discount"));
+        assertTrue(info.rankBenefits().contains(
+                "5% member discount on bookings from 100,000 ₫, up to 50,000 ₫ per booking, for 3 bookings at this rank (not combined with vouchers)"));
         assertTrue(info.rankBenefits().contains("Priority booking"));
     }
 
@@ -111,9 +112,26 @@ class LoyaltyServiceTest {
     private static List<MembershipRank> defaultRanks() {
         return List.of(
                 rank("SILVER", "Silver Member", 0, "{\"pointsRate\":1,\"birthdayBonus\":true,\"priorityBooking\":false}", "0"),
-                rank("GOLD", "Gold Member", 500, "{\"pointsRate\":1.5,\"birthdayBonus\":true,\"priorityBooking\":true}", "5"),
+                withPolicy(rank("GOLD", "Gold Member", 500, "{\"pointsRate\":1.5,\"birthdayBonus\":true,\"priorityBooking\":true}", "5"), 3, "100000", "50000"),
                 rank("PLATINUM", "Platinum Member", 2000, "{\"pointsRate\":2}", "10"),
                 rank("DIAMOND", "Diamond Member", 5000, "{\"pointsRate\":3,\"freeSnacks\":true}", "15"));
+    }
+
+    private static MembershipRank withPolicy(MembershipRank r, int uses, String minBooking, String cap) {
+        r.setDiscountUsageLimit(uses);
+        r.setMinBookingAmount(new java.math.BigDecimal(minBooking));
+        r.setMaxDiscountAmount(new java.math.BigDecimal(cap));
+        return r;
+    }
+
+    @Test
+    void memberDiscountIsHiddenWhenThePolicyIsNotConfigured() {
+        MembershipRank noLimit = rank("GOLD", "Gold Member", 500, null, "5"); // usage limit and cap default to 0
+        assertTrue(service.describeBenefits(noLimit).isEmpty());
+
+        MembershipRank anyBooking = withPolicy(rank("GOLD", "Gold Member", 500, null, "10"), 1, "0", "30000");
+        assertEquals(List.of("10% member discount on any booking, up to 30,000 ₫ per booking, for 1 booking at this rank (not combined with vouchers)"),
+                service.describeBenefits(anyBooking));
     }
 
     private static MembershipRank rank(String name, String display, int min, String benefits, String discount) {

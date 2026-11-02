@@ -106,10 +106,8 @@ public class LoyaltyService {
         List<String> lines = new ArrayList<>();
         if (rank == null) return lines;
 
-        BigDecimal discount = parseDecimal(rank.getDiscountPercent());
-        if (discount != null && discount.signum() > 0) {
-            lines.add(discount.stripTrailingZeros().toPlainString() + "% member discount");
-        }
+        String memberDiscount = describeMemberDiscount(rank);
+        if (memberDiscount != null) lines.add(memberDiscount);
 
         String raw = rank.getBenefits();
         if (raw == null || raw.isBlank()) return lines;
@@ -134,6 +132,31 @@ public class LoyaltyService {
                 .filter(s -> !s.isEmpty())
                 .forEach(lines::add);
         return lines;
+    }
+
+    /**
+     * The rank discount applied at checkout (MembershipDiscountPolicy). It only exists when the
+     * percentage, the per-booking cap and the usage limit are all set; otherwise no line is shown,
+     * so the screen never promises a discount that checkout will not give.
+     */
+    public static String describeMemberDiscount(MembershipRank rank) {
+        if (rank == null) return null;
+        BigDecimal percent = parseDecimal(rank.getDiscountPercent());
+        BigDecimal cap = rank.getMaxDiscountAmount();
+        Integer limit = rank.getDiscountUsageLimit();
+        if (percent == null || percent.signum() <= 0 || percent.compareTo(BigDecimal.valueOf(100)) > 0
+                || cap == null || cap.signum() <= 0 || limit == null || limit <= 0) {
+            return null;
+        }
+        BigDecimal min = rank.getMinBookingAmount();
+        String minText = min == null || min.signum() <= 0 ? "any booking" : "bookings from " + money(min);
+        return percent.stripTrailingZeros().toPlainString() + "% member discount on " + minText
+                + ", up to " + money(cap) + " per booking, for " + limit + (limit == 1 ? " booking" : " bookings")
+                + " at this rank (not combined with vouchers)";
+    }
+
+    private static String money(BigDecimal amount) {
+        return String.format(java.util.Locale.US, "%,d ₫", amount.setScale(0, java.math.RoundingMode.DOWN).longValue());
     }
 
     private static String describeBenefit(String key, JsonNode value) {
