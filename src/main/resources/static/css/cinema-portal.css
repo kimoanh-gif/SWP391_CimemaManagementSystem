@@ -1319,7 +1319,7 @@ button, input, select, textarea {
 .slot-start-time {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .slot-end-time {

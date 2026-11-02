@@ -1178,10 +1178,13 @@ IF NOT EXISTS (SELECT 1 FROM dbo.FoodBeverageItem WHERE ItemCode=N'CB-COUPLE')
     (N'CB-COUPLE',N'Couple Movie Combo',N'One large popcorn and two soft drinks',N'Combo',129000,39000,N'/images/fb/couple-combo.png',N'Active');
 UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/cheese-popcorn.png' WHERE ItemCode=N'PC-CHEESE';
 UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/couple-combo.png' WHERE ItemCode=N'CB-COUPLE';
-UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/cheese-popcorn.png' WHERE ItemCode=N'FB-001';
-UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/large-cola.png' WHERE ItemCode=N'FB-002';
-UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/solo-combo.png' WHERE ItemCode=N'FB-003';
-UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/couple-combo.png' WHERE ItemCode=N'FB-004';
+-- Legacy catalogue items keep their own artwork instead of reusing the newer
+-- products above. This makes similarly named products easy to distinguish in
+-- the customer F&B picker.
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/buttered-popcorn.png' WHERE ItemCode=N'FB-001';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/large-soft-drink.png' WHERE ItemCode=N'FB-002';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/combo-solo.png' WHERE ItemCode=N'FB-003';
+UPDATE dbo.FoodBeverageItem SET ImageURL=N'/images/fb/combo-couple.png' WHERE ItemCode=N'FB-004';
 
 DECLARE @ComboID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'CB-SOLO');
 DECLARE @PopcornID INT = (SELECT FoodBeverageItemID FROM dbo.FoodBeverageItem WHERE ItemCode = N'PC-CARAMEL');
