@@ -7,6 +7,7 @@ import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
 import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffNewsArticle;
+import com.cinema.model.StaffTicketCheck;
 import com.cinema.service.CustomerBookingService;
 import com.cinema.service.SessionService;
 import com.cinema.service.StaffCounterSalesService;
@@ -35,6 +36,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Controller
 @RequestMapping("/staff")
@@ -406,15 +408,25 @@ public class StaffWorkspaceController {
         return "staff/check-in";
     }
 
-    @PostMapping("/check-in")
-    public String checkIn(@RequestParam String bookingCode, HttpSession session,
-                          RedirectAttributes redirectAttributes) {
+    /** Screen 5.6 step 1: validate the scanned or typed ticket and show the result card. */
+    @PostMapping("/check-in/verify")
+    public String verifyTicket(@RequestParam(required = false) String code, HttpSession session,
+                               RedirectAttributes redirectAttributes) {
         if (staffAccountId(session) == null) return "redirect:/login";
+        return checkInResult(redirectAttributes, () -> operationsService.verifyTicket(code));
+    }
+
+    /** Screen 5.6 step 2: Confirm Check-in admits the customer (Valid -> Checked-In). */
+    @PostMapping("/check-in/confirm")
+    public String confirmCheckIn(@RequestParam(required = false) String code, HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        if (staffAccountId(session) == null) return "redirect:/login";
+        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code));
+    }
+
+    private String checkInResult(RedirectAttributes redirectAttributes, Supplier<StaffTicketCheck> check) {
         try {
-            int checkedIn = operationsService.checkIn(bookingCode);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Successfully checked in " + checkedIn + " ticket(s) for booking "
-                            + bookingCode.trim() + ".");
+            redirectAttributes.addFlashAttribute("check", check.get());
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getReason());
         }

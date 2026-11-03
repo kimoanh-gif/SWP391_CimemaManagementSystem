@@ -32,33 +32,76 @@
       <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}" role="status"></div>
       <div class="alert alert-error"   th:if="${errorMessage}"   th:text="${errorMessage}"   role="alert"></div>
 
-      <!-- Check-in form -->
-      <div class="panel checkin-card">
-        <div class="panel-header">
-          <div>
-            <h2>🎫 Validate Booking Code</h2>
-            <p>Enter the booking code shown on the customer's ticket or confirmation email.</p>
-          </div>
-        </div>
-        <div class="panel-body">
-          <form th:action="@{/staff/check-in}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <div class="form-group">
-              <label class="form-label" for="bookingCode">Booking Code</label>
-              <input class="form-control" id="bookingCode" name="bookingCode"
-                     autocomplete="off"
-                     placeholder="Enter booking code (e.g. BK-20241023-0001)"
-                     style="max-width:440px;"
-                     required>
-            </div>
-            <button class="btn btn-primary" type="submit">Confirm Check-In ✓</button>
-          </form>
-        </div>
-      </div>
+      <div class="checkin-layout">
 
-      <!-- Info note -->
-      <div class="alert alert-info">
-        ℹ️ Only <strong>CONFIRMED</strong> bookings with unused tickets can be checked in during the valid time window.
+        <!-- I. Scanner viewport: hardware QR scanners type the code and press Enter -->
+        <section class="panel" aria-labelledby="scannerTitle">
+          <div class="panel-header">
+            <div>
+              <h2 id="scannerTitle">🎫 Scan Ticket</h2>
+              <p>Scan the ticket QR code, or type the ticket ID if the scanner fails.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="scanner-viewport" aria-hidden="true">
+              <span class="scanner-reticle"></span>
+              <span class="scanner-line"></span>
+              <small>Ready to scan</small>
+            </div>
+            <form th:action="@{/staff/check-in/verify}" method="post" class="scanner-form">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <label class="form-label" for="ticketCode">Ticket QR / Ticket ID</label>
+              <div class="scanner-input-row">
+                <input class="form-control" id="ticketCode" name="code" autocomplete="off" autofocus required
+                       placeholder="Scan QR or type e.g. TK-00000008">
+                <button class="btn btn-primary" type="submit">Verify</button>
+              </div>
+            </form>
+            <p class="checkin-note">Check-in opens 30 minutes before the showtime and closes when it ends. Each ticket admits one person once.</p>
+          </div>
+        </section>
+
+        <!-- II. Verification result card -->
+        <section class="panel" aria-labelledby="resultTitle">
+          <div class="panel-header"><div><h2 id="resultTitle">Verification Result</h2></div></div>
+          <div class="panel-body">
+            <div class="checkin-empty" th:unless="${check}">Scan a ticket to see its details here.</div>
+
+            <div th:if="${check}" class="checkin-result" role="status" aria-live="polite"
+                 th:classappend="${check.result.name() == 'VALID' or check.result.name() == 'CHECKED_IN' ? 'is-ok' : (check.result.name() == 'ALREADY_USED' ? 'is-warn' : 'is-bad')}">
+              <p class="checkin-result-status" th:switch="${check.result.name()}">
+                <span th:case="'VALID'">[ SUCCESS ] VALID TICKET</span>
+                <span th:case="'CHECKED_IN'">✓ CHECKED IN</span>
+                <span th:case="'ALREADY_USED'">⚠ ALREADY USED</span>
+                <span th:case="'WRONG_SHOWTIME'">✕ WRONG SHOWTIME</span>
+                <span th:case="'INVALID'">✕ INVALID TICKET</span>
+                <span th:case="*">✕ TICKET NOT FOUND</span>
+              </p>
+              <p class="checkin-result-message" th:text="${check.message}">Message</p>
+
+              <dl class="checkin-details" th:if="${check.ticket}">
+                <div><dt>Movie</dt><dd><strong th:text="${check.ticket.movieTitle}"></strong>
+                  <span class="badge badge-pending" th:if="${check.ticket.ageRating != null}" th:text="${check.ticket.ageRating}"></span></dd></div>
+                <div><dt>Showtime</dt><dd th:text="${#temporals.format(check.ticket.startTime, 'HH:mm dd/MM/yyyy')}"></dd></div>
+                <div><dt>Room</dt><dd th:text="${check.ticket.roomName}"></dd></div>
+                <div><dt>Seat</dt><dd><strong th:text="${check.ticket.seatLabel}"></strong> <span th:text="${check.ticket.seatType}"></span></dd></div>
+                <div><dt>Ticket ID</dt><dd th:text="${check.ticket.ticketCode()}"></dd></div>
+                <div><dt>Booking</dt><dd th:text="${check.ticket.bookingCode}"></dd></div>
+                <div th:if="${check.ticket.checkedInAt != null}"><dt>Checked in at</dt>
+                  <dd th:text="${#temporals.format(check.ticket.checkedInAt, 'HH:mm:ss dd/MM/yyyy')}"></dd></div>
+              </dl>
+
+              <!-- IV. Action controls: only a valid ticket can be admitted -->
+              <form th:if="${check.admissible()}" th:action="@{/staff/check-in/confirm}" method="post" class="checkin-actions">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="code" th:value="${check.ticket.qrCode}">
+                <button class="btn btn-primary" type="submit">Confirm Check-in ✓</button>
+                <a class="btn btn-secondary" th:href="@{/staff/check-in}">Cancel</a>
+              </form>
+            </div>
+          </div>
+        </section>
+
       </div>
 
     </div>

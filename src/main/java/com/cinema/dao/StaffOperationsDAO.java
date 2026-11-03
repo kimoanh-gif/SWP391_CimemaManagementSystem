@@ -5,6 +5,7 @@ import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingListItem;
 import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
+import com.cinema.model.StaffTicketCheck;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -279,5 +280,52 @@ public class StaffOperationsDAO {
                 SELECT COUNT(*) FROM dbo.Booking WHERE BookingCode = ?
                 """, Integer.class, bookingCode.trim());
         return count != null && count > 0;
+    }
+
+    /** Finds one ticket by its QR code or, when ticketId is given, by its ticket ID. */
+    public Optional<StaffTicketCheck.Ticket> findTicketForCheckIn(String qrCode, Integer ticketId) {
+        List<StaffTicketCheck.Ticket> matches = jdbcTemplate.query("""
+                SELECT t.TicketID, t.QRCode, t.TicketStatus, t.CheckedInAt, b.BookingCode, b.[Status],
+                       m.Title, m.AgeRating, r.RoomName, s.RowLabel, s.SeatNumber, sty.TypeName,
+                       st.StartTime, st.EndTime
+                FROM dbo.Ticket t
+                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
+                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID = st.MovieID
+                JOIN dbo.Room r ON r.RoomID = st.RoomID
+                JOIN dbo.Seat s ON s.SeatID = bs.SeatID
+                JOIN dbo.SeatType sty ON sty.SeatTypeID = s.SeatTypeID
+                WHERE (? IS NOT NULL AND t.TicketID = ?) OR (? IS NULL AND t.QRCode = ?)
+                """, (rs, rowNum) -> new StaffTicketCheck.Ticket(
+                rs.getInt("TicketID"), rs.getString("QRCode"), rs.getString("TicketStatus"),
+                rs.getObject("CheckedInAt", java.time.LocalDateTime.class),
+                rs.getString("BookingCode"), rs.getString("Status"), rs.getString("Title"),
+                rs.getString("AgeRating"), rs.getString("RoomName"),
+                rs.getString("RowLabel") + rs.getInt("SeatNumber"), rs.getString("TypeName"),
+                rs.getObject("StartTime", java.time.LocalDateTime.class),
+                rs.getObject("EndTime", java.time.LocalDateTime.class)
+        ), ticketId, ticketId, ticketId, qrCode);
+        return matches.stream().findFirst();
+    }
+
+    /**
+     * Checks in one ticket (Valid -> Checked-In, stored as USED). The guards repeat the service checks
+     * so two gates scanning the same ticket at once cannot both admit it (BR-27).
+     */
+    public int checkInTicket(int ticketId) {
+        return jdbcTemplate.update("""
+                UPDATE t
+                SET TicketStatus = 'USED', CheckedInAt = SYSDATETIME()
+                FROM dbo.Ticket t
+                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
+                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                WHERE t.TicketID = ?
+                  AND UPPER(t.TicketStatus) = 'VALID'
+                  AND UPPER(b.[Status]) = 'CONFIRMED'
+                  AND st.StartTime <= DATEADD(MINUTE, 30, SYSDATETIME())
+                  AND st.EndTime >= SYSDATETIME()
+                """, ticketId);
     }
 }

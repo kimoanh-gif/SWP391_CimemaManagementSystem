@@ -6,24 +6,44 @@ import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
 import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
+import com.cinema.model.StaffTicketCheck;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class StaffOperationsService {
 
     public static final int PAGE_SIZE = 20;
+    /** Check-in opens this many minutes before the showtime and closes when it ends. */
+    static final int CHECK_IN_OPENS_MINUTES = 30;
+    private static final String TICKET_VERIFY_PATH = "/ticket/verify/";
+    private static final Pattern TICKET_ID = Pattern.compile("(?i)(?:TK-?)?0*(\\d{1,10})");
+    private static final DateTimeFormatter CHECK_IN_TIME = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final StaffNewsDAO staffNewsDAO;
     private final StaffOperationsDAO staffOperationsDAO;
+    private final Clock clock;
 
+    @Autowired
     public StaffOperationsService(StaffNewsDAO staffNewsDAO, StaffOperationsDAO staffOperationsDAO) {
+        this(staffNewsDAO, staffOperationsDAO, Clock.systemDefaultZone());
+    }
+
+    StaffOperationsService(StaffNewsDAO staffNewsDAO, StaffOperationsDAO staffOperationsDAO, Clock clock) {
         this.staffNewsDAO = staffNewsDAO;
         this.staffOperationsDAO = staffOperationsDAO;
+        this.clock = clock;
     }
 
     public StaffDashboardData dashboard(int accountId, String role) {
@@ -91,6 +111,71 @@ public class StaffOperationsService {
         }
         throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Check-in is available only for confirmed bookings during the showtime check-in window.");
+    }
+
+    /** UC21 steps 3-6: validates a scanned or typed ticket without changing it. */
+    public StaffTicketCheck verifyTicket(String code) {
+        return evaluate(findTicket(code));
+    }
+
+    /** UC21 step 7 (Confirm Check-in): Valid -> Checked-In with the check-in timestamp (BR-36). */
+    public StaffTicketCheck confirmCheckIn(String code) {
+        StaffTicketCheck check = verifyTicket(code);
+        if (!check.admissible()) return check;
+        if (staffOperationsDAO.checkInTicket(check.ticket().ticketId()) == 0) {
+            // Another gate admitted it, or the window closed, between verify and confirm.
+            return evaluate(findTicket(code));
+        }
+        StaffTicketCheck.Ticket ticket = staffOperationsDAO
+                .findTicketForCheckIn(check.ticket().qrCode(), null).orElse(check.ticket());
+        return new StaffTicketCheck(StaffTicketCheck.Result.CHECKED_IN,
+                "Ticket Validated Successfully. Customer checked in.", ticket);
+    }
+
+    private Optional<StaffTicketCheck.Ticket> findTicket(String code) {
+        if (code == null || code.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Scan a ticket QR code or enter a ticket ID.");
+        }
+        String value = code.trim();
+        // A scanned QR holds the e-ticket link .../ticket/verify/CINEORA-...; keep only the code.
+        int verifyPath = value.indexOf(TICKET_VERIFY_PATH);
+        if (verifyPath >= 0) value = value.substring(verifyPath + TICKET_VERIFY_PATH.length()).split("[?#/]")[0];
+        Matcher ticketId = TICKET_ID.matcher(value);
+        if (ticketId.matches()) {
+            try {
+                return staffOperationsDAO.findTicketForCheckIn(null, Integer.parseInt(ticketId.group(1)));
+            } catch (NumberFormatException tooLong) {
+                return Optional.empty();
+            }
+        }
+        return staffOperationsDAO.findTicketForCheckIn(value, null);
+    }
+
+    private StaffTicketCheck evaluate(Optional<StaffTicketCheck.Ticket> found) {
+        if (found.isEmpty()) {
+            return new StaffTicketCheck(StaffTicketCheck.Result.NOT_FOUND,
+                    "Ticket not found. Check the code and try again.", null);
+        }
+        StaffTicketCheck.Ticket ticket = found.get();
+        if ("USED".equalsIgnoreCase(ticket.ticketStatus())) {
+            String when = ticket.checkedInAt() == null ? "" : " at " + ticket.checkedInAt().format(CHECK_IN_TIME);
+            return new StaffTicketCheck(StaffTicketCheck.Result.ALREADY_USED,
+                    "This ticket has already been used" + when + ". Entry denied.", ticket);
+        }
+        if (!"VALID".equalsIgnoreCase(ticket.ticketStatus()) || !"CONFIRMED".equalsIgnoreCase(ticket.bookingStatus())) {
+            return new StaffTicketCheck(StaffTicketCheck.Result.INVALID,
+                    "This ticket is not valid (booking not paid or ticket cancelled). Entry denied.", ticket);
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime opensAt = ticket.startTime().minusMinutes(CHECK_IN_OPENS_MINUTES);
+        if (now.isBefore(opensAt) || now.isAfter(ticket.endTime())) {
+            String detail = now.isBefore(opensAt)
+                    ? "Check-in opens at " + opensAt.format(CHECK_IN_TIME) + "."
+                    : "This showtime has already ended.";
+            return new StaffTicketCheck(StaffTicketCheck.Result.WRONG_SHOWTIME,
+                    "Ticket invalid for current showtime or room. " + detail + " Entry denied.", ticket);
+        }
+        return new StaffTicketCheck(StaffTicketCheck.Result.VALID, "Ticket Validated Successfully.", ticket);
     }
 
     private int requireStaffId(int accountId) {

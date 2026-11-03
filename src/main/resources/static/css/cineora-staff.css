@@ -582,8 +582,37 @@ textarea.form-control { resize: vertical; }
 .seat-btn.taken    { background: var(--surface-muted); color: var(--text-muted); cursor: not-allowed; }
 .seat-btn:disabled { background: var(--surface-muted); color: var(--text-muted); cursor: not-allowed; }
 
-/* -- Check-in card -- */
-.checkin-card { max-width: 560px; }
+/* -- Ticket check-in (UC21, screen 5.6) -- */
+.checkin-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.scanner-viewport { position: relative; height: 170px; margin-bottom: 18px; border-radius: 12px; overflow: hidden;
+  display: grid; place-items: center; background: radial-gradient(circle at center, #2B2326 0%, #151012 75%); }
+.scanner-reticle { width: 120px; height: 120px; border-radius: 10px;
+  background: linear-gradient(#fff, #fff) top left / 26px 3px no-repeat, linear-gradient(#fff, #fff) top left / 3px 26px no-repeat,
+    linear-gradient(#fff, #fff) top right / 26px 3px no-repeat, linear-gradient(#fff, #fff) top right / 3px 26px no-repeat,
+    linear-gradient(#fff, #fff) bottom left / 26px 3px no-repeat, linear-gradient(#fff, #fff) bottom left / 3px 26px no-repeat,
+    linear-gradient(#fff, #fff) bottom right / 26px 3px no-repeat, linear-gradient(#fff, #fff) bottom right / 3px 26px no-repeat; }
+.scanner-line { position: absolute; left: calc(50% - 56px); width: 112px; height: 2px; background: var(--cineora-red);
+  box-shadow: 0 0 10px var(--cineora-red); animation: scanner-sweep 2.2s ease-in-out infinite alternate; }
+.scanner-viewport small { position: absolute; bottom: 10px; color: rgba(255,255,255,.7); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+@keyframes scanner-sweep { from { top: calc(50% - 56px); } to { top: calc(50% + 56px); } }
+@media (prefers-reduced-motion: reduce) { .scanner-line { animation: none; top: 50%; } }
+.scanner-input-row { display: flex; gap: 10px; }
+.scanner-input-row .form-control { flex: 1; min-width: 0; }
+.checkin-note { margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+.checkin-empty { padding: 34px 10px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.checkin-result { padding: 18px; border-radius: 12px; border: 1.5px solid; }
+.checkin-result.is-ok   { background: #F0FDF4; border-color: #86EFAC; }
+.checkin-result.is-warn { background: #FFFBEB; border-color: #FCD34D; }
+.checkin-result.is-bad  { background: #FEF2F2; border-color: #FCA5A5; }
+.checkin-result-status { font-size: 15px; font-weight: 800; letter-spacing: .04em; }
+.is-ok .checkin-result-status   { color: #15803D; }
+.is-warn .checkin-result-status { color: #B45309; }
+.is-bad .checkin-result-status  { color: #B91C1C; }
+.checkin-result-message { margin: 6px 0 14px; font-size: 13px; }
+.checkin-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; font-size: 13px; }
+.checkin-details dt { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.checkin-actions { display: flex; gap: 10px; margin-top: 18px; }
+@media (max-width: 900px) { .checkin-layout { grid-template-columns: 1fr; } }
 
 /* -- Member lookup result (dashboard + sales dialogs) -- */
 .member-card {
