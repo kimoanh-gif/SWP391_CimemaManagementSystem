@@ -120,8 +120,10 @@ public class SecurityConfig {
                 ).permitAll();
 
                 // A permission is required in addition to the role boundary.
-                // Personal profile/password operations are available to every signed-in role.
-                auth.requestMatchers("/account/**").authenticated();
+                // Personal profiles/password changes are for Customer, Staff and Manager only.
+                auth.requestMatchers("/admin/profile", "/admin/profile/**").denyAll();
+                auth.requestMatchers("/staff/profile").hasRole("STAFF");
+                auth.requestMatchers("/account/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER");
                 auth.requestMatchers("/admin/customers/**", "/admin/staffs/**", "/admin/roles/**",
                         "/api/admin/customers/**", "/api/admin/staffs/**", "/api/admin/roles/**")
                         .access(roleAndPermission("account:manage", "ADMIN"));

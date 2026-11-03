@@ -107,7 +107,6 @@
            class="sidebar-link">
             <span class="nav-icon">📈</span> Revenue Reports
         </a>
-        <a class="sidebar-link" th:href="@{/account/profile}" href="/account/profile"><span>My Profile</span></a>
     </nav>
 
     <!-- Footer user -->
@@ -174,13 +173,7 @@
         <span class="topbar-notif-badge">3</span>
     </div>
 
-    <div class="topbar-user">
-        <div class="avatar">M</div>
-        <div class="topbar-user-info">
-            <span class="topbar-user-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</span>
-            <span class="topbar-user-role">Manager</span>
-        </div>
-    </div>
+    <th:block th:replace="~{fragments/workspace-account :: menu(displayName=${userName != null ? userName : 'Cinema Manager'}, displayRole='Manager')}"></th:block>
 
     <form th:action="@{/logout}" method="post" class="topbar-logout-form">
         <button type="submit" class="topbar-logout-btn" title="Logout">

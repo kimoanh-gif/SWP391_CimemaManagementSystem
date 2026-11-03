@@ -26,7 +26,7 @@ class AccountProfileControllerTest {
         when(sessions.currentAccountId(any())).thenReturn(null);
         mvc=MockMvcBuilders.standaloneSetup(controller).build();
     }
-    @ParameterizedTest @ValueSource(strings={"ADMIN","MANAGER","STAFF","CUSTOMER"})
+    @ParameterizedTest @ValueSource(strings={"MANAGER","STAFF","CUSTOMER"})
     void profileRoutesToOwnRole(String role) {
         when(sessions.getCurrentUser(session)).thenReturn(new AuthenticatedUser(42,"user","own@example.com","Own Name",null,role,Set.of(),true,"PASSWORD"));
         assertEquals("redirect:/"+role.toLowerCase()+"/profile",controller.ownProfile(session));

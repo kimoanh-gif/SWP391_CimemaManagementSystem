@@ -1,0 +1,17 @@
+.workspace-account { position:relative; flex-shrink:0; font-family:inherit; font-size:14px; line-height:1.5; color:#302932; }
+.workspace-account-trigger { display:flex; align-items:center; gap:10px; padding:6px 10px; border:1px solid transparent; border-radius:28px; cursor:pointer; list-style:none; user-select:none; }
+.workspace-account-trigger::-webkit-details-marker { display:none; }
+.workspace-account-trigger:hover,.workspace-account[open]>.workspace-account-trigger { background:#fff8f4; border-color:#efddd7; }
+.workspace-account-trigger:focus-visible { outline:2px solid #d92332; outline-offset:3px; }
+.workspace-account-avatar { width:38px; height:38px; border-radius:50%; object-fit:cover; }
+.workspace-account-identity { display:flex; flex-direction:column; max-width:180px; text-align:left; }
+.workspace-account-identity strong { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.workspace-account-identity small { color:#7d7078; font-size:11px; }
+.workspace-account-chevron { color:#85727d; transition:transform .15s; }
+.workspace-account[open] .workspace-account-chevron { transform:rotate(180deg); }
+.workspace-account-menu { position:absolute; top:calc(100% + 10px); right:0; z-index:500; min-width:220px; padding:8px; border:1px solid #edddd7; border-radius:16px; background:white; box-shadow:0 14px 40px #36212b20; }
+.workspace-account-menu a,.workspace-account-menu button { box-sizing:border-box; display:block; width:100%; padding:12px 14px; border:0; border-radius:9px; background:transparent; color:#423640; font:inherit; font-size:14px; line-height:1.5; text-decoration:none; text-align:left; cursor:pointer; }
+.workspace-account-menu a:hover,.workspace-account-menu button:hover { background:#fff0e9; color:#b51f32; }
+.workspace-account-menu a:focus-visible,.workspace-account-menu button:focus-visible { outline:2px solid #d92332; outline-offset:-2px; }
+.workspace-account-menu form { margin:6px 0 0; padding-top:6px; border-top:1px solid #efdfd9; }
+@media(max-width:520px) { .workspace-account-trigger { padding:5px; gap:7px; }.workspace-account-identity { max-width:100px; }.workspace-account-menu { min-width:200px; max-width:calc(100vw - 32px); } }

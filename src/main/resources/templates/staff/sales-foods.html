@@ -23,6 +23,7 @@
       <div class="topbar-actions">
         <span class="profile-name">Order&nbsp;<strong th:text="${summary.bookingCode}"></strong></span>
         <span class="staff-pill" id="staffHoldCountdown">10:00</span>
+        <th:block th:replace="~{fragments/workspace-account :: menu(displayName=${user != null ? user.fullName : 'Staff'}, displayRole=${user != null ? user.role : 'Staff'})}"></th:block>
       </div>
     </header>
 

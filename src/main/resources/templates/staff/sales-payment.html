@@ -27,6 +27,7 @@
       <div class="page-title">Staff / Counter Sales / <strong>Payment</strong></div>
       <div class="topbar-actions">
         <span class="profile-name">Order&nbsp;<strong th:text="${summary.bookingCode}"></strong></span>
+        <th:block th:replace="~{fragments/workspace-account :: menu(displayName=${user != null ? user.fullName : 'Staff'}, displayRole=${user != null ? user.role : 'Staff'})}"></th:block>
         <span class="staff-pill" id="staffHoldCountdown">10:00</span>
       </div>
     </header>

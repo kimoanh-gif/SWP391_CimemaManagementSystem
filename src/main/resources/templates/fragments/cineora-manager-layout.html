@@ -64,7 +64,6 @@
             <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
         <a th:href="@{/manager/vouchers}" th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'vouchers'} ? ' is-active'">
             <span class="material-symbols-outlined">sell</span><span>Voucher Management</span></a>
-        <a class="cm-nav-link" th:href="@{/account/profile}" href="/account/profile"><span>My Profile</span></a>
     </nav>
 
     <div class="cm-sidebar-footer">
@@ -93,13 +92,7 @@
             <span th:text="${roomsActiveLabel}">5/5 Screening rooms active</span>
         </span>
         <span class="cm-divider"></span>
-        <span class="cm-topbar-user">
-            <img alt="" th:src="@{/images/cineora-logo.png}" src="/images/cineora-logo.png">
-            <span class="cm-user-text">
-                <span class="cm-user-name" th:text="${userName != null} ? ${userName} : 'Cinema Manager'">Cinema Manager</span>
-                <span class="cm-user-role">CINEORA Cinema</span>
-            </span>
-        </span>
+        <th:block th:replace="~{fragments/workspace-account :: menu(displayName=${userName != null ? userName : 'Cinema Manager'}, displayRole='Manager')}"></th:block>
     </div>
 </header>
 

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>My Profile | CINEORA</title><link rel="stylesheet" th:href="@{/css/account-profile.css}" href="/css/account-profile.css"></head>
 <body class="account-page">
-  <header class="account-header"><a th:href="${dashboardUrl}" class="account-brand">CINEORA <span th:text="${roleName}">ADMIN</span></a><a th:href="${dashboardUrl}" class="account-back">Back to workspace</a></header>
+  <header class="account-header"><a th:href="${dashboardUrl}" class="account-brand">CINEORA <span th:text="${roleName}">Staff</span></a><div class="account-header-actions"><a th:href="${dashboardUrl}" class="account-back">Back to workspace</a><th:block th:replace="~{fragments/workspace-account :: menu(displayName=${account.fullName}, displayRole=${roleName})}"></th:block></div></header>
   <main class="account-container">
     <div class="account-heading"><p class="account-eyebrow">YOUR ACCOUNT</p><h1>My profile</h1><p>Your account details and password settings, all in one place.</p></div>
     <div class="account-layout">

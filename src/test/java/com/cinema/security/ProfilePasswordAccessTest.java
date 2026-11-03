@@ -39,7 +39,7 @@ class ProfilePasswordAccessTest {
         mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(context.getBean("springSecurityFilterChain",Filter.class)).build();
     }
     @AfterEach void close(){context.close();}
-    @ParameterizedTest @ValueSource(strings={"ADMIN","MANAGER","STAFF","CUSTOMER"})
+    @ParameterizedTest @ValueSource(strings={"MANAGER","STAFF","CUSTOMER"})
     void everyRoleCanRequestOwnOtpWithoutManagementPermission(String role)throws Exception{
         var session=new MockHttpSession();var user=new AuthenticatedUser(42,"user","own@example.com","Own",null,role,Set.of(),true,"PASSWORD");
         session.setAttribute(SessionService.ATTR_USER,user);when(context.getBean(AuthorizationSnapshotService.class).refresh(session)).thenReturn(user);
@@ -50,6 +50,19 @@ class ProfilePasswordAccessTest {
     @Test void csrfIsRequiredAndGuestCannotUsePersonalApi()throws Exception{
         mvc.perform(post("/account/password/request")).andExpect(status().isForbidden());
         mvc.perform(post("/account/password/request").with(csrf())).andExpect(status().is3xxRedirection());
+        verifyNoInteractions(context.getBean(AuthService.class));
+    }
+    @Test void adminCannotOpenPersonalProfilesOrCallPasswordApis()throws Exception{
+        var session=new MockHttpSession();
+        var user=new AuthenticatedUser(42,"admin","admin@example.com","Admin",null,"ADMIN",Set.of("account:manage"),true,"PASSWORD");
+        session.setAttribute(SessionService.ATTR_USER,user);
+        when(context.getBean(AuthorizationSnapshotService.class).refresh(session)).thenReturn(user);
+        for(String path:java.util.List.of("/account/profile","/admin/profile","/staff/profile","/manager/profile"))
+            mvc.perform(get(path).session(session)).andExpect(status().isForbidden());
+        mvc.perform(post("/account/password/request").session(session).with(csrf())).andExpect(status().isForbidden());
+        mvc.perform(post("/account/password/update").session(session).with(csrf())
+                .param("otp","123456").param("password","Password1234").param("confirmPassword","Password1234"))
+                .andExpect(status().isForbidden());
         verifyNoInteractions(context.getBean(AuthService.class));
     }
     @Configuration @EnableWebMvc @Import(SecurityConfig.class)

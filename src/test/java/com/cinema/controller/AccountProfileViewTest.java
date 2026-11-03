@@ -12,7 +12,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountProfileViewTest {
-    @ParameterizedTest @ValueSource(strings={"ADMIN","MANAGER","STAFF","CUSTOMER"})
+    @ParameterizedTest @ValueSource(strings={"MANAGER","STAFF","CUSTOMER"})
     void allProfileViewsRenderSharedOtpAndPasswordControls(String role) throws Exception {
         var servlet=new MockServletContext();var request=new MockHttpServletRequest(servlet);request.setRequestURI("/"+role.toLowerCase()+"/profile");
         var exchange=JakartaServletWebApplication.buildApplication(servlet).buildExchange(request,new MockHttpServletResponse());
@@ -22,6 +22,7 @@ class AccountProfileViewTest {
         var account=new Account();account.setAccountId(42);account.setUsername("qa.user");account.setFullName("QA User");account.setEmail("qa@example.com");account.setStatus("ACTIVE");account.setPasswordHash("do-not-expose-this-hash");
         variables.put("account",account);variables.put("roleName",role);variables.put("dashboardUrl","/"+role.toLowerCase()+"/dashboard");
         variables.put("passwordMinLength",12);variables.put("_csrf",Map.of("headerName","X-XSRF-TOKEN","token","test-token","parameterName","_csrf"));
+        variables.put("permissionUser",new AuthenticatedUser(42,"qa.user","qa@example.com","QA User",null,role,Set.of(),true,"PASSWORD"));
         if(role.equals("CUSTOMER")) {
             var profile=new CustomerProfile();profile.setFullName("QA User");profile.setUsername("qa.user");profile.setEmail("qa@example.com");profile.setMembershipRankName("Member");
             variables.put("profile",profile);variables.put("currentUser",new AuthenticatedUser(42,"qa.user","qa@example.com","QA User",null,"CUSTOMER",Set.of(),true,"PASSWORD"));

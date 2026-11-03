@@ -28,13 +28,15 @@ public class AccountProfileController {
     public String ownProfile(HttpSession session) {
         var user=sessions.getCurrentUser(session);
         if(user==null) return "redirect:/login";
+        if(user.hasRole("ADMIN")) return "redirect:/admin/dashboard";
         return "redirect:/"+user.getRole().toLowerCase(java.util.Locale.ROOT)+"/profile";
     }
 
-    @GetMapping({"/admin/profile","/manager/profile","/staff/profile"})
+    @GetMapping({"/manager/profile","/staff/profile"})
     public String profile(HttpSession session, Model model, jakarta.servlet.http.HttpServletRequest request) {
         var user=sessions.getCurrentUser(session);
         if(user==null) return "redirect:/login";
+        if(user.hasRole("ADMIN")) return "redirect:/admin/dashboard";
         String own="/"+user.getRole().toLowerCase(java.util.Locale.ROOT)+"/profile";
         if(!request.getServletPath().equals(own)) return "redirect:"+own;
         var account=accounts.findById(user.getAccountId()).orElse(null);
@@ -49,6 +51,7 @@ public class AccountProfileController {
     @PostMapping("/account/password/request")
     @ResponseBody
     public ResponseEntity<?> requestOtp(HttpSession session) {
+        if(sessions.hasRole(session,"ADMIN")) return error(403,"FORBIDDEN","Personal password changes are not available for Admin.");
         Integer id=sessions.currentAccountId(session);
         if(id==null) return error(401,"UNAUTHENTICATED","Please sign in again.");
         try {
@@ -72,6 +75,7 @@ public class AccountProfileController {
                                            @RequestParam(defaultValue="") String password,
                                            @RequestParam(defaultValue="") String confirmPassword,
                                            HttpSession session) {
+        if(sessions.hasRole(session,"ADMIN")) return error(403,"FORBIDDEN","Personal password changes are not available for Admin.");
         Integer id=sessions.currentAccountId(session);
         if(id==null) return error(401,"UNAUTHENTICATED","Please sign in again.");
         if(!password.equals(confirmPassword)) return error(400,"PASSWORD_MISMATCH","Password confirmation does not match.");
