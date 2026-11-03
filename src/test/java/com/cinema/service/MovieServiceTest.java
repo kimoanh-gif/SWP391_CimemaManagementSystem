@@ -109,7 +109,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tên phim");
+                .hasMessageContaining("Movie title");
     }
 
     @Test
@@ -118,12 +118,12 @@ class MovieServiceTest {
         sampleForm.setDuration(0);
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Thời lượng");
+                .hasMessageContaining("duration");
 
         sampleForm.setDuration(601);
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Thời lượng");
+                .hasMessageContaining("duration");
     }
 
     @Test
@@ -132,12 +132,12 @@ class MovieServiceTest {
         sampleForm.setReleaseDate(LocalDate.now());
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày bắt đầu (khởi chiếu) phải ở tương lai");
+                .hasMessageContaining("Release date must be in the future");
 
         sampleForm.setReleaseDate(LocalDate.now().minusDays(1));
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày bắt đầu (khởi chiếu) phải ở tương lai");
+                .hasMessageContaining("Release date must be in the future");
     }
 
     @Test
@@ -147,12 +147,12 @@ class MovieServiceTest {
         sampleForm.setEndDate(LocalDate.now());
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày kết thúc phải ở tương lai");
+                .hasMessageContaining("End date must be in the future");
 
         sampleForm.setEndDate(LocalDate.now().minusDays(2));
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày kết thúc phải ở tương lai");
+                .hasMessageContaining("End date must be in the future");
     }
 
     @Test
@@ -163,7 +163,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.createMovie(sampleForm))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Ngày kết thúc");
+                .hasMessageContaining("End date");
     }
 
 
@@ -199,7 +199,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.updateMovie(1, sampleForm))
                 .isInstanceOf(MovieHasActiveShowtimesException.class)
-                .hasMessageContaining("3 suất chiếu");
+                .hasMessageContaining("3 upcoming showtime");
 
         verify(movieDao, never()).update(anyInt(), any(MovieForm.class));
     }
@@ -232,7 +232,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.deactivateMovie(1))
                 .isInstanceOf(MovieHasActiveShowtimesException.class)
-                .hasMessageContaining("5 suất chiếu");
+                .hasMessageContaining("5 upcoming showtime");
 
         verify(movieDao, never()).updateStatus(anyInt(), anyString());
     }
@@ -268,7 +268,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.deleteMovie(1))
                 .isInstanceOf(MovieHasActiveShowtimesException.class)
-                .hasMessageContaining("3 suất chiếu");
+                .hasMessageContaining("3 upcoming showtime");
         verify(movieDao, never()).delete(anyInt());
     }
 
@@ -281,7 +281,7 @@ class MovieServiceTest {
 
         assertThatThrownBy(() -> movieService.deleteMovie(1))
                 .isInstanceOf(MovieHasActiveShowtimesException.class)
-                .hasMessageContaining("2 suất chiếu"); verify(movieDao, never()).delete(anyInt()); } @Test @DisplayName("createMovie: Should reject when genreIds contain inactive or non-existent genres") void testCreateMovie_InactiveOrMissingGenres_Rejected() { when(movieDao.countInactiveOrMissingGenres(anyList())).thenReturn(1); assertThatThrownBy(() -> movieService.createMovie(sampleForm)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("thể loại"); verify(movieDao, never()).insert(any()); } @Test void dummyEnd() {
+                .hasMessageContaining("2 showtime(s)"); verify(movieDao, never()).delete(anyInt()); } @Test @DisplayName("createMovie: Should reject when genreIds contain inactive or non-existent genres") void testCreateMovie_InactiveOrMissingGenres_Rejected() { when(movieDao.countInactiveOrMissingGenres(anyList())).thenReturn(1); assertThatThrownBy(() -> movieService.createMovie(sampleForm)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("genre"); verify(movieDao, never()).insert(any()); } @Test void dummyEnd() {
         verify(movieDao, never()).delete(anyInt());
     }
 }

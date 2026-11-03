@@ -10,18 +10,18 @@ import jakarta.validation.constraints.Size;
  */
 public class SeatUpdateForm {
 
-    @Positive(message = "Mã ghế không hợp lệ.")
+    @Positive(message = "Invalid seat ID.")
     private Integer seatId;
 
-    @Positive(message = "Mã phòng chiếu không hợp lệ.")
+    @Positive(message = "Invalid room ID.")
     private Integer roomId;
 
-    @Size(max = 50, message = "Tên loại ghế không được vượt quá 50 ký tự.")
+    @Size(max = 50, message = "Seat type name cannot exceed 50 characters.")
     private String seatTypeName;
 
     @Pattern(
             regexp = "^(|Active|Maintenance|Unavailable)$",
-            message = "Trạng thái ghế không hợp lệ. Cho phép: Active, Maintenance, Unavailable."
+            message = "Invalid seat status. Allowed: Active, Maintenance, Unavailable."
     )
     private String status;
 
@@ -35,7 +35,7 @@ public class SeatUpdateForm {
         this.status = status;
     }
 
-    @AssertTrue(message = "Phải cung cấp ít nhất loại ghế hoặc trạng thái ghế để cập nhật.")
+    @AssertTrue(message = "Must provide at least seat type or seat status to update.")
     public boolean isUpdateTargetProvided() {
         boolean hasType = seatTypeName != null && !seatTypeName.trim().isEmpty();
         boolean hasStatus = status != null && !status.trim().isEmpty();

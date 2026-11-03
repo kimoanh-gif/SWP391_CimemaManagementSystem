@@ -1,9 +1,90 @@
+function getCsrfToken() {
+    var metaToken = document.querySelector('meta[name="_csrf"]');
+    if (metaToken && metaToken.getAttribute("content")) return metaToken.getAttribute("content");
+    var inputToken = document.querySelector('input[name="_csrf"]');
+    if (inputToken && inputToken.value) return inputToken.value;
+    var match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
+    return match ? decodeURIComponent(match[2]) : "";
+}
+
+function updateImagePreview(url) {
+    const container = document.getElementById("imagePreviewContainer");
+    const img = document.getElementById("imagePreviewImg");
+    if (!container || !img) return;
+    if (url && url.trim()) {
+        img.src = url.trim();
+        container.style.display = "flex";
+    } else {
+        img.src = "";
+        container.style.display = "none";
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("fbModal");
     const openCreateBtn = document.getElementById("btnCreateFB");
 
     const catSelect = document.getElementById("formCategory");
     const comboSection = document.getElementById("comboComponentsSection");
+
+    const formImageInput = document.getElementById("formImage");
+    const fileInput = document.getElementById("formImageFile");
+
+    if (formImageInput) {
+        formImageInput.addEventListener("input", () => {
+            updateImagePreview(formImageInput.value);
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener("change", async () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Image file size exceeds 5MB. Please choose a smaller image.");
+                fileInput.value = "";
+                return;
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            updateImagePreview(objectUrl);
+
+            const textSpan = fileInput.parentElement ? fileInput.parentElement.querySelector(".upload-text") : null;
+            const oldText = textSpan ? textSpan.textContent : "Upload image";
+            if (textSpan) textSpan.textContent = "Uploading...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const headers = {};
+                const csrf = getCsrfToken();
+                if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
+                const response = await fetch("/api/manager/fb/upload-image", {
+                    method: "POST",
+                    headers: headers,
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success && result.data && result.data.url) {
+                    if (formImageInput) {
+                        formImageInput.value = result.data.url;
+                    }
+                    updateImagePreview(result.data.url);
+                } else {
+                    const msg = (result && result.message) ? result.message : "Image upload failed";
+                    alert("Image upload error: " + msg);
+                }
+            } catch (err) {
+                alert("Connection error during upload: " + err.message);
+            } finally {
+                if (textSpan) textSpan.textContent = oldText;
+            }
+        });
+    }
 
     function toggleComboSection() {
         if (comboSection && catSelect) {
@@ -29,6 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formCostPrice").value = "25000";
             document.getElementById("formImage").value = "https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400";
             document.getElementById("modalTitle").innerText = "Add new product";
+            if (fileInput) fileInput.value = "";
+            updateImagePreview(document.getElementById("formImage").value);
             toggleComboSection();
             modal.classList.add("open");
         });
@@ -77,29 +160,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemId = document.getElementById("formItemId")?.value || "";
             if (!/^[A-Za-z0-9_-]{2,50}$/.test(code)) {
                 e.preventDefault();
-                alert("Mã sản phẩm (SKU) chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới (2-50 ký tự).");
+                alert("SKU must contain only letters, numbers, hyphens or underscores (2-50 characters).");
                 return;
             }
             if (!name || name.length > 150) {
                 e.preventDefault();
-                alert("Tên sản phẩm không được để trống và tối đa 150 ký tự.");
+                alert("Product name cannot be empty and max 150 characters.");
                 return;
             }
             if (isNaN(sellingPrice) || sellingPrice < 0 || isNaN(costPrice) || costPrice < 0) {
                 e.preventDefault();
-                alert("Giá bán và giá vốn không được là số âm.");
+                alert("Selling price and cost price cannot be negative.");
                 return;
             }
             if (costPrice > sellingPrice) {
                 e.preventDefault();
-                alert("Giá vốn không được lớn hơn giá bán.");
+                alert("Cost price cannot exceed selling price.");
                 return;
             }
             if (category === "Combo" && !itemId) {
                 const checked = fbFormEl.querySelectorAll(".combo-comp-cb:checked");
                 if (checked.length === 0) {
                     e.preventDefault();
-                    alert("Gói Combo phải chọn ít nhất 1 mặt hàng thành phần.");
+                    alert("Combo package must have at least 1 component item selected.");
                 }
             }
         });
@@ -125,6 +208,9 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("formCostPrice").value = costPrice;
             document.getElementById("formImage").value = image;
             document.getElementById("modalTitle").innerText = "Edit product #" + code;
+
+            if (fileInput) fileInput.value = "";
+            updateImagePreview(image);
 
             toggleComboSection();
             modal.classList.add("open");

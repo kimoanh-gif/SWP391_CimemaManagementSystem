@@ -124,7 +124,7 @@ public class ShowtimeController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.showtimeForm", bindingResult);
             redirectAttributes.addFlashAttribute("showtimeForm", form);
-            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Thông tin suất chiếu không hợp lệ. Vui lòng kiểm tra lại.");
+            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid showtime information. Please check again.");
             redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return redirectUrl;
         }
@@ -132,16 +132,16 @@ public class ShowtimeController {
         try {
             if (form.getShowtimeId() == null || form.getShowtimeId() <= 0) {
                 showtimeService.createShowtime(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Tạo suất chiếu mới thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Showtime created successfully!");
             } else {
                 showtimeService.updateShowtime(form.getShowtimeId(), form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật suất chiếu thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Showtime updated successfully!");
             }
         } catch (ShowtimeConflictException | InvalidShowtimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "An error occurred: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         }
 
@@ -159,11 +159,11 @@ public class ShowtimeController {
 
         try {
             showtimeService.stopShowtime(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã dừng suất chiếu thành công (BR-54).");
+            redirectAttributes.addFlashAttribute("successMessage", "Showtime stopped successfully (BR-54).");
         } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");
@@ -180,11 +180,11 @@ public class ShowtimeController {
 
         try {
             showtimeService.deleteShowtime(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Xóa suất chiếu thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Showtime deleted successfully!");
         } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa suất chiếu: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete showtime: " + ex.getMessage());
         }
 
         return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");

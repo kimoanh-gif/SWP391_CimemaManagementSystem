@@ -47,7 +47,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<FBItem> items = fbItemService.getAllItems(keyword, category, status);
-        return ResponseEntity.ok(ApiResponse.ok("Lấy danh sách sản phẩm F&B thành công", items));
+        return ResponseEntity.ok(ApiResponse.ok("F&B product list retrieved successfully", items));
     }
 
     @GetMapping("/{id}")
@@ -57,7 +57,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem item = fbItemService.getItemById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Chi tiết sản phẩm F&B", item));
+        return ResponseEntity.ok(ApiResponse.ok("F&B product details", item));
     }
 
     @PostMapping
@@ -68,7 +68,7 @@ public class FBItemApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem created = fbItemService.createItem(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Tạo sản phẩm F&B mới thành công", created));
+                .body(ApiResponse.ok("F&B product created successfully", created));
     }
 
     @PutMapping("/{id}")
@@ -79,7 +79,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem updated = fbItemService.updateItem(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật sản phẩm F&B thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("F&B product updated successfully", updated));
     }
 
     @PutMapping("/{id}/price")
@@ -90,7 +90,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem updated = fbItemService.updatePrice(id, sellingPrice);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật giá bán thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Selling price updated successfully", updated));
     }
 
     @PutMapping("/{id}/status")
@@ -101,7 +101,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem updated = fbItemService.updateStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Status updated successfully", updated));
     }
 
     @PostMapping("/{id}/deactivate")
@@ -111,7 +111,56 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         FBItem updated = fbItemService.deactivateItem(id);
-        return ResponseEntity.ok(ApiResponse.ok("Đã ngừng kinh doanh sản phẩm thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Product deactivated successfully", updated));
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> uploadFBImage(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Please select an image file"));
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Maximum image size is 5 MB"));
+        }
+
+        String contentType = file.getContentType();
+        java.util.Map<String, String> allowedExtensions = java.util.Map.of(
+                "image/jpeg", ".jpg",
+                "image/png", ".png",
+                "image/webp", ".webp",
+                "image/gif", ".gif"
+        );
+
+        String extension = contentType != null ? allowedExtensions.get(contentType.toLowerCase()) : null;
+        if (extension == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Only JPG, PNG, WebP, GIF image formats are supported"));
+        }
+
+        try {
+            java.nio.file.Path directory = java.nio.file.Paths.get("uploads", "fb").toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(directory);
+
+            String fileName = "fb-" + java.util.UUID.randomUUID() + extension;
+            java.nio.file.Path targetPath = directory.resolve(fileName).normalize();
+
+            if (!targetPath.startsWith(directory)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Invalid file save path"));
+            }
+
+            java.nio.file.Files.copy(file.getInputStream(), targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String url = "/uploads/fb/" + fileName;
+
+            return ResponseEntity.ok(ApiResponse.ok("Image uploaded successfully", java.util.Map.of("url", url)));
+        } catch (java.io.IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Cannot save image file: " + ex.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -121,7 +170,7 @@ public class FBItemApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         fbItemService.deleteItem(id);
-        return ResponseEntity.ok(ApiResponse.ok("Xóa món F&B thành công", null));
+        return ResponseEntity.ok(ApiResponse.ok("F&B product deleted successfully", null));
     }
 
     @ExceptionHandler(FBItemNotFoundException.class)

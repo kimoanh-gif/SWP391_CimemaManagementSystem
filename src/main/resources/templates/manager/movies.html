@@ -269,8 +269,8 @@
                                 th:data-id="${movie.id}" th:data-title="${movie.title}"
                                 th:data-original-title="${movie.originalTitle}"
                                 th:data-duration="${movie.duration}" th:data-age-rating="${movie.ageRating}"
-                                th:data-status="${movie.status}" th:data-release-date="${movie.releaseDate}"
-                                th:data-end-date="${movie.endDate}" th:data-director="${movie.director}"
+                                th:data-status="${movie.status}" th:data-release-date="${movie.releaseDate != null ? #temporals.format(movie.releaseDate, 'yyyy-MM-dd') : ''}"
+                                th:data-end-date="${movie.endDate != null ? #temporals.format(movie.endDate, 'yyyy-MM-dd') : ''}" th:data-director="${movie.director}"
                                 th:data-actors="${movie.actors}" th:data-language="${movie.language}"
                                 th:data-description="${movie.description}" th:data-poster="${movie.poster}"
                                 th:data-banner="${movie.banner}" th:data-trailer="${movie.trailer}" th:data-genre-ids="${movie.genreIdsString}">✎</button>
@@ -284,10 +284,11 @@
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
                         <form th:action="@{'/manager/movies/' + ${movie.id} + '/delete'}" method="post" style="display:inline;"
-                              th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa phim \\\'\' + ${movie.title} + \'\\\' không?\');'">
+                              th:data-confirm="|Are you sure you want to delete movie '${movie.title}'?|"
+                              onsubmit="return confirm(this.getAttribute('data-confirm'));">
                             <button type="submit" class="action-btn action-btn-del"
                                     style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
-                                    title="Xóa phim">🗑</button>
+                                    title="Delete movie">🗑</button>
                         </form>
                     </td>
                 </tr>
@@ -398,12 +399,34 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="moviePoster">Vertical poster URL</label>
-                        <input type="url" id="moviePoster" name="poster" class="form-control" placeholder="https://..." maxlength="500">
+                        <label class="form-label" for="moviePoster">Vertical poster (URL or upload from device)</label>
+                        <div style="display:flex;gap:6px;">
+                            <input type="text" id="moviePoster" name="poster" class="form-control" placeholder="https://... or choose image" maxlength="500">
+                            <label class="btn btn-secondary" style="white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:0;padding:6px 12px;font-size:12.5px;" title="Choose image file from computer">
+                                <span class="material-symbols-outlined" style="font-size:16px;">upload_file</span> <span class="upload-text">Upload image</span>
+                                <input type="file" id="moviePosterFile" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                            </label>
+                        </div>
+                        <div id="moviePosterFeedback" class="form-error"></div>
+                        <div id="posterPreviewContainer" style="margin-top:6px;display:none;align-items:center;gap:8px;">
+                            <img id="posterPreviewImg" src="" alt="Poster preview" style="height:70px;border-radius:4px;border:1px solid #E5E7EB;object-fit:cover;">
+                            <span style="font-size:11.5px;color:var(--text-400);">Poster preview</span>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="movieBanner">Horizontal banner URL</label>
-                        <input type="url" id="movieBanner" name="banner" class="form-control" placeholder="https://... (16:9 recommended)" maxlength="500">
+                        <label class="form-label" for="movieBanner">Horizontal banner (URL or upload from device)</label>
+                        <div style="display:flex;gap:6px;">
+                            <input type="text" id="movieBanner" name="banner" class="form-control" placeholder="https://... or choose image (16:9)" maxlength="500">
+                            <label class="btn btn-secondary" style="white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:0;padding:6px 12px;font-size:12.5px;" title="Choose image file from computer">
+                                <span class="material-symbols-outlined" style="font-size:16px;">upload_file</span> <span class="upload-text">Upload image</span>
+                                <input type="file" id="movieBannerFile" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                            </label>
+                        </div>
+                        <div id="movieBannerFeedback" class="form-error"></div>
+                        <div id="bannerPreviewContainer" style="margin-top:6px;display:none;align-items:center;gap:8px;">
+                            <img id="bannerPreviewImg" src="" alt="Banner preview" style="height:50px;border-radius:4px;border:1px solid #E5E7EB;object-fit:cover;">
+                            <span style="font-size:11.5px;color:var(--text-400);">Banner preview</span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -466,6 +489,6 @@
     </div>
 </div>
 
-<script th:src="@{/js/manager-movies.js}"></script>
+<script th:src="@{/js/manager-movies.js(v=${#dates.createNow().time})}"></script>
 </body>
 </html>

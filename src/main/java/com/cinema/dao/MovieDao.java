@@ -286,13 +286,13 @@ public class MovieDao {
      * Inserts a new Movie record and returns the generated MovieID.
      */
     public int insert(MovieForm form) {
-        String sql = """
-                INSERT INTO Movie (
-                    Title, OriginalTitle, Duration, ReleaseDate, EndDate,
-                    [Language], Director, Actors, AgeRating, [Description],
-                    PosterURL, BannerURL, TrailerURL, [Status], CreatedAt
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())
-                """;
+        String posterCol = getWritablePosterColumn();
+        String trailerCol = getWritableTrailerColumn();
+        String sql = "INSERT INTO Movie ("
+                + "Title, OriginalTitle, Duration, ReleaseDate, EndDate, "
+                + "[Language], Director, Actors, AgeRating, [Description], "
+                + posterCol + ", BannerURL, " + trailerCol + ", [Status], CreatedAt"
+                + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -329,25 +329,25 @@ public class MovieDao {
      * Updates an existing movie's information.
      */
     public void update(int movieId, MovieForm form) {
-        String sql = """
-                UPDATE Movie
-                SET Title = ?,
-                    OriginalTitle = ?,
-                    Duration = ?,
-                    ReleaseDate = ?,
-                    EndDate = ?,
-                    [Language] = ?,
-                    Director = ?,
-                    Actors = ?,
-                    AgeRating = ?,
-                    [Description] = ?,
-                    PosterURL = ?,
-                    BannerURL = ?,
-                    TrailerURL = ?,
-                    [Status] = ?,
-                    UpdatedAt = SYSUTCDATETIME()
-                WHERE MovieID = ?
-                """;
+        String posterCol = getWritablePosterColumn();
+        String trailerCol = getWritableTrailerColumn();
+        String sql = "UPDATE Movie SET "
+                + "Title = ?, "
+                + "OriginalTitle = ?, "
+                + "Duration = ?, "
+                + "ReleaseDate = ?, "
+                + "EndDate = ?, "
+                + "[Language] = ?, "
+                + "Director = ?, "
+                + "Actors = ?, "
+                + "AgeRating = ?, "
+                + "[Description] = ?, "
+                + posterCol + " = ?, "
+                + "BannerURL = ?, "
+                + trailerCol + " = ?, "
+                + "[Status] = ?, "
+                + "UpdatedAt = SYSUTCDATETIME() "
+                + "WHERE MovieID = ?";
 
         jdbcTemplate.update(
                 sql,

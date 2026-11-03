@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,24 +53,30 @@ public class RoomDao {
     };
 
     public List<Room> findAll(String keyword, String status) {
-        String sql = "SELECT r.*, " +
+        StringBuilder sql = new StringBuilder(
+                "SELECT r.*, " +
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID) AS SeatCount, " +
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID AND s.Status = 'Active') AS ActiveSeatCount, " +
                 "(SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = r.RoomID) AS ShowtimeCount " +
-                "FROM Room r " +
-                "WHERE ( ? IS NULL OR r.RoomName LIKE ? OR r.RoomCode LIKE ? ) " +
-                "AND ( ? IS NULL OR r.Status = ? ) " +
-                "ORDER BY r.RoomID DESC";
-        String kwPattern = (keyword == null || keyword.isBlank()) ? null : "%" + keyword.trim() + "%";
-        return jdbcTemplate.query(sql,
-                ps -> {
-                    ps.setString(1, kwPattern);
-                    ps.setString(2, kwPattern);
-                    ps.setString(3, kwPattern);
-                    ps.setString(4, status);
-                    ps.setString(5, status);
-                },
-                roomRowMapper);
+                "FROM Room r WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append("AND (r.RoomName LIKE ? OR r.RoomCode LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status.trim())) {
+            sql.append("AND r.Status = ? ");
+            params.add(status.trim());
+        }
+
+        sql.append("ORDER BY r.RoomID DESC");
+
+        return jdbcTemplate.query(sql.toString(), roomRowMapper, params.toArray());
     }
 
     public Optional<Room> findById(int roomId) {

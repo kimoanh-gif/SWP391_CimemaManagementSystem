@@ -26,19 +26,19 @@ public class ReportFilterForm extends RevenueReportRequest {
 
     @Override
     @Pattern(regexp = "^(?i)(today|last7days|thismonth|thisquarter|all|custom)$",
-            message = "Kỳ báo cáo (preset) không hợp lệ")
+            message = "Report period preset is invalid")
     public String getPreset() {
         return super.getPreset();
     }
 
     @Override
     @Pattern(regexp = "^(?i)(DAILY|MOVIE|TRANSACTIONS)$",
-            message = "Loại báo cáo chỉ nhận giá trị DAILY, MOVIE hoặc TRANSACTIONS")
+            message = "Report type must be DAILY, MOVIE or TRANSACTIONS")
     public String getReportType() {
         return super.getReportType();
     }
 
-    @AssertTrue(message = "Ngày bắt đầu không được lớn hơn ngày kết thúc.")
+    @AssertTrue(message = "Start date cannot be after end date.")
     public boolean isValidDateRange() {
         if (getStartDate() != null && getEndDate() != null) {
             return !getStartDate().isAfter(getEndDate());

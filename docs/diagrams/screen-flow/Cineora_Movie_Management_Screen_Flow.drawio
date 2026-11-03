@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-03T17:55:20.633Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="movie-flow" name="Cineora Movie Management Screen Flow (Manager)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_movie_main" value="Primary Movie Administration Interface" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="760" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_movie_modals" value="Modal Dialogs &amp; Contextual Operations" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="840" y="40" width="720" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_movies" value="Movie Catalog Screen
+[/manager/movies - movies.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="100" width="230" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_movie_filter" value="Filter / Search Form
+[Genre, Status, Age, Query]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="350" y="105" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_genres" value="Genre Management Screen
+[/manager/genres - genres.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="310" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_dest_showtimes" value="Related Showtimes Screen
+[/manager/showtimes?movie={id}]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="520" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_quick_view" value="Quick View Modal
+[#movieDetailModalBackdrop]
+Displays Poster, Synopsis, Trailer" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="80" width="220" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_add_movie" value="Add New Movie Modal
+[#movieModalBackdrop]
+Title, Genre, Runtime, Dates, Media" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="220" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_val_movie" value="Validation Checks
+[Required, Positive Duration]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="225" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="err_movie_form" value="Form Error Alert
+[#modalErrorAlert]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="345" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_edit_movie" value="Edit Movie Modal
+[#movieModalBackdrop (Prefilled)]
+Update Metadata &amp; Media URLs" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="420" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_status_toggle" value="Toggle Status Action
+[POST /movies/{id}/status]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="870" y="570" width="180" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_del_confirm" value="Delete Confirmation Dialog
+[Browser native confirm()]
+POST /movies/{id}/delete" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="690" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_has_showtimes" value="Has Scheduled
+Showtimes? [BR-07]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="690" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="err_del_blocked" value="Delete Blocked Alert
+[Flash Error: Has Showtimes]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="695" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_add_genre" value="Add / Edit Genre Modal
+[#genreModal / Inline Table Form]" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="350" y="310" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="suc_movie_save" value="Operation Succeeded
+[Flash Message Banner &amp;
+Table Refresh]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="225" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="em_1" value="Submit Filter / Search" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="dec_movie_filter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_2" value="Reload Filtered List" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_movie_filter" target="scr_mgr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_3" value="Click Eye Icon (Quick View)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="mdl_quick_view">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_4" value="Click Close / Backdrop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="mdl_quick_view" target="scr_mgr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_5" value="Click &quot;+ Add Movie&quot; Button" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="mdl_add_movie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_6" value="POST /manager/movies/save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_add_movie" target="dec_val_movie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_7" value="Invalid Data (400)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_val_movie" target="err_movie_form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_8" value="Correct Inputs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_movie_form" target="mdl_add_movie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_9" value="Valid (Persist Movie &amp; Genres)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_val_movie" target="suc_movie_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_10" value="Redirect /manager/movies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="suc_movie_save" target="scr_mgr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_11" value="Click Pencil Icon (Edit)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="mdl_edit_movie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_12" value="POST /manager/movies/save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_edit_movie" target="dec_val_movie">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_13" value="Click Play/Stop Icon" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="dec_status_toggle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_14" value="Active &lt;-&gt; Archived" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_status_toggle" target="suc_movie_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_15" value="Click Trash Icon (Delete)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="mdl_del_confirm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_16" value="User Confirms Action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_del_confirm" target="dec_has_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_17" value="Showtimes Exist (409)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_has_showtimes" target="err_del_blocked">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_18" value="Show Error Notice" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="err_del_blocked" target="scr_mgr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_19" value="No References (Deleted)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_has_showtimes" target="suc_movie_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_20" value="Click Showtime Badge / Count" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="scr_dest_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_21" value="Sidebar / Header: &quot;Genres&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_movies" target="scr_mgr_genres">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_22" value="Add / Edit Genre" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_genres" target="mdl_add_genre">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em_23" value="Save Genre &amp; Refresh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_add_genre" target="scr_mgr_genres">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

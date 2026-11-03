@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (selectedDate <= todayEnd) {
             if (errorEl) {
-                errorEl.innerText = "Không được chọn ngày ở quá khứ hoặc hiện tại. Vui lòng chọn ngày từ ngày mai trở đi.";
+                errorEl.innerText = "Cannot select past or today date. Please select a date from tomorrow onward.";
                 errorEl.style.display = "block";
             }
             startTimeInput.style.borderColor = "var(--danger, #BA1A1A)";

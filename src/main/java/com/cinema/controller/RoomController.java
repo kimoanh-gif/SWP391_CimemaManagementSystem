@@ -52,7 +52,7 @@ public class RoomController {
             String errorMsg = result.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .findFirst()
-                    .orElse("Dữ liệu nhập không hợp lệ");
+                    .orElse("Invalid input data");
             model.addAttribute("rooms", roomService.getAll(null, null));
             model.addAttribute("errorMessage", errorMsg);
             return "manager/rooms"; // redisplay list with error and required model attributes
@@ -60,10 +60,10 @@ public class RoomController {
         try {
             if (form.getRoomId() == null) {
                 roomService.create(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Tạo phòng thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Screening room created successfully");
             } else {
                 roomService.update(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phòng thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Screening room updated successfully");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -76,7 +76,7 @@ public class RoomController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         try {
             roomService.deactivate(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã đưa phòng vào bảo trì");
+            redirectAttributes.addFlashAttribute("successMessage", "Screening room has been set to maintenance");
         } catch (RoomNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
@@ -92,7 +92,7 @@ public class RoomController {
             Room room = roomService.getById(id);
             String name = room.getRoomName();
             roomService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa phòng chiếu '" + name + "' thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Screening room '" + name + "' deleted successfully.");
         } catch (RoomNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {

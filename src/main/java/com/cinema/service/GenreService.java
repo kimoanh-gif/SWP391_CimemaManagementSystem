@@ -36,7 +36,7 @@ public class GenreService {
      */
     public Genre getGenreById(int genreId) {
         return genreDao.findById(genreId)
-                .orElseThrow(() -> new GenreNotFoundException("Không tìm thấy thể loại với mã ID: " + genreId));
+                .orElseThrow(() -> new GenreNotFoundException("Genre not found with ID: " + genreId));
     }
 
     /**
@@ -47,7 +47,7 @@ public class GenreService {
 
         String trimmedName = form.getName().trim();
         if (genreDao.existsByNameIgnoreCase(trimmedName, null)) {
-            throw new DuplicateGenreException("Thể loại '" + trimmedName + "' đã tồn tại trong hệ thống.");
+            throw new DuplicateGenreException("Genre '" + trimmedName + "' already exists in the system.");
         }
 
         form.setName(trimmedName);
@@ -68,7 +68,7 @@ public class GenreService {
 
         String trimmedName = form.getName().trim();
         if (genreDao.existsByNameIgnoreCase(trimmedName, genreId)) {
-            throw new DuplicateGenreException("Tên thể loại '" + trimmedName + "' đã được sử dụng bởi một thể loại khác.");
+            throw new DuplicateGenreException("Genre name '" + trimmedName + "' is already in use by another genre.");
         }
 
         form.setName(trimmedName);
@@ -112,8 +112,8 @@ public class GenreService {
 
         if (movieCount > 0) {
             throw new GenreAssociationException(
-                    "Không thể xóa thể loại '" + genre.getName() + "' vì đang có " + movieCount
-                            + " phim liên kết. Vui lòng chuyển sang trạng thái Ngưng hoạt động (Deactivate) thay vì xóa."
+                    "Cannot delete genre '" + genre.getName() + "' because it is linked to " + movieCount
+                            + " movie(s). Please deactivate the genre instead of deleting it."
             );
         }
 
@@ -130,10 +130,10 @@ public class GenreService {
 
     private void validateForm(GenreForm form) {
         if (form == null || form.getName() == null || form.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên thể loại không được để trống.");
+            throw new IllegalArgumentException("Genre name cannot be empty.");
         }
         if (form.getName().trim().length() < 2 || form.getName().trim().length() > 100) {
-            throw new IllegalArgumentException("Tên thể loại không được vượt quá 100 ký tự.");
+            throw new IllegalArgumentException("Genre name cannot exceed 100 characters.");
         }
     }
 
@@ -141,9 +141,9 @@ public class GenreService {
         int activeMovies = genreDao.countActiveAssociatedMovies(genreId);
         if (activeMovies > 0) {
             throw new GenreAssociationException(
-                    "Không thể hủy kích hoạt thể loại '" + genreName + "' vì hiện tại có "
-                            + activeMovies + " phim đang chiếu hoặc sắp chiếu thuộc thể loại này. "
-                            + "Vui lòng cập nhật phân loại phim trước khi hủy kích hoạt thể loại."
+                    "Cannot deactivate genre '" + genreName + "' because there are currently "
+                            + activeMovies + " now showing or upcoming movie(s) in this genre. "
+                            + "Please update movie categorizations before deactivating."
             );
         }
     }

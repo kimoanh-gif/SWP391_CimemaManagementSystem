@@ -60,7 +60,7 @@ public class TicketPricingApiController {
         data.put("matrix", matrix);
         data.put("averageTicketPrice", atp);
 
-        return ResponseEntity.ok(ApiResponse.ok("Lấy dữ liệu bảng giá thành công", data));
+        return ResponseEntity.ok(ApiResponse.ok("Ticket pricing data retrieved successfully", data));
     }
 
     @GetMapping("/{id}")
@@ -69,7 +69,7 @@ public class TicketPricingApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing pricing = pricingService.getPricingById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Chi tiết cấu hình giá vé", pricing));
+        return ResponseEntity.ok(ApiResponse.ok("Ticket pricing configuration details", pricing));
     }
 
     @PostMapping
@@ -79,7 +79,7 @@ public class TicketPricingApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing created = pricingService.createPricing(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Tạo cấu hình giá vé thành công", created));
+                .body(ApiResponse.ok("Ticket pricing configuration created successfully", created));
     }
 
     @PutMapping("/{id}")
@@ -89,7 +89,7 @@ public class TicketPricingApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing updated = pricingService.updatePricing(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật cấu hình giá vé thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Ticket pricing configuration updated successfully", updated));
     }
 
     @PutMapping("/{id}/base-price")
@@ -99,7 +99,7 @@ public class TicketPricingApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         TicketPricing updated = pricingService.updateBasePrice(id, basePrice);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật giá cơ sở thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Base price updated successfully", updated));
     }
 
     @PutMapping("/seat-type/{id}/multiplier")
@@ -109,7 +109,7 @@ public class TicketPricingApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeMultiplier(id, multiplier);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật hệ số giá ghế thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Seat price multiplier updated successfully", updated));
     }
 
     @PostMapping("/seat-type")
@@ -119,7 +119,7 @@ public class TicketPricingApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType created = pricingService.createSeatType(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Tạo loại ghế mới thành công", created));
+                .body(ApiResponse.ok("Seat type created successfully", created));
     }
 
     @GetMapping("/calculate")
@@ -133,7 +133,7 @@ public class TicketPricingApiController {
         res.put("basePrice", basePrice);
         res.put("multiplier", multiplier);
         res.put("calculatedPrice", calculated);
-        return ResponseEntity.ok(ApiResponse.ok("Tính giá vé thành công (BR-50)", res));
+        return ResponseEntity.ok(ApiResponse.ok("Ticket price calculated successfully (BR-50)", res));
     }
 
     @ExceptionHandler(TicketPricingNotFoundException.class)

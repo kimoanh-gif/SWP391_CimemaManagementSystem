@@ -439,10 +439,11 @@
                                     <th:block th:each="seat : ${entry.value}"
                                         th:if="${seat.seatNumber <= (midPoint != null ? midPoint : 4)}">
                                         <div class="seat-item"
+                                            th:style="${seat.status == 'Maintenance' ? '' : (seat.colorCode != null ? ('border: 1.5px solid ' + seat.colorCode + '; background:' + seat.colorCode + '18; color:#1F2937;') : '')}"
                                             th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.seatTypeName, ' ', '-'))))}"
                                             th:data-id="${seat.seatId}" th:data-roomid="${seat.roomId}"
                                             th:data-row="${seat.rowLabel}" th:data-num="${seat.seatNumber}"
-                                            th:data-type="${seat.seatTypeName}" th:data-status="${seat.status}"
+                                            th:data-type="${seat.seatTypeName}" th:data-typeid="${seat.seatTypeId}" th:data-status="${seat.status}"
                                             onclick="openSeatModal(this)"
                                             th:title="${seat.rowLabel + seat.seatNumber + ' • ' + seat.seatTypeName + ' (' + seat.status + ')'}">
                                             <span th:text="${seat.rowLabel + seat.seatNumber}">A1</span>
@@ -460,10 +461,11 @@
                                     <th:block th:each="seat : ${entry.value}"
                                         th:if="${seat.seatNumber > (midPoint != null ? midPoint : 4)}">
                                         <div class="seat-item"
+                                            th:style="${seat.status == 'Maintenance' ? '' : (seat.colorCode != null ? ('border: 1.5px solid ' + seat.colorCode + '; background:' + seat.colorCode + '18; color:#1F2937;') : '')}"
                                             th:classappend="${seat.status == 'Maintenance' ? 'seat-maintenance' : (seat.status == 'Unavailable' ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.seatTypeName, ' ', '-'))))}"
                                             th:data-id="${seat.seatId}" th:data-roomid="${seat.roomId}"
                                             th:data-row="${seat.rowLabel}" th:data-num="${seat.seatNumber}"
-                                            th:data-type="${seat.seatTypeName}" th:data-status="${seat.status}"
+                                            th:data-type="${seat.seatTypeName}" th:data-typeid="${seat.seatTypeId}" th:data-status="${seat.status}"
                                             onclick="openSeatModal(this)"
                                             th:title="${seat.rowLabel + seat.seatNumber + ' • ' + seat.seatTypeName + ' (' + seat.status + ')'}">
                                             <span th:text="${seat.rowLabel + seat.seatNumber}">A5</span>
@@ -482,19 +484,11 @@
                         </div>
                     </div>
 
-                    <!-- Legend Bar -->
+                    <!-- Legend Bar (Dynamic from SeatType) -->
                     <div class="legend-bar">
-                        <div class="legend-item">
-                            <span class="legend-box seat-standard"></span>
-                            <span>Standard / Front row</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-box seat-vip"></span>
-                            <span>VIP</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-box seat-couple"></span>
-                            <span>Sweetbox (Couple)</span>
+                        <div class="legend-item" th:each="st : ${seatTypes}">
+                            <span class="legend-box" th:style="'border: 1.5px solid ' + ${st.colorCode} + '; background:' + ${st.colorCode} + '28;'"></span>
+                            <span th:text="${st.typeName}">Standard</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-box seat-maintenance"></span>
@@ -535,6 +529,8 @@
                         <label class="form-label">Seat type: <span class="req">*</span></label>
                         <select id="modalSeatTypeName" name="seatTypeName" class="form-control" required>
                             <option th:each="st : ${seatTypes}" th:value="${st.typeName}"
+                                th:data-id="${st.seatTypeId}"
+                                th:data-code="${st.typeCode}"
                                 th:text="${st.typeName + ' (' + st.priceMultiplier + 'x)'}">Standard</option>
                         </select>
                     </div>

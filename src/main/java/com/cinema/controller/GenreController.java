@@ -89,7 +89,7 @@ public class GenreController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("genreForm", form);
-            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid input data. Please check your information.");
             redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return "redirect:/manager/genres";
         }
@@ -97,16 +97,16 @@ public class GenreController {
         try {
             if (form.getId() == null || form.getId() <= 0) {
                 genreService.createGenre(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Thêm thể loại mới '" + form.getName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Genre '" + form.getName() + "' created successfully!");
             } else {
                 genreService.updateGenre(form.getId(), form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thể loại '" + form.getName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Genre '" + form.getName() + "' updated successfully!");
             }
         } catch (DuplicateGenreException | GenreAssociationException | IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("genreForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "An error occurred: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("genreForm", form);
         }
 
@@ -126,15 +126,15 @@ public class GenreController {
 
         try {
             Genre genre = genreService.toggleStatus(id);
-            String statusText = genre.isActive() ? "kích hoạt" : "hủy kích hoạt";
+            String statusText = genre.isActive() ? "activated" : "deactivated";
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Đã " + statusText + " thành công thể loại '" + genre.getName() + "'."
+                    "Genre '" + genre.getName() + "' has been successfully " + statusText + "."
             );
         } catch (GenreAssociationException | GenreNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot update status: " + ex.getMessage());
         }
 
         return "redirect:/manager/genres";
@@ -153,11 +153,11 @@ public class GenreController {
 
         try {
             genreService.deleteGenre(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa thể loại thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Genre deleted successfully.");
         } catch (GenreAssociationException | GenreNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa thể loại: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete genre: " + ex.getMessage());
         }
 
         return "redirect:/manager/genres";

@@ -43,26 +43,26 @@ public class SeatApiController {
 
     @GetMapping("/room/{roomId}")
     public ResponseEntity<ApiResponse<List<Seat>>> getSeatsByRoom(
-            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
+            @PathVariable @Positive(message = "Room ID must be greater than 0.") int roomId,
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Seat> seats = seatService.getSeatsByRoomId(roomId);
-        return ResponseEntity.ok(ApiResponse.ok("Lấy sơ đồ ghế thành công", seats));
+        return ResponseEntity.ok(ApiResponse.ok("Seat map retrieved successfully", seats));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Seat>> getSeatById(
-            @PathVariable @Positive(message = "Mã ghế phải lớn hơn 0.") int id,
+            @PathVariable @Positive(message = "Seat ID must be greater than 0.") int id,
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Seat seat = seatService.getSeatById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Chi tiết ghế", seat));
+        return ResponseEntity.ok(ApiResponse.ok("Seat details", seat));
     }
 
     @PutMapping("/room/{roomId}/layout")
     public ResponseEntity<ApiResponse<List<Seat>>> saveLayout(
-            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
-            @RequestBody @NotEmpty(message = "Sơ đồ ghế không được để trống.") List<@Valid SeatLayoutForm> seatForms,
+            @PathVariable @Positive(message = "Room ID must be greater than 0.") int roomId,
+            @RequestBody @NotEmpty(message = "Seat layout cannot be empty.") List<@Valid SeatLayoutForm> seatForms,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime expectedUpdatedAt,
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
@@ -70,21 +70,21 @@ public class SeatApiController {
                 .map(form -> form.toSeat(roomId))
                 .collect(Collectors.toList());
         List<Seat> saved = seatService.saveRoomLayout(roomId, seats, expectedUpdatedAt);
-        return ResponseEntity.ok(ApiResponse.ok("Lưu sơ đồ ghế thành công", saved));
+        return ResponseEntity.ok(ApiResponse.ok("Seat layout saved successfully", saved));
     }
 
     @PostMapping("/room/{roomId}/generate-default")
     public ResponseEntity<ApiResponse<List<Seat>>> generateDefault(
-            @PathVariable @Positive(message = "Mã phòng chiếu phải lớn hơn 0.") int roomId,
+            @PathVariable @Positive(message = "Room ID must be greater than 0.") int roomId,
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Seat> generated = seatService.generateDefaultLayout(roomId);
-        return ResponseEntity.ok(ApiResponse.ok("Khởi tạo sơ đồ tiêu chuẩn thành công", generated));
+        return ResponseEntity.ok(ApiResponse.ok("Standard seat layout initialized successfully", generated));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<Seat>> updateSeat(
-            @PathVariable @Positive(message = "Mã ghế phải lớn hơn 0.") int id,
+            @PathVariable @Positive(message = "Seat ID must be greater than 0.") int id,
             @Valid @ModelAttribute SeatUpdateForm form,
             BindingResult bindingResult,
             HttpServletRequest request) {
@@ -93,11 +93,11 @@ public class SeatApiController {
             List<String> errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            String message = errors.isEmpty() ? "Dữ liệu cập nhật ghế không hợp lệ" : errors.get(0);
+            String message = errors.isEmpty() ? "Invalid seat update data" : errors.get(0);
             return ResponseEntity.badRequest().body(ApiResponse.error(message, errors));
         }
         Seat updated = seatService.updateSeat(id, form.getSeatTypeName(), form.getStatus());
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật ghế thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Seat updated successfully", updated));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -105,7 +105,7 @@ public class SeatApiController {
         List<String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
-        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        String msg = errors.isEmpty() ? "Invalid input data." : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 
@@ -114,7 +114,7 @@ public class SeatApiController {
         List<String> errors = ex.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.toList());
-        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        String msg = errors.isEmpty() ? "Invalid input data." : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 
@@ -123,7 +123,7 @@ public class SeatApiController {
         List<String> errors = ex.getAllErrors().stream()
                 .map(MessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.toList());
-        String msg = errors.isEmpty() ? "Dữ liệu nhập không hợp lệ." : errors.get(0);
+        String msg = errors.isEmpty() ? "Invalid input data." : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 

@@ -35,7 +35,7 @@ public class FBItemService {
 
     public FBItem getItemById(int id) {
         return fbItemDao.findById(id)
-                .orElseThrow(() -> new FBItemNotFoundException("Không tìm thấy sản phẩm F&B với ID: " + id));
+                .orElseThrow(() -> new FBItemNotFoundException("F&B product not found with ID: " + id));
     }
 
     @Transactional
@@ -45,7 +45,7 @@ public class FBItemService {
 
         fbItemDao.insert(form);
         FBItem created = fbItemDao.findByCode(form.getItemCode().trim())
-                .orElseThrow(() -> new IllegalStateException("Lỗi lưu trữ sản phẩm F&B"));
+                .orElseThrow(() -> new IllegalStateException("Error saving F&B product"));
 
         if ("Combo".equalsIgnoreCase(form.getCategory())
                 && form.getComponentItemIds() != null && !form.getComponentItemIds().isEmpty()) {
@@ -77,7 +77,7 @@ public class FBItemService {
     @Transactional
     public FBItem updatePrice(int id, BigDecimal sellingPrice) {
         if (sellingPrice == null || sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidFBItemException("Giá bán sản phẩm không được để trống hoặc là số âm");
+            throw new InvalidFBItemException("Selling price cannot be empty or negative");
         }
         getItemById(id);
         fbItemDao.updatePrice(id, sellingPrice);
@@ -88,7 +88,7 @@ public class FBItemService {
     public FBItem updateStatus(int id, String status) {
         if (status == null
                 || (!"Active".equalsIgnoreCase(status.trim()) && !"Inactive".equalsIgnoreCase(status.trim()))) {
-            throw new InvalidFBItemException("Trạng thái sản phẩm chỉ nhận giá trị Active hoặc Inactive");
+            throw new InvalidFBItemException("Status must be Active or Inactive");
         }
         getItemById(id);
         fbItemDao.updateStatus(id, status);
@@ -111,14 +111,14 @@ public class FBItemService {
             // Preserve historical transaction records (BR-51) by soft-deactivating instead
             // of hard delete
             fbItemDao.updateStatus(id, "Inactive");
-            throw new InvalidFBItemException("Món '" + item.getItemName()
-                    + "' đã phát sinh trong đơn hàng của khách, không thể xóa hoàn toàn khỏi cơ sở dữ liệu. Hệ thống đã chuyển món sang trạng thái 'Ngừng Bán' (Inactive).");
+            throw new InvalidFBItemException("Product '" + item.getItemName()
+                    + "' has been ordered in customer bookings and cannot be permanently deleted. The product status has been set to Inactive.");
         }
 
         // 2. Check if item is currently part of any other combo
         if (fbItemDao.isComponentOfAnyCombo(id)) {
-            throw new InvalidFBItemException("Món '" + item.getItemName()
-                    + "' đang là thành phần của một gói Combo khác. Vui lòng gỡ món khỏi Combo trước khi xóa.");
+            throw new InvalidFBItemException("Product '" + item.getItemName()
+                    + "' is a component of an existing Combo. Please remove it from the Combo before deleting.");
         }
 
         // 3. Delete item
@@ -132,27 +132,27 @@ public class FBItemService {
 
     private void validateForm(FBItemForm form, Integer currentId) {
         if (form.getItemCode() == null || form.getItemCode().isBlank()) {
-            throw new InvalidFBItemException("Mã sản phẩm / SKU không được để trống");
+            throw new InvalidFBItemException("SKU / Product code cannot be empty");
         }
         if (form.getItemName() == null || form.getItemName().isBlank()) {
-            throw new InvalidFBItemException("Tên sản phẩm không được để trống");
+            throw new InvalidFBItemException("Product name cannot be empty");
         }
         if (form.getSellingPrice() == null || form.getSellingPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidFBItemException("Giá bán không được để trống hoặc là số âm");
+            throw new InvalidFBItemException("Selling price cannot be empty or negative");
         }
         if (form.getCostPrice() == null || form.getCostPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidFBItemException("Giá vốn không được để trống hoặc là số âm");
+            throw new InvalidFBItemException("Cost price cannot be empty or negative");
         }
         if (form.getCostPrice().compareTo(form.getSellingPrice()) > 0) {
-            throw new InvalidFBItemException("Giá vốn không được lớn hơn giá bán");
+            throw new InvalidFBItemException("Cost price cannot exceed selling price");
         }
         if (form.getCategory() == null || !form.getCategory().trim().matches("(?i)^(Combo|Food|Drink|Snack)$")) {
-            throw new InvalidFBItemException("Danh mục sản phẩm chỉ nhận giá trị Combo, Food, Drink hoặc Snack");
+            throw new InvalidFBItemException("Category must be Combo, Food, Drink or Snack");
         }
         if (form.getStatus() != null && !form.getStatus().isBlank()
                 && !"Active".equalsIgnoreCase(form.getStatus().trim())
                 && !"Inactive".equalsIgnoreCase(form.getStatus().trim())) {
-            throw new InvalidFBItemException("Trạng thái sản phẩm chỉ nhận giá trị Active hoặc Inactive");
+            throw new InvalidFBItemException("Status must be Active or Inactive");
         }
         if (Boolean.FALSE) {
         }
@@ -160,7 +160,7 @@ public class FBItemService {
         fbItemDao.findByCode(form.getItemCode().trim()).ifPresent(item -> {
             if (currentId == null || !item.getItemId().equals(currentId)) {
                 throw new InvalidFBItemException(
-                        "Mã sản phẩm / SKU '" + form.getItemCode() + "' đã tồn tại trong hệ thống");
+                        "SKU '" + form.getItemCode() + "' already exists in the system");
             }
         });
     }
@@ -182,7 +182,7 @@ public class FBItemService {
                     return; // Existing components retained
                 }
             }
-            throw new InvalidFBItemException("Gói Combo phải có ít nhất một mặt hàng thành phần hợp lệ.");
+            throw new InvalidFBItemException("Combo must have at least one valid component item.");
         }
 
         boolean hasValidComponent = false;
@@ -193,33 +193,33 @@ public class FBItemService {
             }
 
             if (currentId != null && compId.equals(currentId)) {
-                throw new InvalidFBItemException("Gói Combo không thể chứa chính nó.");
+                throw new InvalidFBItemException("Combo cannot contain itself.");
             }
 
             Integer qty = (quantities != null && i < quantities.size()) ? quantities.get(i) : 1;
             if (qty == null || qty <= 0) {
-                throw new InvalidFBItemException("Số lượng thành phần trong Combo phải lớn hơn 0.");
+                throw new InvalidFBItemException("Component quantity in combo must be greater than 0.");
             }
 
             FBItem comp = fbItemDao.findById(compId)
                     .orElseThrow(() -> new InvalidFBItemException(
-                            "Mặt hàng thành phần ID " + compId + " không tồn tại trong hệ thống."));
+                            "Component item ID " + compId + " does not exist in the system."));
 
             if ("Combo".equalsIgnoreCase(comp.getCategory())) {
                 throw new InvalidFBItemException(
-                        "Combo chỉ có thể chứa các mặt hàng đơn lẻ (Food, Drink, Snack), không thể lồng Combo vào Combo.");
+                        "Combo can only contain single items (Food, Drink, Snack) and cannot nest combos.");
             }
 
             if (!comp.isActive()) {
                 throw new InvalidFBItemException(
-                        "Không thể đưa mặt hàng đang ngừng bán '" + comp.getItemName() + "' vào Combo.");
+                        "Cannot add inactive item '" + comp.getItemName() + "' into Combo.");
             }
 
             hasValidComponent = true;
         }
 
         if (!hasValidComponent) {
-            throw new InvalidFBItemException("Gói Combo phải có ít nhất một mặt hàng thành phần hợp lệ.");
+            throw new InvalidFBItemException("Combo must have at least one valid component item.");
         }
     }
 }

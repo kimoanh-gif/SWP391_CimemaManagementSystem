@@ -125,7 +125,7 @@ public class FBItemServiceTest {
         when(fbItemDao.isReferencedInOrders(1)).thenReturn(true);
 
         InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.deleteItem(1));
-        assertTrue(ex.getMessage().contains("đã phát sinh trong đơn hàng"));
+        assertTrue(ex.getMessage().contains("has been ordered in customer bookings"));
         verify(fbItemDao).updateStatus(1, "Inactive");
         verify(fbItemDao, never()).delete(1);
     }
@@ -145,7 +145,7 @@ public class FBItemServiceTest {
         when(fbItemDao.isComponentOfAnyCombo(1)).thenReturn(true);
 
         InvalidFBItemException ex = assertThrows(InvalidFBItemException.class, () -> fbItemService.deleteItem(1));
-        assertTrue(ex.getMessage().contains("đang là thành phần của một gói Combo"));
+        assertTrue(ex.getMessage().contains("is a component of an existing Combo"));
         verify(fbItemDao, never()).delete(1);
     }
 }

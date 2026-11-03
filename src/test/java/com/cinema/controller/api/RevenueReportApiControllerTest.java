@@ -65,14 +65,14 @@ class RevenueReportApiControllerTest {
     @DisplayName("GET /api/manager/reports/data: Invalid date range returns 400 Bad Request")
     void testGetReportData_InvalidDateRange() throws Exception {
         when(revenueReportService.getReportData(any()))
-                .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
+                .thenThrow(new IllegalArgumentException("Start date cannot be after end date."));
 
         mockMvc.perform(get("/api/manager/reports/data").sessionAttr("userRole", "MANAGER")
                         .param("startDate", "2026-10-20")
                         .param("endDate", "2026-10-10"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
+                .andExpect(jsonPath("$.message").value("Start date cannot be after end date."));
     }
 
     @Test
@@ -103,12 +103,12 @@ class RevenueReportApiControllerTest {
     @DisplayName("GET /api/manager/reports/export: Invalid date range returns 400 Bad Request")
     void testExportRevenueReport_InvalidDateRange() throws Exception {
         when(revenueReportService.generateCsvReport(any()))
-                .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
+                .thenThrow(new IllegalArgumentException("Start date cannot be after end date."));
 
         mockMvc.perform(get("/api/manager/reports/export").sessionAttr("userRole", "MANAGER")
                         .param("startDate", "2026-10-30")
                         .param("endDate", "2026-10-01"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Ngày bắt đầu không được lớn hơn ngày kết thúc."));
+                .andExpect(content().string("Start date cannot be after end date."));
     }
 }

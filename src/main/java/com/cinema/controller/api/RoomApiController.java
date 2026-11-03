@@ -31,7 +31,7 @@ public class RoomApiController {
                                                          jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Room> rooms = roomService.getAll(keyword, status);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Thành công", rooms, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening rooms retrieved successfully", rooms, null));
     }
 
     @GetMapping("/{id}")
@@ -39,7 +39,7 @@ public class RoomApiController {
                                                   jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Room room = roomService.getById(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Thành công", room, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening room details retrieved successfully", room, null));
     }
 
     @PostMapping
@@ -47,7 +47,7 @@ public class RoomApiController {
                                                     jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         roomService.create(form);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Tạo phòng thành công", null, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening room created successfully", null, null));
     }
 
     @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.POST})
@@ -57,7 +57,7 @@ public class RoomApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         form.setRoomId(id);
         roomService.update(form);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật phòng thành công", null, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening room updated successfully", null, null));
     }
 
     @PatchMapping("/deactivate/{id}")
@@ -65,7 +65,7 @@ public class RoomApiController {
                                                         jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         roomService.deactivate(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Phòng đã được đưa vào bảo trì", null, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening room has been set to maintenance", null, null));
     }
 
     @DeleteMapping("/{id}")
@@ -73,7 +73,7 @@ public class RoomApiController {
                                                     jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         roomService.delete(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Xóa phòng chiếu thành công", null, null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Screening room deleted successfully", null, null));
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -98,13 +98,13 @@ public class RoomApiController {
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
-        String msg = "Dữ liệu phòng không hợp lệ hoặc bị trùng lặp.";
+        String msg = "Screening room data is invalid or duplicate.";
         Throwable cause = ex.getMostSpecificCause();
         String specificMsg = cause != null && cause.getMessage() != null ? cause.getMessage() : "";
         if (specificMsg.contains("UQ_Room_RoomCode")) {
-            msg = "Mã phòng chiếu đã tồn tại trong hệ thống. Vui lòng nhập mã phòng khác.";
+            msg = "Room code already exists in the system. Please enter a different room code.";
         } else if (specificMsg.contains("UQ_Room_RoomName")) {
-            msg = "Tên phòng chiếu đã tồn tại trong hệ thống. Vui lòng đặt tên phòng khác.";
+            msg = "Room name already exists in the system. Please enter a different room name.";
         }
         return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(new ApiResponse<>(false, msg, null, null));
     }
@@ -114,7 +114,7 @@ public class RoomApiController {
         String errorMsg = ex.getBindingResult().getFieldErrors().stream()
                 .map(org.springframework.validation.FieldError::getDefaultMessage)
                 .findFirst()
-                .orElse("Dữ liệu nhập không hợp lệ.");
+                .orElse("Invalid input data.");
         return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(false, errorMsg, null, null));
     }
@@ -127,6 +127,6 @@ public class RoomApiController {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, "Đã xảy ra lỗi: " + ex.getMessage(), null, null));
+                .body(new ApiResponse<>(false, "An error occurred: " + ex.getMessage(), null, null));
     }
 }

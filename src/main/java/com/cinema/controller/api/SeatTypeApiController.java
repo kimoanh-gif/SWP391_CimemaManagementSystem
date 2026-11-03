@@ -45,7 +45,7 @@ public class SeatTypeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<SeatType> list = pricingService.getAllSeatTypes(status);
-        return ResponseEntity.ok(ApiResponse.ok("Lấy danh sách loại ghế thành công", list));
+        return ResponseEntity.ok(ApiResponse.ok("Seat type list retrieved successfully", list));
     }
 
     @GetMapping("/{id}")
@@ -54,7 +54,7 @@ public class SeatTypeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType st = pricingService.getSeatTypeById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Chi tiết loại ghế", st));
+        return ResponseEntity.ok(ApiResponse.ok("Seat type details", st));
     }
 
     @PostMapping
@@ -64,7 +64,7 @@ public class SeatTypeApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType created = pricingService.createSeatType(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Tạo loại ghế mới thành công", created));
+                .body(ApiResponse.ok("Seat type created successfully", created));
     }
 
     @PutMapping("/{id}/multiplier")
@@ -74,7 +74,7 @@ public class SeatTypeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeMultiplier(id, multiplier);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật hệ số giá ghế thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Seat type price multiplier updated successfully", updated));
     }
 
     @PutMapping("/{id}")
@@ -84,7 +84,7 @@ public class SeatTypeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatType(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật thông tin loại ghế thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Seat type updated successfully", updated));
     }
 
     @PutMapping("/{id}/status")
@@ -94,7 +94,7 @@ public class SeatTypeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         SeatType updated = pricingService.updateSeatTypeStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái loại ghế thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Seat type status updated successfully", updated));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -102,7 +102,7 @@ public class SeatTypeApiController {
         List<String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
-        String msg = errors.isEmpty() ? "Dữ liệu loại ghế không hợp lệ" : errors.get(0);
+        String msg = errors.isEmpty() ? "Invalid seat type data" : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 

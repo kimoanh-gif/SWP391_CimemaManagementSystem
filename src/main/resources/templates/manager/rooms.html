@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
             gap: 20px;
         }
+
         .room-card {
             background: #fff;
             border: 1px solid var(--border);
@@ -23,11 +25,13 @@
             display: flex;
             flex-direction: column;
         }
+
         .room-card:hover {
             box-shadow: var(--shadow-md);
             border-color: var(--primary);
             transform: translateY(-2px);
         }
+
         .room-card-hero {
             height: 120px;
             background: linear-gradient(135deg, #3A2228, #28202A);
@@ -38,13 +42,15 @@
             justify-content: space-between;
             color: #fff;
         }
+
         .room-card-hero::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(217,35,50,0.28), transparent 70%);
+            background: radial-gradient(circle at 50% 0%, rgba(217, 35, 50, 0.28), transparent 70%);
             pointer-events: none;
         }
+
         .room-badge-row {
             display: flex;
             align-items: center;
@@ -52,6 +58,7 @@
             position: relative;
             z-index: 1;
         }
+
         .status-pill {
             font-size: 11px;
             font-weight: 700;
@@ -63,13 +70,33 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .status-pill.ready       { background: rgba(16,185,129,0.2); color: #34D399; border: 1px solid rgba(16,185,129,0.4); }
-        .status-pill.screening   { background: rgba(217,35,50,0.25); color: #FFB3AF; border: 1px solid rgba(217,35,50,0.45); }
-        .status-pill.cleaning    { background: rgba(242,184,75,0.2); color: #F7BD4F; border: 1px solid rgba(242,184,75,0.4); }
-        .status-pill.maintenance { background: rgba(239,68,68,0.2);  color: #F87171; border: 1px solid rgba(239,68,68,0.4); }
+
+        .status-pill.ready {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .status-pill.screening {
+            background: rgba(217, 35, 50, 0.25);
+            color: #FFB3AF;
+            border: 1px solid rgba(217, 35, 50, 0.45);
+        }
+
+        .status-pill.cleaning {
+            background: rgba(242, 184, 75, 0.2);
+            color: #F7BD4F;
+            border: 1px solid rgba(242, 184, 75, 0.4);
+        }
+
+        .status-pill.maintenance {
+            background: rgba(239, 68, 68, 0.2);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
 
         .tech-pill {
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             color: #E2E8F0;
             font-size: 11px;
             font-weight: 700;
@@ -77,16 +104,19 @@
             border-radius: 4px;
             letter-spacing: 0.5px;
         }
+
         .room-hero-title {
             position: relative;
             z-index: 1;
         }
+
         .room-hero-name {
             font-size: 17px;
             font-weight: 800;
             margin: 0;
             color: #fff;
         }
+
         .room-hero-sub {
             font-size: 12px;
             color: #94A3B8;
@@ -100,6 +130,7 @@
             flex-direction: column;
             gap: 12px;
         }
+
         .room-specs-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -108,6 +139,7 @@
             padding: 12px;
             border-radius: var(--radius-sm);
         }
+
         .room-spec-item {
             font-size: 12px;
             color: var(--text-500);
@@ -115,6 +147,7 @@
             align-items: center;
             gap: 6px;
         }
+
         .room-spec-item b {
             color: var(--text-700);
             font-weight: 600;
@@ -141,11 +174,15 @@
             justify-content: center;
             padding: 24px 16px;
         }
-        .modal.open { display: flex; }
+
+        .modal.open {
+            display: flex;
+        }
+
         .modal-content {
             background: #fff;
             border-radius: 16px;
-            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.06);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.06);
             width: 100%;
             max-width: 680px;
             max-height: 92vh;
@@ -154,10 +191,19 @@
             overflow: hidden;
             animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.96) translateY(-10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
+
         .modal-header {
             padding: 20px 28px;
             border-bottom: 1px solid var(--border);
@@ -166,11 +212,13 @@
             justify-content: space-between;
             background: #fff;
         }
+
         .modal-header-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .modal-header-icon {
             width: 40px;
             height: 40px;
@@ -182,17 +230,20 @@
             justify-content: center;
             font-size: 22px;
         }
+
         .modal-header h2 {
             font-size: 17px;
             font-weight: 700;
             color: var(--text-900);
             margin: 0;
         }
+
         .modal-header p {
             font-size: 12.5px;
             color: var(--text-500);
             margin: 2px 0 0;
         }
+
         .close-btn {
             width: 34px;
             height: 34px;
@@ -207,10 +258,12 @@
             cursor: pointer;
             transition: all 0.15s;
         }
+
         .close-btn:hover {
             background: #E5E7EB;
             color: var(--text-900);
         }
+
         #room-form {
             padding: 22px 28px;
             overflow-y: auto;
@@ -219,21 +272,25 @@
             flex-direction: column;
             gap: 16px;
         }
+
         .room-form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px 20px;
             width: 100%;
         }
+
         .form-field {
             display: flex;
             flex-direction: column;
             gap: 6px;
             width: 100%;
         }
+
         .form-field.full-width {
             grid-column: 1 / -1;
         }
+
         .form-field-label {
             font-size: 13px;
             font-weight: 600;
@@ -243,15 +300,18 @@
             justify-content: space-between;
             margin: 0;
         }
+
         .form-field-label .req {
             color: #D92332;
             margin-left: 3px;
         }
+
         .form-field-label .badge-tip {
             font-size: 11px;
             font-weight: 500;
             color: #6B7280;
         }
+
         .form-field-input,
         .form-field-select,
         .form-field-textarea {
@@ -267,6 +327,7 @@
             background-color: #FFFFFF;
             transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
         }
+
         .form-field-select {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E");
@@ -276,12 +337,14 @@
             padding-right: 36px;
             cursor: pointer;
         }
+
         .form-field-textarea {
             height: 72px;
             padding: 10px 14px;
             resize: vertical;
             line-height: 1.45;
         }
+
         .form-field-input:focus,
         .form-field-select:focus,
         .form-field-textarea:focus {
@@ -290,13 +353,16 @@
             box-shadow: 0 0 0 3px rgba(217, 35, 50, 0.12);
             background-color: #FFFFFF;
         }
+
         .form-field-input.is-invalid {
             border-color: #DC2626 !important;
             background-color: #FEF2F2 !important;
         }
+
         .form-field-input.is-invalid:focus {
             box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18) !important;
         }
+
         .form-section-divider {
             grid-column: 1 / -1;
             display: flex;
@@ -304,6 +370,7 @@
             gap: 10px;
             margin: 4px 0 -4px;
         }
+
         .form-section-divider span {
             font-size: 11.5px;
             font-weight: 700;
@@ -312,12 +379,14 @@
             color: #9CA3AF;
             white-space: nowrap;
         }
+
         .form-section-divider hr {
             flex: 1;
             border: none;
             border-top: 1px solid #E5E7EB;
             margin: 0;
         }
+
         .calc-status-box {
             grid-column: 1 / -1;
             display: flex;
@@ -332,16 +401,19 @@
             color: #4B5563;
             transition: all 0.2s;
         }
+
         .calc-status-box.is-match {
             background: #ECFDF5;
             border-color: #A7F3D0;
             color: #065F46;
         }
+
         .calc-status-box.is-mismatch {
             background: #FEF2F2;
             border-color: #FECACA;
             color: #991B1B;
         }
+
         .btn-apply-calc {
             background: #D92332;
             color: #fff;
@@ -353,12 +425,15 @@
             cursor: pointer;
             transition: background 0.15s;
         }
+
         .btn-apply-calc:hover {
             background: #B91C1C;
         }
+
         .modal-messages {
             padding: 0 28px;
         }
+
         .rf-alert {
             padding: 10px 14px;
             border-radius: 8px;
@@ -367,16 +442,19 @@
             display: none;
             margin-top: 14px;
         }
+
         .rf-alert-error {
             background: #FFDAD6;
             color: #BA1A1A;
             border: 1px solid #F5B5AE;
         }
+
         .rf-alert-success {
             background: #D1FAE5;
             color: #065F46;
             border: 1px solid #A7F3D0;
         }
+
         .modal-footer {
             padding: 16px 28px;
             border-top: 1px solid var(--border);
@@ -388,315 +466,351 @@
         }
     </style>
 </head>
+
 <body class="cm-body">
 
-<!-- Sidebar -->
-<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='rooms')}"></aside>
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='rooms')}"></aside>
 
-<!-- Main Wrapper -->
-<div class="cm-shell">
-<header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
-<div class="cm-main">
+    <!-- Main Wrapper -->
+    <div class="cm-shell">
+        <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+        <div class="cm-main">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="breadcrumb">
-                <a th:href="@{/manager/dashboard}">Overview</a>
-                <span>/</span>
-                <span>Screening Room Management</span>
-            </div>
-            <h1 class="page-title">Screening Room Management</h1>
-            <p class="page-subtitle">Manage seat maps, technical specifications and operating status of the screening rooms.</p>
-        </div>
-        <div class="page-header-actions">
-            <button type="button" id="add-room-btn" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:18px">add</span> Add screening room</button>
-        </div>
-    </div>
-
-    <!-- Alerts -->
-    <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
-        <span class="alert-icon">✅</span>
-        <div class="alert-body" th:text="${successMessage}"></div>
-        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
-    </div>
-    <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
-        <span class="alert-icon">⚠️</span>
-        <div class="alert-body" th:text="${errorMessage}"></div>
-        <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Total screening rooms</div>
-            <div class="stat-value" th:text="${rooms.size()}">0</div>
-            <div class="stat-sub">Matching the current filter</div>
-            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">meeting_room</span></span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Active</div>
-            <div class="stat-value" th:text="${rooms.?[status == 'Ready' or status == 'Screening'].size()}">0</div>
-            <div class="stat-sub">Ready or screening now</div>
-            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">check_circle</span></span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Maintenance / Cleaning</div>
-            <div class="stat-value" th:text="${rooms.?[status == 'Maintenance' or status == 'Cleaning'].size()}">0</div>
-            <div class="stat-sub">Unavailable for new showtimes</div>
-            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">build</span></span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Actual total seats</div>
-            <div class="stat-value" th:text="${#lists.isEmpty(rooms) ? 0 : #aggregates.sum(rooms.![capacity ?: 0])}">0</div>
-            <div class="stat-sub">Sum of room capacities</div>
-            <span class="stat-icon"><span class="material-symbols-outlined cm-fill">chair</span></span>
-        </div>
-    </div>
-
-    <!-- Filter Toolbar -->
-    <div class="toolbar">
-        <form method="get" th:action="@{/manager/rooms}" class="toolbar-form">
-            <div class="toolbar-search">
-                <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
-                <input type="text" placeholder="Search by room name or code..." th:value="${keyword}" name="keyword" id="keyword" />
-            </div>
-            <select name="status" id="status-select" onchange="this.form.submit()">
-                <option th:value="''" th:selected="${status == null or status == ''}">All statuses</option>
-                <option th:value="Ready" th:selected="${status == 'Ready'}">Ready</option>
-                <option th:value="Screening" th:selected="${status == 'Screening'}">Screening</option>
-                <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning</option>
-                <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance</option>
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-            <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">Clear filters</a>
-        </form>
-    </div>
-
-    <!-- Rooms Cards Grid (matching Image 2) -->
-    <div class="room-grid" th:if="${not #lists.isEmpty(rooms)}">
-        <div th:each="room : ${rooms}" class="room-card">
-            <!-- Hero Top -->
-            <div class="room-card-hero">
-                <div class="room-badge-row">
-                    <span class="status-pill"
-                          th:classappend="${room.status == 'Ready' ? 'ready' : (room.status == 'Screening' ? 'screening' : (room.status == 'Cleaning' ? 'cleaning' : 'maintenance'))}">
-                        ● <span th:text="${room.status == 'Ready' ? 'READY FOR GUESTS' : (room.status == 'Screening' ? 'SCREENING' : (room.status == 'Cleaning' ? 'CLEANING' : 'MAINTENANCE'))}">READY</span>
-                    </span>
-                    <span class="tech-pill" th:text="${room.roomType}">IMAX LASER</span>
-                </div>
-                <div class="room-hero-title">
-                    <h3 class="room-hero-name" th:text="${room.roomName}">Screening Room 01</h3>
-                    <div class="room-hero-sub" th:text="${room.roomCode} + ' • ' + ${room.capacity} + ' seats'">ROOM-01 • 320 seats</div>
-                </div>
-            </div>
-
-            <!-- Body specs -->
-            <div class="room-card-body">
-                <div class="room-specs-grid">
-                    <div class="room-spec-item">
-                        <span>📽</span>
-                        <div>Projector: <b th:text="${room.projector ?: 'Laser 4K'}">Laser 4K</b></div>
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-header-left">
+                    <div class="breadcrumb">
+                        <a th:href="@{/manager/dashboard}">Overview</a>
+                        <span>/</span>
+                        <span>Screening Room Management</span>
                     </div>
-                    <div class="room-spec-item">
-                        <span>🔊</span>
-                        <div>Sound: <b th:text="${room.soundSystem ?: 'Dolby Atmos'}">Dolby 7.1</b></div>
-                    </div>
-                    <div class="room-spec-item">
-                        <span>📐</span>
-                        <div>Screen: <b th:text="${room.screenSize ?: 'Standard'}">24m x 14m</b></div>
-                    </div>
-                    <div class="room-spec-item">
-                        <span>💺</span>
-                        <div>Capacity: <b th:text="${room.capacity} + ' seats'">200 seats</b></div>
-                    </div>
+                    <h1 class="page-title">Screening Room Management</h1>
+                    <p class="page-subtitle">Manage seat maps, technical specifications and operating status of the
+                        screening rooms.</p>
                 </div>
-                <div style="font-size:12.5px;color:var(--text-500);line-height:1.4;" th:if="${room.description != null and !room.description.isEmpty()}" th:text="${room.description}">
-                    Room description...
+                <div class="page-header-actions">
+                    <button type="button" id="add-room-btn" class="btn btn-primary"><span
+                            class="material-symbols-outlined" style="font-size:18px">add</span> Add screening
+                        room</button>
                 </div>
             </div>
 
-            <!-- Footer actions -->
-            <div class="room-card-footer">
-                <a th:href="@{'/manager/seats?roomId=' + ${room.roomId}}" class="btn btn-secondary btn-sm">
-                    <span class="material-symbols-outlined" style="font-size:18px">grid_view</span> Seat map (<span th:text="${room.capacity}">0</span> seats)
-                </a>
-                <div style="display:flex;gap:6px;">
-                    <button type="button" class="action-btn action-btn-edit edit-room-btn" th:data-id="${room.roomId}" title="Edit room">✎</button>
-                    <button type="button" class="action-btn action-btn-del deactivate-room-btn" th:data-id="${room.roomId}" title="Set to maintenance">⏹</button>
-                    <form th:action="@{'/manager/rooms/delete/' + ${room.roomId}}" method="post" style="display:inline;"
-                          th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa phòng chiếu \\\'\' + ${room.roomName} + \'\\\' không?\');'">
-                        <button type="submit" class="action-btn action-btn-del"
-                                style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
-                                title="Xóa phòng chiếu">🗑</button>
-                    </form>
+            <!-- Alerts -->
+            <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
+                <span class="alert-icon">✅</span>
+                <div class="alert-body" th:text="${successMessage}"></div>
+                <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+            </div>
+            <div class="alert alert-error" th:if="${errorMessage}" style="margin:0;">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-body" th:text="${errorMessage}"></div>
+                <button class="alert-close" onclick="this.closest('.alert').remove()">×</button>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total screening rooms</div>
+                    <div class="stat-value" th:text="${rooms.size()}">0</div>
+                    <div class="stat-sub">Matching the current filter</div>
+                    <span class="stat-icon"><span class="material-symbols-outlined cm-fill">meeting_room</span></span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value" th:text="${rooms.?[status == 'Ready' or status == 'Screening'].size()}">0
+                    </div>
+                    <div class="stat-sub">Ready or screening now</div>
+                    <span class="stat-icon"><span class="material-symbols-outlined cm-fill">check_circle</span></span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Maintenance / Cleaning</div>
+                    <div class="stat-value"
+                        th:text="${rooms.?[status == 'Maintenance' or status == 'Cleaning'].size()}">0</div>
+                    <div class="stat-sub">Unavailable for new showtimes</div>
+                    <span class="stat-icon"><span class="material-symbols-outlined cm-fill">build</span></span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Actual total seats</div>
+                    <div class="stat-value"
+                        th:text="${#lists.isEmpty(rooms) ? 0 : #aggregates.sum(rooms.![capacity ?: 0])}">0</div>
+                    <div class="stat-sub">Sum of room capacities</div>
+                    <span class="stat-icon"><span class="material-symbols-outlined cm-fill">chair</span></span>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Pagination -->
-    <div class="pagination-row" style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);" th:if="${not #lists.isEmpty(rooms)}">
-        <span style="font-size: 13px; color: var(--text-500);">
-            Showing 1 – <span th:text="${#lists.size(rooms)}">5</span> of <span th:text="${rooms.size()}">5</span> screening rooms
-        </span>
-        <div class="pagination">
-            <button type="button" class="page-btn" disabled>&lsaquo;</button>
-            <button type="button" class="page-btn active">1</button>
-            <button type="button" class="page-btn">&rsaquo;</button>
-        </div>
-    </div>
-
-    <!-- Empty State -->
-    <div class="empty-state" th:if="${#lists.isEmpty(rooms)}">
-        <div class="empty-state-icon"><span class="material-symbols-outlined" style="font-size:48px">meeting_room</span></div>
-        <h3>No screening rooms yet</h3>
-        <p>Add your first screening room to start setting up seat maps and showtimes.</p>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('add-room-btn').click()" style="margin-top:12px;">+ Add screening room</button>
-    </div>
-
-</div>
-</div>
-
-<!-- Modal for Add / Edit (Screening room configuration) -->
-<div class="modal" id="room-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-header-info">
-                <div class="modal-header-icon">
-                    <span class="material-symbols-outlined">meeting_room</span>
-                </div>
-                <div>
-                    <h2 id="modal-title">Screening room configuration</h2>
-                    <p>Configure room specifications, seats and audio-visual hardware</p>
-                </div>
-            </div>
-            <button type="button" class="close-btn" aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-messages">
-            <div id="form-error" class="rf-alert rf-alert-error"></div>
-            <div id="form-success" class="rf-alert rf-alert-success"></div>
-        </div>
-        <form id="room-form">
-            <input type="hidden" name="roomId" />
-            
-            <div class="room-form-grid">
-                <!-- Row 1: Code & Name -->
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Room code <span class="req">*</span></span>
-                    </label>
-                    <input type="text" name="roomCode" required maxlength="20" pattern="^[A-Za-z0-9_-]+$" placeholder="e.g. ROOM-01" class="form-field-input" />
-                </div>
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Room name <span class="req">*</span></span>
-                    </label>
-                    <input type="text" name="roomName" required maxlength="100" placeholder="e.g. Screening Room 01 — IMAX Laser" class="form-field-input" />
-                </div>
-
-                <!-- Row 2: Room Type & Status -->
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Room type <span class="req">*</span></span>
-                    </label>
-                    <select name="roomType" required class="form-field-select">
-                        <option value="IMAX Laser">IMAX Laser</option>
-                        <option value="Gold Class">Gold Class VIP</option>
-                        <option value="Dolby Atmos">Dolby Atmos</option>
-                        <option value="Standard Laser">Standard Laser</option>
-                        <option value="Tech Lab">Tech Lab &amp; Hall</option>
+            <!-- Filter Toolbar -->
+            <div class="toolbar">
+                <form method="get" th:action="@{/manager/rooms}" class="toolbar-form">
+                    <div class="toolbar-search">
+                        <span class="toolbar-search-icon material-symbols-outlined" style="font-size:18px">search</span>
+                        <input type="text" placeholder="Search by room name or code..." th:value="${keyword}"
+                            name="keyword" id="keyword" />
+                    </div>
+                    <select name="status" id="status-select" onchange="this.form.submit()">
+                        <option th:value="''" th:selected="${status == null or status == ''}">All statuses</option>
+                        <option th:value="Ready" th:selected="${status == 'Ready'}">Ready</option>
+                        <option th:value="Screening" th:selected="${status == 'Screening'}">Screening</option>
+                        <option th:value="Cleaning" th:selected="${status == 'Cleaning'}">Cleaning</option>
+                        <option th:value="Maintenance" th:selected="${status == 'Maintenance'}">Maintenance</option>
                     </select>
-                </div>
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Operating status <span class="req">*</span></span>
-                    </label>
-                    <select name="status" required class="form-field-select">
-                        <option value="Ready">Ready</option>
-                        <option value="Screening">Screening</option>
-                        <option value="Cleaning">Cleaning</option>
-                        <option value="Maintenance">Maintenance</option>
-                    </select>
-                </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                    <a th:href="@{/manager/rooms}" class="btn btn-secondary btn-sm">Clear filters</a>
+                </form>
+            </div>
 
-                <!-- Section: Seating Layout & Capacity -->
-                <div class="form-section-divider">
-                    <span>Seat Layout &amp; Capacity</span>
-                    <hr />
-                </div>
-
-                <!-- Row 3: Total Rows & Seats Per Row -->
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Number of rows (optional)</span>
-                        <span class="badge-tip">Rows</span>
-                    </label>
-                    <input type="number" id="field-totalRows" name="totalRows" min="1" max="100" required placeholder="e.g. 10" class="form-field-input" />
-                </div>
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Seats per row (optional)</span>
-                        <span class="badge-tip">Seats/row</span>
-                    </label>
-                    <input type="number" id="field-seatsPerRow" name="seatsPerRow" min="1" max="100" required placeholder="e.g. 12" class="form-field-input" />
-                </div>
-
-                <!-- Row 4: Capacity & Screen size -->
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Capacity (total seats) <span class="req">*</span></span>
-                        <span class="badge-tip" id="calc-hint-text">Rows × Seats/row</span>
-                    </label>
-                    <input type="number" id="field-capacity" name="capacity" min="1" max="5000" required placeholder="e.g. 120" class="form-field-input" />
-                </div>
-                <div class="form-field">
-                    <label class="form-field-label">
-                        <span>Screen size</span>
-                    </label>
-                    <input type="text" name="screenSize" placeholder="e.g. 26.5m x 15.2m" class="form-field-input" />
-                </div>
-
-                <!-- Interactive Calculation Notice -->
-                <div id="calc-sync-notice" class="calc-status-box" style="display:none;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span id="calc-sync-icon" class="material-symbols-outlined" style="font-size:18px;">info</span>
-                        <span id="calc-sync-text"></span>
+            <!-- Rooms Cards Grid (matching Image 2) -->
+            <div class="room-grid" th:if="${not #lists.isEmpty(rooms)}">
+                <div th:each="room : ${rooms}" class="room-card">
+                    <!-- Hero Top -->
+                    <div class="room-card-hero">
+                        <div class="room-badge-row">
+                            <span class="status-pill"
+                                th:classappend="${room.status == 'Ready' ? 'ready' : (room.status == 'Screening' ? 'screening' : (room.status == 'Cleaning' ? 'cleaning' : 'maintenance'))}">
+                                ● <span
+                                    th:text="${room.status == 'Ready' ? 'READY FOR GUESTS' : (room.status == 'Screening' ? 'SCREENING' : (room.status == 'Cleaning' ? 'CLEANING' : 'MAINTENANCE'))}">READY</span>
+                            </span>
+                            <span class="tech-pill" th:text="${room.roomType}">IMAX LASER</span>
+                        </div>
+                        <div class="room-hero-title">
+                            <h3 class="room-hero-name" th:text="${room.roomName}">Screening Room 01</h3>
+                            <div class="room-hero-sub" th:text="${room.roomCode} + ' • ' + ${room.capacity} + ' seats'">
+                                ROOM-01 • 320 seats</div>
+                        </div>
                     </div>
-                    <button type="button" id="btn-apply-calc" class="btn-apply-calc" style="display:none;">Apply calculated seats</button>
-                </div>
 
-                <!-- Section: Hardware Specs -->
-                <div class="form-section-divider">
-                    <span>Hardware &amp; Equipment</span>
-                    <hr />
-                </div>
+                    <!-- Body specs -->
+                    <div class="room-card-body">
+                        <div class="room-specs-grid">
+                            <div class="room-spec-item">
+                                <span>📽</span>
+                                <div>Projector: <b th:text="${room.projector ?: 'Laser 4K'}">Laser 4K</b></div>
+                            </div>
+                            <div class="room-spec-item">
+                                <span>🔊</span>
+                                <div>Sound: <b th:text="${room.soundSystem ?: 'Dolby Atmos'}">Dolby 7.1</b></div>
+                            </div>
+                            <div class="room-spec-item">
+                                <span>📐</span>
+                                <div>Screen: <b th:text="${room.screenSize ?: 'Standard'}">24m x 14m</b></div>
+                            </div>
+                            <div class="room-spec-item">
+                                <span>💺</span>
+                                <div>Capacity: <b th:text="${room.capacity} + ' seats'">200 seats</b></div>
+                            </div>
+                        </div>
+                        <div style="font-size:12.5px;color:var(--text-500);line-height:1.4;"
+                            th:if="${room.description != null and !room.description.isEmpty()}"
+                            th:text="${room.description}">
+                            Room description...
+                        </div>
+                    </div>
 
-                <!-- Row 5: Projector & Sound System -->
-                <div class="form-field">
-                    <label class="form-field-label">Projector</label>
-                    <input type="text" name="projector" placeholder="e.g. Christie 4K Dual Laser" class="form-field-input" />
-                </div>
-                <div class="form-field">
-                    <label class="form-field-label">Sound system</label>
-                    <input type="text" name="soundSystem" placeholder="e.g. IMAX 12 Ch Audio" class="form-field-input" />
-                </div>
-
-                <!-- Row 6: Description (Full Width) -->
-                <div class="form-field full-width">
-                    <label class="form-field-label">Description &amp; equipment notes</label>
-                    <textarea name="description" rows="2" maxlength="500" placeholder="Notes about projection equipment, accessibility, or floor location..." class="form-field-textarea"></textarea>
+                    <!-- Footer actions -->
+                    <div class="room-card-footer">
+                        <a th:href="@{'/manager/seats?roomId=' + ${room.roomId}}" class="btn btn-secondary btn-sm">
+                            <span class="material-symbols-outlined" style="font-size:18px">grid_view</span> Seat map
+                            (<span th:text="${room.capacity}">0</span> seats)
+                        </a>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="action-btn action-btn-edit edit-room-btn"
+                                th:data-id="${room.roomId}" title="Edit room">✎</button>
+                            <form th:action="@{'/manager/rooms/delete/' + ${room.roomId}}" method="post"
+                                style="display:inline;"
+                                th:data-confirm="|Are you sure you want to delete screening room '${room.roomName}'?|"
+                                onsubmit="return confirm(this.getAttribute('data-confirm'));">
+                                <button type="submit" class="action-btn action-btn-del"
+                                    style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
+                                    title="Delete screening room">🗑</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary close-btn" style="height:40px;padding:0 20px;border-radius:8px;font-weight:600;">Cancel</button>
-                <button type="submit" id="btn-save-room" class="btn btn-primary" style="height:40px;padding:0 24px;border-radius:8px;font-weight:600;box-shadow:0 2px 6px rgba(217,35,50,0.3);">Save room</button>
+            <!-- Pagination -->
+            <div class="pagination-row"
+                style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);"
+                th:if="${not #lists.isEmpty(rooms)}">
+                <span style="font-size: 13px; color: var(--text-500);">
+                    Showing 1 – <span th:text="${#lists.size(rooms)}">5</span> of <span
+                        th:text="${rooms.size()}">5</span> screening rooms
+                </span>
+                <div class="pagination">
+                    <button type="button" class="page-btn" disabled>&lsaquo;</button>
+                    <button type="button" class="page-btn active">1</button>
+                    <button type="button" class="page-btn">&rsaquo;</button>
+                </div>
             </div>
-        </form>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${#lists.isEmpty(rooms)}">
+                <div class="empty-state-icon"><span class="material-symbols-outlined"
+                        style="font-size:48px">meeting_room</span></div>
+                <h3>No screening rooms yet</h3>
+                <p>Add your first screening room to start setting up seat maps and showtimes.</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('add-room-btn').click()"
+                    style="margin-top:12px;">+ Add screening room</button>
+            </div>
+
+        </div>
     </div>
-</div>
 
-<script th:src="@{/js/manager-rooms.js}"></script>
+    <!-- Modal for Add / Edit (Screening room configuration) -->
+    <div class="modal" id="room-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <div class="modal-header-icon">
+                        <span class="material-symbols-outlined">meeting_room</span>
+                    </div>
+                    <div>
+                        <h2 id="modal-title">Screening room configuration</h2>
+                        <p>Configure room specifications, seats and audio-visual hardware</p>
+                    </div>
+                </div>
+                <button type="button" class="close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-messages">
+                <div id="form-error" class="rf-alert rf-alert-error"></div>
+                <div id="form-success" class="rf-alert rf-alert-success"></div>
+            </div>
+            <form id="room-form">
+                <input type="hidden" name="roomId" />
+
+                <div class="room-form-grid">
+                    <!-- Row 1: Code & Name -->
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Room code <span class="req">*</span></span>
+                        </label>
+                        <input type="text" name="roomCode" required maxlength="20" pattern="^[A-Za-z0-9_-]+$"
+                            placeholder="e.g. ROOM-01" class="form-field-input" />
+                    </div>
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Room name <span class="req">*</span></span>
+                        </label>
+                        <input type="text" name="roomName" required maxlength="100"
+                            placeholder="e.g. Screening Room 01 — IMAX Laser" class="form-field-input" />
+                    </div>
+
+                    <!-- Row 2: Room Type & Status -->
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Room type <span class="req">*</span></span>
+                        </label>
+                        <select name="roomType" required class="form-field-select">
+                            <option value="IMAX Laser">IMAX Laser</option>
+                            <option value="Gold Class">Gold Class VIP</option>
+                            <option value="Dolby Atmos">Dolby Atmos</option>
+                            <option value="Standard Laser">Standard Laser</option>
+                            <option value="Tech Lab">Tech Lab &amp; Hall</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Operating status <span class="req">*</span></span>
+                        </label>
+                        <select name="status" required class="form-field-select">
+                            <option value="Ready">Ready</option>
+                            <option value="Screening">Screening</option>
+                            <option value="Cleaning">Cleaning</option>
+                            <option value="Maintenance">Maintenance</option>
+                        </select>
+                    </div>
+
+                    <!-- Section: Seating Layout & Capacity -->
+                    <div class="form-section-divider">
+                        <span>Seat Layout &amp; Capacity</span>
+                        <hr />
+                    </div>
+
+                    <!-- Row 3: Total Rows & Seats Per Row -->
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Number of rows (optional)</span>
+                            <span class="badge-tip">Rows</span>
+                        </label>
+                        <input type="number" id="field-totalRows" name="totalRows" min="1" max="100" required
+                            placeholder="e.g. 10" class="form-field-input" />
+                    </div>
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Seats per row (optional)</span>
+                            <span class="badge-tip">Seats/row</span>
+                        </label>
+                        <input type="number" id="field-seatsPerRow" name="seatsPerRow" min="1" max="100" required
+                            placeholder="e.g. 12" class="form-field-input" />
+                    </div>
+
+                    <!-- Row 4: Capacity & Screen size -->
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Capacity (total seats) <span class="req">*</span></span>
+                            <span class="badge-tip" id="calc-hint-text">Rows × Seats/row</span>
+                        </label>
+                        <input type="number" id="field-capacity" name="capacity" min="1" max="5000" required
+                            placeholder="e.g. 120" class="form-field-input" />
+                    </div>
+                    <div class="form-field">
+                        <label class="form-field-label">
+                            <span>Screen size</span>
+                        </label>
+                        <input type="text" name="screenSize" placeholder="e.g. 26.5m x 15.2m"
+                            class="form-field-input" />
+                    </div>
+
+                    <!-- Interactive Calculation Notice -->
+                    <div id="calc-sync-notice" class="calc-status-box" style="display:none;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span id="calc-sync-icon" class="material-symbols-outlined"
+                                style="font-size:18px;">info</span>
+                            <span id="calc-sync-text"></span>
+                        </div>
+                        <button type="button" id="btn-apply-calc" class="btn-apply-calc" style="display:none;">Apply
+                            calculated seats</button>
+                    </div>
+
+                    <!-- Section: Hardware Specs -->
+                    <div class="form-section-divider">
+                        <span>Hardware &amp; Equipment</span>
+                        <hr />
+                    </div>
+
+                    <!-- Row 5: Projector & Sound System -->
+                    <div class="form-field">
+                        <label class="form-field-label">Projector</label>
+                        <input type="text" name="projector" placeholder="e.g. Christie 4K Dual Laser"
+                            class="form-field-input" />
+                    </div>
+                    <div class="form-field">
+                        <label class="form-field-label">Sound system</label>
+                        <input type="text" name="soundSystem" placeholder="e.g. IMAX 12 Ch Audio"
+                            class="form-field-input" />
+                    </div>
+
+                    <!-- Row 6: Description (Full Width) -->
+                    <div class="form-field full-width">
+                        <label class="form-field-label">Description &amp; equipment notes</label>
+                        <textarea name="description" rows="2" maxlength="500"
+                            placeholder="Notes about projection equipment, accessibility, or floor location..."
+                            class="form-field-textarea"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn"
+                        style="height:40px;padding:0 20px;border-radius:8px;font-weight:600;">Cancel</button>
+                    <button type="submit" id="btn-save-room" class="btn btn-primary"
+                        style="height:40px;padding:0 24px;border-radius:8px;font-weight:600;box-shadow:0 2px 6px rgba(217,35,50,0.3);">Save
+                        room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script th:src="@{/js/manager-rooms.js(v=${#dates.createNow().time})}"></script>
 </body>
+
 </html>

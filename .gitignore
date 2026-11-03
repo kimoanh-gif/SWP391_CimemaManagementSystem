@@ -74,4 +74,7 @@ node_modules/
 e2e/node_modules/
 e2e/*.png
 audit_test_results.json
+uploads/movies/
+uploads/fb/
+
 

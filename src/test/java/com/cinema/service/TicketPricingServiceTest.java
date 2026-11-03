@@ -148,11 +148,30 @@ public class TicketPricingServiceTest {
         assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.updatePricingStatus(1, "InvalidStatus"));
         when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
         when(seatTypeDao.isReferencedBySeats(2)).thenReturn(true);
-        assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.updateSeatTypeStatus(2, "Inactive"));
-        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
-        when(seatTypeDao.isReferencedBySeats(2)).thenReturn(true);
 
         assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.deleteSeatType(2));
         verify(seatTypeDao, never()).delete(anyInt());
+    }
+
+    @Test
+    void testUpdateSeatTypeStatus_Success_EvenWhenReferenced() {
+        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
+        when(seatTypeDao.hasActiveOrUpcomingShowtimes(2)).thenReturn(false);
+        assertDoesNotThrow(() -> pricingService.updateSeatTypeStatus(2, "Inactive"));
+        verify(seatTypeDao).updateStatus(2, "Inactive");
+    }
+
+    @Test
+    void testUpdateSeatType_HasUpcomingShowtimes_ThrowsException() {
+        when(seatTypeDao.findById(2)).thenReturn(Optional.of(vipSeat));
+        when(seatTypeDao.hasActiveOrUpcomingShowtimes(2)).thenReturn(true);
+
+        com.cinema.dto.SeatTypeForm form = new com.cinema.dto.SeatTypeForm();
+        form.setTypeCode("VIP");
+        form.setTypeName("VIP Royal");
+        form.setPriceMultiplier(new java.math.BigDecimal("1.25"));
+        form.setStatus("Inactive");
+
+        assertThrows(InvalidPricingConfigurationException.class, () -> pricingService.updateSeatType(2, form));
     }
 }

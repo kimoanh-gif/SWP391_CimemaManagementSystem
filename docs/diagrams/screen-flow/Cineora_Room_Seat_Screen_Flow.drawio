@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-03T17:55:20.635Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="room-seat-flow" name="Cineora Rooms, Seat Maps &amp; Dynamic Pricing Screen Flow (Manager)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_rooms" value="Cinema Screening Room Domain" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="480" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_seats" value="Seat Map &amp; Layout Grid Domain" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#EFF6FF;strokeColor=#93C5FD;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="550" y="40" width="520" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_pricing" value="Seat Types &amp; Ticket Pricing Matrix" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#FEF3C7;strokeColor=#FCD34D;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="40" width="510" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_rooms" value="Cinema Rooms Screen
+[/manager/rooms - rooms.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="100" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_add_room" value="Add / Edit Room Modal
+[#roomModalBackdrop]
+Name, Code, ScreenType, Audio" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="70" y="240" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_del_room" value="Has Future Showtimes?
+[BR-52 Deactivation Check]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="380" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="err_room_blocked" value="Action Blocked
+[Scheduled Showtimes Present]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="510" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_room_status" value="Toggle Maintenance Status
+[POST /rooms/deactivate/{id}]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="630" width="180" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_seat_map" value="Seat Map Layout Editor
+[/manager/seats?roomId={id}
+seats.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="580" y="100" width="230" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_room_select" value="Switch Active Room
+[Dropdown: roomId Param]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="850" y="105" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_gen_grid" value="Generate Default Grid Modal
+[Specify Rows A-J &amp; Cols 1-12]" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="580" y="240" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_seat_inspect" value="Seat Inspector &amp; Config
+[Assign Type: VIP, Standard, Couple
+Toggle Active / Broken]" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="580" y="380" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="suc_layout_saved" value="Seat Layout Synchronized
+[Room Capacity Updated]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="580" y="520" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_seat_types" value="Seat Type Management
+[/manager/seat-types - seat-types.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="100" width="220" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_add_seattype" value="Add / Edit Seat Type Modal
+[Name, Code, Multiplier, Color]" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="240" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_del_seattype" value="Seats in Room Use Type?
+[BR-53 Historical Integrity]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="380" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="err_seattype_del" value="Cannot Hard-Delete
+[Must Set Status to Inactive]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="500" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_pricing_matrix" value="Ticket Pricing Matrix Screen
+[/manager/pricing - pricing.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="630" width="220" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_pricing_rule" value="Pricing Rule Modal
+[DayType, TimeSlot, BasePrice
+BR-50 Formula]" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="750" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="suc_room_op" value="Room Operation Succeeded
+[Redirect /manager/rooms]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="310" y="240" width="180" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="er_1" value="Click &quot;+ Add Room&quot; or Edit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_rooms" target="mdl_add_room">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_2" value="POST /manager/rooms/save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_add_room" target="suc_room_op">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_3" value="POST /manager/rooms/delete/{id}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_rooms" target="dec_del_room">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_4" value="Upcoming Showtimes Found" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_del_room" target="err_room_blocked">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_5" value="Dismiss Alert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_room_blocked" target="scr_rooms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_6" value="No Showtimes -&gt; Room Deleted" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_del_room" target="suc_room_op">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_7" value="Toggle Maintenance Mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_rooms" target="dec_room_status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_8" value="Status Updated" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_room_status" target="suc_room_op">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_9" value="Flash Message &amp; Refresh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="suc_room_op" target="scr_rooms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_10" value="Click &quot;Seat Map ({n} seats)&quot; Button" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_rooms" target="scr_seat_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_11" value="Change Room Selector" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_seat_map" target="dec_room_select">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_12" value="GET /manager/seats?roomId=..." style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_room_select" target="scr_seat_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_13" value="Click &quot;Generate Default Grid&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_seat_map" target="mdl_gen_grid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_14" value="POST /seats/generate-default" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_gen_grid" target="scr_seat_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_15" value="Click Individual Seat Cell" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_seat_map" target="mdl_seat_inspect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_16" value="POST /seats/update-seat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_seat_inspect" target="suc_layout_saved">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_17" value="Visual Matrix Re-rendered" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="suc_layout_saved" target="scr_seat_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_18" value="Header Link: &quot;Check seat types&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_seat_map" target="scr_seat_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_19" value="Click &quot;+ Add Seat Type&quot; or Edit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_seat_types" target="mdl_add_seattype">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_20" value="POST /manager/seat-types/save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_add_seattype" target="scr_seat_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_21" value="POST /seat-types/delete/{id}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_seat_types" target="dec_del_seattype">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_22" value="Assigned in Rooms" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_del_seattype" target="err_seattype_del">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_23" value="Recommend Deactivate (Inactive)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_seattype_del" target="scr_seat_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_24" value="Not Referenced (Deleted)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_del_seattype" target="scr_seat_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_25" value="Navigation: Ticket Pricing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_seat_types" target="scr_pricing_matrix">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_26" value="Add / Edit Pricing Formula" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_pricing_matrix" target="mdl_pricing_rule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er_27" value="Save Rule (Multipliers Active)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_pricing_rule" target="scr_pricing_matrix">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -43,32 +43,35 @@ public class SeatService {
 
     public Seat getSeatById(int seatId) {
         return seatDao.findById(seatId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ghế với ID: " + seatId));
+                .orElseThrow(() -> new IllegalArgumentException("Seat not found with ID: " + seatId));
     }
 
     @Transactional(rollbackFor = Exception.class)
     public Seat updateSeat(int seatId, String seatTypeName, String status) {
         if ((seatTypeName == null || seatTypeName.isBlank()) && (status == null || status.isBlank())) {
-            throw new IllegalArgumentException("Phải cung cấp ít nhất loại ghế hoặc trạng thái ghế để cập nhật.");
+            throw new IllegalArgumentException("Must provide at least seat type or seat status to update.");
         }
 
         Seat seat = getSeatById(seatId);
 
         if (seatTypeName != null && !seatTypeName.isBlank()) {
-            validateSeatType(seatTypeName.trim());
-            if (!seat.getSeatTypeName().equalsIgnoreCase(seatTypeName.trim())
+            SeatType matchedType = validateSeatType(seatTypeName.trim());
+            String targetTypeName = matchedType != null && matchedType.getTypeName() != null ? matchedType.getTypeName() : seatTypeName.trim();
+            Integer targetTypeId = matchedType != null && matchedType.getSeatTypeId() != null ? matchedType.getSeatTypeId() : resolveSeatTypeId(seatTypeName.trim());
+
+            if (!seat.getSeatTypeName().equalsIgnoreCase(targetTypeName)
                     && seatDao.isSeatBookedInUpcomingShowtimes(seatId, seat.getRoomId())) {
-                throw new InvalidSeatLayoutException("Không thể đổi loại ghế vì ghế đã có vé đặt trong suất chiếu sắp diễn ra.");
+                throw new InvalidSeatLayoutException("Cannot change seat type because the seat has booked tickets in an upcoming showtime.");
             }
-            seat.setSeatTypeName(seatTypeName.trim());
-            seat.setSeatTypeId(resolveSeatTypeId(seatTypeName.trim()));
+            seat.setSeatTypeName(targetTypeName);
+            seat.setSeatTypeId(targetTypeId);
         }
 
         if (status != null && !status.isBlank()) {
             validateSeatStatus(status.trim());
             if (!"Active".equalsIgnoreCase(status.trim())
                     && seatDao.isSeatBookedInUpcomingShowtimes(seatId, seat.getRoomId())) {
-                throw new InvalidSeatLayoutException("Không thể khóa bảo trì ghế vì ghế đã có vé đặt trong suất chiếu sắp diễn ra.");
+                throw new InvalidSeatLayoutException("Cannot set seat to maintenance because the seat has booked tickets in an upcoming showtime.");
             }
             seat.setStatus(status.trim());
         }
@@ -102,17 +105,17 @@ public class SeatService {
         // AC06: Optimistic versioning check if expectedUpdatedAt provided
         if (expectedUpdatedAt != null && room.getUpdatedAt() != null) {
             if (room.getUpdatedAt().isAfter(expectedUpdatedAt)) {
-                throw new InvalidSeatLayoutException("Sơ đồ phòng chiếu đã được cập nhật bởi một người dùng khác lúc "
-                        + room.getUpdatedAt() + ". Vui lòng tải lại trang trước khi lưu (AC06).");
+                throw new InvalidSeatLayoutException("Room seat layout was updated by another user at "
+                        + room.getUpdatedAt() + ". Please refresh the page before saving.");
             }
         }
 
         if (seats == null || seats.isEmpty()) {
-            throw new InvalidSeatLayoutException("Sơ đồ ghế không được để trống.");
+            throw new InvalidSeatLayoutException("Seat layout cannot be empty.");
         }
 
         if (seats.size() > room.getCapacity()) {
-            throw new InvalidSeatLayoutException("Số lượng ghế (" + seats.size() + ") vượt quá sức chứa phòng chiếu (" + room.getCapacity() + ").");
+            throw new InvalidSeatLayoutException("Total seats (" + seats.size() + ") exceeds room capacity (" + room.getCapacity() + ").");
         }
 
         // AC04: Validate uniqueness of positions and valid attributes
@@ -121,25 +124,27 @@ public class SeatService {
             seat.setRoomId(roomId);
 
             if (seat.getRowLabel() == null || seat.getRowLabel().trim().isEmpty()) {
-                throw new InvalidSeatLayoutException("Mã hàng ghế không được để trống.");
+                throw new InvalidSeatLayoutException("Row code cannot be empty.");
             }
             if (seat.getSeatNumber() == null || seat.getSeatNumber() <= 0) {
-                throw new InvalidSeatLayoutException("Số ghế phải lớn hơn 0.");
+                throw new InvalidSeatLayoutException("Seat number must be greater than 0.");
             }
 
             String posKey = seat.getRowLabel().trim().toUpperCase() + "-" + seat.getSeatNumber();
             if (!positions.add(posKey)) {
-                throw new InvalidSeatLayoutException("Trùng lặp vị trí ghế: " + posKey + " (AC04).");
+                throw new InvalidSeatLayoutException("Duplicate seat position: " + posKey + " (AC04).");
             }
 
-            if (seat.getSeatTypeName() == null || seat.getSeatTypeName().isBlank()) {
-                seat.setSeatTypeName("Standard");
+            String reqTypeName = (seat.getSeatTypeName() == null || seat.getSeatTypeName().isBlank()) ? "Standard" : seat.getSeatTypeName().trim();
+            SeatType matchedType = validateSeatType(reqTypeName);
+            if (matchedType != null) {
+                seat.setSeatTypeName(matchedType.getTypeName());
+                seat.setSeatTypeId(matchedType.getSeatTypeId());
             } else {
-                validateSeatType(seat.getSeatTypeName().trim());
-            }
-
-            if (seat.getSeatTypeId() == null) {
-                seat.setSeatTypeId(resolveSeatTypeId(seat.getSeatTypeName()));
+                seat.setSeatTypeName(reqTypeName);
+                if (seat.getSeatTypeId() == null) {
+                    seat.setSeatTypeId(resolveSeatTypeId(reqTypeName));
+                }
             }
 
             if (seat.getStatus() == null || seat.getStatus().isBlank()) {
@@ -176,14 +181,14 @@ public class SeatService {
 
                 if (typeChanged || statusChanged || gridRowChanged || gridColChanged) {
                     if (typeChanged && seatDao.isSeatBookedInUpcomingShowtimes(existing.getSeatId(), roomId)) {
-                        throw new InvalidSeatLayoutException("Không thể thay đổi loại ghế của ghế "
-                                + posKey + " vì ghế đã được khách đặt trong suất chiếu sắp diễn ra.");
+                        throw new InvalidSeatLayoutException("Cannot change seat type of seat "
+                                + posKey + " because it has been booked by customers in an upcoming showtime.");
                     }
 
                     if (statusChanged && !"Active".equalsIgnoreCase(incomingSeat.getStatus())
                             && seatDao.isSeatBookedInUpcomingShowtimes(existing.getSeatId(), roomId)) {
-                        throw new InvalidSeatLayoutException("Không thể khóa bảo trì ghế "
-                                + posKey + " vì ghế đã có vé đặt trong suất chiếu sắp diễn ra.");
+                        throw new InvalidSeatLayoutException("Cannot set seat to maintenance for seat "
+                                + posKey + " because it has booked tickets in an upcoming showtime.");
                     }
 
                     existing.setSeatTypeId(incomingSeat.getSeatTypeId() != null ? incomingSeat.getSeatTypeId() : resolveSeatTypeId(incomingSeat.getSeatTypeName()));
@@ -208,16 +213,16 @@ public class SeatService {
         if (!remainingExistingKeys.isEmpty()) {
             boolean hasUpcomingBookings = seatDao.hasUpcomingBookingsForRoom(roomId);
             if (hasUpcomingBookings) {
-                throw new InvalidSeatLayoutException("Không thể xóa ghế khỏi sơ đồ vì phòng chiếu đang có suất chiếu tương lai đã phát sinh đặt vé.");
+                throw new InvalidSeatLayoutException("Cannot remove seats from layout because the room has upcoming showtimes with booked tickets.");
             }
 
             for (String removedKey : remainingExistingKeys) {
                 Seat removedSeat = currentSeatMap.get(removedKey);
                 // AC02: Protect against physical deletion if referenced in historical tickets/bookings
                 if (seatDao.isSeatReferenced(removedSeat.getSeatId())) {
-                    throw new InvalidSeatLayoutException("Không thể xóa vật lý ghế "
+                    throw new InvalidSeatLayoutException("Cannot physically delete seat "
                             + removedSeat.getRowLabel() + removedSeat.getSeatNumber()
-                            + " (SeatID: " + removedSeat.getSeatId() + ") vì ghế đã được vé lịch sử tham chiếu (AC02).");
+                            + " (SeatID: " + removedSeat.getSeatId() + ") because it is referenced by historical bookings.");
                 }
                 seatDao.deleteById(removedSeat.getSeatId());
             }
@@ -255,6 +260,11 @@ public class SeatService {
                 defaultType = "Couple";
             }
 
+            SeatType matched = resolveSeatType(defaultType);
+            String assignedTypeName = matched != null && matched.getTypeName() != null ? matched.getTypeName() : defaultType;
+            Integer assignedTypeId = matched != null && matched.getSeatTypeId() != null ? matched.getSeatTypeId() : 1;
+            String assignedColor = matched != null ? matched.getColorCode() : null;
+
             for (int c = 1; c <= cols; c++) {
                 Seat s = new Seat();
                 s.setRoomId(roomId);
@@ -262,8 +272,9 @@ public class SeatService {
                 s.setSeatNumber(c);
                 s.setGridRow(r);
                 s.setGridColumn(c);
-                s.setSeatTypeName(defaultType);
-                s.setSeatTypeId(resolveSeatTypeId(defaultType));
+                s.setSeatTypeName(assignedTypeName);
+                s.setSeatTypeId(assignedTypeId);
+                s.setColorCode(assignedColor);
                 s.setStatus("Active");
                 generated.add(s);
             }
@@ -272,23 +283,22 @@ public class SeatService {
         return saveRoomLayout(roomId, generated);
     }
 
-    private Integer resolveSeatTypeId(String typeName) {
-        if (typeName == null || typeName.isBlank()) return 1;
+    public SeatType resolveSeatType(String typeName) {
+        if (typeName == null || typeName.isBlank()) return null;
         try {
             List<SeatType> all = seatTypeDao.findAll("ALL");
             for (SeatType st : all) {
-                if (st.getTypeName() != null && st.getTypeName().equalsIgnoreCase(typeName)) {
-                    return st.getSeatTypeId();
-                }
-                if (st.getTypeCode() != null && st.getTypeCode().equalsIgnoreCase(typeName)) {
-                    return st.getSeatTypeId();
-                }
-                if (st.getTypeName() != null && st.getTypeName().toLowerCase().contains(typeName.toLowerCase())) {
-                    return st.getSeatTypeId();
+                if (isSeatTypeMatching(st, typeName)) {
+                    return st;
                 }
             }
         } catch (Exception ignored) {}
-        return 1;
+        return null;
+    }
+
+    private Integer resolveSeatTypeId(String typeName) {
+        SeatType st = resolveSeatType(typeName);
+        return st != null && st.getSeatTypeId() != null ? st.getSeatTypeId() : 1;
     }
 
     private Room ensureRoomExists(int roomId) {
@@ -296,26 +306,62 @@ public class SeatService {
                 .orElseThrow(() -> new RoomNotFoundException(roomId));
     }
 
-    private void validateSeatType(String typeName) {
+    private SeatType validateSeatType(String typeName) {
+        if (typeName == null || typeName.isBlank()) {
+            throw new InvalidSeatLayoutException("Invalid seat type: Seat type name cannot be empty.");
+        }
         List<SeatType> validTypes = seatTypeDao.findAll("Active");
         if (validTypes != null && !validTypes.isEmpty()) {
-            boolean match = validTypes.stream().anyMatch(st ->
-                    (st.getTypeName() != null && st.getTypeName().equalsIgnoreCase(typeName))
-                            || (st.getTypeCode() != null && st.getTypeCode().equalsIgnoreCase(typeName))
-            );
-            if (!match) {
-                throw new InvalidSeatLayoutException("Loại ghế không hợp lệ hoặc đã ngừng hoạt động: '" + typeName + "'. Phải là loại ghế đã được kích hoạt.");
+            for (SeatType st : validTypes) {
+                if (isSeatTypeMatching(st, typeName)) {
+                    return st;
+                }
             }
-            return;
+            throw new InvalidSeatLayoutException("Invalid or inactive seat type: '" + typeName + "'. Must be an active seat type.");
         }
         if (!"Standard".equalsIgnoreCase(typeName) && !"VIP".equalsIgnoreCase(typeName) && !"Couple".equalsIgnoreCase(typeName) && !"Front".equalsIgnoreCase(typeName)) {
-            throw new InvalidSeatLayoutException("Loại ghế không hợp lệ: '" + typeName + "'. Phải là loại ghế đã được kích hoạt.");
+            throw new InvalidSeatLayoutException("Invalid seat type: '" + typeName + "'. Must be an active seat type.");
         }
+        return null;
+    }
+
+    private boolean isSeatTypeMatching(SeatType st, String input) {
+        if (st == null || input == null) return false;
+        String raw = input.trim();
+        String low = raw.toLowerCase();
+        String stName = st.getTypeName() != null ? st.getTypeName().trim() : "";
+        String stCode = st.getTypeCode() != null ? st.getTypeCode().trim() : "";
+
+        if (stName.equalsIgnoreCase(raw) || stCode.equalsIgnoreCase(raw)) {
+            return true;
+        }
+        if (!stName.isEmpty() && stName.toLowerCase().contains(low)) {
+            return true;
+        }
+        // Common Aliases
+        if (low.equals("standard") && (stCode.equalsIgnoreCase("STD") || stName.toLowerCase().contains("standard"))) {
+            return true;
+        }
+        if ((low.equals("couple") || low.equals("sweetbox")) && (stCode.equalsIgnoreCase("COUPLE") || stName.toLowerCase().contains("couple") || stName.toLowerCase().contains("sweetbox"))) {
+            return true;
+        }
+        if (low.equals("vip") && (stCode.equalsIgnoreCase("VIP") || stName.toLowerCase().contains("vip"))) {
+            return true;
+        }
+        if (low.equals("front")) {
+            if (stCode.equalsIgnoreCase("FRONT") || stName.toLowerCase().contains("front")) {
+                return true;
+            }
+            if (stCode.equalsIgnoreCase("STD") || stName.toLowerCase().contains("standard")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validateSeatStatus(String status) {
         if (!"Active".equalsIgnoreCase(status) && !"Maintenance".equalsIgnoreCase(status) && !"Unavailable".equalsIgnoreCase(status)) {
-            throw new InvalidSeatLayoutException("Trạng thái ghế không hợp lệ: '" + status + "'. Cho phép: Active, Maintenance, Unavailable.");
+            throw new InvalidSeatLayoutException("Invalid seat status: '" + status + "'. Allowed: Active, Maintenance, Unavailable.");
         }
     }
 }

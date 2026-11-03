@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-02T10:22:41.144Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="BF-01-Account-Auth" name="2.1 Account Registration &amp; Authentication (BF-01)">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lane_customer" value="Customer" style="swimlane;horizontal=0;swimlaneFillColor=#FFFFFF;fillColor=#F3F4F6;strokeColor=#6B7280;fontFamily=Helvetica;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;startSize=30;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1640" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_system" value="System" style="swimlane;horizontal=0;swimlaneFillColor=#FFFFFF;fillColor=#F3F4F6;strokeColor=#6B7280;fontFamily=Helvetica;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;startSize=30;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="260" width="1640" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_email" value="Email Service" style="swimlane;horizontal=0;swimlaneFillColor=#FFFFFF;fillColor=#F3F4F6;strokeColor=#6B7280;fontFamily=Helvetica;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;startSize=30;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="1640" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="node_start" value="" style="ellipse;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="90" y="135" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_action" value="Select&#xa;Action" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="150" y="120" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_select_reg" value="Select &quot;Create&#xa;New Account&quot;" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="270" y="65" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_fill_reg" value="Fill Registration&#xa;Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="410" y="65" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_enter_act_otp" value="Enter Activation&#xa;OTP" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="550" y="65" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_reg" value="Display&#xa;Registration Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="270" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_val_reg" value="Validate&#xa;Registration Data" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="410" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_reg_valid" value="Valid?" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="440" y="380" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_create_pending" value="Create Pending&#xa;Account" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="370" y="460" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_gen_act_otp" value="Generate&#xa;Activation OTP" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="500" y="460" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_act_otp" value="Display Activation&#xa;OTP Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="550" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_act_otp_valid" value="Valid&#xa;OTP?" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="575" y="155" width="60" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_activate_acc" value="Activate&#xa;Account" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="670" y="300" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_e_send_act_otp" value="Send Activation&#xa;OTP Email" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="500" y="640" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_select_login" value="Open Sign In&#xa;Page" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="780" y="65" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_enter_creds" value="Enter Email/&#xa;Username &amp; Password" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="900" y="65" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_choose_google" value="Choose &quot;Continue&#xa;with Google&quot;" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="900" y="150" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_login" value="Display Sign In&#xa;Page" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="780" y="300" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_auth_creds" value="Authenticate&#xa;Credentials" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="905" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_creds_valid" value="Valid?" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="940" y="380" width="40" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_auth_google" value="Process OAuth2&#xa;Callback &amp; Sync User" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="905" y="460" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_acc_active" value="Account&#xa;Active?" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1045" y="375" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_create_session" value="Create User&#xa;Session" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="460" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_redirect_home" value="Redirect to&#xa;Dashboard / Home" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="460" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="node_end_auth" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1205" y="385" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_select_forgot" value="Select &quot;Forgot&#xa;Password&quot;" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="65" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_req_reset" value="Submit Registered&#xa;Email" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="65" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_enter_reset_otp" value="Enter Reset&#xa;OTP" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="65" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_set_new_pwd" value="Set New&#xa;Password" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="150" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_forgot" value="Display Forgot&#xa;Password Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="300" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_gen_reset_otp" value="Validate Email &amp;&#xa;Generate OTP" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_reset_otp" value="Display Reset&#xa;OTP Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="460" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_reset_otp_valid" value="Valid&#xa;OTP?" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FFFFFF;strokeColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="1555" y="275" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_disp_new_pwd" value="Display New&#xa;Password Form" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1525" y="345" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_s_update_pwd" value="Update Password&#xa;Hash in DB" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1525" y="460" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="act_e_send_reset_otp" value="Send Password&#xa;Reset OTP Email" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fillColor=#FFFFFF;strokeColor=#111827;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="640" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e_start" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="node_start" target="dec_action">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dispatch_reg" value="Register" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="dec_action" target="act_c_select_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dispatch_login" value="Sign In" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="dec_action" target="act_c_select_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dispatch_forgot" value="Forgot Pwd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="dec_action" target="act_c_select_forgot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_select_reg" target="act_s_disp_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_reg" target="act_c_fill_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_fill_reg" target="act_s_val_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_s_val_reg" target="dec_reg_valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_5_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="dec_reg_valid" target="act_c_fill_reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_5_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="dec_reg_valid" target="act_s_create_pending">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_s_create_pending" target="act_s_gen_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_gen_act_otp" target="act_e_send_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_gen_act_otp" target="act_s_disp_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_act_otp" target="act_c_enter_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_c_enter_act_otp" target="dec_act_otp_valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_11_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="dec_act_otp_valid" target="act_c_enter_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_11_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="dec_act_otp_valid" target="act_s_activate_acc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_reg_12" value="Redirect to Sign In" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_activate_acc" target="act_s_disp_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_select_login" target="act_s_disp_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_2a" value="Form Login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_login" target="act_c_enter_creds">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_2b" value="OAuth2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_login" target="act_c_choose_google">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_3b" value="Google Auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_choose_google" target="act_s_auth_google">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_oauth_sync" value="Sync &amp; Verify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_auth_google" target="dec_acc_active">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_3a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_enter_creds" target="act_s_auth_creds">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_s_auth_creds" target="dec_creds_valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_5_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="dec_creds_valid" target="act_c_enter_creds">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_5_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="dec_creds_valid" target="dec_acc_active">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_act_no" value="No (Pending)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.75;entryY=1;" edge="1" parent="1" source="dec_acc_active" target="act_s_disp_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_act_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="dec_acc_active" target="act_s_create_session">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_session" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_s_create_session" target="act_s_redirect_home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_login_end" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_s_redirect_home" target="node_end_auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_select_forgot" target="act_s_disp_forgot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_forgot" target="act_c_req_reset">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_req_reset" target="act_s_gen_reset_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_gen_reset_otp" target="act_e_send_reset_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_gen_reset_otp" target="act_s_disp_reset_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_reset_otp" target="act_c_enter_reset_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="act_c_enter_reset_otp" target="dec_reset_otp_valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_8_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="dec_reset_otp_valid" target="act_c_enter_reset_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_8_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0.25;entryY=0;" edge="1" parent="1" source="dec_reset_otp_valid" target="act_s_disp_new_pwd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_s_disp_new_pwd" target="act_c_set_new_pwd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="act_c_set_new_pwd" target="act_s_update_pwd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_forgot_11" value="Redirect to Sign In" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#1F2937;strokeWidth=1.5;endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="act_s_update_pwd" target="act_s_disp_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

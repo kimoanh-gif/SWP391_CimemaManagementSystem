@@ -106,7 +106,7 @@ public class P2BusinessFlowTest {
 
             InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
                     () -> fbItemService.updateItem(20, form));
-            assertTrue(ex.getMessage().contains("chính nó"));
+            assertTrue(ex.getMessage().contains("itself"));
         }
 
         @Test
@@ -125,7 +125,7 @@ public class P2BusinessFlowTest {
 
             InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
                     () -> fbItemService.createItem(form));
-            assertTrue(ex.getMessage().contains("không thể lồng Combo"));
+            assertTrue(ex.getMessage().contains("cannot nest combos"));
         }
 
         @Test
@@ -142,7 +142,7 @@ public class P2BusinessFlowTest {
 
             InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
                     () -> fbItemService.createItem(form));
-            assertTrue(ex.getMessage().contains("lớn hơn 0"));
+            assertTrue(ex.getMessage().contains("greater than 0"));
         }
 
         @Test
@@ -161,7 +161,7 @@ public class P2BusinessFlowTest {
 
             InvalidFBItemException ex = assertThrows(InvalidFBItemException.class,
                     () -> fbItemService.createItem(form));
-            assertTrue(ex.getMessage().contains("đang ngừng bán"));
+            assertTrue(ex.getMessage().contains("inactive item"));
         }
 
         @Test
@@ -245,7 +245,7 @@ public class P2BusinessFlowTest {
             MovieHasActiveShowtimesException ex = assertThrows(
                     MovieHasActiveShowtimesException.class,
                     () -> movieService.deactivateMovie(1));
-            assertTrue(ex.getMessage().contains("4 suất chiếu sắp diễn ra"));
+            assertTrue(ex.getMessage().contains("upcoming showtime"));
 
             assertThrows(
                     MovieHasActiveShowtimesException.class,

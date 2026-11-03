@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-03T17:55:20.634Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="showtime-flow" name="Cineora Showtime Management Screen Flow (Manager)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_st_main" value="Showtime Dashboard &amp; Scheduling Surface" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="750" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_st_actions" value="Modal Operations &amp; Validation Rules (BF-05)" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#EFF6FF;strokeColor=#93C5FD;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="830" y="40" width="730" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_showtimes" value="Showtime Management Screen
+[/manager/showtimes - showtimes.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="110" width="240" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_st_filter" value="Filter Showtimes
+[Date, Room, Movie, Status]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="360" y="115" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_rel_rooms" value="Cinema Rooms Screen
+[/manager/rooms]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="360" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_rel_movies" value="Movie Catalog Screen
+[/manager/movies]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="520" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_create_st" value="Create Showtime Modal
+[#showtimeModal]
+Select Movie, Room, StartTime" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="110" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_st_calc" value="Auto-Calculate EndTime
+[StartTime + MovieRuntime + Buffer
+BR-55]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="110" width="160" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_conflict_check" value="Schedule Overlap?
+[BR-09 Same Room Collision]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="110" width="140" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="err_st_conflict" value="Collision Alert Banner
+[Flash Error: Overlap Detected]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1345" y="240" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_edit_st" value="Edit Showtime Modal
+[#showtimeModal (Edit Mode)]
+Adjust Start Time or Room" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="350" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_has_bookings" value="Held / Paid Bookings
+Exist? [BR-54]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="355" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="err_edit_blocked" value="Edit / Delete Blocked
+[Flash Error: Bookings Present]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1135" y="475" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_stop_st" value="Stop Showtime Action
+[POST /manager/showtimes/{id}/stop]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="870" y="570" width="190" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mdl_del_st" value="Delete Showtime Confirmation
+[Browser confirm()]
+POST /manager/showtimes/{id}/delete" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontColor=#111827;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="690" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="suc_st_save" value="Showtime Updated Successfully
+[Persisted &amp; Grid Refreshed]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1345" y="355" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="es_1" value="Filter By Date / Movie / Room" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_showtimes" target="dec_st_filter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_2" value="Render Filtered Grid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_st_filter" target="scr_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_3" value="Click &quot;+ Add Showtime&quot; Button" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_showtimes" target="mdl_create_st">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_4" value="Select Movie &amp; Start Time" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_create_st" target="dec_st_calc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_5" value="POST /manager/showtimes/save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_st_calc" target="dec_conflict_check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_6" value="Overlap Found (Conflict)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_conflict_check" target="err_st_conflict">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_7" value="Adjust Schedule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_st_conflict" target="mdl_create_st">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_8" value="No Overlap (Scheduled)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_conflict_check" target="suc_st_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_9" value="Click Edit Icon (Showtime Card)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_showtimes" target="mdl_edit_st">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_10" value="Check Booking Dependency" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_edit_st" target="dec_has_bookings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_11" value="Bookings &gt; 0 (Locked)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_has_bookings" target="err_edit_blocked">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_12" value="Dismiss Notice" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_edit_blocked" target="scr_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_13" value="No Bookings -&gt; Validate Timing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_has_bookings" target="dec_st_calc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_14" value="Click Stop Button" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_showtimes" target="dec_stop_st">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_15" value="Verify No Active Sessions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_stop_st" target="dec_has_bookings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_16" value="Status -&gt; Stopped" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_stop_st" target="suc_st_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_17" value="Click Trash Icon" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_showtimes" target="mdl_del_st">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_18" value="Confirm Physical Deletion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="mdl_del_st" target="dec_has_bookings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_19" value="Deleted from DB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_has_bookings" target="suc_st_save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_20" value="Redirect &amp; Flash Success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="suc_st_save" target="scr_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_21" value="Navigation: Check Rooms" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_showtimes" target="scr_rel_rooms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es_22" value="Navigation: Check Movies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_showtimes" target="scr_rel_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

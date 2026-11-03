@@ -13,15 +13,15 @@ public class GenreForm {
 
     private Integer id;
 
-    @NotBlank(message = "Tên thể loại không được để trống")
-    @Size(min = 2, max = 100, message = "Tên thể loại phải từ 2 đến 100 ký tự")
+    @NotBlank(message = "Genre name cannot be empty")
+    @Size(min = 2, max = 100, message = "Genre name must be between 2 and 100 characters")
     private String name;
 
-    @Size(max = 500, message = "Mô tả không được vượt quá 500 ký tự")
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    @NotBlank(message = "Trạng thái không được để trống")
-    @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "Trạng thái phải là ACTIVE hoặc INACTIVE")
+    @NotBlank(message = "Status cannot be empty")
+    @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "Status must be ACTIVE or INACTIVE")
     private String status = "ACTIVE";
 
     public GenreForm() {

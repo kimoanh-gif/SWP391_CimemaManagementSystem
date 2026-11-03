@@ -73,7 +73,7 @@ class GenreApiControllerTest {
     void testCreateGenreApi_DuplicateName_ReturnsConflict() throws Exception {
         GenreForm form = new GenreForm(null, "Action", "Duplicate", "ACTIVE");
         when(genreService.createGenre(any(GenreForm.class)))
-                .thenThrow(new DuplicateGenreException("Thể loại 'Action' đã tồn tại trong hệ thống."));
+                .thenThrow(new DuplicateGenreException("Genre 'Action' already exists in the system."));
 
         mockMvc.perform(post("/api/manager/genres")
                         .sessionAttr("userRole", "MANAGER")
@@ -81,7 +81,7 @@ class GenreApiControllerTest {
                         .content(objectMapper.writeValueAsString(form)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Thể loại 'Action' đã tồn tại trong hệ thống."));
+                .andExpect(jsonPath("$.message").value("Genre 'Action' already exists in the system."));
     }
 
     @Test
@@ -101,7 +101,7 @@ class GenreApiControllerTest {
     @DisplayName("PATCH /api/manager/genres/{id}/toggle-status: Should return 409 Conflict when genre has active movies")
     void testToggleStatusApi_ActiveMoviesConflict() throws Exception {
         when(genreService.toggleStatus(anyInt()))
-                .thenThrow(new GenreAssociationException("Không thể hủy kích hoạt thể loại đang có phim đang chiếu."));
+                .thenThrow(new GenreAssociationException("Cannot deactivate genre with now showing movies."));
 
         mockMvc.perform(patch("/api/manager/genres/1/toggle-status")
                         .sessionAttr("userRole", "MANAGER"))

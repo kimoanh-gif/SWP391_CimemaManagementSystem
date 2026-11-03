@@ -94,23 +94,23 @@ public class TicketPricingController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.pricingForm", bindingResult);
             redirectAttributes.addFlashAttribute("pricingForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin quy tắc giá không hợp lệ. Vui lòng kiểm tra lại.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid pricing rule information. Please check again.");
             return "redirect:/manager/pricing";
         }
 
         try {
             if (form.getPricingId() == null || form.getPricingId() <= 0) {
                 pricingService.createPricing(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Thêm quy tắc định giá mới '" + form.getRuleName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Pricing rule '" + form.getRuleName() + "' created successfully!");
             } else {
                 pricingService.updatePricing(form.getPricingId(), form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật quy tắc định giá '" + form.getRuleName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Pricing rule '" + form.getRuleName() + "' updated successfully!");
             }
         } catch (InvalidPricingConfigurationException | com.cinema.exception.DuplicatePricingRuleException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("pricingForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi lưu quy tắc: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error saving pricing rule: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("pricingForm", form);
         }
 
@@ -129,11 +129,11 @@ public class TicketPricingController {
         try {
             SeatType st = pricingService.updateSeatTypeMultiplier(seatTypeId, multiplier);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Cập nhật hệ số giá cho loại ghế '" + st.getTypeName() + "' thành " + multiplier + " thành công!");
+                    "Price multiplier for seat type '" + st.getTypeName() + "' updated to " + multiplier + " successfully!");
         } catch (InvalidPricingConfigurationException | SeatTypeNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật hệ số giá: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot update price multiplier: " + ex.getMessage());
         }
 
         return "redirect:/manager/pricing";
@@ -151,11 +151,11 @@ public class TicketPricingController {
         try {
             TicketPricing tp = pricingService.updatePricingStatus(id, status);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Cập nhật trạng thái quy tắc '" + tp.getRuleName() + "' thành " + status + " thành công!");
+                    "Status for pricing rule '" + tp.getRuleName() + "' changed to " + status + " successfully!");
         } catch (com.cinema.exception.DuplicatePricingRuleException | InvalidPricingConfigurationException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi đổi trạng thái: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error changing status: " + ex.getMessage());
         }
 
         return "redirect:/manager/pricing";

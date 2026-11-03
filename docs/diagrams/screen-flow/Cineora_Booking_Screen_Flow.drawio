@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-03T17:55:20.636Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="booking-flow" name="Cineora Customer Ticket Booking &amp; Payment Screen Flow (BF-02)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1750" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_bk_select" value="Stage 1: Selection &amp; Temporary Reservation" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F8FAFC;strokeColor=#94A3B8;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="680" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_bk_checkout" value="Stage 2: Add-ons &amp; Order Checkout" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#EFF6FF;strokeColor=#93C5FD;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="750" y="40" width="480" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_bk_payment" value="Stage 3: Gateway Payment &amp; Ticket Issuance" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F0FDF4;strokeColor=#86EFAC;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="40" width="450" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_entry_point" value="Entry: Movie Details / Home
+[/movies/{id} or /showtimes]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="100" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_showtimes" value="Showtime Selection
+[/booking/showtimes
+?movieId={id}]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="330" y="100" width="190" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_seats" value="Seat Selection Screen
+[/booking/seats?showtimeId={id}
+Interactive Seat Map]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="270" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_seat_hold" value="Reserve Seats?
+[10-min Temporary Hold
+BR-11, BR-12, JOB-01]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="330" y="270" width="150" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="err_seat_conflict" value="Seat Already Held / Booked
+[Conflict Alert Banner]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="330" y="410" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_hold_timeout" value="Hold Timer Expired?
+[Countdown 10:00 reaches 0]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="410" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="err_hold_expired" value="Reservation Expired
+[Seats Auto-Released]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="520" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_foods" value="Concessions &amp; Combos (F&amp;B)
+[/booking/foods - foods.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="780" y="100" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_food_choice" value="Select F&amp;B or Skip?
+[BR-15 F&amp;B is Optional]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="105" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_promos" value="Vouchers &amp; Promotions
+[/booking/promotions]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="780" y="270" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_promo_val" value="Validate Voucher
+[BR-17..21 Rank &amp; Min Spend]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="275" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_checkout" value="Order Checkout Summary
+[/booking/checkout - checkout.html
+Itemized Bill &amp; Contact Info]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="780" y="440" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_auth_gate" value="Customer Authenticated?
+[BR-42 Online Booking Check]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="445" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_payment" value="Payment Method Selection
+[/booking/payment/{paymentId}
+VNPay Checkout Portal]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="100" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_ext_vnpay" value="External VNPay Gateway
+[sandbox.vnpayment.vn
+HMAC-SHA512 Signature]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="260" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_pay_result" value="VNPay Return Response
+[vnp_ResponseCode == &quot;00&quot;]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="390" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="err_pay_failed" value="Payment Unsuccessful
+[BR-25 No Ticket Issued
+Retry Payment Allowed]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#7F1D1D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="395" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_success" value="Booking Success Screen
+[/booking/success/{id}
+Displays Booking Code &amp; Room]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="530" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_tickets" value="Digital Ticket View
+[/customer/tickets/{id}
+Unique QR Code BR-26]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="660" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_bk_history" value="Booking &amp; Ticket History
+[/customer/bookings]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="780" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_user_cancel" value="Cancel Reservation
+[POST /booking/cancel]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="530" y="275" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_1" value="Click &quot;Book Tickets&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_entry_point" target="scr_bk_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_2" value="Select Showtime Time-slot" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_showtimes" target="scr_bk_seats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_3" value="Select 1..8 Seats &amp; Submit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_seats" target="dec_seat_hold">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_4" value="Double-booking Detected" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_seat_hold" target="err_seat_conflict">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_5" value="Reselect Available Seats" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_seat_conflict" target="scr_bk_seats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_6" value="Seats Held (Status: HELD)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_seat_hold" target="scr_bk_foods">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_7" value="Background Job Poll / Clock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_seats" target="dec_hold_timeout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_8" value="Timeout &gt; 10 Mins" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_hold_timeout" target="err_hold_expired">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_9" value="Return to Movie Selection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="err_hold_expired" target="scr_entry_point">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_10" value="User Aborts Selection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_seats" target="dec_user_cancel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_11" value="Release Held Seats -&gt; Home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_user_cancel" target="scr_entry_point">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_12" value="Add Combos or Skip" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_foods" target="dec_food_choice">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_13" value="POST /booking/foods" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_food_choice" target="scr_bk_promos">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_14" value="Apply Voucher Code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_promos" target="dec_promo_val">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_15" value="Discount Applied / Continue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_promo_val" target="scr_bk_checkout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_16" value="Click &quot;Proceed to Payment&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_checkout" target="dec_auth_gate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_17" value="Authenticated Customer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_auth_gate" target="scr_bk_payment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_18" value="Redirect to VNPay URL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_payment" target="scr_ext_vnpay">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_19" value="VNPay IPN / Return Callback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_ext_vnpay" target="dec_pay_result">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_20" value="Payment Cancelled / Declined" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_pay_result" target="err_pay_failed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_21" value="Retry Transaction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="err_pay_failed" target="scr_bk_payment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_22" value="Paid (CONFIRMED) &amp; Email Sent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_pay_result" target="scr_bk_success">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_23" value="Click &quot;View Digital Ticket&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_success" target="scr_bk_tickets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_24" value="Click &quot;My Bookings&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_bk_success" target="scr_bk_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb_25" value="Back to Booking History" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_bk_tickets" target="scr_bk_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

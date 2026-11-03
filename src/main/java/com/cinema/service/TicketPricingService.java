@@ -94,7 +94,7 @@ public class TicketPricingService {
                                         + existing.getDayType() +
                                         ", TimeSlot=" + existing.getTimeSlot() + ", ExperienceType="
                                         + existing.getExperienceType() +
-                                        ". Please deactivate the existing rule before activating this one (Vui lòng vô hiệu hóa quy tắc cũ trước khi kích hoạt quy tắc này).");
+                                        ". Please deactivate the existing rule before activating this one.");
                     });
         }
         ticketPricingDao.updateStatus(id, status);
@@ -148,6 +148,10 @@ public class TicketPricingService {
                         "Seat type name '" + form.getTypeName() + "' is already in use");
             }
         });
+        if (form.getStatus() != null && "Inactive".equalsIgnoreCase(form.getStatus().trim())
+                && seatTypeDao.hasActiveOrUpcomingShowtimes(id)) {
+            throw new InvalidPricingConfigurationException("Cannot deactivate seat type '" + form.getTypeName() + "' because screening rooms with active or upcoming showtimes are using it.");
+        }
         seatTypeDao.update(id, form);
         return getSeatTypeById(id);
     }
@@ -156,7 +160,9 @@ public class TicketPricingService {
     public SeatType updateSeatTypeStatus(int id, String status) {
         SeatType existing = getSeatTypeById(id);
         if (status == null || (!"Active".equalsIgnoreCase(status.trim()) && !"Inactive".equalsIgnoreCase(status.trim()))) { throw new InvalidPricingConfigurationException("Seat type status must be Active or Inactive"); }
-        if ("Inactive".equalsIgnoreCase(status.trim()) && seatTypeDao.isReferencedBySeats(id)) { throw new InvalidPricingConfigurationException("Không thể vô hiệu hóa loại ghế '" + existing.getTypeName() + "' vì đang có ghế trong phòng chiếu sử dụng loại ghế này."); }
+        if ("Inactive".equalsIgnoreCase(status.trim()) && seatTypeDao.hasActiveOrUpcomingShowtimes(id)) {
+            throw new InvalidPricingConfigurationException("Cannot deactivate seat type '" + existing.getTypeName() + "' because screening rooms with active or upcoming showtimes are using it.");
+        }
         seatTypeDao.updateStatus(id, status);
         return getSeatTypeById(id);
     }
@@ -166,7 +172,7 @@ public class TicketPricingService {
         SeatType st = getSeatTypeById(id);
         if (seatTypeDao.isReferencedBySeats(id)) {
             throw new InvalidPricingConfigurationException(
-                    "Không thể xóa loại ghế '" + st.getTypeName() + "' vì đang có ghế trong phòng chiếu sử dụng loại ghế này. Hãy đổi loại ghế cho các ghế liên quan trước hoặc chuyển trạng thái sang Không hoạt động (Inactive)."
+                    "Cannot delete seat type '" + st.getTypeName() + "' because seats in screening rooms are using this seat type. Please change seat types for related seats first or switch status to Inactive."
             );
         }
         seatTypeDao.delete(id);
@@ -290,7 +296,7 @@ public class TicketPricingService {
                             currentId)
                     .ifPresent(conflict -> {
                         throw new DuplicatePricingRuleException(
-                                "An active pricing rule already exists (Đã tồn tại quy tắc giá đang kích hoạt): '"
+                                "An active pricing rule already exists: '"
                                         + conflict.getRuleName() +
                                         "' (Code: " + conflict.getPricingCode() + ") for combination DayType="
                                         + form.getDayType() +

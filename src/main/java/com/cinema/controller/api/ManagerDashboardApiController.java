@@ -28,6 +28,6 @@ public class ManagerDashboardApiController {
     public ResponseEntity<ApiResponse<ManagerDashboardStats>> getStats(HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         ManagerDashboardStats stats = dashboardService.getDashboardStats();
-        return ResponseEntity.ok(ApiResponse.ok("Lấy dữ liệu thống kê tổng quan thành công", stats));
+        return ResponseEntity.ok(ApiResponse.ok("Overview dashboard statistics retrieved successfully", stats));
     }
 }

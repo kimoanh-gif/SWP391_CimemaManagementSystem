@@ -88,14 +88,14 @@ public class RevenueReportService {
         // Validation: StartDate cannot be after EndDate
         if (request.getPreset() != null && !request.getPreset().isBlank()
                 && !request.getPreset().trim().matches("(?i)^(today|last7days|thismonth|thisquarter|all|custom)$")) {
-            throw new IllegalArgumentException("Kỳ báo cáo (preset) không hợp lệ.");
+            throw new IllegalArgumentException("Report period preset is invalid.");
         }
         if (request.getReportType() != null && !request.getReportType().isBlank()
                 && !request.getReportType().trim().matches("(?i)^(DAILY|MOVIE|TRANSACTIONS)$")) {
-            throw new IllegalArgumentException("Loại báo cáo chỉ nhận giá trị DAILY, MOVIE hoặc TRANSACTIONS.");
+            throw new IllegalArgumentException("Report type must be DAILY, MOVIE or TRANSACTIONS.");
         }
         if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+            throw new IllegalArgumentException("Start date cannot be after end date.");
         }
     }
 
@@ -176,31 +176,31 @@ public class RevenueReportService {
             DecimalFormat df = new DecimalFormat("#,##0", new DecimalFormatSymbols(Locale.US));
 
             // 1. Report Header
-            writer.println("BÁO CÁO DOANH THU RẠP CHIẾU PHIM - ROYALLY CINEMA");
-            writer.println("Thời gian xuất báo cáo," + escape(LocalDateTime.now().format(DATETIME_FMT)));
-            writer.println("Khoảng thời gian," + escape(request.getStartDate().format(DATE_FMT) + " đến " + request.getEndDate().format(DATE_FMT)));
-            writer.println("Loại báo cáo," + escape(resolveReportTypeName(request.getReportType())));
+            writer.println("CINEMA REVENUE REPORT - ROYALLY CINEMA");
+            writer.println("Export time," + escape(LocalDateTime.now().format(DATETIME_FMT)));
+            writer.println("Date range," + escape(request.getStartDate().format(DATE_FMT) + " to " + request.getEndDate().format(DATE_FMT)));
+            writer.println("Report type," + escape(resolveReportTypeName(request.getReportType())));
             writer.println();
 
             // 2. Summary KPI Block
-            writer.println("--- TỔNG QUAN CHỈ SỐ DOANH THU ---");
-            writer.println("Tổng doanh thu toàn hệ thống (VNĐ)," + formatMoney(summary.getTotalRevenue(), df));
-            writer.println("Doanh thu vé xem phim (VNĐ)," + formatMoney(summary.getTicketRevenue(), df));
-            writer.println("Doanh thu bắp nước & F&B (VNĐ)," + formatMoney(summary.getFbRevenue(), df));
-            writer.println("Tổng giá trị giảm giá/voucher (VNĐ)," + formatMoney(summary.getDiscountAmount(), df));
-            writer.println("Tổng số vé đã bán," + summary.getTotalTickets());
-            writer.println("Tổng số đơn đặt vé thành công," + summary.getTotalPaidBookings());
+            writer.println("--- REVENUE OVERVIEW METRICS ---");
+            writer.println("Total Revenue (VND)," + formatMoney(summary.getTotalRevenue(), df));
+            writer.println("Ticket Revenue (VND)," + formatMoney(summary.getTicketRevenue(), df));
+            writer.println("F&B Revenue (VND)," + formatMoney(summary.getFbRevenue(), df));
+            writer.println("Total Discount / Voucher (VND)," + formatMoney(summary.getDiscountAmount(), df));
+            writer.println("Total Tickets Sold," + summary.getTotalTickets());
+            writer.println("Total Paid Bookings," + summary.getTotalPaidBookings());
             writer.println();
 
             // 3. Detailed Data Table based on ReportType
             String type = request.getReportType() != null ? request.getReportType().toUpperCase().trim() : "DAILY";
 
             if ("MOVIE".equals(type)) {
-                writer.println("--- CHI TIẾT DOANH THU THEO PHIM ---");
-                writer.println("Mã Phim,Tên Phim,Số Suất Chiếu,Số Vé Đã Bán,Doanh Thu Vé (VNĐ),Doanh Thu F&B (VNĐ),Tổng Doanh Thu (VNĐ)");
+                writer.println("--- REVENUE BY MOVIE DETAILS ---");
+                writer.println("Movie Code,Movie Title,Showtimes,Tickets Sold,Ticket Revenue (VND),F&B Revenue (VND),Total Revenue (VND)");
 
                 if (data.getMovieItems().isEmpty()) {
-                    writer.println(escape("Không có dữ liệu phim trong khoảng thời gian này") + ",,,,,,");
+                    writer.println(escape("No movie data found for this period") + ",,,,,,");
                 } else {
                     for (MovieRevenueItem m : data.getMovieItems()) {
                         writer.println(String.format(
@@ -216,11 +216,11 @@ public class RevenueReportService {
                     }
                 }
             } else if ("TRANSACTIONS".equals(type)) {
-                writer.println("--- CHI TIẾT DANH SÁCH GIAO DỊCH / ĐƠN HÀNG ---");
-                writer.println("Mã Đơn,Thời Gian Đặt,Khách Hàng,Số Điện Thoại,Phim,Phòng Chiếu,Suất Chiếu,Ghế Ngồi,Tiền Vé (VNĐ),Tiền F&B (VNĐ),Giảm Giá (VNĐ),Tổng Tiền (VNĐ),Hình Thức TT,Trạng Thái");
+                writer.println("--- TRANSACTION DETAILS ---");
+                writer.println("Booking Code,Booking Time,Customer,Phone,Movie,Room,Showtime,Seats,Ticket Amount (VND),F&B Amount (VND),Discount (VND),Total (VND),Payment Method,Status");
 
                 if (data.getTransactionItems().isEmpty()) {
-                    writer.println(escape("Không có giao dịch thanh toán thành công trong khoảng thời gian này") + ",,,,,,,,,,,,,");
+                    writer.println(escape("No successful transactions found for this period") + ",,,,,,,,,,,,,");
                 } else {
                     for (TransactionRevenueItem t : data.getTransactionItems()) {
                         writer.println(String.format(
@@ -244,11 +244,11 @@ public class RevenueReportService {
                 }
             } else {
                 // Default: DAILY
-                writer.println("--- CHI TIẾT DOANH THU THEO NGÀY ---");
-                writer.println("Ngày,Doanh Thu Vé (VNĐ),Doanh Thu F&B (VNĐ),Giảm Giá (VNĐ),Tổng Doanh Thu (VNĐ),Số Vé Bán,Số Đơn Hàng");
+                writer.println("--- REVENUE BY DAY DETAILS ---");
+                writer.println("Date,Ticket Revenue (VND),F&B Revenue (VND),Discount (VND),Total Revenue (VND),Tickets Sold,Orders");
 
                 if (data.getDailyItems().isEmpty()) {
-                    writer.println(escape("Không có dữ liệu doanh thu trong khoảng thời gian này") + ",,,,,,");
+                    writer.println(escape("No revenue data found for this period") + ",,,,,,");
                 } else {
                     for (DailyRevenueItem d : data.getDailyItems()) {
                         writer.println(String.format(
@@ -272,9 +272,9 @@ public class RevenueReportService {
     }
 
     private String resolveReportTypeName(String type) {
-        if ("MOVIE".equalsIgnoreCase(type)) return "Báo cáo doanh thu theo phim";
-        if ("TRANSACTIONS".equalsIgnoreCase(type)) return "Báo cáo chi tiết giao dịch";
-        return "Báo cáo doanh thu theo ngày";
+        if ("MOVIE".equalsIgnoreCase(type)) return "Revenue by movie report";
+        if ("TRANSACTIONS".equalsIgnoreCase(type)) return "Transaction details report";
+        return "Daily revenue report";
     }
 
     private String formatMoney(BigDecimal amount, DecimalFormat df) {

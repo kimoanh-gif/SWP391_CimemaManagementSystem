@@ -16,6 +16,7 @@ function openSeatModal(element) {
     const row = element.getAttribute('data-row');
     const num = element.getAttribute('data-num');
     const type = element.getAttribute('data-type');
+    const typeId = element.getAttribute('data-typeid');
     const status = element.getAttribute('data-status');
 
     document.getElementById('modalSeatId').value = seatId;
@@ -30,7 +31,28 @@ function openSeatModal(element) {
 
     const typeSelect = document.getElementById('modalSeatTypeName');
     if (typeSelect) {
-        typeSelect.value = type;
+        let matched = false;
+        if (typeId) {
+            for (let i = 0; i < typeSelect.options.length; i++) {
+                if (typeSelect.options[i].getAttribute('data-id') === typeId) {
+                    typeSelect.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        if (!matched && type) {
+            const cleanType = type.trim().toLowerCase();
+            for (let i = 0; i < typeSelect.options.length; i++) {
+                const optVal = typeSelect.options[i].value.trim().toLowerCase();
+                const optCode = (typeSelect.options[i].getAttribute('data-code') || '').trim().toLowerCase();
+                if (optVal === cleanType || optCode === cleanType || optVal.includes(cleanType) || cleanType.includes(optVal)) {
+                    typeSelect.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+        }
     }
 
     const statusSelect = document.getElementById('modalSeatStatus');

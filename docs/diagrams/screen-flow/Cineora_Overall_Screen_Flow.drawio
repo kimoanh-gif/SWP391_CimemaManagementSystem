@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-03T17:55:20.608Z" agent="Antigravity Architect" version="21.0.0" type="device">
+  <diagram id="overall-flow" name="Cineora Overall Screen Navigation Flow">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_pub" value="Public &amp; Customer Navigation Zone" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F1F5F9;strokeColor=#94A3B8;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1600" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_auth" value="Authentication &amp; Role Router" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#EFF6FF;strokeColor=#93C5FD;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="450" width="440" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_staff" value="Staff Box-Office Workspace" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#F0FDF4;strokeColor=#86EFAC;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="510" y="450" width="440" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_mgr" value="Manager Administrative Console" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#FEF2F2;strokeColor=#FCA5A5;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="980" y="450" width="660" height="390" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_admin" value="System Administration Zone" style="swimlane;startSize=26;horizontal=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#FAF5FF;strokeColor=#D8B4FE;fontColor=#334155;rounded=1;arcSize=8;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="980" y="860" width="660" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_home" value="Public Homepage
+[/ - index.html]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="90" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_movies" value="Movie Catalog
+[/movies]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="270" y="90" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_movie_dtl" value="Movie Details
+[/movies/{id}]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="460" y="90" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_pub_showtimes" value="Public Showtimes
+[/showtimes]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="270" y="190" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_pub_news" value="Promotions &amp; News
+[/promotions, /news]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="190" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_cust_booking" value="Customer Booking Flow
+[/booking/seats -&gt; foods -&gt; payment]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="650" y="90" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_booking_success" value="Booking Confirmation
+[/booking/success/{id}]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#DCFCE7;strokeColor=#22C55E;fontColor=#14532D;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="900" y="90" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_cust_profile" value="Customer Profile &amp; Tickets
+[/customer/profile, /customer/bookings]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="90" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_cust_reviews" value="Movie Reviews
+[/customer/reviews]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="90" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_cust_loyalty" value="Loyalty &amp; Membership
+[/customer/loyalty]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="190" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_login" value="Sign In Screen
+[/login]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="500" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_register" value="Register Screen
+[/register]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="610" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_act_otp" value="Verify Activation OTP
+[/verify-activation-otp]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="70" y="710" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_forgot_pw" value="Forgot Password
+[/forgot-password]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="270" y="610" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_reset_pw" value="Reset Password
+[/reset-password]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="270" y="710" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_role" value="Role &amp; Session
+Dispatcher
+[/role-dashboard]" style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontStyle=1;fillColor=#FFEDD5;strokeColor=#F97316;fontColor=#7C2D12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="270" y="500" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_staff_dash" value="Staff Dashboard
+[/staff/dashboard]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="540" y="500" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_staff_pos" value="Counter Ticket Sales
+[/staff/counter-sales]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="740" y="500" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_staff_scan" value="Ticket Verification &amp; Check-in
+[/staff/ticket-verification]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="740" y="580" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_staff_bookings" value="Staff Order Management
+[/staff/bookings]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="740" y="660" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_staff_news" value="Staff News Draft
+[/staff/news]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="740" y="740" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_dash" value="Manager Dashboard
+[/manager/dashboard]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="500" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_movies" value="Movie Management
+[/manager/movies]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="500" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_showtimes" value="Showtime Scheduling
+[/manager/showtimes]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="570" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_rooms" value="Rooms &amp; Seat Maps
+[/manager/rooms, /seats]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="640" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_pricing" value="Pricing &amp; Seat Types
+[/manager/pricing, /seat-types]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="710" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_fb" value="Concessions (F&amp;B)
+[/manager/food-beverage]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="500" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_promo" value="Promotions &amp; Vouchers
+[/manager/promotions]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="570" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_reports" value="Operational Reports
+[/manager/reports]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="640" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_mgr_news" value="News Review &amp; Approval
+[/manager/news]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="710" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_admin_dash" value="Admin Dashboard
+[/admin/dashboard]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;fillColor=#1E3A8A;strokeColor=#172554;fontColor=#FFFFFF;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="910" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_admin_users" value="Account Governance
+[/admin/customers, /staffs]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="900" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_admin_roles" value="Roles &amp; Permissions
+[/admin/roles]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="970" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="scr_admin_config" value="System Configuration
+[/admin/config]" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E3A8A;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="935" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_1" value="Browse Movies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_home" target="scr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_2" value="Select Movie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_movies" target="scr_movie_dtl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_3" value="Book Tickets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_movie_dtl" target="scr_cust_booking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_4" value="Browse Showtimes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_home" target="scr_pub_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_5" value="Select Showtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_pub_showtimes" target="scr_cust_booking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_6" value="View Promo/News" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_home" target="scr_pub_news">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_7" value="Payment Confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_cust_booking" target="scr_booking_success">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_8" value="View In History" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_booking_success" target="scr_cust_profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_9" value="Review Film" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_cust_profile" target="scr_cust_reviews">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pub_10" value="Check Rank" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_cust_profile" target="scr_cust_loyalty">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_1" value="Sign In Link" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="scr_home" target="scr_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_2" value="New Account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_login" target="scr_register">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_3" value="Submit Registration" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_register" target="scr_act_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_4" value="OTP Verified" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_act_otp" target="scr_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_5" value="Forgot Password" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_login" target="scr_forgot_pw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_6" value="Verify Reset OTP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_forgot_pw" target="scr_reset_pw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_7" value="Password Updated" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_reset_pw" target="scr_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_auth_8" value="Authenticate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_login" target="dec_role">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_disp_cust" value="Customer Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="dec_role" target="scr_home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_disp_staff" value="Staff Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_role" target="scr_staff_dash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_disp_mgr" value="Manager Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_role" target="scr_mgr_dash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_disp_admin" value="Admin Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="dec_role" target="scr_admin_dash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st_1" value="Counter Sales" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_staff_dash" target="scr_staff_pos">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st_2" value="Verify Tickets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_staff_dash" target="scr_staff_scan">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st_3" value="Search Orders" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_staff_dash" target="scr_staff_bookings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st_4" value="Draft News" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_staff_dash" target="scr_staff_news">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_1" value="Movies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_movies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_2" value="Showtimes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_showtimes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_3" value="Rooms" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_rooms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_4" value="Pricing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_pricing">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_5" value="Concessions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_fb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_6" value="Vouchers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_promo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_7" value="Analytics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_reports">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_8" value="News Review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_mgr_dash" target="scr_mgr_news">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_adm_1" value="Users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_admin_dash" target="scr_admin_users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_adm_2" value="Permissions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_admin_dash" target="scr_admin_roles">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_adm_3" value="System Config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=10;fontColor=#374151;strokeColor=#4B5563;strokeWidth=1.5;" edge="1" parent="1" source="scr_admin_dash" target="scr_admin_config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

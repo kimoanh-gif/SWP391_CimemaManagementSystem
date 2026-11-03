@@ -69,15 +69,15 @@ public class SeatTypeController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.seatTypeForm", bindingResult);
             redirectAttributes.addFlashAttribute("seatTypeForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu loại ghế không hợp lệ.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid seat type data.");
             return "redirect:/manager/seat-types";
         }
 
         try {
             pricingService.createSeatType(form);
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm loại ghế '" + form.getTypeName() + "' thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Seat type '" + form.getTypeName() + "' created successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("seatTypeForm", form);
         }
 
@@ -95,9 +95,9 @@ public class SeatTypeController {
 
         try {
             SeatType st = pricingService.updateSeatTypeMultiplier(seatTypeId, multiplier);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật hệ số giá cho loại ghế '" + st.getTypeName() + "'!");
+            redirectAttributes.addFlashAttribute("successMessage", "Price multiplier updated for seat type '" + st.getTypeName() + "'!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/seat-types";
@@ -114,15 +114,15 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu loại ghế không hợp lệ.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid seat type data.");
             return "redirect:/manager/seat-types";
         }
 
         try {
             pricingService.updateSeatType(id, form);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật loại ghế '" + form.getTypeName() + "' thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Seat type '" + form.getTypeName() + "' updated successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/seat-types";
@@ -139,9 +139,9 @@ public class SeatTypeController {
 
         try {
             SeatType st = pricingService.updateSeatTypeStatus(id, status);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã đổi trạng thái loại ghế '" + st.getTypeName() + "' sang " + status + "!");
+            redirectAttributes.addFlashAttribute("successMessage", "Changed status of seat type '" + st.getTypeName() + "' to " + status + "!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/seat-types";
@@ -159,9 +159,9 @@ public class SeatTypeController {
             SeatType st = pricingService.getSeatTypeById(id);
             String name = st.getTypeName();
             pricingService.deleteSeatType(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa loại ghế '" + name + "' thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Seat type '" + name + "' deleted successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/seat-types";

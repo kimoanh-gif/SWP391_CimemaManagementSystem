@@ -16,28 +16,28 @@ public class SeatTypeForm {
 
     private Integer seatTypeId;
 
-    @NotBlank(message = "Mã loại ghế không được để trống")
-    @Size(max = 50, message = "Mã loại ghế tối đa 50 ký tự")
-    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Mã loại ghế chỉ gồm chữ cái, chữ số, dấu gạch ngang hoặc gạch dưới")
+    @NotBlank(message = "Seat type code cannot be empty")
+    @Size(max = 50, message = "Seat type code cannot exceed 50 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Seat type code can only contain letters, numbers, hyphens or underscores")
     private String typeCode;
 
-    @NotBlank(message = "Tên loại ghế không được để trống")
-    @Size(max = 100, message = "Tên loại ghế tối đa 100 ký tự")
+    @NotBlank(message = "Seat type name cannot be empty")
+    @Size(max = 100, message = "Seat type name cannot exceed 100 characters")
     private String typeName;
 
-    @Size(max = 255, message = "Mô tả tối đa 255 ký tự")
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
-    @NotNull(message = "Hệ số giá không được để trống")
-    @DecimalMin(value = "0.50", message = "Hệ số giá tối thiểu là 0.50")
-    @DecimalMax(value = "3.00", message = "Hệ số giá tối đa là 3.00")
+    @NotNull(message = "Price multiplier cannot be empty")
+    @DecimalMin(value = "0.50", message = "Minimum price multiplier is 0.50")
+    @DecimalMax(value = "3.00", message = "Maximum price multiplier is 3.00")
     private BigDecimal priceMultiplier;
 
-    @Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", message = "Mã màu phải đúng định dạng HEX (ví dụ: #3B82F6)")
+    @Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", message = "Color code must be in HEX format (e.g. #3B82F6)")
     private String colorCode = "#3B82F6";
 
-    @NotBlank(message = "Trạng thái không được để trống")
-    @Pattern(regexp = "^(Active|Inactive)$", message = "Trạng thái loại ghế phải là Active hoặc Inactive")
+    @NotBlank(message = "Status cannot be empty")
+    @Pattern(regexp = "^(Active|Inactive)$", message = "Seat type status must be Active or Inactive")
     private String status = "Active";
 
     public SeatTypeForm() {

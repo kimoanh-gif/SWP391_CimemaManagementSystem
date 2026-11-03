@@ -60,7 +60,7 @@ public class RevenueReportApiController {
 
         try {
             RevenueReportData data = revenueReportService.getReportData(reportRequest);
-            return ResponseEntity.ok(ApiResponse.ok("Lấy dữ liệu báo cáo doanh thu thành công", data));
+            return ResponseEntity.ok(ApiResponse.ok("Revenue report data retrieved successfully", data));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage()));
         }

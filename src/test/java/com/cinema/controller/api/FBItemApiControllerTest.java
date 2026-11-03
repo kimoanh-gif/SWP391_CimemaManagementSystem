@@ -80,4 +80,18 @@ public class FBItemApiControllerTest extends com.cinema.support.AuthenticatedMvc
                                 .session(authSession("CUSTOMER")))
                                 .andExpect(status().isForbidden());
         }
+
+        @Test
+        void testUploadFBImage_AuthorizedManager() throws Exception {
+                org.springframework.mock.web.MockMultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile(
+                                "file", "popcorn.png", "image/png", "fake image content".getBytes());
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .multipart("/api/manager/fb/upload-image")
+                                .file(mockFile)
+                                .session(authSession("MANAGER")))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.data.url").value(org.hamcrest.Matchers.startsWith("/uploads/fb/")));
+        }
 }

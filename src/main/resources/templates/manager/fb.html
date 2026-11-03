@@ -391,7 +391,8 @@
                         </form>
 
                         <form th:action="@{'/manager/fb/' + ${it.itemId} + '/delete'}" method="post" style="display:inline;"
-                              th:onsubmit="'return confirm(\'Are you sure you want to delete \\\'\' + ${it.itemName} + \'\\\' from the menu?\');'">
+                              th:data-confirm="|Are you sure you want to delete '${it.itemName}' from the menu?|"
+                              onsubmit="return confirm(this.getAttribute('data-confirm'));">
                             <button type="submit" class="action-btn" style="width:26px;height:26px;font-size:12px;color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
                                     title="Delete item">
                                 🗑
@@ -443,7 +444,7 @@
             <h3 id="modalTitle">Add new product</h3>
             <button class="modal-close">&times;</button>
         </div>
-        <form th:action="@{/manager/fb/save}" th:object="${fbForm}" method="post">
+        <form th:action="@{/manager/fb/save}" th:object="${fbForm}" method="post" enctype="multipart/form-data">
             <input type="hidden" id="formItemId" th:field="*{itemId}">
             <div class="form-row">
                 <div class="form-group">
@@ -475,8 +476,18 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Image URL</label>
-                <input type="text" id="formImage" th:field="*{image}" class="form-control" maxlength="500" placeholder="https://images.unsplash.com/...">
+                <label class="form-label">Image URL or upload from device</label>
+                <div style="display:flex;gap:6px;">
+                    <input type="text" id="formImage" th:field="*{image}" class="form-control" maxlength="500" placeholder="https://... or choose image from device">
+                    <label class="btn btn-secondary" style="white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:0;padding:6px 12px;font-size:12.5px;" title="Choose image file from computer">
+                        <span class="material-symbols-outlined" style="font-size:16px;">upload_file</span> <span class="upload-text">Upload image</span>
+                        <input type="file" id="formImageFile" name="imageFile" accept="image/png, image/jpeg, image/webp, image/gif" style="display:none;">
+                    </label>
+                </div>
+                <div id="imagePreviewContainer" style="margin-top:6px;display:none;align-items:center;gap:8px;">
+                    <img id="imagePreviewImg" src="" alt="Product preview" style="height:60px;width:60px;border-radius:6px;border:1px solid #E5E7EB;object-fit:cover;">
+                    <span style="font-size:11.5px;color:var(--text-400);">Product image preview</span>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Description / components</label>

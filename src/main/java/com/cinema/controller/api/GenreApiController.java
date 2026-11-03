@@ -54,7 +54,7 @@ public class GenreApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Genre> genres = genreService.getAllGenres(keyword, status);
-        return ResponseEntity.ok(ApiResponse.ok("Danh sách thể loại", genres));
+        return ResponseEntity.ok(ApiResponse.ok("Genre list retrieved successfully", genres));
     }
 
     @GetMapping("/{id}")
@@ -89,12 +89,12 @@ public class GenreApiController {
             List<String> errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Dữ liệu nhập không hợp lệ", errors));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
         }
 
         Genre created = genreService.createGenre(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Thêm mới thể loại thành công", created));
+                .body(ApiResponse.ok("Genre created successfully", created));
     }
 
     @PutMapping("/{id}")
@@ -110,11 +110,11 @@ public class GenreApiController {
             List<String> errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Dữ liệu nhập không hợp lệ", errors));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
         }
 
         Genre updated = genreService.updateGenre(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật thể loại thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Genre updated successfully", updated));
     }
 
     @PatchMapping("/{id}/toggle-status")
@@ -124,8 +124,8 @@ public class GenreApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Genre toggled = genreService.toggleStatus(id);
-        String action = toggled.isActive() ? "kích hoạt" : "hủy kích hoạt";
-        return ResponseEntity.ok(ApiResponse.ok("Đã " + action + " thể loại thành công", toggled));
+        String action = toggled.isActive() ? "activated" : "deactivated";
+        return ResponseEntity.ok(ApiResponse.ok("Genre successfully " + action, toggled));
     }
 
     @PatchMapping("/{id}/status")
@@ -137,7 +137,7 @@ public class GenreApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         String status = body.get("status");
         if (status == null || (!status.equalsIgnoreCase("ACTIVE") && !status.equalsIgnoreCase("INACTIVE"))) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Trạng thái phải là ACTIVE hoặc INACTIVE"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Status must be ACTIVE or INACTIVE"));
         }
 
         Genre existing = genreService.getGenreById(id);
@@ -145,7 +145,7 @@ public class GenreApiController {
         form.setStatus(status.toUpperCase());
         Genre updated = genreService.updateGenre(id, form);
 
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Status updated successfully", updated));
     }
 
     @DeleteMapping("/{id}")
@@ -155,7 +155,7 @@ public class GenreApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         genreService.deleteGenre(id);
-        return ResponseEntity.ok(ApiResponse.ok("Đã xóa thể loại thành công", null));
+        return ResponseEntity.ok(ApiResponse.ok("Genre deleted successfully", null));
     }
 
     @ExceptionHandler(GenreNotFoundException.class)

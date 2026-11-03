@@ -140,7 +140,7 @@ class RoomServiceTest {
         when(roomDao.existsByRoomCode("ROOM-01", null)).thenReturn(true);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
-        assertTrue(ex.getMessage().contains("Mã phòng chiếu đã tồn tại"));
+        assertTrue(ex.getMessage().contains("Room code already exists"));
         verify(roomDao, never()).insert(any());
     }
 
@@ -152,7 +152,7 @@ class RoomServiceTest {
         form.setCapacity(100); // 10 * 12 = 120 != 100
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
-        assertTrue(ex.getMessage().contains("không khớp"));
+        assertTrue(ex.getMessage().contains("does not match"));
         verify(roomDao, never()).insert(any());
     }
 
@@ -164,7 +164,7 @@ class RoomServiceTest {
         form.setCapacity(100);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.create(form));
-        assertTrue(ex.getMessage().contains("nhập đầy đủ"));
+        assertTrue(ex.getMessage().contains("Please enter"));
         verify(roomDao, never()).insert(any());
     }
 
@@ -181,7 +181,7 @@ class RoomServiceTest {
         form.setCapacity(90); // 8 * 10 = 80 != 90
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.update(form));
-        assertTrue(ex.getMessage().contains("không khớp"));
+        assertTrue(ex.getMessage().contains("does not match"));
         verify(roomDao, never()).update(any());
     }
 

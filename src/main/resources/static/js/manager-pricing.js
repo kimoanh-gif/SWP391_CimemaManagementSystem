@@ -49,17 +49,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const surcharge = parseFloat(document.getElementById("formFormatSurcharge")?.value || "0");
             if (!/^[A-Za-z0-9_-]{2,50}$/.test(code)) {
                 e.preventDefault();
-                alert("Mã quy tắc chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới (2-50 ký tự).");
+                alert("Rule code must contain only letters, numbers, hyphens or underscores (2-50 characters).");
                 return;
             }
             if (!name || name.length > 150) {
                 e.preventDefault();
-                alert("Tên quy tắc không được để trống và tối đa 150 ký tự.");
+                alert("Rule name cannot be empty and max 150 characters.");
                 return;
             }
             if (isNaN(basePrice) || basePrice < 0 || basePrice > 10000000 || isNaN(surcharge) || surcharge < 0 || surcharge > 10000000) {
                 e.preventDefault();
-                alert("Giá cơ sở và phụ thu định dạng phải nằm trong khoảng 0 đến 10.000.000 VNĐ.");
+                alert("Base price and format surcharge must be between 0 and 10,000,000 VND.");
             }
         });
     }
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const mult = parseFloat(document.getElementById("multInput")?.value || "0");
             if (isNaN(mult) || mult < 0.5 || mult > 3.0) {
                 e.preventDefault();
-                alert("Hệ số giá ghế phải nằm trong khoảng 0.50 đến 3.00.");
+                alert("Seat price multiplier must be between 0.50 and 3.00.");
             }
         });
     }

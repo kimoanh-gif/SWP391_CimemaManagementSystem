@@ -166,7 +166,7 @@ public class ManagerDashboardService {
                 stats.setSeatOccupancyRate(null);
             }
         } catch (Exception ex) {
-            // Fallback safely per AC04: Xử lý an toàn khi hệ thống mới triển khai chưa có dữ liệu giao dịch
+            // Fallback safely per AC04: Handle safely when system is newly deployed without transaction data
             stats.setHasTransactionData(false);
             stats.setTotalRevenue(BigDecimal.ZERO);
             stats.setTicketRevenue(BigDecimal.ZERO);

@@ -17,29 +17,29 @@ public class ShowtimeForm {
 
     private Integer showtimeId;
 
-    @NotNull(message = "Vui lòng chọn phim")
-    @Positive(message = "Mã phim phải lớn hơn 0")
+    @NotNull(message = "Please select a movie")
+    @Positive(message = "Movie ID must be greater than 0")
     private Integer movieId;
 
-    @NotNull(message = "Vui lòng chọn phòng chiếu")
-    @Positive(message = "Mã phòng chiếu phải lớn hơn 0")
+    @NotNull(message = "Please select a screening room")
+    @Positive(message = "Room ID must be greater than 0")
     private Integer roomId;
 
-    @NotNull(message = "Vui lòng chọn thời gian bắt đầu")
+    @NotNull(message = "Please select start time")
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startTime;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;
 
-    @NotNull(message = "Vui lòng nhập giá vé cơ sở")
-    @DecimalMin(value = "0.0", message = "Giá vé cơ sở không được âm")
-    @DecimalMax(value = "10000000.0", message = "Giá vé cơ sở không được vượt quá 10,000,000 VNĐ")
+    @NotNull(message = "Please enter base ticket price")
+    @DecimalMin(value = "0.0", message = "Base ticket price cannot be negative")
+    @DecimalMax(value = "10000000.0", message = "Base ticket price cannot exceed 10,000,000 VND")
     private BigDecimal baseTicketPrice;
 
     @Pattern(
             regexp = "^(Scheduled|Showing|Ended|Cancelled|Stopped)$",
-            message = "Trạng thái suất chiếu không hợp lệ"
+            message = "Invalid showtime status"
     )
     private String status = "Scheduled";
 

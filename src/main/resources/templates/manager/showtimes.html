@@ -235,10 +235,10 @@
                                     title="Stop showtime">⏹</button>
                         </form>
                         <form th:action="@{'/manager/showtimes/' + ${st.showtimeId} + '/delete'}" method="post" style="display:inline;"
-                              th:onsubmit="'return confirm(\'Bạn có chắc chắn muốn xóa suất chiếu này không?\');'">
+                              onsubmit="return confirm('Are you sure you want to delete this showtime?');">
                             <button type="submit" class="action-btn action-btn-del"
                                     style="color:#BA1A1A;border-color:#F5B5AE;background:#FFDAD6;"
-                                    title="Xóa suất chiếu">🗑</button>
+                                    title="Delete showtime">🗑</button>
                         </form>
                     </td>
                 </tr>

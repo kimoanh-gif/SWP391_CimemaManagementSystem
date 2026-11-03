@@ -100,6 +100,7 @@ public class FBItemController {
 
     @PostMapping("/save")
     public String saveFBItem(
+            @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile,
             @Valid @ModelAttribute("fbForm") FBItemForm form,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
@@ -107,26 +108,57 @@ public class FBItemController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
+        if (imageFile != null && !imageFile.isEmpty()) {
+            if (imageFile.getSize() > 5 * 1024 * 1024) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Image size exceeds the 5 MB limit.");
+                redirectAttributes.addFlashAttribute("fbForm", form);
+                return "redirect:/manager/fb";
+            }
+            try {
+                java.nio.file.Path directory = java.nio.file.Paths.get("uploads", "fb").toAbsolutePath().normalize();
+                java.nio.file.Files.createDirectories(directory);
+                String contentType = imageFile.getContentType();
+                java.util.Map<String, String> allowedExtensions = java.util.Map.of(
+                        "image/jpeg", ".jpg",
+                        "image/png", ".png",
+                        "image/webp", ".webp",
+                        "image/gif", ".gif"
+                );
+                String ext = contentType != null ? allowedExtensions.get(contentType.toLowerCase()) : ".jpg";
+                if (ext == null) ext = ".jpg";
+                String fileName = "fb-" + java.util.UUID.randomUUID() + ext;
+                java.nio.file.Path targetPath = directory.resolve(fileName).normalize();
+                if (targetPath.startsWith(directory)) {
+                    java.nio.file.Files.copy(imageFile.getInputStream(), targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    form.setImage("/uploads/fb/" + fileName);
+                }
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Cannot save uploaded image file: " + ex.getMessage());
+                redirectAttributes.addFlashAttribute("fbForm", form);
+                return "redirect:/manager/fb";
+            }
+        }
+
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fbForm", bindingResult);
             redirectAttributes.addFlashAttribute("fbForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin sản phẩm F&B không hợp lệ. Vui lòng kiểm tra lại.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid F&B product information. Please check again.");
             return "redirect:/manager/fb";
         }
 
         try {
             if (form.getItemId() == null || form.getItemId() <= 0) {
                 fbItemService.createItem(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Thêm sản phẩm F&B mới '" + form.getItemName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "F&B product '" + form.getItemName() + "' created successfully!");
             } else {
                 fbItemService.updateItem(form.getItemId(), form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm F&B '" + form.getItemName() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "F&B product '" + form.getItemName() + "' updated successfully!");
             }
         } catch (InvalidFBItemException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("fbForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("fbForm", form);
         }
 
@@ -145,9 +177,9 @@ public class FBItemController {
         try {
             FBItem item = fbItemService.updatePrice(id, sellingPrice);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Cập nhật giá bán món '" + item.getItemName() + "' thành công!");
+                    "Selling price for '" + item.getItemName() + "' updated successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi cập nhật giá: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating price: " + ex.getMessage());
         }
 
         return "redirect:/manager/fb";
@@ -165,9 +197,9 @@ public class FBItemController {
         try {
             FBItem item = fbItemService.updateStatus(id, status);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Đổi trạng thái món '" + item.getItemName() + "' sang " + status + " thành công!");
+                    "Status of '" + item.getItemName() + "' changed to " + status + " successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi đổi trạng thái: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error changing status: " + ex.getMessage());
         }
 
         return "redirect:/manager/fb";
@@ -185,11 +217,11 @@ public class FBItemController {
             FBItem item = fbItemService.getItemById(id);
             fbItemService.deleteItem(id);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Xóa món '" + item.getItemName() + "' thành công!");
+                    "Product '" + item.getItemName() + "' deleted successfully!");
         } catch (InvalidFBItemException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xóa món: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting product: " + ex.getMessage());
         }
 
         return "redirect:/manager/fb";

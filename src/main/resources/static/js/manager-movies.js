@@ -79,6 +79,10 @@ function escapeHtml(str) {
 }
 
 function getCsrfToken() {
+    var metaToken = document.querySelector('meta[name="_csrf"]');
+    if (metaToken && metaToken.getAttribute("content")) return metaToken.getAttribute("content");
+    var inputToken = document.querySelector('input[name="_csrf"]');
+    if (inputToken && inputToken.value) return inputToken.value;
     var match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
     return match ? decodeURIComponent(match[2]) : "";
 }
@@ -92,6 +96,7 @@ function getTomorrowDateStr() {
     return y + "-" + m + "-" + day;
 }
 
+var getTodayIso = getTodayDateStr;
 function getTodayDateStr() {
     var d = new Date();
     var y = d.getFullYear();
@@ -167,8 +172,10 @@ function openEditMovieModal(button) {
     setValue("moviePoster", poster);
     setValue("movieBanner", banner);
     setValue("movieTrailer", trailer);
+    updatePosterPreview(poster);
+    updateBannerPreview(banner);
 
-    var todayStr = getTodayIso();
+    var todayStr = getTodayDateStr();
     var releaseInput = document.getElementById("movieReleaseDate");
     var endInput = document.getElementById("movieEndDate");
     if (releaseInput) {
@@ -314,6 +321,8 @@ function resetMovieForm() {
 
     var counter = document.getElementById("descCharCounter");
     if (counter) counter.textContent = "0/1000";
+    updatePosterPreview("");
+    updateBannerPreview("");
 
     var checkboxes = document.querySelectorAll(".genre-checkbox-item input[type='checkbox']");
     checkboxes.forEach(function (cb) { cb.checked = false; });
@@ -322,16 +331,16 @@ function resetMovieForm() {
 function validateMovieDuration() {
     var raw = getValue("movieDuration").trim();
     if (!raw) {
-        showError("movieDuration", "durationFeedback", "Thời lượng phim không được để trống.");
+        showError("movieDuration", "durationFeedback", "Movie duration cannot be empty.");
         return false;
     }
     var num = Number(raw);
     if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
-        showError("movieDuration", "durationFeedback", "Thời lượng phim phải là số nguyên lớn hơn 0 phút.");
+        showError("movieDuration", "durationFeedback", "Movie duration must be an integer greater than 0 minutes.");
         return false;
     }
     if (num > 600) {
-        showError("movieDuration", "durationFeedback", "Thời lượng phim không được vượt quá 600 phút.");
+        showError("movieDuration", "durationFeedback", "Movie duration cannot exceed 600 minutes.");
         return false;
     }
     clearError("movieDuration", "durationFeedback");
@@ -347,7 +356,7 @@ function validateMovieDates() {
 
     if (releaseDate) {
         if (isCreate && releaseDate <= todayStr) {
-            showError("movieReleaseDate", "releaseDateFeedback", "Ngày bắt đầu (khởi chiếu) phải ở tương lai (từ ngày mai trở đi).");
+            showError("movieReleaseDate", "releaseDateFeedback", "Release date must be in the future (from tomorrow onward).");
             isValid = false;
         } else {
             clearError("movieReleaseDate", "releaseDateFeedback");
@@ -358,10 +367,10 @@ function validateMovieDates() {
 
     if (endDate) {
         if (isCreate && endDate <= todayStr) {
-            showError("movieEndDate", "dateFeedback", "Ngày kết thúc phải ở tương lai (từ ngày mai trở đi).");
+            showError("movieEndDate", "dateFeedback", "End date must be in the future (from tomorrow onward).");
             isValid = false;
         } else if (releaseDate && endDate < releaseDate) {
-            showError("movieEndDate", "dateFeedback", "Ngày kết thúc không được diễn ra trước ngày bắt đầu.");
+            showError("movieEndDate", "dateFeedback", "End date must be after release date.");
             isValid = false;
         } else {
             clearError("movieEndDate", "dateFeedback");
@@ -476,6 +485,9 @@ window.resetMovieForm = resetMovieForm;
 window.deactivateMovie = deactivateMovie;
 window.reactivateMovie = reactivateMovie;
 window.validateMovieDates = validateMovieDates;
+window.updatePosterPreview = updatePosterPreview;
+window.updateBannerPreview = updateBannerPreview;
+window.uploadImageFile = uploadImageFile;
 window.setValue = setValue;
 window.getValue = getValue;
 window.setText = setText;
@@ -528,6 +540,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Wireup image upload and preview
+    var posterFile = document.getElementById("moviePosterFile");
+    if (posterFile) {
+        posterFile.addEventListener("change", function () {
+            uploadImageFile(this, "moviePoster", updatePosterPreview, "poster");
+        });
+    }
+
+    var bannerFile = document.getElementById("movieBannerFile");
+    if (bannerFile) {
+        bannerFile.addEventListener("change", function () {
+            uploadImageFile(this, "movieBanner", updateBannerPreview, "banner");
+        });
+    }
+
+    var posterInput = document.getElementById("moviePoster");
+    if (posterInput) {
+        posterInput.addEventListener("input", function () {
+            updatePosterPreview(this.value);
+        });
+    }
+
+    var bannerInput = document.getElementById("movieBanner");
+    if (bannerInput) {
+        bannerInput.addEventListener("input", function () {
+            updateBannerPreview(this.value);
+        });
+    }
+
     // Form submission via AJAX API with fallback
     if (movieForm) {
         movieForm.addEventListener("submit", async function (e) {
@@ -542,10 +583,10 @@ document.addEventListener("DOMContentLoaded", function () {
             var hasError = false;
 
             if (!title) {
-                showError("movieTitle", "titleFeedback", "Tên phim không được để trống.");
+                showError("movieTitle", "titleFeedback", "Movie title cannot be empty.");
                 hasError = true;
             } else if (title.length > 150) {
-                showError("movieTitle", "titleFeedback", "Tên phim không được vượt quá 150 ký tự.");
+                showError("movieTitle", "titleFeedback", "Movie title cannot exceed 150 characters.");
                 hasError = true;
             } else {
                 clearError("movieTitle", "titleFeedback");
@@ -594,6 +635,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 ageRating: getValue("movieAgeRating"),
                 description: getValue("movieDescription").trim(),
                 poster: getValue("moviePoster").trim(),
+                banner: getValue("movieBanner").trim(),
                 trailer: getValue("movieTrailer").trim(),
                 status: getValue("movieStatus"),
                 genreIds: selectedGenreIds
@@ -657,3 +699,76 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+
+// =====================================================================
+// Poster & Banner Live Preview & Upload Handlers
+// =====================================================================
+function updatePosterPreview(url) {
+    var c = document.getElementById("posterPreviewContainer");
+    var img = document.getElementById("posterPreviewImg");
+    if (!c || !img) return;
+    if (url && url.trim()) {
+        img.src = url.trim();
+        c.style.display = "inline-flex";
+    } else {
+        img.src = "";
+        c.style.display = "none";
+    }
+}
+
+function updateBannerPreview(url) {
+    var c = document.getElementById("bannerPreviewContainer");
+    var img = document.getElementById("bannerPreviewImg");
+    if (!c || !img) return;
+    if (url && url.trim()) {
+        img.src = url.trim();
+        c.style.display = "inline-flex";
+    } else {
+        img.src = "";
+        c.style.display = "none";
+    }
+}
+
+async function uploadImageFile(fileInput, targetInputId, previewFn, type) {
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+    var file = fileInput.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        alert("Image file size cannot exceed 5MB.");
+        fileInput.value = "";
+        return;
+    }
+    var formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    var textSpan = fileInput.parentElement ? fileInput.parentElement.querySelector(".upload-text") : null;
+    var oldText = textSpan ? textSpan.textContent : "Upload image";
+    if (textSpan) textSpan.textContent = "Uploading...";
+
+    try {
+        var headers = {};
+        var csrf = getCsrfToken();
+        if (csrf) headers["X-XSRF-TOKEN"] = csrf;
+
+        var response = await fetch("/api/manager/movies/upload-image", {
+            method: "POST",
+            headers: headers,
+            body: formData
+        });
+
+        var result = await response.json();
+        if (response.ok && result.success && result.data && result.data.url) {
+            setValue(targetInputId, result.data.url);
+            previewFn(result.data.url);
+        } else {
+            var msg = (result && result.message) ? result.message : "Image upload failed";
+            alert("Image upload error: " + msg);
+        }
+    } catch (err) {
+        alert("Connection error during upload: " + err.message);
+    } finally {
+        if (textSpan) textSpan.textContent = oldText;
+        fileInput.value = "";
+    }
+}

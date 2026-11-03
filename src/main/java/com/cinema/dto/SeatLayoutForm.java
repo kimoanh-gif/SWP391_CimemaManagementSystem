@@ -15,39 +15,39 @@ import jakarta.validation.constraints.Size;
  */
 public class SeatLayoutForm {
 
-    @Positive(message = "Mã ghế phải lớn hơn 0.")
+    @Positive(message = "Seat ID must be greater than 0.")
     private Integer seatId;
 
-    @Positive(message = "Mã phòng chiếu phải lớn hơn 0.")
+    @Positive(message = "Room ID must be greater than 0.")
     private Integer roomId;
 
-    @Positive(message = "Mã loại ghế phải lớn hơn 0.")
+    @Positive(message = "Seat type ID must be greater than 0.")
     private Integer seatTypeId;
 
-    @Size(max = 50, message = "Tên loại ghế không được vượt quá 50 ký tự.")
+    @Size(max = 50, message = "Seat type name cannot exceed 50 characters.")
     private String seatTypeName;
 
-    @NotBlank(message = "Mã hàng ghế không được để trống.")
-    @Size(max = 5, message = "Mã hàng ghế tối đa 5 ký tự.")
-    @Pattern(regexp = "^[A-Za-z0-9]+$", message = "Mã hàng ghế chỉ được chứa chữ cái và chữ số.")
+    @NotBlank(message = "Row code cannot be empty.")
+    @Size(max = 5, message = "Row code cannot exceed 5 characters.")
+    @Pattern(regexp = "^[A-Za-z0-9]+$", message = "Row code can only contain letters and numbers.")
     private String rowLabel;
 
-    @NotNull(message = "Số ghế không được để trống.")
-    @Min(value = 1, message = "Số ghế phải từ 1 trở lên.")
-    @Max(value = 100, message = "Số ghế không được vượt quá 100.")
+    @NotNull(message = "Seat number cannot be empty.")
+    @Min(value = 1, message = "Seat number must be 1 or greater.")
+    @Max(value = 100, message = "Seat number cannot exceed 100.")
     private Integer seatNumber;
 
-    @Min(value = 1, message = "Tọa độ hàng (gridRow) phải từ 1 trở lên.")
-    @Max(value = 100, message = "Tọa độ hàng (gridRow) không được vượt quá 100.")
+    @Min(value = 1, message = "Grid row must be 1 or greater.")
+    @Max(value = 100, message = "Grid row cannot exceed 100.")
     private Integer gridRow;
 
-    @Min(value = 1, message = "Tọa độ cột (gridColumn) phải từ 1 trở lên.")
-    @Max(value = 100, message = "Tọa độ cột (gridColumn) không được vượt quá 100.")
+    @Min(value = 1, message = "Grid column must be 1 or greater.")
+    @Max(value = 100, message = "Grid column cannot exceed 100.")
     private Integer gridColumn;
 
     @Pattern(
             regexp = "^(|Active|Maintenance|Unavailable)$",
-            message = "Trạng thái ghế không hợp lệ. Cho phép: Active, Maintenance, Unavailable."
+            message = "Invalid seat status. Allowed: Active, Maintenance, Unavailable."
     )
     private String status;
 

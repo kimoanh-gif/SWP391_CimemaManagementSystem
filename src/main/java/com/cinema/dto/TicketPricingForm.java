@@ -16,41 +16,41 @@ public class TicketPricingForm {
 
     private Integer pricingId;
 
-    @NotBlank(message = "Mã quy tắc định giá không được để trống")
-    @Size(max = 50, message = "Mã quy tắc tối đa 50 ký tự")
-    @Pattern(regexp = "^[A-Za-z0-9_-]{2,50}$", message = "Mã quy tắc chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới (2-50 ký tự)")
+    @NotBlank(message = "Pricing rule code cannot be empty")
+    @Size(max = 50, message = "Pricing rule code cannot exceed 50 characters")
+    @Pattern(regexp = "^[A-Za-z0-9_-]{2,50}$", message = "Pricing rule code must contain only letters, numbers, hyphens or underscores (2-50 characters)")
     private String pricingCode;
 
-    @NotBlank(message = "Tên quy tắc định giá không được để trống")
-    @Size(max = 150, message = "Tên quy tắc tối đa 150 ký tự")
+    @NotBlank(message = "Pricing rule name cannot be empty")
+    @Size(max = 150, message = "Pricing rule name cannot exceed 150 characters")
     private String ruleName;
 
-    @NotBlank(message = "Loại ngày áp dụng không được để trống")
-    @Pattern(regexp = "^(?i)(WEEKDAY|WEEKEND|HOLIDAY)$", message = "Loại ngày áp dụng không hợp lệ (WEEKDAY, WEEKEND, HOLIDAY)")
+    @NotBlank(message = "Applicable day type cannot be empty")
+    @Pattern(regexp = "^(?i)(WEEKDAY|WEEKEND|HOLIDAY)$", message = "Invalid day type (WEEKDAY, WEEKEND, HOLIDAY)")
     private String dayType; // 'WEEKDAY', 'WEEKEND', 'HOLIDAY'
 
-    @NotBlank(message = "Khung giờ chiếu không được để trống")
-    @Pattern(regexp = "^(?i)(MORNING|STANDARD|GOLDEN_HOUR|ALL_DAY)$", message = "Khung giờ chiếu không hợp lệ (MORNING, STANDARD, GOLDEN_HOUR, ALL_DAY)")
+    @NotBlank(message = "Time slot cannot be empty")
+    @Pattern(regexp = "^(?i)(MORNING|STANDARD|GOLDEN_HOUR|ALL_DAY)$", message = "Invalid time slot (MORNING, STANDARD, GOLDEN_HOUR, ALL_DAY)")
     private String timeSlot; // 'MORNING', 'STANDARD', 'GOLDEN_HOUR', 'ALL_DAY'
 
-    @NotNull(message = "Giá vé cơ sở không được để trống")
-    @DecimalMin(value = "0.0", message = "Giá vé cơ sở không được là số âm")
-    @DecimalMax(value = "10000000.0", message = "Giá vé cơ sở vượt quá giới hạn cho phép")
+    @NotNull(message = "Base ticket price cannot be empty")
+    @DecimalMin(value = "0.0", message = "Base ticket price cannot be negative")
+    @DecimalMax(value = "10000000.0", message = "Base ticket price exceeds allowed limit")
     private BigDecimal basePrice;
 
-    @NotNull(message = "Phụ thu định dạng không được để trống")
-    @DecimalMin(value = "0.0", message = "Phụ thu định dạng không được là số âm")
-    @DecimalMax(value = "10000000.0", message = "Phụ thu định dạng vượt quá giới hạn cho phép")
+    @NotNull(message = "Format surcharge cannot be empty")
+    @DecimalMin(value = "0.0", message = "Format surcharge cannot be negative")
+    @DecimalMax(value = "10000000.0", message = "Format surcharge exceeds allowed limit")
     private BigDecimal formatSurcharge = BigDecimal.ZERO;
 
-    @NotBlank(message = "Định dạng trải nghiệm không được để trống")
-    @Size(max = 50, message = "Định dạng trải nghiệm tối đa 50 ký tự")
+    @NotBlank(message = "Experience format cannot be empty")
+    @Size(max = 50, message = "Experience format cannot exceed 50 characters")
     private String experienceType = "2D Digital";
 
-    @Pattern(regexp = "^(?i)(Active|Inactive)$", message = "Trạng thái quy tắc chỉ nhận giá trị Active hoặc Inactive")
+    @Pattern(regexp = "^(?i)(Active|Inactive)$", message = "Rule status must be Active or Inactive")
     private String status = "Active";
 
-    @Size(max = 255, message = "Mô tả tối đa 255 ký tự")
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
     public TicketPricingForm() {

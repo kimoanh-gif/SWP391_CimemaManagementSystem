@@ -54,21 +54,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 capacityInput.classList.remove('is-invalid');
                 noticeBox.className = 'calc-status-box is-match';
                 if (noticeIcon) noticeIcon.textContent = 'check_circle';
-                if (noticeText) noticeText.textContent = `Tự động tính: ${r} hàng × ${s} ghế = ${expected} ghế (khớp với tổng sức chứa)`;
+                if (noticeText) noticeText.textContent = `Auto-calculated: ${r} rows × ${s} seats = ${expected} seats (matches total capacity)`;
                 if (applyBtn) applyBtn.style.display = 'none';
             } else if (c === expected) {
                 capacityInput.classList.remove('is-invalid');
                 noticeBox.className = 'calc-status-box is-match';
                 if (noticeIcon) noticeIcon.textContent = 'check_circle';
-                if (noticeText) noticeText.textContent = `Chính xác: ${r} hàng × ${s} ghế = ${expected} ghế (khớp hoàn toàn với tổng sức chứa)`;
+                if (noticeText) noticeText.textContent = `Exact: ${r} rows × ${s} seats = ${expected} seats (matches total capacity)`;
                 if (applyBtn) applyBtn.style.display = 'none';
             } else {
                 capacityInput.classList.add('is-invalid');
                 noticeBox.className = 'calc-status-box is-mismatch';
                 if (noticeIcon) noticeIcon.textContent = 'warning';
-                if (noticeText) noticeText.textContent = `Chưa khớp: ${r} hàng × ${s} ghế = ${expected} ghế (khác với sức chứa đang nhập: ${c || 0} ghế)`;
+                if (noticeText) noticeText.textContent = `Mismatch: ${r} rows × ${s} seats = ${expected} seats (current input: ${c || 0} seats)`;
                 if (applyBtn) {
-                    applyBtn.textContent = `Áp dụng ${expected} ghế`;
+                    applyBtn.textContent = `Apply ${expected} seats`;
                     applyBtn.style.display = 'inline-block';
                     applyBtn.onclick = () => {
                         capacityInput.value = expected;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             noticeBox.style.display = 'flex';
             noticeBox.className = 'calc-status-box';
             if (noticeIcon) noticeIcon.textContent = 'info';
-            if (noticeText) noticeText.textContent = 'Vui lòng nhập cả số hàng và số ghế mỗi hàng để đối chiếu sức chứa.';
+            if (noticeText) noticeText.textContent = 'Please enter both rows and seats per row to verify capacity.';
             if (applyBtn) applyBtn.style.display = 'none';
             if (capacityInput) capacityInput.classList.remove('is-invalid');
         } else {
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error(err);
-                alert('Không thể tải thông tin phòng chiếu.');
+                alert('Cannot load screening room details.');
             }
         });
     });
@@ -186,18 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.deactivate-room-btn').forEach(btn => {
         btn.addEventListener('click', async e => {
             const id = btn.dataset.id;
-            if (!confirm('Bạn có chắc chắn muốn đưa phòng chiếu này vào trạng thái Bảo trì?')) return;
+            if (!confirm('Are you sure you want to set this screening room to Maintenance?')) return;
             try {
                 const resp = await fetch(`/api/manager/rooms/deactivate/${id}`, { method: 'PATCH' });
                 const data = await resp.json();
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(data.message || 'Lỗi khi bảo trì phòng');
+                    alert(data.message || 'Error setting room to maintenance');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Lỗi kết nối máy chủ.');
+                alert('Server connection error.');
             }
         });
     });
@@ -212,9 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = capacityInput && capacityInput.value ? parseInt(capacityInput.value, 10) : 0;
 
         // Validation rule requested: code, name, rows, seatsPerRow and capacity > 0
-        const codeVal = (form.roomCode?.value || '').trim(); const nameVal = (form.roomName?.value || '').trim(); if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) { showFormError('Mã phòng không hợp lệ (tối đa 20 ký tự, chỉ gồm chữ, số, dấu - và _).'); form.roomCode?.focus(); return; } if (!nameVal || nameVal.length > 100) { showFormError('Tên phòng không được để trống và tối đa 100 ký tự.'); form.roomName?.focus(); return; } if (r <= 0 || s <= 0) { showFormError('Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng lớn hơn 0.'); if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus(); return; }
+        const codeVal = (form.roomCode?.value || '').trim(); const nameVal = (form.roomName?.value || '').trim(); if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) { showFormError('Invalid room code (max 20 characters, alphanumeric with '-' and '_').'); form.roomCode?.focus(); return; } if (!nameVal || nameVal.length > 100) { showFormError('Room name cannot be empty and max 100 characters.'); form.roomName?.focus(); return; } if (r <= 0 || s <= 0) { showFormError('Please enter both rows and seats per row greater than 0.'); if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus(); return; }
         if (!c || c <= 0) {
-            showFormError('Vui lòng nhập tổng sức chứa hợp lệ (lớn hơn 0).');
+            showFormError('Please enter a valid total capacity (greater than 0).');
             capacityInput.focus();
             return;
         }
@@ -222,13 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Validation rule requested: totalRows * seatsPerRow must equal capacity
         if (r > 0 || s > 0) {
             if (r <= 0 || s <= 0) {
-                showFormError('Vui lòng nhập đầy đủ cả Số hàng và Số ghế mỗi hàng để đối chiếu sức chứa.');
+                showFormError('Please enter both rows and seats per row to verify capacity.');
                 if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus();
                 return;
             }
             const expected = r * s;
             if (c !== expected) {
-                showFormError(`Tổng sức chứa (${c} ghế) phải bằng số hàng (${r}) × số ghế mỗi hàng (${s} = ${expected} ghế). Vui lòng điều chỉnh lại.`);
+                showFormError(`Total capacity (${c} seats) must equal rows (${r}) × seats per row (${s} = ${expected} seats). Please adjust accordingly.`);
                 capacityInput.classList.add('is-invalid');
                 capacityInput.focus();
                 return;
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (saveBtn) {
             saveBtn.disabled = true;
-            saveBtn.textContent = 'Đang lưu...';
+            saveBtn.textContent = 'Saving...';
         }
 
         try {
@@ -259,14 +259,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await resp.json();
             if (data.success) {
-                showFormSuccess(data.message || 'Lưu phòng chiếu thành công!');
+                showFormSuccess(data.message || 'Screening room saved successfully!');
                 setTimeout(() => location.reload(), 900);
             } else {
-                showFormError(data.message || 'Không thể lưu phòng chiếu. Vui lòng kiểm tra lại.');
+                showFormError(data.message || 'Cannot save screening room. Please check again.');
             }
         } catch (err) {
             console.error(err);
-            showFormError('Lỗi kết nối máy chủ. Vui lòng thử lại.');
+            showFormError('Server connection error. Please try again.');
         } finally {
             if (saveBtn) {
                 saveBtn.disabled = false;

@@ -48,7 +48,7 @@ public class ShowtimeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Showtime> list = showtimeService.getAllShowtimes(date, roomId, movieId, status);
-        return ResponseEntity.ok(ApiResponse.ok("Lấy danh sách suất chiếu thành công", list));
+        return ResponseEntity.ok(ApiResponse.ok("Showtime list retrieved successfully", list));
     }
 
     @GetMapping("/{id}")
@@ -57,7 +57,7 @@ public class ShowtimeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime st = showtimeService.getShowtimeById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Chi tiết suất chiếu", st));
+        return ResponseEntity.ok(ApiResponse.ok("Showtime details", st));
     }
 
     @PostMapping
@@ -67,7 +67,7 @@ public class ShowtimeApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime created = showtimeService.createShowtime(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Tạo suất chiếu mới thành công", created));
+                .body(ApiResponse.ok("Showtime created successfully", created));
     }
 
     @PutMapping("/{id}")
@@ -77,7 +77,7 @@ public class ShowtimeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime updated = showtimeService.updateShowtime(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật suất chiếu thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Showtime updated successfully", updated));
     }
 
     @PostMapping("/{id}/stop")
@@ -86,7 +86,7 @@ public class ShowtimeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime stopped = showtimeService.stopShowtime(id);
-        return ResponseEntity.ok(ApiResponse.ok("Đã dừng suất chiếu thành công (BR-54)", stopped));
+        return ResponseEntity.ok(ApiResponse.ok("Showtime stopped successfully (BR-54)", stopped));
     }
 
     @PostMapping("/{id}/cancel")
@@ -95,7 +95,7 @@ public class ShowtimeApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime cancelled = showtimeService.cancelShowtime(id);
-        return ResponseEntity.ok(ApiResponse.ok("Đã hủy lịch chiếu thành công", cancelled));
+        return ResponseEntity.ok(ApiResponse.ok("Showtime cancelled successfully", cancelled));
     }
 
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
@@ -104,7 +104,7 @@ public class ShowtimeApiController {
         List<String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(org.springframework.validation.FieldError::getDefaultMessage)
                 .toList();
-        String msg = errors.isEmpty() ? "Thông tin suất chiếu không hợp lệ" : errors.get(0);
+        String msg = errors.isEmpty() ? "Invalid showtime information" : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));
     }
 

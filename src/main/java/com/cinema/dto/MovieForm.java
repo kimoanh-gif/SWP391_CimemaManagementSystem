@@ -23,16 +23,16 @@ public class MovieForm {
 
     private Integer id;
 
-    @NotBlank(message = "Tên phim không được để trống")
-    @Size(max = 150, message = "Tên phim không được vượt quá 150 ký tự")
+    @NotBlank(message = "Movie title cannot be empty")
+    @Size(max = 150, message = "Movie title cannot exceed 150 characters")
     private String title;
 
-    @Size(max = 150, message = "Tên gốc không được vượt quá 150 ký tự")
+    @Size(max = 150, message = "Original title cannot exceed 150 characters")
     private String originalTitle;
 
-    @NotNull(message = "Thời lượng phim không được để trống")
-    @Min(value = 1, message = "Thời lượng phim phải lớn hơn 0 phút")
-    @Max(value = 600, message = "Thời lượng phim không được vượt quá 600 phút")
+    @NotNull(message = "Movie duration cannot be empty")
+    @Min(value = 1, message = "Movie duration must be greater than 0 minutes")
+    @Max(value = 600, message = "Movie duration cannot exceed 600 minutes")
     private Integer duration = 120;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -41,41 +41,41 @@ public class MovieForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate endDate;
 
-    @Size(max = 50, message = "Ngôn ngữ không được vượt quá 50 ký tự")
+    @Size(max = 50, message = "Language cannot exceed 50 characters")
     private String language;
 
-    @Size(max = 100, message = "Đạo diễn không được vượt quá 100 ký tự")
+    @Size(max = 100, message = "Director cannot exceed 100 characters")
     private String director;
 
-    @Size(max = 500, message = "Diễn viên không được vượt quá 500 ký tự")
+    @Size(max = 500, message = "Actors cannot exceed 500 characters")
     private String actors;
 
-    @NotBlank(message = "Độ tuổi quy định không được để trống")
-    @Pattern(regexp = "^(P|K|T13|T16|T18)$", message = "Độ tuổi quy định phải là một trong các giá trị: P, K, T13, T16, T18")
+    @NotBlank(message = "Age rating cannot be empty")
+    @Pattern(regexp = "^(P|K|T13|T16|T18)$", message = "Age rating must be one of: P, K, T13, T16, T18")
     private String ageRating = "P";
 
-    @Size(max = 1000, message = "Tóm tắt phim không được vượt quá 1000 ký tự")
+    @Size(max = 1000, message = "Synopsis cannot exceed 1000 characters")
     private String description;
 
-    @Size(max = 500, message = "Đường dẫn Poster không được vượt quá 500 ký tự")
+    @Size(max = 500, message = "Poster URL cannot exceed 500 characters")
     private String poster;
 
-    @Size(max = 500, message = "Đường dẫn banner không được vượt quá 500 ký tự")
+    @Size(max = 500, message = "Banner URL cannot exceed 500 characters")
     private String banner;
 
-    @Size(max = 500, message = "Đường dẫn Trailer không được vượt quá 500 ký tự")
+    @Size(max = 500, message = "Trailer URL cannot exceed 500 characters")
     private String trailer;
 
-    @NotBlank(message = "Trạng thái phim không được để trống")
-    @Pattern(regexp = "^(Upcoming|Now Showing|Ended|Archived)$", message = "Trạng thái phim phải là Upcoming, Now Showing, Ended hoặc Archived")
+    @NotBlank(message = "Movie status cannot be empty")
+    @Pattern(regexp = "^(Upcoming|Now Showing|Ended|Archived)$", message = "Movie status must be Upcoming, Now Showing, Ended or Archived")
     private String status = "Upcoming";
 
-    private List<@Positive(message = "Mã thể loại phải lớn hơn 0") Integer> genreIds = new ArrayList<>();
+    private List<@Positive(message = "Genre ID must be greater than 0") Integer> genreIds = new ArrayList<>();
 
     public MovieForm() {
     }
 
-    @AssertTrue(message = "Ngày kết thúc không được diễn ra trước ngày khởi chiếu")
+    @AssertTrue(message = "End date must be after release date")
     public boolean isValidDateRange() {
         if (releaseDate != null && endDate != null) {
             return !endDate.isBefore(releaseDate);

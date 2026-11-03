@@ -40,16 +40,50 @@ public class SeatDao {
         if (rs.getTimestamp("CreatedAt") != null) {
             seat.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
         }
+        try {
+            seat.setColorCode(rs.getString("ColorCode"));
+        } catch (Exception ignored) {}
+        try {
+            seat.setTypeCode(rs.getString("TypeCode"));
+        } catch (Exception ignored) {}
+        try {
+            String canonicalName = rs.getString("CanonicalTypeName");
+            if (canonicalName != null && !canonicalName.isBlank()) {
+                seat.setSeatTypeName(canonicalName);
+            }
+        } catch (Exception ignored) {}
         return seat;
     };
 
     public List<Seat> findByRoomId(int roomId) {
-        String sql = "SELECT * FROM Seat WHERE RoomID = ? ORDER BY GridRow ASC, GridColumn ASC";
+        String sql = "SELECT s.*, " +
+                "COALESCE(st.TypeName, s.SeatTypeName) AS CanonicalTypeName, " +
+                "st.ColorCode, " +
+                "st.TypeCode " +
+                "FROM Seat s " +
+                "LEFT JOIN SeatType st ON st.SeatTypeID = s.SeatTypeID " +
+                "OR (s.SeatTypeID IS NULL AND (st.TypeName = s.SeatTypeName OR st.TypeCode = s.SeatTypeName " +
+                "OR (s.SeatTypeName = 'Front' AND st.TypeCode = 'FRONT') " +
+                "OR (s.SeatTypeName = 'Standard' AND st.TypeCode = 'STD') " +
+                "OR (s.SeatTypeName = 'Couple' AND st.TypeCode = 'COUPLE') " +
+                "OR (s.SeatTypeName = 'VIP' AND st.TypeCode = 'VIP'))) " +
+                "WHERE s.RoomID = ? ORDER BY s.GridRow ASC, s.GridColumn ASC";
         return jdbcTemplate.query(sql, ps -> ps.setInt(1, roomId), rowMapper);
     }
 
     public Optional<Seat> findById(int seatId) {
-        String sql = "SELECT * FROM Seat WHERE SeatID = ?";
+        String sql = "SELECT s.*, " +
+                "COALESCE(st.TypeName, s.SeatTypeName) AS CanonicalTypeName, " +
+                "st.ColorCode, " +
+                "st.TypeCode " +
+                "FROM Seat s " +
+                "LEFT JOIN SeatType st ON st.SeatTypeID = s.SeatTypeID " +
+                "OR (s.SeatTypeID IS NULL AND (st.TypeName = s.SeatTypeName OR st.TypeCode = s.SeatTypeName " +
+                "OR (s.SeatTypeName = 'Front' AND st.TypeCode = 'FRONT') " +
+                "OR (s.SeatTypeName = 'Standard' AND st.TypeCode = 'STD') " +
+                "OR (s.SeatTypeName = 'Couple' AND st.TypeCode = 'COUPLE') " +
+                "OR (s.SeatTypeName = 'VIP' AND st.TypeCode = 'VIP'))) " +
+                "WHERE s.SeatID = ?";
         List<Seat> list = jdbcTemplate.query(sql, ps -> ps.setInt(1, seatId), rowMapper);
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }

@@ -43,7 +43,7 @@ public class MovieService {
      */
     public Movie getMovieById(int movieId) {
         return movieDao.findById(movieId)
-                .orElseThrow(() -> new MovieNotFoundException("Không tìm thấy phim với mã ID: " + movieId));
+                .orElseThrow(() -> new MovieNotFoundException("Movie not found with ID: " + movieId));
     }
 
     /**
@@ -76,13 +76,13 @@ public class MovieService {
         LocalDate today = LocalDate.now();
         if (form.getReleaseDate() != null && form.getReleaseDate().isBefore(today)) {
             if (existing.getReleaseDate() == null || !existing.getReleaseDate().equals(form.getReleaseDate())) {
-                throw new IllegalArgumentException("Ngày khởi chiếu mới phải từ hôm nay trở đi, không được ở quá khứ.");
+                throw new IllegalArgumentException("New release date must be from today onward, cannot be in the past.");
             }
         }
         if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
             if (existing.getEndDate() == null || !existing.getEndDate().equals(form.getEndDate())) {
                 throw new IllegalArgumentException(
-                        "Ngày kết thúc dự kiến mới phải từ hôm nay trở đi, không được ở quá khứ.");
+                        "New planned end date must be from today onward, cannot be in the past.");
             }
         }
 
@@ -95,9 +95,9 @@ public class MovieService {
             int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
             if (upcomingShowtimes > 0) {
                 throw new MovieHasActiveShowtimesException(
-                        "Không thể chuyển trạng thái phim '" + existing.getTitle() + "' sang " + newStatus
-                                + " vì hiện tại đang có " + upcomingShowtimes
-                                + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước.");
+                        "Cannot change status of movie '" + existing.getTitle() + "' to " + newStatus
+                                + " because there are currently " + upcomingShowtimes
+                                + " upcoming showtime(s). Please cancel the showtimes first.");
             }
         }
 
@@ -108,9 +108,9 @@ public class MovieService {
             int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
             if (upcomingShowtimes > 0) {
                 throw new MovieHasActiveShowtimesException(
-                        "Không thể thay đổi thời lượng phim '" + existing.getTitle() + "' (từ " + oldDuration
-                                + " phút thành " + newDuration + " phút) vì phim đang có " + upcomingShowtimes
-                                + " suất chiếu trong tương lai. Vui lòng hủy hoặc điều chỉnh các suất chiếu tương lai trước khi thay đổi thời lượng.");
+                        "Cannot change duration of movie '" + existing.getTitle() + "' (from " + oldDuration
+                                + " min to " + newDuration + " min) because it has " + upcomingShowtimes
+                                + " future showtime(s). Please adjust or cancel future showtimes before changing duration.");
             }
         }
 
@@ -133,9 +133,9 @@ public class MovieService {
         int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
         if (upcomingShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
-                    "Không thể hủy kích hoạt phim '" + movie.getTitle()
-                            + "' vì đang có " + upcomingShowtimes
-                            + " suất chiếu sắp diễn ra. Vui lòng hủy hoặc dời các suất chiếu trước.");
+                    "Cannot deactivate movie '" + movie.getTitle()
+                            + "' because there are currently " + upcomingShowtimes
+                            + " upcoming showtime(s). Please cancel or reschedule showtimes first.");
         }
 
         movieDao.updateStatus(movieId, "Archived");
@@ -168,8 +168,8 @@ public class MovieService {
             int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
             if (upcomingShowtimes > 0) {
                 throw new MovieHasActiveShowtimesException(
-                        "Không thể chuyển trạng thái phim sang " + normalized
-                                + " vì đang có " + upcomingShowtimes + " suất chiếu sắp diễn ra.");
+                        "Cannot change movie status to " + normalized
+                                + " because there are " + upcomingShowtimes + " upcoming showtime(s).");
             }
         }
 
@@ -195,16 +195,16 @@ public class MovieService {
         int upcomingShowtimes = movieDao.countUpcomingShowtimesByMovieId(movieId);
         if (upcomingShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
-                    "Không thể xóa phim '" + movie.getTitle()
-                            + "' vì đang có " + upcomingShowtimes
-                            + " suất chiếu sắp diễn ra. Vui lòng hủy các suất chiếu trước.");
+                    "Cannot delete movie '" + movie.getTitle()
+                            + "' because there are currently " + upcomingShowtimes
+                            + " upcoming showtime(s). Please cancel the showtimes first.");
         }
         int totalShowtimes = movieDao.countShowtimesByMovieId(movieId);
         if (totalShowtimes > 0) {
             throw new MovieHasActiveShowtimesException(
-                    "Không thể xóa phim '" + movie.getTitle()
-                            + "' vì đã có " + totalShowtimes
-                            + " suất chiếu trong lịch sử hệ thống. Bạn có thể chuyển phim sang trạng thái Lưu trữ (Archived).");
+                    "Cannot delete movie '" + movie.getTitle()
+                            + "' because there are " + totalShowtimes
+                            + " showtime(s) in system history. You can archive the movie instead.");
         }
         movieDao.delete(movieId);
     }
@@ -219,46 +219,46 @@ public class MovieService {
 
     private void validateMovieForm(MovieForm form, boolean isNew) {
         if (form == null) {
-            throw new IllegalArgumentException("Dữ liệu phim không được để trống.");
+            throw new IllegalArgumentException("Movie data cannot be empty.");
         }
         if (form.getTitle() == null || form.getTitle().trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên phim không được để trống.");
+            throw new IllegalArgumentException("Movie title cannot be empty.");
         }
         if (form.getDuration() == null || form.getDuration() <= 0 || form.getDuration() > 600) {
-            throw new IllegalArgumentException("Thời lượng phim phải từ 1 đến 600 phút.");
+            throw new IllegalArgumentException("Movie duration must be between 1 and 600 minutes.");
         }
         if (form.getAgeRating() != null && !form.getAgeRating().isBlank()) {
             String rating = form.getAgeRating().trim().toUpperCase();
             if (!VALID_AGE_RATINGS.contains(rating)) {
-                throw new IllegalArgumentException("Độ tuổi quy định không hợp lệ: " + form.getAgeRating());
+                throw new IllegalArgumentException("Invalid age rating: " + form.getAgeRating());
             }
             form.setAgeRating(rating);
         }
         LocalDate today = LocalDate.now();
         if (isNew) {
             if (form.getReleaseDate() != null && !form.getReleaseDate().isAfter(today)) {
-                throw new IllegalArgumentException("Ngày bắt đầu (khởi chiếu) phải ở tương lai (từ ngày mai trở đi).");
+                throw new IllegalArgumentException("Release date must be in the future (from tomorrow onward).");
             }
             if (form.getEndDate() != null && !form.getEndDate().isAfter(today)) {
-                throw new IllegalArgumentException("Ngày kết thúc phải ở tương lai (từ ngày mai trở đi).");
+                throw new IllegalArgumentException("End date must be in the future (from tomorrow onward).");
             }
         }
         if (form.getReleaseDate() != null && form.getEndDate() != null
                 && form.getEndDate().isBefore(form.getReleaseDate())) {
-            throw new IllegalArgumentException("Ngày kết thúc không được diễn ra trước ngày khởi chiếu.");
+            throw new IllegalArgumentException("End date must be after release date.");
         }
         if (form.getGenreIds() != null && !form.getGenreIds().isEmpty()) {
             Set<Integer> distinctGenreIds = new LinkedHashSet<>();
             for (Integer gid : form.getGenreIds()) {
                 if (gid == null || gid <= 0) {
-                    throw new IllegalArgumentException("Mã thể loại phim không hợp lệ.");
+                    throw new IllegalArgumentException("Invalid movie genre ID.");
                 }
                 distinctGenreIds.add(gid);
             }
             int invalidGenreCount = movieDao.countInactiveOrMissingGenres(new ArrayList<>(distinctGenreIds));
             if (invalidGenreCount > 0) {
                 throw new IllegalArgumentException(
-                        "Một hoặc nhiều thể loại được chọn không tồn tại hoặc đã ngừng hoạt động.");
+                        "One or more selected genres do not exist or are inactive.");
             }
             form.setGenreIds(new ArrayList<>(distinctGenreIds));
         }
@@ -266,7 +266,7 @@ public class MovieService {
 
     private String normalizeAndValidateStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
-            throw new InvalidMovieStatusException("Trạng thái phim không được để trống.");
+            throw new InvalidMovieStatusException("Movie status cannot be empty.");
         }
         String trimmed = status.trim();
         for (String valid : VALID_STATUSES) {
@@ -275,6 +275,6 @@ public class MovieService {
             }
         }
         throw new InvalidMovieStatusException(
-                "Trạng thái '" + status + "' không hợp lệ. Chỉ chấp nhận: " + String.join(", ", VALID_STATUSES));
+                "Status '" + status + "' is invalid. Allowed: " + String.join(", ", VALID_STATUSES));
     }
 }

@@ -111,6 +111,18 @@ public class SeatTypeDao {
         return count != null && count > 0;
     }
 
+    public boolean hasActiveOrUpcomingShowtimes(int id) {
+        String sql = "SELECT COUNT(*) FROM Showtime sh " +
+                "JOIN Seat s ON s.RoomID = sh.RoomID " +
+                "WHERE (s.SeatTypeID = ? " +
+                "OR (s.SeatTypeID IS NULL AND (s.SeatTypeName = (SELECT TypeName FROM SeatType WHERE SeatTypeID = ?) " +
+                "OR s.SeatTypeName = (SELECT TypeCode FROM SeatType WHERE SeatTypeID = ?)))) " +
+                "AND sh.EndTime > GETDATE() " +
+                "AND UPPER(sh.Status) NOT IN ('CANCELLED', 'STOPPED')";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id, id, id);
+        return count != null && count > 0;
+    }
+
     public int delete(int id) {
         String sql = "DELETE FROM SeatType WHERE SeatTypeID = ?";
         return jdbcTemplate.update(sql, id);

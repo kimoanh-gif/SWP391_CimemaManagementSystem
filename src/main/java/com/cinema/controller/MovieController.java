@@ -102,7 +102,7 @@ public class MovieController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("movieForm", form);
-            String firstError = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+            String firstError = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid input data. Please check your information.");
             redirectAttributes.addFlashAttribute("errorMessage", firstError);
             return "redirect:/manager/movies";
         }
@@ -110,16 +110,16 @@ public class MovieController {
         try {
             if (form.getId() == null || form.getId() <= 0) {
                 movieService.createMovie(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Thêm phim mới '" + form.getTitle() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Movie '" + form.getTitle() + "' created successfully!");
             } else {
                 movieService.updateMovie(form.getId(), form);
-                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin phim '" + form.getTitle() + "' thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Movie '" + form.getTitle() + "' updated successfully!");
             }
         } catch (MovieHasActiveShowtimesException | InvalidMovieStatusException | IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("movieForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "An error occurred: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("movieForm", form);
         }
 
@@ -141,12 +141,12 @@ public class MovieController {
             Movie movie = movieService.deactivateMovie(id);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Đã hủy kích hoạt và lưu trữ phim '" + movie.getTitle() + "' thành công."
+                    "Movie '" + movie.getTitle() + "' has been deactivated and archived successfully."
             );
         } catch (MovieHasActiveShowtimesException | MovieNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy kích hoạt phim: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot deactivate movie: " + ex.getMessage());
         }
 
         return "redirect:/manager/movies";
@@ -168,12 +168,12 @@ public class MovieController {
             Movie movie = movieService.updateStatus(id, status);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Đã chuyển trạng thái phim '" + movie.getTitle() + "' sang " + movie.getStatus() + "."
+                    "Movie '" + movie.getTitle() + "' status changed to " + movie.getStatus() + "."
             );
         } catch (MovieHasActiveShowtimesException | InvalidMovieStatusException | MovieNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật trạng thái: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot update status: " + ex.getMessage());
         }
 
         return "redirect:/manager/movies";
@@ -194,10 +194,10 @@ public class MovieController {
             Movie movie = movieService.reactivateMovie(id);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Đã mở lại và chuyển phim '" + movie.getTitle() + "' sang trạng thái " + movie.getStatus() + "."
+                    "Movie '" + movie.getTitle() + "' has been reopened and set to " + movie.getStatus() + "."
             );
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể kích hoạt lại phim: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot reactivate movie: " + ex.getMessage());
         }
 
         return "redirect:/manager/movies";
@@ -220,12 +220,12 @@ public class MovieController {
             movieService.deleteMovie(id);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Đã xóa phim '" + title + "' thành công."
+                    "Movie '" + title + "' deleted successfully."
             );
         } catch (MovieHasActiveShowtimesException | MovieNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa phim: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete movie: " + ex.getMessage());
         }
 
         return "redirect:/manager/movies";

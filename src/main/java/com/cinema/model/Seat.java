@@ -16,6 +16,8 @@ public class Seat {
     private Integer gridRow;     // numeric row index (1‑based)
     private Integer gridColumn;  // numeric column index (1‑based)
     private String status;       // Active, Maintenance, Unavailable
+    private String colorCode;
+    private String typeCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -69,4 +71,8 @@ public class Seat {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getColorCode() { return colorCode; }
+    public void setColorCode(String colorCode) { this.colorCode = colorCode; }
+    public String getTypeCode() { return typeCode; }
+    public void setTypeCode(String typeCode) { this.typeCode = typeCode; }
 }

@@ -106,15 +106,15 @@ public class SeatController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (roomId <= 0) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Mã phòng chiếu không hợp lệ.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: Invalid room ID.");
             return "redirect:/manager/seats";
         }
 
         try {
             List<Seat> generated = seatService.generateDefaultLayout(roomId);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã khởi tạo thành công sơ đồ tiêu chuẩn (" + generated.size() + " ghế)!");
+            redirectAttributes.addFlashAttribute("successMessage", "Standard seat layout initialized successfully (" + generated.size() + " seats)!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return "redirect:/manager/seats?roomId=" + roomId;
@@ -134,7 +134,7 @@ public class SeatController {
                 : "redirect:/manager/seats";
 
         if (form.getSeatId() == null || form.getSeatId() <= 0 || form.getRoomId() == null || form.getRoomId() <= 0) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Mã ghế và mã phòng chiếu không được để trống.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: Seat ID and room ID cannot be empty.");
             return redirectTarget;
         }
 
@@ -142,16 +142,16 @@ public class SeatController {
             String errorMsg = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .findFirst()
-                    .orElse("Dữ liệu cập nhật ghế không hợp lệ.");
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + errorMsg);
+                    .orElse("Invalid seat update data.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + errorMsg);
             return redirectTarget;
         }
 
         try {
             seatService.updateSeat(form.getSeatId(), form.getSeatTypeName(), form.getStatus());
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin ghế thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Seat updated successfully!");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }
 
         return redirectTarget;

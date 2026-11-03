@@ -53,7 +53,7 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Movie> movies = movieService.getAllMovies(keyword, genreId, ageRating, status);
-        return ResponseEntity.ok(ApiResponse.ok("Danh sách phim", movies));
+        return ResponseEntity.ok(ApiResponse.ok("Movie list retrieved successfully", movies));
     }
 
     @GetMapping("/{id}")
@@ -72,7 +72,7 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         List<Movie> movies = movieService.getAvailableMoviesForShowtimes();
-        return ResponseEntity.ok(ApiResponse.ok("Danh sách phim có thể tạo suất chiếu", movies));
+        return ResponseEntity.ok(ApiResponse.ok("Available movies for showtimes retrieved successfully", movies));
     }
 
     @PostMapping
@@ -87,12 +87,12 @@ public class MovieApiController {
             List<String> errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Dữ liệu nhập không hợp lệ", errors));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
         }
 
         Movie created = movieService.createMovie(form);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Thêm mới phim thành công", created));
+                .body(ApiResponse.ok("Movie created successfully", created));
     }
 
     @PutMapping("/{id}")
@@ -108,11 +108,11 @@ public class MovieApiController {
             List<String> errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Dữ liệu nhập không hợp lệ", errors));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
         }
 
         Movie updated = movieService.updateMovie(id, form);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật thông tin phim thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Movie updated successfully", updated));
     }
 
     @PatchMapping("/{id}/deactivate")
@@ -122,7 +122,7 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Movie deactivated = movieService.deactivateMovie(id);
-        return ResponseEntity.ok(ApiResponse.ok("Hủy kích hoạt phim thành công", deactivated));
+        return ResponseEntity.ok(ApiResponse.ok("Movie deactivated successfully", deactivated));
     }
 
     @PatchMapping("/{id}/reactivate")
@@ -132,7 +132,7 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Movie reactivated = movieService.reactivateMovie(id);
-        return ResponseEntity.ok(ApiResponse.ok("Mở lại và kích hoạt phim '" + reactivated.getTitle() + "' thành công", reactivated));
+        return ResponseEntity.ok(ApiResponse.ok("Movie '" + reactivated.getTitle() + "' reactivated successfully", reactivated));
     }
 
     @PatchMapping("/{id}/status")
@@ -144,17 +144,17 @@ public class MovieApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         String status = body.get("status");
         if (status == null || !status.trim().matches("^(Upcoming|Now Showing|Ended|Archived)$")) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Trạng thái không được để trống"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Status cannot be empty"));
         }
 
         Movie updated = movieService.updateStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái thành công", updated));
+        return ResponseEntity.ok(ApiResponse.ok("Status updated successfully", updated));
     }
 
     @GetMapping("/customer")
     public ResponseEntity<ApiResponse<List<Movie>>> getCustomerMovies() {
         List<Movie> movies = movieService.getCustomerMovies();
-        return ResponseEntity.ok(ApiResponse.ok("Danh sách phim đang chiếu và sắp chiếu dành cho khách hàng", movies));
+        return ResponseEntity.ok(ApiResponse.ok("Customer movies retrieved successfully", movies));
     }
 
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
@@ -164,7 +164,58 @@ public class MovieApiController {
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         movieService.deleteMovie(id);
-        return ResponseEntity.ok(ApiResponse.ok("Đã lưu trữ / hủy kích hoạt phim thành công", null));
+        return ResponseEntity.ok(ApiResponse.ok("Movie archived / deactivated successfully", null));
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadMovieImage(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "type", defaultValue = "poster") String type,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Please select an image file"));
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Maximum image size is 5 MB"));
+        }
+
+        String contentType = file.getContentType();
+        Map<String, String> allowedExtensions = Map.of(
+                "image/jpeg", ".jpg",
+                "image/png", ".png",
+                "image/webp", ".webp",
+                "image/gif", ".gif"
+        );
+
+        String extension = contentType != null ? allowedExtensions.get(contentType.toLowerCase()) : null;
+        if (extension == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Only JPG, PNG, WebP, GIF image formats are supported"));
+        }
+
+        try {
+            java.nio.file.Path directory = java.nio.file.Paths.get("uploads", "movies").toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(directory);
+
+            String safeType = "banner".equalsIgnoreCase(type) ? "banner" : "poster";
+            String fileName = "movie-" + safeType + "-" + java.util.UUID.randomUUID() + extension;
+            java.nio.file.Path targetPath = directory.resolve(fileName).normalize();
+
+            if (!targetPath.startsWith(directory)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Invalid file save path"));
+            }
+
+            java.nio.file.Files.copy(file.getInputStream(), targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String url = "/uploads/movies/" + fileName;
+
+            return ResponseEntity.ok(ApiResponse.ok("Image uploaded successfully", Map.of("url", url)));
+        } catch (java.io.IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Could not save image file: " + ex.getMessage()));
+        }
     }
 
     @ExceptionHandler(MovieNotFoundException.class)

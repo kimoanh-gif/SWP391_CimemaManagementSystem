@@ -166,7 +166,7 @@ public class ShowtimeServiceTest {
 
         InvalidShowtimeException ex = assertThrows(InvalidShowtimeException.class, () ->
                 showtimeService.createShowtime(form));
-        assertTrue(ex.getMessage().contains("chưa có sơ đồ ghế khả dụng"));
+        assertTrue(ex.getMessage().contains("does not have a valid seat layout"));
     }
 
     @Test
@@ -222,7 +222,7 @@ public class ShowtimeServiceTest {
 
         InvalidShowtimeException exToday = assertThrows(InvalidShowtimeException.class, () ->
                 showtimeService.createShowtime(formToday));
-        assertTrue(exToday.getMessage().contains("Không được chọn ngày ở quá khứ hoặc hiện tại"));
+        assertTrue(exToday.getMessage().contains("Cannot select a past or today date"));
 
         // Test with yesterday's date
         ShowtimeForm formPast = new ShowtimeForm();
@@ -233,7 +233,7 @@ public class ShowtimeServiceTest {
 
         InvalidShowtimeException exPast = assertThrows(InvalidShowtimeException.class, () ->
                 showtimeService.createShowtime(formPast));
-        assertTrue(exPast.getMessage().contains("Không được chọn ngày ở quá khứ hoặc hiện tại"));
+        assertTrue(exPast.getMessage().contains("Cannot select a past or today date"));
     }
 
     @Test

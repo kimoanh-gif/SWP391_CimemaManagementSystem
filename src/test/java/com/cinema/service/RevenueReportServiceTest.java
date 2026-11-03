@@ -79,7 +79,7 @@ class RevenueReportServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> revenueReportService.resolveAndValidateDates(req));
 
-        assertEquals("Ngày bắt đầu không được lớn hơn ngày kết thúc.", ex.getMessage());
+        assertEquals("Start date cannot be after end date.", ex.getMessage());
     }
 
     @Test
@@ -156,8 +156,8 @@ class RevenueReportServiceTest {
         assertEquals((byte) 0xBF, csvBytes[2]);
 
         String text = new String(csvBytes, 3, csvBytes.length - 3, StandardCharsets.UTF_8);
-        assertTrue(text.contains("BÁO CÁO DOANH THU RẠP CHIẾU PHIM"));
-        assertTrue(text.contains("Tổng doanh thu toàn hệ thống"));
+        assertTrue(text.contains("CINEMA REVENUE REPORT"));
+        assertTrue(text.contains("Total Revenue"));
         assertTrue(text.contains("2,000,000"));
     }
 
@@ -249,6 +249,7 @@ class RevenueReportServiceTest {
 
         // 1. Verify DAILY report CSV: 7 columns & UTF-8 BOM
         RevenueReportRequest dailyReq = new RevenueReportRequest();
+        dailyReq.setPreset("custom");
         dailyReq.setStartDate(start);
         dailyReq.setEndDate(end);
         dailyReq.setReportType("DAILY");
@@ -266,7 +267,7 @@ class RevenueReportServiceTest {
         String dailyHeader = null;
         String dailyDataLine = null;
         for (String line : dailyLines) {
-            if (line.contains("Doanh Thu") && (line.contains("Vé") || line.contains("V")) && line.contains("F&B")) {
+            if (line.contains("Revenue") && line.contains("Ticket") && line.contains("F&B")) {
                 dailyHeader = line;
             } else if (line.contains("01/10/2026") && line.contains("340,000")) {
                 dailyDataLine = line;
@@ -287,6 +288,7 @@ class RevenueReportServiceTest {
 
         // 2. Verify MOVIE report CSV: 7 columns & UTF-8 BOM
         RevenueReportRequest movieReq = new RevenueReportRequest();
+        movieReq.setPreset("custom");
         movieReq.setStartDate(start);
         movieReq.setEndDate(end);
         movieReq.setReportType("MOVIE");
@@ -300,7 +302,7 @@ class RevenueReportServiceTest {
         String movieHeader = null;
         String movieDataLine = null;
         for (String line : movieLines) {
-            if (line.contains("Phim") && (line.contains("Chiếu") || line.contains("Bán") || line.contains("Doanh Thu"))) {
+            if (line.contains("Movie") && (line.contains("Showtimes") || line.contains("Sold") || line.contains("Revenue"))) {
                 movieHeader = line;
             } else if (line.contains("Avatar") && line.contains("340,000")) {
                 movieDataLine = line;
@@ -321,6 +323,7 @@ class RevenueReportServiceTest {
 
         // 3. Verify TRANSACTIONS report CSV: 14 columns & UTF-8 BOM
         RevenueReportRequest txReq = new RevenueReportRequest();
+        txReq.setPreset("custom");
         txReq.setStartDate(start);
         txReq.setEndDate(end);
         txReq.setReportType("TRANSACTIONS");
@@ -334,7 +337,7 @@ class RevenueReportServiceTest {
         String txHeader = null;
         String txDataLine = null;
         for (String line : txLines) {
-            if ((line.contains("Mã Đơn") || line.contains("Thời Gian Đặt")) && line.contains("Khách Hàng")) {
+            if ((line.contains("Booking Code") || line.contains("Booking Time")) && line.contains("Customer")) {
                 txHeader = line;
             } else if (line.contains("BK-001")) {
                 txDataLine = line;

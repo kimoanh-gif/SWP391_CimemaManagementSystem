@@ -57,7 +57,7 @@ class RevenueReportControllerTest {
     @DisplayName("GET /manager/reports: Handles date validation error gracefully")
     void testViewReports_InvalidDateRange() throws Exception {
         when(revenueReportService.getReportData(any()))
-                .thenThrow(new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc."))
+                .thenThrow(new IllegalArgumentException("Start date cannot be after end date."))
                 .thenReturn(new RevenueReportData());
 
         mockMvc.perform(get("/manager/reports").sessionAttr("userRole", "MANAGER")

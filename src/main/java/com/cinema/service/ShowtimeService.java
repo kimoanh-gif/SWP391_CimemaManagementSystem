@@ -103,7 +103,7 @@ public class ShowtimeService {
             }
         }
 
-        if (form.getStartTime() != null && existing.getStartTime() != null && !existing.getStartTime().equals(form.getStartTime()) && form.getStartTime().isBefore(LocalDateTime.now())) { throw new InvalidShowtimeException("Thời gian bắt đầu mới không được nằm trong quá khứ (BR-55)."); }
+        if (form.getStartTime() != null && existing.getStartTime() != null && !existing.getStartTime().equals(form.getStartTime()) && form.getStartTime().isBefore(LocalDateTime.now())) { throw new InvalidShowtimeException("New start time cannot be in the past (BR-55)."); }
         validateShowtime(form, id);
 
         showtimeDao.update(id, form);
@@ -140,7 +140,7 @@ public class ShowtimeService {
         Showtime existing = getShowtimeById(id);
 
         if (showtimeDao.hasAnyBookings(id)) {
-            throw new InvalidShowtimeException("Suất chiếu đã có lịch sử đặt vé hoặc vé đã bán, không thể xóa trực tiếp. Bạn có thể sử dụng chức năng Dừng/Hủy suất chiếu (Stop).");
+            throw new InvalidShowtimeException("Showtime has booking history or sold tickets and cannot be deleted directly. You can use the Stop/Cancel feature.");
         }
 
         showtimeDao.delete(id);
@@ -167,7 +167,7 @@ public class ShowtimeService {
         if (currentShowtimeId == null) {
             LocalDate today = LocalDate.now();
             if (!form.getStartTime().toLocalDate().isAfter(today)) {
-                throw new InvalidShowtimeException("Không được chọn ngày ở quá khứ hoặc hiện tại. Suất chiếu phải được lên lịch từ ngày mai trở đi (BR-55).");
+                throw new InvalidShowtimeException("Cannot select a past or today date. Showtimes must be scheduled from tomorrow onward (BR-55).");
             }
         }
 
@@ -192,7 +192,7 @@ public class ShowtimeService {
         if (seatDao != null) {
             int usableSeats = seatDao.countActiveSeatsByRoomId(form.getRoomId());
             if (usableSeats <= 0) {
-                throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' does not have a valid seat layout (chưa có sơ đồ ghế khả dụng). Please configure seat layout before creating showtimes.");
+                throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' does not have a valid seat layout. Please configure seat layout before creating showtimes.");
             }
         }
 
