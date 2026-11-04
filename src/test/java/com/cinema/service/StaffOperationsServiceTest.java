@@ -148,25 +148,6 @@ class StaffOperationsServiceTest {
                 "CASH", new BigDecimal("120000"), null, "Staff Name", tickets, List.of());
     }
 
-    @Test
-    void checkInReportsUnknownBookingCode() {
-        when(operationsDAO.checkInBooking("UNKNOWN")).thenReturn(0);
-        when(operationsDAO.hasBooking("UNKNOWN")).thenReturn(false);
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> service.checkIn(" UNKNOWN "));
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(operationsDAO).checkInBooking("UNKNOWN");
-    }
-
-    @Test
-    void reportsSuccessfulCheckInCount() {
-        when(operationsDAO.checkInBooking("BK123")).thenReturn(2);
-
-        assertEquals(2, service.checkIn("BK123"));
-    }
-
     // Gate clock: 18:45 on 01/11/2026, 15 minutes before the 19:00 showtime.
     private static final LocalDateTime SHOW_START = LocalDateTime.of(2026, 11, 1, 19, 0);
     private static final String QR = "CINEORA-1f2e3d4c";

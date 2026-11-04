@@ -248,40 +248,6 @@ public class StaffOperationsDAO {
         ), bookingId);
     }
 
-    public int checkInBooking(String bookingCode) {
-        return jdbcTemplate.update("""
-                UPDATE t
-                SET TicketStatus = 'USED', CheckedInAt = SYSDATETIME()
-                FROM dbo.Ticket t
-                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
-                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
-                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
-                WHERE b.BookingCode = ?
-                  AND UPPER(b.[Status]) = 'CONFIRMED'
-                  AND st.StartTime <= DATEADD(MINUTE, 30, SYSDATETIME())
-                  AND st.EndTime >= SYSDATETIME()
-                  AND UPPER(t.TicketStatus) = 'VALID'
-                """, bookingCode.trim());
-    }
-
-    public int countCheckInTickets(String bookingCode) {
-        Integer count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM dbo.Ticket t
-                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
-                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
-                WHERE b.BookingCode = ? AND UPPER(t.TicketStatus) = 'USED'
-                """, Integer.class, bookingCode.trim());
-        return count == null ? 0 : count;
-    }
-
-    public boolean hasBooking(String bookingCode) {
-        Integer count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*) FROM dbo.Booking WHERE BookingCode = ?
-                """, Integer.class, bookingCode.trim());
-        return count != null && count > 0;
-    }
-
     /** Finds one ticket by its QR code or, when ticketId is given, by its ticket ID. */
     public Optional<StaffTicketCheck.Ticket> findTicketForCheckIn(String qrCode, Integer ticketId) {
         List<StaffTicketCheck.Ticket> matches = jdbcTemplate.query("""

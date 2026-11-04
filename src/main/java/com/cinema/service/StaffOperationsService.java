@@ -95,24 +95,6 @@ public class StaffOperationsService {
         if (!isPrivileged(role)) requireStaffId(accountId);
     }
 
-    public int checkIn(String bookingCode) {
-        if (bookingCode == null || bookingCode.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a booking code.");
-        }
-        bookingCode = bookingCode.trim();
-        int checkedIn = staffOperationsDAO.checkInBooking(bookingCode);
-        if (checkedIn > 0) return checkedIn;
-        if (!staffOperationsDAO.hasBooking(bookingCode)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking code was not found.");
-        }
-        int alreadyCheckedIn = staffOperationsDAO.countCheckInTickets(bookingCode);
-        if (alreadyCheckedIn > 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tickets for this booking were already checked in.");
-        }
-        throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Check-in is available only for confirmed bookings during the showtime check-in window.");
-    }
-
     /** UC21 steps 3-6: validates a scanned or typed ticket without changing it. */
     public StaffTicketCheck verifyTicket(String code) {
         return evaluate(findTicket(code));
