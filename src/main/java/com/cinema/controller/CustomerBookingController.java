@@ -7,10 +7,10 @@ import com.cinema.service.CustomerBookingService;
 import com.cinema.service.CustomerBookingService.BookingException;
 import com.cinema.service.SessionService;
 import com.cinema.service.VnpayService;
+import com.cinema.service.PublicUrlResolver;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,17 +30,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.Inet4Address;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Collections;
 
 @Controller
 @RequestMapping("/customer/booking")
 public class CustomerBookingController {
-
-    @Value("${app.public-base-url:}")
-    private String publicBaseUrl;
 
     private static final String SESSION_SHOWTIME_ID = "customerBookingShowtimeId";
     private static final String SESSION_BOOKING_ID = "customerPendingBookingId";
@@ -48,13 +41,16 @@ public class CustomerBookingController {
     private final CustomerBookingService bookingService;
     private final SessionService sessionService;
     private final VnpayService vnpayService;
+    private final PublicUrlResolver publicUrlResolver;
 
     public CustomerBookingController(CustomerBookingService bookingService,
                                      SessionService sessionService,
-                                     VnpayService vnpayService) {
+                                     VnpayService vnpayService,
+                                     PublicUrlResolver publicUrlResolver) {
         this.bookingService = bookingService;
         this.sessionService = sessionService;
         this.vnpayService = vnpayService;
+        this.publicUrlResolver = publicUrlResolver;
     }
 
     @ModelAttribute
@@ -502,40 +498,14 @@ public class CustomerBookingController {
     }
 
     private String resolveTicketBaseUrl(HttpServletRequest request) {
-        if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
-            return publicBaseUrl.trim().replaceAll("/+$", "");
-        }
-        String scheme = request.getHeader("X-Forwarded-Proto");
-        if (scheme == null || scheme.isBlank()) scheme = request.getScheme();
-        String host = request.getHeader("X-Forwarded-Host");
-        if (host == null || host.isBlank()) {
-            host = request.getServerName();
-            if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
-                String lanAddress = findLanIpv4Address();
-                if (lanAddress != null) host = lanAddress;
-            }
-            int port = request.getServerPort();
-            boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
-                    || ("https".equalsIgnoreCase(scheme) && port == 443);
-            if (!defaultPort) host += ":" + port;
-        }
-        return scheme + "://" + host + request.getContextPath();
+        return publicUrlResolver.resolve(request);
     }
 
-    private String findLanIpv4Address() {
-        try {
-            for (NetworkInterface network : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                if (!network.isUp() || network.isLoopback() || network.isVirtual()) continue;
-                for (var address : Collections.list(network.getInetAddresses())) {
-                    if (address instanceof Inet4Address && address.isSiteLocalAddress()) {
-                        return address.getHostAddress();
-                    }
-                }
-            }
-        } catch (SocketException ignored) {
-            // Fall back to the request host below when network interfaces are unavailable.
-        }
-        return null;
+    @GetMapping("/qr-base-url")
+    @ResponseBody
+    public Map<String, String> qrBaseUrl(HttpSession session, HttpServletRequest request) {
+        if (customerAccountId(session) == null) return Map.of("baseUrl", "");
+        return Map.of("baseUrl", publicUrlResolver.resolve(request));
     }
 
     private int parsePositiveInteger(String value) {

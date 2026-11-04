@@ -211,17 +211,40 @@
 
   const setupTicketQrs = () => {
     if (!window.QRCode) return;
-    document.querySelectorAll(".ticket-verification-qr").forEach((element) => {
-      if (!element.dataset.ticketUrl) return;
+    const renderQr = (element, url) => {
+      if (!url || element.dataset.renderedUrl === url) return;
+      element.replaceChildren();
+      element.dataset.renderedUrl = url;
       new window.QRCode(element, {
-        text: element.dataset.ticketUrl,
+        text: url,
         width: 142,
         height: 142,
         colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: window.QRCode.CorrectLevel.M,
       });
+    };
+    document.querySelectorAll(".ticket-verification-qr").forEach((element) => {
+      renderQr(element, element.dataset.ticketUrl);
     });
+
+    const refreshTunnelQrs = async () => {
+      try {
+        const response = await fetch("/customer/booking/qr-base-url", { cache: "no-store" });
+        if (!response.ok) return;
+        const { baseUrl } = await response.json();
+        if (!baseUrl) return;
+        document.querySelectorAll(".ticket-verification-qr[data-ticket-code]").forEach((element) => {
+          const url = `${baseUrl}/ticket/verify/${encodeURIComponent(element.dataset.ticketCode)}`;
+          element.dataset.ticketUrl = url;
+          renderQr(element, url);
+        });
+      } catch (_) {
+        // Keep the most recently rendered QR while cloudflared is restarting.
+      }
+    };
+    refreshTunnelQrs();
+    window.setInterval(refreshTunnelQrs, 5000);
   };
 
   const setupBookingHistory = () => {

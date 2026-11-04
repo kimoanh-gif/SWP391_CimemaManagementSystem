@@ -42,6 +42,21 @@ View → Controller → Service → DAO → SQL Server
    ```
 4. Open http://localhost:8080.
 
+## Local ticket QR codes with Cloudflare Quick Tunnel
+
+Start Spring Boot on port 8080, then run this command in a second PowerShell
+terminal:
+
+```powershell
+.\tools\start-cineora-quick-tunnel.ps1
+```
+
+The application reads the active `trycloudflare.com` hostname from cloudflared's
+local metrics endpoint. When the Quick Tunnel restarts and its hostname changes,
+an open ticket page checks again every five seconds and redraws its QR code with
+the new verification URL. Keep port 20241 available for cloudflared. Set
+`PUBLIC_BASE_URL` only when deploying to a permanent public hostname.
+
 ## Local database configuration
 
 Do not commit database credentials. Each member creates their own local file:

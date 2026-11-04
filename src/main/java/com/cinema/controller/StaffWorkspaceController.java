@@ -14,9 +14,9 @@ import com.cinema.service.StaffCounterSalesService;
 import com.cinema.service.StaffNewsService;
 import com.cinema.service.StaffOperationsService;
 import com.cinema.service.VnpayService;
+import com.cinema.service.PublicUrlResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,19 +49,19 @@ public class StaffWorkspaceController {
     private final StaffCounterSalesService counterSalesService;
     private final StaffOperationsService operationsService;
     private final VnpayService vnpayService;
-
-    @Value("${app.public-base-url:}")
-    private String publicBaseUrl;
+    private final PublicUrlResolver publicUrlResolver;
 
     public StaffWorkspaceController(SessionService sessionService, StaffNewsService staffNewsService,
                                     StaffCounterSalesService counterSalesService,
                                     StaffOperationsService operationsService,
-                                    VnpayService vnpayService) {
+                                    VnpayService vnpayService,
+                                    PublicUrlResolver publicUrlResolver) {
         this.sessionService = sessionService;
         this.staffNewsService = staffNewsService;
         this.counterSalesService = counterSalesService;
         this.operationsService = operationsService;
         this.vnpayService = vnpayService;
+        this.publicUrlResolver = publicUrlResolver;
     }
 
     @GetMapping("/news")
@@ -375,7 +374,7 @@ public class StaffWorkspaceController {
     }
 
     @GetMapping("/bookings/{id}/print")
-    public String printBooking(@PathVariable int id, HttpSession session, Model model,
+    public String printBooking(@PathVariable int id, HttpSession session, HttpServletRequest request, Model model,
                                RedirectAttributes redirectAttributes) {
         Integer accountId = staffAccountId(session);
         if (accountId == null) return "redirect:/login";
@@ -389,16 +388,8 @@ public class StaffWorkspaceController {
         }
         model.addAttribute("user", sessionService.getCurrentUser(session));
         model.addAttribute("print", print);
-        model.addAttribute("ticketVerifyBaseUrl", ticketVerifyBaseUrl());
+        model.addAttribute("ticketVerifyBaseUrl", publicUrlResolver.resolve(request) + "/ticket/verify/");
         return "staff/booking-print";
-    }
-
-    // Printed QR codes carry the same verification link as the customer's e-ticket.
-    private String ticketVerifyBaseUrl() {
-        String base = publicBaseUrl != null && !publicBaseUrl.isBlank()
-                ? publicBaseUrl.trim().replaceAll("/+$", "")
-                : ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
-        return base + "/ticket/verify/";
     }
 
     @GetMapping("/check-in")
