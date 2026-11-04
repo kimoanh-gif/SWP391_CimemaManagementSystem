@@ -58,8 +58,14 @@ BEGIN
         MaxPoints INT NULL,
         Benefits NVARCHAR(MAX) NULL,
         DiscountPercent DECIMAL(5, 2) NULL CONSTRAINT DF_MembershipRank_Discount DEFAULT 0,
+        DiscountUsageLimit INT NOT NULL CONSTRAINT DF_MembershipRank_DiscountUsageLimit DEFAULT 0,
+        MinBookingAmount DECIMAL(18,0) NOT NULL CONSTRAINT DF_MembershipRank_MinBookingAmount DEFAULT 0,
+        MaxDiscountAmount DECIMAL(18,0) NOT NULL CONSTRAINT DF_MembershipRank_MaxDiscountAmount DEFAULT 0,
         IsActive BIT NOT NULL CONSTRAINT DF_MembershipRank_IsActive DEFAULT 1,
-        CONSTRAINT CK_MembershipRank_MinPoints CHECK (MinPoints >= 0)
+        CONSTRAINT CK_MembershipRank_MinPoints CHECK (MinPoints >= 0),
+        CONSTRAINT CK_MembershipRank_DiscountUsageLimit CHECK (DiscountUsageLimit >= 0),
+        CONSTRAINT CK_MembershipRank_MinBookingAmount CHECK (MinBookingAmount >= 0),
+        CONSTRAINT CK_MembershipRank_MaxDiscountAmount CHECK (MaxDiscountAmount >= 0)
     );
 END;
 
@@ -74,6 +80,15 @@ IF COL_LENGTH(N'dbo.MembershipRank', N'Benefits') IS NULL
     ALTER TABLE dbo.MembershipRank ADD Benefits NVARCHAR(MAX) NULL;
 IF COL_LENGTH(N'dbo.MembershipRank', N'DiscountPercent') IS NULL
     ALTER TABLE dbo.MembershipRank ADD DiscountPercent DECIMAL(5, 2) NULL;
+IF COL_LENGTH(N'dbo.MembershipRank', N'DiscountUsageLimit') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD DiscountUsageLimit INT NOT NULL
+        CONSTRAINT DF_MembershipRank_DiscountUsageLimit DEFAULT 0 WITH VALUES;
+IF COL_LENGTH(N'dbo.MembershipRank', N'MinBookingAmount') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD MinBookingAmount DECIMAL(18,0) NOT NULL
+        CONSTRAINT DF_MembershipRank_MinBookingAmount DEFAULT 0 WITH VALUES;
+IF COL_LENGTH(N'dbo.MembershipRank', N'MaxDiscountAmount') IS NULL
+    ALTER TABLE dbo.MembershipRank ADD MaxDiscountAmount DECIMAL(18,0) NOT NULL
+        CONSTRAINT DF_MembershipRank_MaxDiscountAmount DEFAULT 0 WITH VALUES;
 IF COL_LENGTH(N'dbo.MembershipRank', N'IsActive') IS NULL
     ALTER TABLE dbo.MembershipRank ADD IsActive BIT NULL;
 
@@ -629,6 +644,32 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Loyalty
     CREATE UNIQUE INDEX UX_LoyaltyTransaction_BookingEarn ON dbo.LoyaltyTransaction(BookingID,TransactionType) WHERE BookingID IS NOT NULL AND TransactionType='EARN';
 GO
 
+/* One membership-rank discount may be recorded for each booking. */
+IF OBJECT_ID(N'dbo.MembershipDiscountUsage', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MembershipDiscountUsage (
+        BookingID INT NOT NULL CONSTRAINT PK_MembershipDiscountUsage PRIMARY KEY,
+        CustomerID INT NOT NULL,
+        RankID INT NOT NULL,
+        DiscountAmount DECIMAL(18,0) NOT NULL,
+        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_MembershipDiscountUsage_CreatedAt DEFAULT SYSDATETIME(),
+        CONSTRAINT FK_MembershipDiscountUsage_Booking FOREIGN KEY (BookingID) REFERENCES dbo.Booking(BookingID),
+        CONSTRAINT FK_MembershipDiscountUsage_Customer FOREIGN KEY (CustomerID) REFERENCES dbo.Customer(CustomerID),
+        CONSTRAINT FK_MembershipDiscountUsage_Rank FOREIGN KEY (RankID) REFERENCES dbo.MembershipRank(RankID),
+        CONSTRAINT CK_MembershipDiscountUsage_Amount CHECK (DiscountAmount > 0)
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.MembershipDiscountUsage')
+      AND [name] = N'IX_MembershipDiscountUsage_CustomerRank'
+)
+    CREATE INDEX IX_MembershipDiscountUsage_CustomerRank
+        ON dbo.MembershipDiscountUsage(CustomerID, RankID);
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Payment') AND [name] = N'UX_Payment_TransactionRef')
     CREATE UNIQUE INDEX UX_Payment_TransactionRef ON dbo.Payment(TransactionRef) WHERE TransactionRef IS NOT NULL;
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Payment') AND [name] = N'UX_Payment_ProviderTransactionNo')
@@ -696,9 +737,19 @@ BEGIN
         ResolvedByAccountID INT NULL,
         CONSTRAINT FK_MovieReviewReport_Review FOREIGN KEY (ReviewID) REFERENCES dbo.MovieReview(ReviewID),
         CONSTRAINT FK_MovieReviewReport_Reporter FOREIGN KEY (ReporterAccountID) REFERENCES dbo.Account(AccountID),
+        CONSTRAINT FK_MovieReviewReport_Resolver FOREIGN KEY (ResolvedByAccountID) REFERENCES dbo.Account(AccountID),
         CONSTRAINT UQ_MovieReviewReport_Review_Reporter UNIQUE (ReviewID, ReporterAccountID)
     );
 END;
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE parent_object_id = OBJECT_ID(N'dbo.MovieReviewReport')
+      AND [name] = N'FK_MovieReviewReport_Resolver'
+)
+    ALTER TABLE dbo.MovieReviewReport WITH CHECK
+        ADD CONSTRAINT FK_MovieReviewReport_Resolver
+        FOREIGN KEY (ResolvedByAccountID) REFERENCES dbo.Account(AccountID);
 
 IF OBJECT_ID(N'dbo.News', N'U') IS NULL
 BEGIN
