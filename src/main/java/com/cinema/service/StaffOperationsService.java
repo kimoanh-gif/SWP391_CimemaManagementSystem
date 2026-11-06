@@ -30,6 +30,7 @@ public class StaffOperationsService {
     private static final String TICKET_VERIFY_PATH = "/ticket/verify/";
     private static final Pattern TICKET_ID = Pattern.compile("(?i)(?:TK-?)?0*(\\d{1,10})");
     private static final DateTimeFormatter CHECK_IN_TIME = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    private static final Pattern MINIMUM_AGE = Pattern.compile("T(\\d{1,2})");
 
     private final StaffNewsDAO staffNewsDAO;
     private final StaffOperationsDAO staffOperationsDAO;
@@ -100,10 +101,17 @@ public class StaffOperationsService {
         return evaluate(findTicket(code));
     }
 
-    /** UC21 step 7 (Confirm Check-in): Valid -> Checked-In with the check-in timestamp (BR-36). */
-    public StaffTicketCheck confirmCheckIn(String code) {
+    /**
+     * UC21 step 7 (Confirm Check-in): Valid -> Checked-In with the check-in timestamp (BR-36).
+     * An age-restricted ticket also needs Staff to confirm the customer's age (UC22 step 5).
+     */
+    public StaffTicketCheck confirmCheckIn(String code, boolean ageConfirmed) {
         StaffTicketCheck check = verifyTicket(code);
         if (!check.admissible()) return check;
+        if (check.ageCheckRequired() && !ageConfirmed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Confirm the customer's age for the "
+                    + check.ticket().ageRating().trim() + " rating before check-in.");
+        }
         if (staffOperationsDAO.checkInTicket(check.ticket().ticketId()) == 0) {
             // Another gate admitted it, or the window closed, between verify and confirm.
             return evaluate(findTicket(code));
@@ -112,6 +120,18 @@ public class StaffOperationsService {
                 .findTicketForCheckIn(check.ticket().qrCode(), null).orElse(check.ticket());
         return new StaffTicketCheck(StaffTicketCheck.Result.CHECKED_IN,
                 "Ticket Validated Successfully. Customer checked in.", ticket);
+    }
+
+    /** Banner text for a rating that needs an ID check (BR-40), or null when the movie is open to all ages. */
+    static String ageNotice(String ageRating) {
+        if (!StaffCounterSalesService.requiresAgeCheck(ageRating)) return null;
+        String rating = ageRating.trim().toUpperCase(Locale.ROOT);
+        Matcher minimumAge = MINIMUM_AGE.matcher(rating);
+        if (minimumAge.matches()) {
+            return rating + " - Restricted to persons aged " + minimumAge.group(1) + " and above";
+        }
+        if ("K".equals(rating)) return "K - Viewers under 13 must be accompanied by a parent or guardian";
+        return rating + " - Age-restricted movie";
     }
 
     private Optional<StaffTicketCheck.Ticket> findTicket(String code) {
@@ -157,7 +177,10 @@ public class StaffOperationsService {
             return new StaffTicketCheck(StaffTicketCheck.Result.WRONG_SHOWTIME,
                     "Ticket invalid for current showtime or room. " + detail + " Entry denied.", ticket);
         }
-        return new StaffTicketCheck(StaffTicketCheck.Result.VALID, "Ticket Validated Successfully.", ticket);
+        String ageNotice = ageNotice(ticket.ageRating());
+        return new StaffTicketCheck(StaffTicketCheck.Result.VALID, ageNotice == null
+                ? "Ticket Validated Successfully."
+                : "Ticket Validated Successfully. Check the customer's ID before entry.", ticket, ageNotice);
     }
 
     private int requireStaffId(int accountId) {

@@ -412,7 +412,7 @@ public class StaffWorkspaceController {
     public String confirmCheckIn(@RequestParam(required = false) String code, HttpSession session,
                                  RedirectAttributes redirectAttributes) {
         if (staffAccountId(session) == null) return "redirect:/login";
-        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code));
+        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code, false));
     }
 
     private String checkInResult(RedirectAttributes redirectAttributes, Supplier<StaffTicketCheck> check) {
