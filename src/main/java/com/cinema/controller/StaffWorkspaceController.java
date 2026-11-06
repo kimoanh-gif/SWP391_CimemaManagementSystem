@@ -407,12 +407,25 @@ public class StaffWorkspaceController {
         return checkInResult(redirectAttributes, () -> operationsService.verifyTicket(code));
     }
 
-    /** Screen 5.6 step 2: Confirm Check-in admits the customer (Valid -> Checked-In). */
+    /**
+     * Screen 5.6 step 2: Confirm Check-in admits the customer (Valid -> Checked-In). For an age-restricted
+     * movie this is the "Confirm &amp; Allow Entry" button of screen 5.7, which sends ageConfirmed.
+     */
     @PostMapping("/check-in/confirm")
-    public String confirmCheckIn(@RequestParam(required = false) String code, HttpSession session,
-                                 RedirectAttributes redirectAttributes) {
+    public String confirmCheckIn(@RequestParam(required = false) String code,
+                                 @RequestParam(defaultValue = "false") boolean ageConfirmed,
+                                 HttpSession session, RedirectAttributes redirectAttributes) {
         if (staffAccountId(session) == null) return "redirect:/login";
-        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code));
+        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code, ageConfirmed));
+    }
+
+    /** Screen 5.7 Deny Entry: refuses an age-restricted ticket and logs the reason (UC22 A1/E1). */
+    @PostMapping("/check-in/deny")
+    public String denyEntry(@RequestParam(required = false) String code, @RequestParam(required = false) String reason,
+                            HttpSession session, RedirectAttributes redirectAttributes) {
+        Integer accountId = staffAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        return checkInResult(redirectAttributes, () -> operationsService.denyEntry(code, reason, accountId));
     }
 
     private String checkInResult(RedirectAttributes redirectAttributes, Supplier<StaffTicketCheck> check) {

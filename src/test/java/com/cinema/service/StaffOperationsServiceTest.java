@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -235,7 +237,7 @@ class StaffOperationsServiceTest {
                 Optional.of(ticket("USED", "CONFIRMED", SHOW_START, SHOW_START.minusMinutes(15))));
         when(operationsDAO.checkInTicket(8)).thenReturn(1);
 
-        StaffTicketCheck check = gateService().confirmCheckIn(QR);
+        StaffTicketCheck check = gateService().confirmCheckIn(QR, false);
 
         assertEquals(StaffTicketCheck.Result.CHECKED_IN, check.result());
         assertEquals("USED", check.ticket().ticketStatus());
@@ -246,7 +248,7 @@ class StaffOperationsServiceTest {
         when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(
                 ticket("USED", "CONFIRMED", SHOW_START, SHOW_START.minusMinutes(20))));
 
-        assertEquals(StaffTicketCheck.Result.ALREADY_USED, gateService().confirmCheckIn(QR).result());
+        assertEquals(StaffTicketCheck.Result.ALREADY_USED, gateService().confirmCheckIn(QR, false).result());
         verify(operationsDAO, never()).checkInTicket(anyInt());
     }
 
@@ -257,6 +259,79 @@ class StaffOperationsServiceTest {
                 Optional.of(ticket("USED", "CONFIRMED", SHOW_START, SHOW_START.minusMinutes(16))));
         when(operationsDAO.checkInTicket(8)).thenReturn(0);
 
-        assertEquals(StaffTicketCheck.Result.ALREADY_USED, gateService().confirmCheckIn(QR).result());
+        assertEquals(StaffTicketCheck.Result.ALREADY_USED, gateService().confirmCheckIn(QR, false).result());
+    }
+
+    private static StaffTicketCheck.Ticket restrictedTicket(String ageRating) {
+        return new StaffTicketCheck.Ticket(8, QR, "VALID", null, "BK8", "CONFIRMED",
+                "Night Shift", ageRating, "Cinema 02", "A1", "STANDARD", SHOW_START, SHOW_START.plusMinutes(105));
+    }
+
+    @Test
+    void flagsAgeRestrictedTicketForAnIdCheck() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T18")));
+
+        StaffTicketCheck check = gateService().verifyTicket(QR);
+
+        assertEquals(StaffTicketCheck.Result.VALID, check.result());
+        assertTrue(check.ageCheckRequired());
+        assertEquals("T18 - Restricted to persons aged 18 and above", check.ageNotice());
+    }
+
+    @Test
+    void allAgesTicketNeedsNoIdCheck() {
+        when(operationsDAO.findTicketForCheckIn(QR, null))
+                .thenReturn(Optional.of(ticket("VALID", "CONFIRMED", SHOW_START, null)));
+
+        assertFalse(gateService().verifyTicket(QR).ageCheckRequired());
+    }
+
+    @Test
+    void describesEachAgeRating() {
+        assertEquals("T13 - Restricted to persons aged 13 and above", StaffOperationsService.ageNotice(" t13 "));
+        assertEquals("K - Viewers under 13 must be accompanied by a parent or guardian",
+                StaffOperationsService.ageNotice("K"));
+        assertNull(StaffOperationsService.ageNotice("P"));
+        assertNull(StaffOperationsService.ageNotice(null));
+    }
+
+    @Test
+    void confirmRequiresAgeConfirmationForRestrictedMovie() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T16")));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> gateService().confirmCheckIn(QR, false));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(operationsDAO, never()).checkInTicket(anyInt());
+    }
+
+    @Test
+    void confirmChecksInRestrictedMovieAfterAgeConfirmation() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T16")));
+        when(operationsDAO.checkInTicket(8)).thenReturn(1);
+
+        assertEquals(StaffTicketCheck.Result.CHECKED_IN, gateService().confirmCheckIn(QR, true).result());
+    }
+
+    @Test
+    void denyEntryKeepsTheTicketUnused() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T18")));
+
+        StaffTicketCheck check = gateService().denyEntry(QR, "underage", 15);
+
+        assertEquals(StaffTicketCheck.Result.AGE_DENIED, check.result());
+        assertTrue(check.message().contains("does not meet the age requirement"));
+        verify(operationsDAO, never()).checkInTicket(anyInt());
+    }
+
+    @Test
+    void denyEntryRequiresAReason() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T18")));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> gateService().denyEntry(QR, "", 15));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 }

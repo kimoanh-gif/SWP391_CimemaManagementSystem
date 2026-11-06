@@ -614,6 +614,29 @@ textarea.form-control { resize: vertical; }
 .checkin-actions { display: flex; gap: 10px; margin-top: 18px; }
 @media (max-width: 900px) { .checkin-layout { grid-template-columns: 1fr; } }
 
+/* -- Age eligibility verification (UC22, screen 5.7) -- */
+.age-alert { margin: -4px 0 14px; padding: 9px 12px; border-radius: 8px; background: #FEF3C7; color: #92400E;
+  font-size: 12.5px; font-weight: 700; }
+.age-dialog { width: min(480px, 94vw); padding: 0; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-xl); margin: auto; }
+.age-dialog::backdrop { background: rgba(21, 16, 18, .55); }
+.age-dialog-banner { padding: 14px 20px; background: #B91C1C; color: #fff; font-size: 14px; font-weight: 800;
+  letter-spacing: .02em; text-align: center; }
+.age-dialog-body { padding: 18px 20px 20px; }
+.age-dialog-body h2 { font-size: 16px; font-weight: 800; margin-bottom: 12px; }
+.age-dialog-guide { margin: 14px 0; padding: 10px 12px; border-left: 3px solid var(--cineora-red); background: var(--surface-hover);
+  font-size: 12.5px; }
+.btn-success { background: #16A34A; border-color: #16A34A; color: #fff; }
+.btn-success:hover { background: #15803D; border-color: #15803D; }
+.btn-danger { background: #DC2626; border-color: #DC2626; color: #fff; }
+.btn-danger:hover { background: #B91C1C; border-color: #B91C1C; }
+.age-dialog-allow { width: 100%; justify-content: center; }
+.age-dialog-deny { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.age-dialog-deny fieldset { border: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.age-dialog-deny legend { margin-bottom: 6px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.age-dialog-deny label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.age-dialog-actions { display: flex; gap: 10px; margin-top: 14px; }
+
 /* -- Member lookup result (dashboard + sales dialogs) -- */
 .member-card {
   border: 1px solid var(--border);
