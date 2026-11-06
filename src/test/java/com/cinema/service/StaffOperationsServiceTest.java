@@ -313,4 +313,25 @@ class StaffOperationsServiceTest {
 
         assertEquals(StaffTicketCheck.Result.CHECKED_IN, gateService().confirmCheckIn(QR, true).result());
     }
+
+    @Test
+    void denyEntryKeepsTheTicketUnused() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T18")));
+
+        StaffTicketCheck check = gateService().denyEntry(QR, "underage", 15);
+
+        assertEquals(StaffTicketCheck.Result.AGE_DENIED, check.result());
+        assertTrue(check.message().contains("does not meet the age requirement"));
+        verify(operationsDAO, never()).checkInTicket(anyInt());
+    }
+
+    @Test
+    void denyEntryRequiresAReason() {
+        when(operationsDAO.findTicketForCheckIn(QR, null)).thenReturn(Optional.of(restrictedTicket("T18")));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> gateService().denyEntry(QR, "", 15));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
 }

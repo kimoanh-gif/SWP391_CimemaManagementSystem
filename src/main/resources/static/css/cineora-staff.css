@@ -628,7 +628,13 @@ textarea.form-control { resize: vertical; }
   font-size: 12.5px; }
 .btn-success { background: #16A34A; border-color: #16A34A; color: #fff; }
 .btn-success:hover { background: #15803D; border-color: #15803D; }
+.btn-danger { background: #DC2626; border-color: #DC2626; color: #fff; }
+.btn-danger:hover { background: #B91C1C; border-color: #B91C1C; }
 .age-dialog-allow { width: 100%; justify-content: center; }
+.age-dialog-deny { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.age-dialog-deny fieldset { border: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.age-dialog-deny legend { margin-bottom: 6px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.age-dialog-deny label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
 .age-dialog-actions { display: flex; gap: 10px; margin-top: 14px; }
 
 /* -- Member lookup result (dashboard + sales dialogs) -- */

@@ -419,6 +419,15 @@ public class StaffWorkspaceController {
         return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code, ageConfirmed));
     }
 
+    /** Screen 5.7 Deny Entry: refuses an age-restricted ticket and logs the reason (UC22 A1/E1). */
+    @PostMapping("/check-in/deny")
+    public String denyEntry(@RequestParam(required = false) String code, @RequestParam(required = false) String reason,
+                            HttpSession session, RedirectAttributes redirectAttributes) {
+        Integer accountId = staffAccountId(session);
+        if (accountId == null) return "redirect:/login";
+        return checkInResult(redirectAttributes, () -> operationsService.denyEntry(code, reason, accountId));
+    }
+
     private String checkInResult(RedirectAttributes redirectAttributes, Supplier<StaffTicketCheck> check) {
         try {
             redirectAttributes.addFlashAttribute("check", check.get());

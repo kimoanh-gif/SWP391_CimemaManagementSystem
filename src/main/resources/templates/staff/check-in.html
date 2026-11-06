@@ -76,6 +76,7 @@
                 <span th:case="'ALREADY_USED'">⚠ ALREADY USED</span>
                 <span th:case="'WRONG_SHOWTIME'">✕ WRONG SHOWTIME</span>
                 <span th:case="'INVALID'">✕ INVALID TICKET</span>
+                <span th:case="'AGE_DENIED'">✕ ENTRY DENIED – AGE CHECK</span>
                 <span th:case="*">✕ TICKET NOT FOUND</span>
               </p>
               <p class="checkin-result-message" th:text="${check.message}">Message</p>
@@ -134,9 +135,19 @@
                   <input type="hidden" name="ageConfirmed" value="true">
                   <button class="btn btn-success age-dialog-allow" type="submit">✓ Confirm &amp; Allow Entry</button>
                 </form>
-                <div class="age-dialog-actions">
-                  <button class="btn btn-secondary" type="button" data-close-age-check>Back</button>
-                </div>
+                <form th:action="@{/staff/check-in/deny}" method="post" class="age-dialog-deny">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <input type="hidden" name="code" th:value="${check.ticket.qrCode}">
+                  <fieldset>
+                    <legend>Reason for denying entry</legend>
+                    <label><input type="radio" name="reason" value="UNDERAGE" required> Customer does not meet the age requirement</label>
+                    <label><input type="radio" name="reason" value="NO_ID"> Customer refused or could not show a valid ID</label>
+                  </fieldset>
+                  <div class="age-dialog-actions">
+                    <button class="btn btn-danger" type="submit">✕ Deny Entry</button>
+                    <button class="btn btn-secondary" type="button" data-close-age-check>Back</button>
+                  </div>
+                </form>
               </div>
             </dialog>
           </div>

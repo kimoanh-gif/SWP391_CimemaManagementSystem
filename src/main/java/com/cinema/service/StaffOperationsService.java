@@ -7,6 +7,8 @@ import com.cinema.model.StaffBookingPage;
 import com.cinema.model.StaffBookingPrint;
 import com.cinema.model.StaffDashboardData;
 import com.cinema.model.StaffTicketCheck;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class StaffOperationsService {
     private static final Pattern TICKET_ID = Pattern.compile("(?i)(?:TK-?)?0*(\\d{1,10})");
     private static final DateTimeFormatter CHECK_IN_TIME = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
     private static final Pattern MINIMUM_AGE = Pattern.compile("T(\\d{1,2})");
+    private static final Logger log = LoggerFactory.getLogger(StaffOperationsService.class);
 
     private final StaffNewsDAO staffNewsDAO;
     private final StaffOperationsDAO staffOperationsDAO;
@@ -120,6 +123,23 @@ public class StaffOperationsService {
                 .findTicketForCheckIn(check.ticket().qrCode(), null).orElse(check.ticket());
         return new StaffTicketCheck(StaffTicketCheck.Result.CHECKED_IN,
                 "Ticket Validated Successfully. Customer checked in.", ticket);
+    }
+
+    /** UC22 A1/E1 (Deny Entry): refuses an age-restricted ticket and logs why. The ticket stays unused. */
+    public StaffTicketCheck denyEntry(String code, String reason, int accountId) {
+        StaffTicketCheck check = verifyTicket(code);
+        if (!check.admissible() || !check.ageCheckRequired()) return check;
+        StaffTicketCheck.AgeDenialReason denial;
+        try {
+            denial = StaffTicketCheck.AgeDenialReason.valueOf(reason == null ? "" : reason.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException unknown) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose why entry is denied.");
+        }
+        StaffTicketCheck.Ticket ticket = check.ticket();
+        log.warn("Age check denied entry: ticket {} ({}, rated {}) booking {}, staff account {}, reason {}",
+                ticket.ticketCode(), ticket.movieTitle(), ticket.ageRating(), ticket.bookingCode(), accountId, denial);
+        return new StaffTicketCheck(StaffTicketCheck.Result.AGE_DENIED,
+                "Entry denied: " + denial.label() + ". The ticket was not checked in.", ticket, check.ageNotice());
     }
 
     /** Banner text for a rating that needs an ID check (BR-40), or null when the movie is open to all ages. */

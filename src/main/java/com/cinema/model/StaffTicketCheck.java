@@ -27,7 +27,25 @@ public record StaffTicketCheck(
         WRONG_SHOWTIME,
         /** BR-26: booking not paid or ticket cancelled. */
         INVALID,
-        NOT_FOUND
+        NOT_FOUND,
+        /** UC22 A1/E1: Staff denied entry after the age check; the ticket stays unused. */
+        AGE_DENIED
+    }
+
+    /** Why Staff refused an age-restricted ticket (UC22 A1 and E1). */
+    public enum AgeDenialReason {
+        UNDERAGE("Customer does not meet the age requirement"),
+        NO_ID("Customer refused or could not show a valid ID");
+
+        private final String label;
+
+        AgeDenialReason(String label) {
+            this.label = label;
+        }
+
+        public String label() {
+            return label;
+        }
     }
 
     public boolean ageCheckRequired() {
