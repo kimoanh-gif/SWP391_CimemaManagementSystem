@@ -407,12 +407,16 @@ public class StaffWorkspaceController {
         return checkInResult(redirectAttributes, () -> operationsService.verifyTicket(code));
     }
 
-    /** Screen 5.6 step 2: Confirm Check-in admits the customer (Valid -> Checked-In). */
+    /**
+     * Screen 5.6 step 2: Confirm Check-in admits the customer (Valid -> Checked-In). For an age-restricted
+     * movie this is the "Confirm &amp; Allow Entry" button of screen 5.7, which sends ageConfirmed.
+     */
     @PostMapping("/check-in/confirm")
-    public String confirmCheckIn(@RequestParam(required = false) String code, HttpSession session,
-                                 RedirectAttributes redirectAttributes) {
+    public String confirmCheckIn(@RequestParam(required = false) String code,
+                                 @RequestParam(defaultValue = "false") boolean ageConfirmed,
+                                 HttpSession session, RedirectAttributes redirectAttributes) {
         if (staffAccountId(session) == null) return "redirect:/login";
-        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code, false));
+        return checkInResult(redirectAttributes, () -> operationsService.confirmCheckIn(code, ageConfirmed));
     }
 
     private String checkInResult(RedirectAttributes redirectAttributes, Supplier<StaffTicketCheck> check) {
