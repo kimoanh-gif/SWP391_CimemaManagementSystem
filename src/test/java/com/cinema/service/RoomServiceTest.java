@@ -224,4 +224,72 @@ class RoomServiceTest {
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("status")));
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("capacityMatchingLayout")));
     }
+
+    @Test
+    void update_capacityMismatchesConfiguredSeatMap_shouldThrow() {
+        Room existing = new Room();
+        existing.setRoomId(20);
+        existing.setRoomCode("ROOM-20");
+        existing.setRoomName("Room 20");
+        existing.setCapacity(20);
+        existing.setTotalRows(4);
+        existing.setSeatsPerRow(5);
+        existing.setStatus("Ready");
+
+        when(roomDao.findById(20)).thenReturn(Optional.of(existing));
+        when(roomDao.hasUpcomingShowtimes(20)).thenReturn(false);
+
+        // Seat Map currently has 20 configured seats
+        java.util.List<com.cinema.model.Seat> currentSeats = new java.util.ArrayList<>();
+        for (int i = 1; i <= 20; i++) {
+            com.cinema.model.Seat s = new com.cinema.model.Seat();
+            s.setSeatId(i);
+            s.setRoomId(20);
+            currentSeats.add(s);
+        }
+        when(seatDao.findByRoomId(20)).thenReturn(currentSeats);
+
+        // Attempt to change capacity to 30 (5 rows x 6 seats)
+        RoomForm form = new RoomForm();
+        form.setRoomId(20);
+        form.setRoomCode("ROOM-20");
+        form.setRoomName("Room 20");
+        form.setRoomType("2D Digital");
+        form.setTotalRows(5);
+        form.setSeatsPerRow(6);
+        form.setCapacity(30);
+        form.setStatus("Ready");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> roomService.update(form));
+        assertTrue(ex.getMessage().contains("does not match the configured Seat Map"));
+        verify(roomDao, never()).update(any());
+    }
+
+    @Test
+    void update_changeCapacityWithUpcomingShowtimes_shouldThrow() {
+        Room existing = new Room();
+        existing.setRoomId(21);
+        existing.setRoomCode("ROOM-21");
+        existing.setRoomName("Room 21");
+        existing.setCapacity(20);
+        existing.setTotalRows(4);
+        existing.setSeatsPerRow(5);
+        existing.setStatus("Ready");
+
+        when(roomDao.findById(21)).thenReturn(Optional.of(existing));
+        when(roomDao.hasUpcomingShowtimes(21)).thenReturn(true);
+
+        RoomForm form = new RoomForm();
+        form.setRoomId(21);
+        form.setRoomCode("ROOM-21");
+        form.setRoomName("Room 21");
+        form.setRoomType("2D Digital");
+        form.setTotalRows(5);
+        form.setSeatsPerRow(6);
+        form.setCapacity(30);
+        form.setStatus("Ready");
+
+        assertThrows(RoomHasActiveShowtimesException.class, () -> roomService.update(form));
+        verify(roomDao, never()).update(any());
+    }
 }

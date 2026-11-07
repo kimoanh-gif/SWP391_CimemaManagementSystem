@@ -212,7 +212,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = capacityInput && capacityInput.value ? parseInt(capacityInput.value, 10) : 0;
 
         // Validation rule requested: code, name, rows, seatsPerRow and capacity > 0
-        const codeVal = (form.roomCode?.value || '').trim(); const nameVal = (form.roomName?.value || '').trim(); if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) { showFormError('Invalid room code (max 20 characters, alphanumeric with '-' and '_').'); form.roomCode?.focus(); return; } if (!nameVal || nameVal.length > 100) { showFormError('Room name cannot be empty and max 100 characters.'); form.roomName?.focus(); return; } if (r <= 0 || s <= 0) { showFormError('Please enter both rows and seats per row greater than 0.'); if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus(); return; }
+        const codeVal = (form.roomCode?.value || '').trim();
+        const nameVal = (form.roomName?.value || '').trim();
+        if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) {
+            showFormError("Invalid room code (max 20 characters, alphanumeric with '-' and '_').");
+            form.roomCode?.focus();
+            return;
+        }
+        if (!nameVal || nameVal.length > 100) {
+            showFormError('Room name cannot be empty and max 100 characters.');
+            form.roomName?.focus();
+            return;
+        }
+        if (r <= 0 || s <= 0) {
+            showFormError('Please enter both rows and seats per row greater than 0.');
+            if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus();
+            return;
+        }
         if (!c || c <= 0) {
             showFormError('Please enter a valid total capacity (greater than 0).');
             capacityInput.focus();
@@ -242,6 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (json.capacity) json.capacity = parseInt(json.capacity, 10);
         if (json.totalRows) json.totalRows = parseInt(json.totalRows, 10); else json.totalRows = null;
         if (json.seatsPerRow) json.seatsPerRow = parseInt(json.seatsPerRow, 10); else json.seatsPerRow = null;
+
+        if (json.roomId) {
+            json.roomId = parseInt(json.roomId, 10);
+        } else {
+            delete json.roomId;
+        }
 
         const method = json.roomId ? 'PUT' : 'POST';
         const url = json.roomId ? `/api/manager/rooms/${json.roomId}` : '/api/manager/rooms';

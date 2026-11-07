@@ -156,7 +156,7 @@ class RevenueReportServiceTest {
         assertEquals((byte) 0xBF, csvBytes[2]);
 
         String text = new String(csvBytes, 3, csvBytes.length - 3, StandardCharsets.UTF_8);
-        assertTrue(text.contains("CINEMA REVENUE REPORT"));
+        assertTrue(text.contains("CINEMA REVENUE REPORT - CINEORA"));
         assertTrue(text.contains("Total Revenue"));
         assertTrue(text.contains("2,000,000"));
     }
@@ -313,7 +313,7 @@ class RevenueReportServiceTest {
         assertEquals(7, parseCsvLine(movieHeader).size());
         List<String> movieCols = parseCsvLine(movieDataLine);
         assertEquals(7, movieCols.size(), "Movie data line must have exactly 7 columns");
-        assertEquals("1", movieCols.get(0));
+        assertEquals("MOV-1", movieCols.get(0));
         assertEquals("Avatar: The Way of Water", movieCols.get(1));
         assertEquals("5", movieCols.get(2));
         assertEquals("4", movieCols.get(3));

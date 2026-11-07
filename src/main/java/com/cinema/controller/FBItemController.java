@@ -140,9 +140,14 @@ public class FBItemController {
         }
 
         if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
+                    .findFirst()
+                    .orElse("Invalid F&B product information. Please check again.");
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fbForm", bindingResult);
             redirectAttributes.addFlashAttribute("fbForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid F&B product information. Please check again.");
+            redirectAttributes.addFlashAttribute("errorMessage", errorMsg);
             return "redirect:/manager/fb";
         }
 

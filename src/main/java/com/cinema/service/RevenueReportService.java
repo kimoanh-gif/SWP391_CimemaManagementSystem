@@ -176,7 +176,7 @@ public class RevenueReportService {
             DecimalFormat df = new DecimalFormat("#,##0", new DecimalFormatSymbols(Locale.US));
 
             // 1. Report Header
-            writer.println("CINEMA REVENUE REPORT - ROYALLY CINEMA");
+            writer.println("CINEMA REVENUE REPORT - CINEORA");
             writer.println("Export time," + escape(LocalDateTime.now().format(DATETIME_FMT)));
             writer.println("Date range," + escape(request.getStartDate().format(DATE_FMT) + " to " + request.getEndDate().format(DATE_FMT)));
             writer.println("Report type," + escape(resolveReportTypeName(request.getReportType())));
@@ -204,7 +204,7 @@ public class RevenueReportService {
                 } else {
                     for (MovieRevenueItem m : data.getMovieItems()) {
                         writer.println(String.format(
-                                "%d,%s,%d,%d,%s,%s,%s",
+                                "MOV-%d,%s,%d,%d,%s,%s,%s",
                                 m.getMovieId(),
                                 escape(m.getTitle()),
                                 m.getShowtimesCount(),

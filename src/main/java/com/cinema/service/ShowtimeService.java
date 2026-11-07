@@ -180,6 +180,16 @@ public class ShowtimeService {
                     + movie.getTitle() + "' is currently: " + movie.getStatus());
         }
 
+        // ST_025: Movie release date and screening period restriction
+        if (movie.getReleaseDate() != null && form.getStartTime().toLocalDate().isBefore(movie.getReleaseDate())) {
+            throw new InvalidShowtimeException("Cannot schedule showtime on " + form.getStartTime().toLocalDate()
+                    + " because the movie release date is " + movie.getReleaseDate() + ".");
+        }
+        if (movie.getEndDate() != null && form.getStartTime().toLocalDate().isAfter(movie.getEndDate())) {
+            throw new InvalidShowtimeException("Cannot schedule showtime on " + form.getStartTime().toLocalDate()
+                    + " because the movie screening period ended on " + movie.getEndDate() + ".");
+        }
+
         // Validate Room & BR-08
         Room room = roomDao.findById(form.getRoomId())
                 .orElseThrow(() -> new InvalidShowtimeException("Selected screening room does not exist in the system."));

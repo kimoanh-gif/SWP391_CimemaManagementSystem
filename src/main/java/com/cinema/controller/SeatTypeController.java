@@ -67,9 +67,14 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(org.springframework.validation.FieldError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
+                    .findFirst()
+                    .orElse("Invalid seat type data.");
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.seatTypeForm", bindingResult);
             redirectAttributes.addFlashAttribute("seatTypeForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid seat type data.");
+            redirectAttributes.addFlashAttribute("errorMessage", errorMsg);
             return "redirect:/manager/seat-types";
         }
 
@@ -114,7 +119,14 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid seat type data.");
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(org.springframework.validation.FieldError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
+                    .findFirst()
+                    .orElse("Invalid seat type data.");
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.seatTypeForm", bindingResult);
+            redirectAttributes.addFlashAttribute("seatTypeForm", form);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMsg);
             return "redirect:/manager/seat-types";
         }
 

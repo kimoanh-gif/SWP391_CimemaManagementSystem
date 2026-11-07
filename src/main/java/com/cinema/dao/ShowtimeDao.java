@@ -133,28 +133,63 @@ public class ShowtimeDao {
     public int insert(ShowtimeForm form) {
         String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
-        return jdbcTemplate.update(sql,
-                form.getMovieId(),
-                form.getRoomId(),
-                Timestamp.valueOf(form.getStartTime()),
-                Timestamp.valueOf(form.getEndTime()),
-                form.getBaseTicketPrice(),
-                form.getStatus() != null ? form.getStatus() : "Scheduled"
-        );
+        try {
+            return jdbcTemplate.update(sql,
+                    form.getMovieId(),
+                    form.getRoomId(),
+                    Timestamp.valueOf(form.getStartTime()),
+                    Timestamp.valueOf(form.getEndTime()),
+                    form.getBaseTicketPrice(),
+                    form.getStatus() != null ? form.getStatus() : "Scheduled"
+            );
+        } catch (org.springframework.dao.DataAccessException ex) {
+            String msg = ex.getMessage();
+            if (msg != null && (msg.contains("BasePrice") || msg.contains("computed column") || msg.contains("271"))) {
+                String fallbackSql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
+                return jdbcTemplate.update(fallbackSql,
+                        form.getMovieId(),
+                        form.getRoomId(),
+                        Timestamp.valueOf(form.getStartTime()),
+                        Timestamp.valueOf(form.getEndTime()),
+                        form.getBaseTicketPrice(),
+                        form.getStatus() != null ? form.getStatus() : "Scheduled"
+                );
+            }
+            throw ex;
+        }
     }
 
     public int update(int id, ShowtimeForm form) {
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
                 "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
-        return jdbcTemplate.update(sql,
-                form.getMovieId(),
-                form.getRoomId(),
-                Timestamp.valueOf(form.getStartTime()),
-                Timestamp.valueOf(form.getEndTime()),
-                form.getBaseTicketPrice(),
-                form.getStatus(),
-                id
-        );
+        try {
+            return jdbcTemplate.update(sql,
+                    form.getMovieId(),
+                    form.getRoomId(),
+                    Timestamp.valueOf(form.getStartTime()),
+                    Timestamp.valueOf(form.getEndTime()),
+                    form.getBaseTicketPrice(),
+                    form.getStatus(),
+                    id
+            );
+        } catch (org.springframework.dao.DataAccessException ex) {
+            String msg = ex.getMessage();
+            if (msg != null && (msg.contains("BasePrice") || msg.contains("computed column") || msg.contains("271"))) {
+                String fallbackSql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
+                        "BaseTicketPrice = ?, Status = ? WHERE ShowtimeID = ?";
+                return jdbcTemplate.update(fallbackSql,
+                        form.getMovieId(),
+                        form.getRoomId(),
+                        Timestamp.valueOf(form.getStartTime()),
+                        Timestamp.valueOf(form.getEndTime()),
+                        form.getBaseTicketPrice(),
+                        form.getStatus(),
+                        id
+                );
+            }
+            throw ex;
+        }
     }
 
     public int updateStatus(int id, String status) {

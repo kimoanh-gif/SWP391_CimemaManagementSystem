@@ -23,6 +23,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -234,6 +235,28 @@ public class ShowtimeServiceTest {
         InvalidShowtimeException exPast = assertThrows(InvalidShowtimeException.class, () ->
                 showtimeService.createShowtime(formPast));
         assertTrue(exPast.getMessage().contains("Cannot select a past or today date"));
+    }
+
+    @Test
+    void testCreateShowtime_RejectBeforeMovieReleaseDate_ST025() {
+        Movie movie = new Movie();
+        movie.setMovieId(5);
+        movie.setTitle("Future Blockbuster");
+        movie.setStatus("Upcoming");
+        movie.setDuration(120);
+        movie.setReleaseDate(LocalDate.now().plusDays(10)); // Release is in 10 days
+
+        when(movieDao.findById(5)).thenReturn(Optional.of(movie));
+
+        ShowtimeForm form = new ShowtimeForm();
+        form.setMovieId(5);
+        form.setRoomId(1);
+        form.setStartTime(LocalDateTime.now().plusDays(5).withHour(10).withMinute(0)); // 5 days before release
+        form.setBaseTicketPrice(new BigDecimal("85000"));
+
+        InvalidShowtimeException ex = assertThrows(InvalidShowtimeException.class, () ->
+                showtimeService.createShowtime(form));
+        assertTrue(ex.getMessage().contains("movie release date"));
     }
 
     @Test

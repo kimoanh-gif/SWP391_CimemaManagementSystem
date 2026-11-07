@@ -396,6 +396,16 @@ END;
 IF COL_LENGTH(N'dbo.Showtime', N'CreatedAt') IS NULL ALTER TABLE dbo.Showtime ADD CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME() WITH VALUES;
 IF COL_LENGTH(N'dbo.Showtime', N'UpdatedAt') IS NULL ALTER TABLE dbo.Showtime ADD UpdatedAt DATETIME2 NULL;
 
+IF EXISTS (SELECT 1 FROM sys.computed_columns WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'BasePrice')
+BEGIN
+    ALTER TABLE dbo.Showtime DROP COLUMN BasePrice;
+END;
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'BaseTicketPrice')
+   AND NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'BasePrice')
+BEGIN
+    EXEC sp_rename N'dbo.Showtime.BaseTicketPrice', N'BasePrice', N'COLUMN';
+END;
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'IX_Showtime_Movie_StartTime')
     CREATE INDEX IX_Showtime_Movie_StartTime ON dbo.Showtime(MovieID, StartTime);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'IX_Showtime_Room_StartTime')

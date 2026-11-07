@@ -162,7 +162,7 @@ public class RevenueReportDao {
                 SELECT
                     m.MovieID,
                     m.Title,
-                    COUNT(DISTINCT st.ShowtimeID) AS ShowtimesCount,
+                    COUNT(DISTINCT CASE WHEN CAST(st.StartTime AS DATE) BETWEEN ? AND ? THEN st.ShowtimeID END) AS ShowtimesCount,
                     COALESCE(COUNT(DISTINCT bs.BookingSeatID), 0) AS SoldTickets,
                     COALESCE(SUM(bs.UnitPrice), 0) AS TicketRevenue,
                     COALESCE((
@@ -189,7 +189,7 @@ public class RevenueReportDao {
                      AND CAST(b.BookingTime AS DATE) BETWEEN ? AND ?
                 LEFT JOIN dbo.BookingSeat bs ON bs.BookingID = b.BookingID
                 GROUP BY m.MovieID, m.Title
-                HAVING COUNT(DISTINCT bs.BookingSeatID) > 0 OR COUNT(DISTINCT st.ShowtimeID) > 0
+                HAVING COUNT(DISTINCT bs.BookingSeatID) > 0 OR COUNT(DISTINCT CASE WHEN CAST(st.StartTime AS DATE) BETWEEN ? AND ? THEN st.ShowtimeID END) > 0
                 ORDER BY TotalRevenue DESC, SoldTickets DESC
                 """;
 
@@ -205,6 +205,8 @@ public class RevenueReportDao {
                 item.setTotalRevenue(rs.getBigDecimal("TotalRevenue"));
                 return item;
             }, Date.valueOf(startDate), Date.valueOf(endDate),
+               Date.valueOf(startDate), Date.valueOf(endDate),
+               Date.valueOf(startDate), Date.valueOf(endDate),
                Date.valueOf(startDate), Date.valueOf(endDate),
                Date.valueOf(startDate), Date.valueOf(endDate));
         } catch (Exception ex) {

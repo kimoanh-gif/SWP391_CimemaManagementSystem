@@ -131,26 +131,43 @@ public class ManagerDashboardService {
             }
 
             Integer paidCount = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM Booking WHERE Status IN ('Paid', 'Confirmed', 'Completed')", Integer.class);
+                    "SELECT COUNT(*) FROM dbo.Booking WHERE UPPER([Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
 
             if (paidCount != null && paidCount > 0) {
                 stats.setHasTransactionData(true);
-                BigDecimal ticketRev = jdbcTemplate.queryForObject(
-                        "SELECT COALESCE(SUM(TotalAmount), 0) FROM Booking WHERE Status IN ('Paid', 'Confirmed', 'Completed')",
+                BigDecimal totalRev = jdbcTemplate.queryForObject(
+                        "SELECT COALESCE(SUM(TotalAmount), 0) FROM dbo.Booking WHERE UPPER([Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
                         BigDecimal.class);
-                stats.setTicketRevenue(ticketRev != null ? ticketRev : BigDecimal.ZERO);
-                stats.setTotalRevenue(ticketRev != null ? ticketRev : BigDecimal.ZERO);
+                stats.setTotalRevenue(totalRev != null ? totalRev : BigDecimal.ZERO);
 
-                // Booked tickets count
+                BigDecimal ticketRev = jdbcTemplate.queryForObject(
+                        "SELECT COALESCE(SUM(bs.UnitPrice), 0) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON bs.BookingID = b.BookingID WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
+                        BigDecimal.class);
+                stats.setTicketRevenue(ticketRev != null && ticketRev.compareTo(BigDecimal.ZERO) > 0 ? ticketRev : (totalRev != null ? totalRev : BigDecimal.ZERO));
+
+                BigDecimal fbRev = jdbcTemplate.queryForObject(
+                        "SELECT COALESCE(SUM(bfb.Quantity * bfb.UnitPrice), 0) FROM dbo.BookingFoodBeverage bfb JOIN dbo.Booking b ON bfb.BookingID = b.BookingID WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
+                        BigDecimal.class);
+                stats.setFbRevenue(fbRev != null ? fbRev : BigDecimal.ZERO);
+
+                // Booked tickets count (count from BookingSeat; fallback to digital Ticket count if needed)
                 Integer bookedCount = jdbcTemplate.queryForObject(
-                        "SELECT COUNT(*) FROM Ticket t JOIN Booking b ON t.BookingID = b.BookingID " +
-                        "WHERE b.Status IN ('Paid', 'Confirmed', 'Completed')", Integer.class);
+                        "SELECT COALESCE(COUNT(bs.BookingSeatID), 0) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON bs.BookingID = b.BookingID " +
+                        "WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
+                if ((bookedCount == null || bookedCount == 0)) {
+                    Integer digitalTickets = jdbcTemplate.queryForObject(
+                            "SELECT COALESCE(COUNT(t.TicketID), 0) FROM dbo.Ticket t JOIN dbo.BookingSeat bs ON t.BookingSeatID = bs.BookingSeatID JOIN dbo.Booking b ON bs.BookingID = b.BookingID " +
+                            "WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
+                    if (digitalTickets != null && digitalTickets > 0) {
+                        bookedCount = digitalTickets;
+                    }
+                }
                 stats.setTotalBookedTickets(bookedCount != null ? bookedCount : 0);
 
                 // Capacity of scheduled showtimes
                 Integer totalShowtimeCapacity = jdbcTemplate.queryForObject(
-                        "SELECT COALESCE(SUM(r.Capacity), 0) FROM Showtime s JOIN Room r ON s.RoomID = r.RoomID " +
-                        "WHERE s.Status NOT IN ('Cancelled', 'Stopped')", Integer.class);
+                        "SELECT COALESCE(SUM(r.Capacity), 0) FROM dbo.Showtime s JOIN dbo.Room r ON s.RoomID = r.RoomID " +
+                        "WHERE s.[Status] NOT IN ('Cancelled', 'Stopped')", Integer.class);
 
                 if (totalShowtimeCapacity != null && totalShowtimeCapacity > 0 && bookedCount != null) {
                     double rate = ((double) bookedCount / totalShowtimeCapacity) * 100.0;
@@ -166,7 +183,7 @@ public class ManagerDashboardService {
                 stats.setSeatOccupancyRate(null);
             }
         } catch (Exception ex) {
-            // Fallback safely per AC04: Handle safely when system is newly deployed without transaction data
+            org.slf4j.LoggerFactory.getLogger(ManagerDashboardService.class).warn("Failed to compute dashboard transaction metrics: {}", ex.getMessage());
             stats.setHasTransactionData(false);
             stats.setTotalRevenue(BigDecimal.ZERO);
             stats.setTicketRevenue(BigDecimal.ZERO);

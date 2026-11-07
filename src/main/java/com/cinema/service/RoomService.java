@@ -100,10 +100,33 @@ public class RoomService {
         validateCapacityAndLayout(form);
         validateUniquenessAndStatus(form, form.getRoomId());
 
+        boolean hasUpcomingShowtimes = roomDao.hasUpcomingShowtimes(form.getRoomId());
+
         if ("Maintenance".equalsIgnoreCase(form.getStatus())
                 && (existing.getStatus() == null || !"Maintenance".equalsIgnoreCase(existing.getStatus()))
-                && roomDao.hasUpcomingShowtimes(form.getRoomId())) {
+                && hasUpcomingShowtimes) {
             throw new RoomHasActiveShowtimesException(form.getRoomId());
+        }
+
+        // Prevent changing room capacity or dimensions if upcoming showtimes are scheduled
+        if (hasUpcomingShowtimes) {
+            if (!java.util.Objects.equals(existing.getCapacity(), form.getCapacity())
+                    || !java.util.Objects.equals(existing.getTotalRows(), form.getTotalRows())
+                    || !java.util.Objects.equals(existing.getSeatsPerRow(), form.getSeatsPerRow())) {
+                throw new RoomHasActiveShowtimesException("Cannot change room capacity or layout dimensions because the room has active or upcoming showtimes.");
+            }
+        }
+
+        // ST_014: Check consistency between Room.Capacity and actual configured seats in Seat Map
+        if (seatDao != null) {
+            List<com.cinema.model.Seat> existingSeats = seatDao.findByRoomId(form.getRoomId());
+            if (existingSeats != null && !existingSeats.isEmpty()) {
+                if (!form.getCapacity().equals(existingSeats.size())) {
+                    throw new IllegalArgumentException(
+                            "Room capacity (" + form.getCapacity() + " seats) does not match the configured Seat Map ("
+                                    + existingSeats.size() + " seats). Please update the Seat Map before changing room capacity.");
+                }
+            }
         }
 
         roomDao.update(form);

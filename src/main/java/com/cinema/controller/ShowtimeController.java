@@ -141,7 +141,7 @@ public class ShowtimeController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "An error occurred: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", resolveUserFriendlyErrorMessage(ex));
             redirectAttributes.addFlashAttribute("showtimeForm", form);
         }
 
@@ -163,7 +163,7 @@ public class ShowtimeController {
         } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", resolveUserFriendlyErrorMessage(ex));
         }
 
         return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");
@@ -184,9 +184,58 @@ public class ShowtimeController {
         } catch (InvalidShowtimeException | ShowtimeNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete showtime: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", resolveUserFriendlyErrorMessage(ex));
         }
 
         return "redirect:/manager/showtimes" + (date != null && !date.isEmpty() ? "?date=" + date : "");
+    }
+
+    private String resolveUserFriendlyErrorMessage(Throwable ex) {
+        if (ex == null) return "An unexpected error occurred. Please try again.";
+        Throwable root = ex;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        String msg = root.getMessage() != null ? root.getMessage() : ex.getMessage();
+        if (msg == null) return "An unexpected error occurred. Please try again.";
+
+        // Business rule / domain exceptions
+        if (ex instanceof ShowtimeConflictException || ex instanceof InvalidShowtimeException || ex instanceof ShowtimeNotFoundException) {
+            return ex.getMessage();
+        }
+
+        // Database specific friendly translation
+        if (msg.contains("The column 'BasePrice' cannot be modified") || msg.contains("computed column") || msg.contains("271")) {
+            return "Lỗi cấu hình cột giá vé (BasePrice) trong cơ sở dữ liệu. Hệ thống đã tự động chuyển đổi, vui lòng thử lưu lại.";
+        }
+        if (msg.contains("FK_Showtime_Movie") || (msg.contains("FOREIGN KEY") && msg.contains("Movie"))) {
+            return "Phim đã chọn không tồn tại hoặc không hợp lệ.";
+        }
+        if (msg.contains("FK_Showtime_Room") || (msg.contains("FOREIGN KEY") && msg.contains("Room"))) {
+            return "Phòng chiếu đã chọn không tồn tại hoặc không hợp lệ.";
+        }
+        if (msg.contains("CK_Showtime_TimeRange")) {
+            return "Thời gian kết thúc suất chiếu phải sau thời gian bắt đầu.";
+        }
+        if (msg.contains("CK_Showtime_BasePrice")) {
+            return "Giá vé cơ bản không được nhỏ hơn 0.";
+        }
+        if (msg.contains("timed out") || msg.contains("Connection refused") || msg.contains("Communications link failure")) {
+            return "Không thể kết nối đến máy chủ cơ sở dữ liệu. Vui lòng kiểm tra dịch vụ SQL Server.";
+        }
+
+        // Clean raw technical SQL statement dump
+        if (msg.contains("PreparedStatementCallback") || msg.contains("SQLException") || msg.contains("SQL state")) {
+            int errIdx = msg.indexOf("error code");
+            if (errIdx >= 0) {
+                int colon = msg.indexOf(":", errIdx);
+                if (colon >= 0 && colon + 1 < msg.length()) {
+                    return "Lỗi cơ sở dữ liệu: " + msg.substring(colon + 1).trim();
+                }
+            }
+            return "Đã xảy ra lỗi khi lưu vào cơ sở dữ liệu. Vui lòng kiểm tra lại thông tin suất chiếu.";
+        }
+
+        return msg;
     }
 }

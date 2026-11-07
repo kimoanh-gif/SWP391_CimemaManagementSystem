@@ -92,9 +92,14 @@ public class TicketPricingController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(org.springframework.validation.FieldError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
+                    .findFirst()
+                    .orElse("Invalid pricing rule information. Please check again.");
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.pricingForm", bindingResult);
             redirectAttributes.addFlashAttribute("pricingForm", form);
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid pricing rule information. Please check again.");
+            redirectAttributes.addFlashAttribute("errorMessage", errorMsg);
             return "redirect:/manager/pricing";
         }
 
