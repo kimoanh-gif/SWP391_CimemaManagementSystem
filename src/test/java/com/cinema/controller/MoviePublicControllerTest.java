@@ -82,24 +82,30 @@ class MoviePublicControllerTest {
 
         assertEquals("customer/movies/details", view);
         assertEquals(movie, model.getAttribute("movie"));
+        assertEquals(false, model.getAttribute("canBookTickets"));
+        @SuppressWarnings("unchecked")
+        List<LocalDate> calendarDates = (List<LocalDate>) model.getAttribute("showtimeCalendarDates");
+        assertEquals(30, calendarDates.size());
+        assertEquals(LocalDate.now(), calendarDates.get(0));
+        assertEquals(LocalDate.now().plusDays(29), calendarDates.get(29));
     }
 
     @Test
-    void movieDetailsOpensFirstDateThatHasShowtimesWhenTodayHasNone() {
+    void movieDetailsAlwaysOpensTheThirtyDayCalendarOnToday() {
         Movie movie = new Movie();
         movie.setMovieId(5);
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
         when(movieService.getMovieById(5)).thenReturn(Optional.of(movie));
         when(showtimeService.getAvailableDatesForMovie(5)).thenReturn(List.of(tomorrow, tomorrow.plusDays(1)));
-        when(showtimeService.getShowtimesForMovie(5, tomorrow)).thenReturn(List.of());
+        when(showtimeService.getShowtimesForMovie(5, LocalDate.now())).thenReturn(List.of());
         when(movieService.getMovieReviews(5)).thenReturn(List.of());
         when(movieService.getRelatedMovies(5, 4)).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         controller.movieDetails(5, null, null, session, model, new RedirectAttributesModelMap());
 
-        assertEquals(tomorrow, model.getAttribute("selectedDate"));
+        assertEquals(LocalDate.now(), model.getAttribute("selectedDate"));
     }
 
     @Test

@@ -132,18 +132,18 @@ public class Voucher {
     }
 
     public String getDiscountDisplay() {
-        if (discountValue == null) return "Giảm giá đặc biệt";
+        if (discountValue == null) return "Special Offer";
         if (VoucherDiscounts.isPercentage(discountType)) {
-            return "Giảm " + discountValue.stripTrailingZeros().toPlainString() + "%";
+            return discountValue.stripTrailingZeros().toPlainString() + "% Off";
         }
         DecimalFormat df = new DecimalFormat("###,###");
-        return "Giảm " + df.format(discountValue) + " đ";
+        return df.format(discountValue) + " VND Off";
     }
 
     public String getFormattedValidRange() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String from = validFrom != null ? validFrom.format(fmt) : "";
-        String to = validTo != null ? validTo.format(fmt) : "Vô thời hạn";
+        String to = validTo != null ? validTo.format(fmt) : "No expiry";
         return from + " - " + to;
     }
 }

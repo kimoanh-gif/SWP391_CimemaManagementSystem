@@ -344,7 +344,9 @@
                 <div class="promo-banner-wrap">
                     <img th:src="${promo.bannerUrl}" th:alt="${promo.name}" class="promo-banner-img" loading="lazy" decoding="async"
                          onerror="this.src='/images/cinema-login-hero.png'" />
-                    <span class="promo-tag-badge" th:text="${promo.discountDisplay}">20% Off</span>
+                    <span class="promo-tag-badge"
+                          th:with="voucher=${promo.vouchers.isEmpty() ? null : promo.vouchers[0]}, isPercent=${voucher != null and voucher.discountType != null and (#strings.startsWith(#strings.toUpperCase(voucher.discountType), 'PERCENT') or voucher.discountType == '%')}"
+                          th:text="${voucher == null or voucher.discountValue == null ? 'Special Offer' : (isPercent ? #numbers.formatDecimal(voucher.discountValue, 1, 0) + '% Off' : #numbers.formatDecimal(voucher.discountValue, 1, 0) + ' VND Off')}">20% Off</span>
                 </div>
                 <div class="promo-body">
                     <h3 class="promo-title">

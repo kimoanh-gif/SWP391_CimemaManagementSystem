@@ -97,6 +97,11 @@ public class MovieCatalogService {
         if (movies == null || movies.isEmpty()) return movies;
         Map<Integer, double[]> summaries = movieReviewDAO.findRatingSummaries();
         for (Movie m : movies) {
+            if (m.isComingSoon()) {
+                m.setAverageRating(0.0);
+                m.setReviewCount(0);
+                continue;
+            }
             double[] summary = summaries == null || m.getMovieId() == null ? null : summaries.get(m.getMovieId());
             m.setAverageRating(summary != null ? summary[0] : 0.0);
             m.setReviewCount(summary != null ? (int) summary[1] : 0);

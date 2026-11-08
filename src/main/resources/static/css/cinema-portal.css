@@ -2069,10 +2069,19 @@ button, input, select, textarea {
 .cineora-home .btn-auth-login { color: #fff; border-color: rgba(255,255,255,.22); background: rgba(0,0,0,.12); }
 .cineora-home .btn-auth-login:hover { color: var(--primary); background: #ffe5d9; }
 .cineora-home .btn-auth-register { color: #fff; border: 0; background: var(--primary); box-shadow: 0 3px 12px rgba(217,35,50,.2); }
-.cineora-home .user-badge { color: var(--text-primary); border-color: var(--border-subtle); background: #fff; }
+.cineora-home .user-badge {
+    color: #fff;
+    border-color: rgba(255,255,255,.3);
+    background: transparent;
+}
+.cineora-home .user-badge:hover {
+    border-color: rgba(255,255,255,.55);
+    background: rgba(255,255,255,.1);
+}
 .cineora-home .user-avatar { color: #fff; background: var(--primary); }
-.cineora-home .user-name { color: var(--text-primary); }
-.cineora-home .user-points { color: #745100; }
+.cineora-home .user-name { color: #fff; }
+.cineora-home .user-points { color: #f7bd4f; }
+.cineora-home .account-chevron { color: rgba(255,255,255,.8); }
 .cineora-home .account-dropdown-menu { border-color: var(--border-subtle); background: #fff; box-shadow: 0 16px 36px rgba(40,32,42,.14); }
 .cineora-home .account-dropdown-menu a,.cineora-home .account-dropdown-menu button { color: var(--text-primary); }
 .cineora-home .account-dropdown-menu a:hover,.cineora-home .account-dropdown-menu button:hover { color:var(--primary); background:#fff1ec; }
@@ -2083,6 +2092,11 @@ button, input, select, textarea {
 .cineora-home .cinema-header.is-scrolled .nav-link:hover { color:var(--primary);background:#ffe5d9; }
 .cineora-home .cinema-header.is-scrolled .nav-link.active { color:var(--primary);border-bottom-color:var(--primary); }
 .cineora-home .cinema-header.is-scrolled .btn-auth-login { color:var(--text-primary);border-color:transparent;background:transparent; }
+.cineora-home .cinema-header.is-scrolled .user-badge { color:var(--text-primary);border-color:var(--border-subtle);background:#fff; }
+.cineora-home .cinema-header.is-scrolled .user-badge:hover { border-color:var(--border-focus);background:#fff; }
+.cineora-home .cinema-header.is-scrolled .user-name { color:var(--text-primary); }
+.cineora-home .cinema-header.is-scrolled .user-points { color:#745100; }
+.cineora-home .cinema-header.is-scrolled .account-chevron { color:var(--text-secondary); }
 
 .cineora-home .hero-slider-section {
     min-height: 590px;

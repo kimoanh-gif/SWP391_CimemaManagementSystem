@@ -40,6 +40,6 @@ class VoucherDiscountsTest {
         v.setDiscountType("PERCENT");
         v.setDiscountValue(BigDecimal.TEN);
 
-        assertEquals("Giảm 10%", v.getDiscountDisplay());
+        assertEquals("10% Off", v.getDiscountDisplay());
     }
 }

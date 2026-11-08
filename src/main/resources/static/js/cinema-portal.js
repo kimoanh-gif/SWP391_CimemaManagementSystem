@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initHomeHeader();
     initMovieDetailHeader();
+    initMovieShowtimeCalendar();
     initHeroCarousel();
     initTrailerModal();
     initVoucherCopy();
@@ -9,6 +10,41 @@ document.addEventListener('DOMContentLoaded', () => {
     initMoviePagination();
     initTopGrossingCarousel();
 });
+
+function initMovieShowtimeCalendar() {
+    const calendar = document.querySelector('.movie-detail-page .showtime-calendar');
+    if (!calendar || calendar.querySelector('.date-pill')) return;
+
+    const movieId = calendar.dataset.movieId;
+    const selectedDate = calendar.dataset.selectedDate;
+    if (!movieId) return;
+
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+
+    for (let index = 0; index < 30; index += 1) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + index);
+        const value = formatDate(date);
+        const link = document.createElement('a');
+        link.className = `date-pill${value === selectedDate ? ' active' : ''}`;
+        link.href = `/movies/${encodeURIComponent(movieId)}?date=${value}#showtimes`;
+
+        const dayLabel = index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : weekdays[date.getDay()];
+        link.innerHTML = `<span class="date-pill-day">${dayLabel}</span>`
+            + `<span class="date-pill-date">${String(date.getDate()).padStart(2, '0')}</span>`
+            + `<span class="date-pill-month">${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}</span>`;
+        calendar.appendChild(link);
+    }
+}
 
 function initMovieDetailHeader() {
     const page = document.querySelector('.movie-detail-page');

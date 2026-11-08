@@ -110,17 +110,22 @@ public class MoviePublicController {
             return "redirect:/movies";
         }
         model.addAttribute("movie", movie);
+        boolean canBookTickets = !movie.isComingSoon()
+                && movie.getTrailerUrl() != null
+                && !movie.getTrailerUrl().isBlank();
+        model.addAttribute("canBookTickets", canBookTickets);
 
         // Upcoming available dates for this movie
         List<LocalDate> availableDates = showtimeService.getAvailableDatesForMovie(movieId);
         model.addAttribute("availableDates", availableDates);
+        LocalDate calendarStart = LocalDate.now();
+        model.addAttribute("showtimeCalendarDates",
+                calendarStart.datesUntil(calendarStart.plusDays(30)).toList());
 
-        // Date selection for showtimes: without an explicit date, open the first date
-        // that really has showtimes so the highlighted tab matches the list below it.
+        // The 30-day calendar always opens on the real current date. A date without
+        // scheduled screenings remains selectable and displays the empty state below.
         if (showDate == null) {
-            showDate = availableDates.contains(LocalDate.now()) || availableDates.isEmpty()
-                    ? LocalDate.now()
-                    : availableDates.get(0);
+            showDate = LocalDate.now();
         }
         model.addAttribute("selectedDate", showDate);
 
@@ -129,7 +134,9 @@ public class MoviePublicController {
         model.addAttribute("showtimes", showtimes);
 
         // Movie Reviews
-        List<MovieReview> reviews = movieService.getMovieReviews(movieId);
+        List<MovieReview> reviews = movie.isComingSoon()
+                ? List.of()
+                : movieService.getMovieReviews(movieId);
         movie.setReviewCount(reviews.size());
         movie.setAverageRating(reviews.isEmpty()
                 ? 0.0

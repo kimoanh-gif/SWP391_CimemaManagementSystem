@@ -106,7 +106,7 @@ public class Promotion {
     }
 
     public String getFormattedEndDate() {
-        if (endDate == null) return "Vô thời hạn";
+        if (endDate == null) return "No expiry";
         return endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
@@ -129,6 +129,6 @@ public class Promotion {
         if (vouchers != null && !vouchers.isEmpty()) {
             return vouchers.get(0).getDiscountDisplay();
         }
-        return "Ưu Đãi Đặc Biệt";
+        return "Special Offer";
     }
 }

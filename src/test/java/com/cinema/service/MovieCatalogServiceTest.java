@@ -86,6 +86,19 @@ class MovieCatalogServiceTest {
     }
 
     @Test
+    void comingSoonMoviesNeverExposeReviewRatings() {
+        Movie upcoming = movie(8, "Coming Soon", "T13", java.time.LocalDate.now().plusDays(30));
+        upcoming.setStatus("Upcoming");
+        when(movieDAO.findComingSoon(5)).thenReturn(List.of(upcoming));
+        when(movieReviewDAO.findRatingSummaries()).thenReturn(java.util.Map.of(8, new double[]{4.8, 12}));
+
+        Movie result = movieCatalogService.getComingSoonMovies(5).get(0);
+
+        assertEquals(0.0, result.getAverageRating());
+        assertEquals(0, result.getReviewCount());
+    }
+
+    @Test
     void searchFiltersByAgeRatingAndSortsByRating() {
         Movie a = movie(1, "A", "T16", null);
         Movie b = movie(2, "B", "T16", null);
