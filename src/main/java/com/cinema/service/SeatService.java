@@ -114,8 +114,16 @@ public class SeatService {
             throw new InvalidSeatLayoutException("Seat layout cannot be empty.");
         }
 
-        if (seats.size() > room.getCapacity()) {
+        int maxRows = room.getTotalRows() != null && room.getTotalRows() > 0 ? room.getTotalRows() : 26;
+        int maxCols = room.getSeatsPerRow() != null && room.getSeatsPerRow() > 0 ? room.getSeatsPerRow() : 50;
+        int maxGridPositions = maxRows * maxCols;
+
+        if (room.getCapacity() != null && room.getCapacity() > 0 && seats.size() > room.getCapacity()) {
             throw new InvalidSeatLayoutException("Total seats (" + seats.size() + ") exceeds room capacity (" + room.getCapacity() + ").");
+        }
+
+        if (seats.size() > maxGridPositions) {
+            throw new InvalidSeatLayoutException("Total seats (" + seats.size() + ") exceeds maximum grid positions (" + maxGridPositions + ").");
         }
 
         // AC04: Validate uniqueness of positions and valid attributes
@@ -133,6 +141,13 @@ public class SeatService {
             String posKey = seat.getRowLabel().trim().toUpperCase() + "-" + seat.getSeatNumber();
             if (!positions.add(posKey)) {
                 throw new InvalidSeatLayoutException("Duplicate seat position: " + posKey + " (AC04).");
+            }
+
+            if (seat.getGridRow() != null && (seat.getGridRow() < 1 || seat.getGridRow() > maxRows)) {
+                throw new InvalidSeatLayoutException("Seat " + posKey + " grid row (" + seat.getGridRow() + ") is outside room grid boundary (1-" + maxRows + ").");
+            }
+            if (seat.getGridColumn() != null && (seat.getGridColumn() < 1 || seat.getGridColumn() > maxCols)) {
+                throw new InvalidSeatLayoutException("Seat " + posKey + " grid column (" + seat.getGridColumn() + ") is outside room grid boundary (1-" + maxCols + ").");
             }
 
             String reqTypeName = (seat.getSeatTypeName() == null || seat.getSeatTypeName().isBlank()) ? "Standard" : seat.getSeatTypeName().trim();
@@ -228,7 +243,8 @@ public class SeatService {
             }
         }
 
-        // Update room timestamp for optimistic concurrency tracking
+        // Synchronize Room.Capacity with actual configured physical seat count within the same transaction
+        roomDao.updateCapacity(roomId, seats.size());
         roomDao.updateRoomTimestamp(roomId);
 
         return seatDao.findByRoomId(roomId);

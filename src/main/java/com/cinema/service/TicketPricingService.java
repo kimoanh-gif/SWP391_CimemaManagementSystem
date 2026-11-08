@@ -221,6 +221,67 @@ public class TicketPricingService {
     }
 
     /**
+     * Determine day type for ticket pricing:
+     * - WEEKEND: Saturday, Sunday
+     * - WEEKDAY: Monday through Friday
+     */
+    public String determineDayType(java.time.LocalDate date) {
+        if (date == null) return "WEEKDAY";
+        java.time.DayOfWeek dow = date.getDayOfWeek();
+        if (dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY) {
+            return "WEEKEND";
+        }
+        return "WEEKDAY";
+    }
+
+    /**
+     * Resolves the authoritative effective base price for a screening from active TicketPricing rules,
+     * adding FormatSurcharge exactly once, or falling back to the showtime base price.
+     */
+    public BigDecimal resolveEffectiveBasePrice(java.time.LocalDateTime showtimeStart, String experienceType, BigDecimal fallbackBasePrice) {
+        if (showtimeStart == null) {
+            return (fallbackBasePrice != null && fallbackBasePrice.compareTo(BigDecimal.ZERO) >= 0)
+                    ? fallbackBasePrice : new BigDecimal("85000");
+        }
+        String dayType = determineDayType(showtimeStart.toLocalDate());
+        String timeSlot = determineTimeSlot(showtimeStart.toLocalTime());
+        String exp = (experienceType != null && !experienceType.isBlank()) ? experienceType.trim() : "2D Digital";
+
+        // 1. Try exact active rule match (dayType, timeSlot, exp)
+        java.util.Optional<TicketPricing> matched = ticketPricingDao.findActiveConflict(dayType, timeSlot, exp, null);
+
+        // 2. Fallback to generic 2D Digital if specific format not found
+        if (matched.isEmpty() && !exp.equalsIgnoreCase("2D Digital")) {
+            matched = ticketPricingDao.findActiveConflict(dayType, timeSlot, "2D Digital", null);
+        }
+
+        // 3. Fallback to ALL_DAY if specific timeSlot not found
+        if (matched.isEmpty()) {
+            matched = ticketPricingDao.findActiveConflict(dayType, "ALL_DAY", exp, null);
+        }
+
+        if (matched.isPresent()) {
+            TicketPricing rule = matched.get();
+            BigDecimal base = rule.getBasePrice() != null ? rule.getBasePrice() : BigDecimal.ZERO;
+            BigDecimal surcharge = rule.getFormatSurcharge() != null ? rule.getFormatSurcharge() : BigDecimal.ZERO;
+            return base.add(surcharge);
+        }
+
+        // 4. Fallback to showtime base price or system default
+        return (fallbackBasePrice != null && fallbackBasePrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? fallbackBasePrice : new BigDecimal("85000");
+    }
+
+    /**
+     * Resolves the authoritative ticket unit price for a seat at checkout according to BR-50:
+     * Effective base price x SeatType price multiplier, rounded to the nearest 1,000 VND (HALF_UP).
+     */
+    public BigDecimal resolveSeatPrice(java.time.LocalDateTime showtimeStart, String experienceType, BigDecimal fallbackBasePrice, BigDecimal multiplier) {
+        BigDecimal effectiveBase = resolveEffectiveBasePrice(showtimeStart, experienceType, fallbackBasePrice);
+        return calculateTicketUnitPrice(effectiveBase, multiplier);
+    }
+
+    /**
      * P1-03: Determine time slot based on strict boundary rules:
      * - MORNING: < 12:00
      * - STANDARD: 12:00 - 17:00

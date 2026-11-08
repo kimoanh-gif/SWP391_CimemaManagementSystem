@@ -97,7 +97,6 @@ public class RoomService {
     @Transactional
     public void update(RoomForm form) {
         Room existing = getById(form.getRoomId());
-        validateCapacityAndLayout(form);
         validateUniquenessAndStatus(form, form.getRoomId());
 
         boolean hasUpcomingShowtimes = roomDao.hasUpcomingShowtimes(form.getRoomId());
@@ -117,16 +116,38 @@ public class RoomService {
             }
         }
 
-        // ST_014: Check consistency between Room.Capacity and actual configured seats in Seat Map
-        if (seatDao != null) {
-            List<com.cinema.model.Seat> existingSeats = seatDao.findByRoomId(form.getRoomId());
-            if (existingSeats != null && !existingSeats.isEmpty()) {
-                if (!form.getCapacity().equals(existingSeats.size())) {
-                    throw new IllegalArgumentException(
-                            "Room capacity (" + form.getCapacity() + " seats) does not match the configured Seat Map ("
-                                    + existingSeats.size() + " seats). Please update the Seat Map before changing room capacity.");
-                }
+        List<com.cinema.model.Seat> existingSeats = seatDao != null ? seatDao.findByRoomId(form.getRoomId()) : java.util.Collections.emptyList();
+        if (existingSeats != null && !existingSeats.isEmpty()) {
+            if (form.getCapacity() == null || form.getCapacity() <= 0) {
+                throw new IllegalArgumentException("Please enter total room capacity greater than 0.");
             }
+            if (form.getTotalRows() == null || form.getTotalRows() <= 0 || form.getSeatsPerRow() == null || form.getSeatsPerRow() <= 0) {
+                throw new IllegalArgumentException("Please enter vertical rows and horizontal seats greater than 0.");
+            }
+            // 1. Capacity must match actual configured physical seat count
+            if (!form.getCapacity().equals(existingSeats.size())) {
+                throw new IllegalArgumentException(
+                        "Room capacity (" + form.getCapacity() + " seats) does not match the configured Seat Map ("
+                                + existingSeats.size() + " seats). Please update the Seat Map before changing room capacity.");
+            }
+            // 2. TotalRows and SeatsPerRow must accommodate all existing seat coordinates
+            int maxRow = existingSeats.stream().mapToInt(com.cinema.model.Seat::getGridRow).filter(r -> r > 0).max().orElse(1);
+            int maxCol = existingSeats.stream().mapToInt(com.cinema.model.Seat::getGridColumn).filter(c -> c > 0).max().orElse(1);
+            if (form.getTotalRows() < maxRow || form.getSeatsPerRow() < maxCol) {
+                throw new IllegalArgumentException(
+                        "Room dimensions (" + form.getTotalRows() + " rows × " + form.getSeatsPerRow()
+                                + " seats per row) cannot be smaller than existing seat coordinates (row "
+                                + maxRow + ", column " + maxCol + ").");
+            }
+            // 3. Room dimensions must accommodate total capacity
+            if (form.getCapacity() > form.getTotalRows() * form.getSeatsPerRow()) {
+                throw new IllegalArgumentException(
+                        "Total capacity (" + form.getCapacity() + " seats) cannot exceed maximum grid positions ("
+                                + (form.getTotalRows() * form.getSeatsPerRow()) + " seats).");
+            }
+        } else {
+            // Room has NO configured seats yet: enforce rectangular layout
+            validateCapacityAndLayout(form);
         }
 
         roomDao.update(form);

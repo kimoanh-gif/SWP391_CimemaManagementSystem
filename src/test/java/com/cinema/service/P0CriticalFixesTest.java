@@ -116,7 +116,7 @@ public class P0CriticalFixesTest {
                     seatService.saveRoomLayout(1, List.of(targetA1, targetA2))
             );
 
-            assertTrue(ex.getMessage().contains("AC02") || ex.getMessage().contains("tham chiếu"));
+            assertTrue(ex.getMessage().contains("AC02") || ex.getMessage().contains("tham chiếu") || ex.getMessage().contains("historical bookings"));
             verify(seatDao, never()).deleteById(105);
         }
 
@@ -149,7 +149,7 @@ public class P0CriticalFixesTest {
                     seatService.saveRoomLayout(1, List.of(targetA1), clientLoadedTime)
             );
 
-            assertTrue(ex.getMessage().contains("AC06") || ex.getMessage().contains("người dùng khác"));
+            assertTrue(ex.getMessage().contains("AC06") || ex.getMessage().contains("người dùng khác") || ex.getMessage().contains("another user"));
         }
     }
 
@@ -223,8 +223,8 @@ public class P0CriticalFixesTest {
                     movieService.updateMovie(10, updateForm)
             );
 
-            assertTrue(ex.getMessage().contains("thay đổi thời lượng"));
-            assertTrue(ex.getMessage().contains("4 suất chiếu"));
+            assertTrue(ex.getMessage().contains("thay đổi thời lượng") || ex.getMessage().contains("change duration"));
+            assertTrue(ex.getMessage().contains("4 suất chiếu") || ex.getMessage().contains("4 future showtime") || ex.getMessage().contains("4 upcoming showtime"));
             verify(movieDao, never()).update(eq(10), any());
         }
     }

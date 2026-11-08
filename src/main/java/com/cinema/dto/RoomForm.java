@@ -53,7 +53,7 @@ public class RoomForm {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    @AssertTrue(message = "Total room capacity does not match vertical rows × horizontal seats")
+    @AssertTrue(message = "Total room capacity cannot exceed vertical rows × horizontal seats")
     public boolean isCapacityMatchingLayout() {
         if (capacity == null || totalRows == null || seatsPerRow == null) {
             return true;
@@ -61,7 +61,10 @@ public class RoomForm {
         if (capacity <= 0 || totalRows <= 0 || seatsPerRow <= 0) {
             return true;
         }
-        return capacity.equals(totalRows * seatsPerRow);
+        if (roomId == null) {
+            return capacity.equals(totalRows * seatsPerRow);
+        }
+        return capacity <= (totalRows * seatsPerRow);
     }
 
     // Getters & Setters

@@ -171,6 +171,14 @@ public class RoomDao {
         jdbcTemplate.update(sql, roomId);
     }
 
+    /**
+     * Synchronizes Room.Capacity with configured physical seat count and updates UpdatedAt timestamp.
+     */
+    public void updateCapacity(int roomId, int capacity) {
+        String sql = "UPDATE Room SET Capacity = ?, UpdatedAt = SYSUTCDATETIME() WHERE RoomID = ?";
+        jdbcTemplate.update(sql, capacity, roomId);
+    }
+
     public boolean existsByRoomCode(String roomCode, Integer excludeRoomId) {
         if (roomCode == null || roomCode.trim().isEmpty()) return false;
         String sql = "SELECT COUNT(*) FROM Room WHERE RoomCode = ?" + (excludeRoomId != null ? " AND RoomID <> ?" : "");
