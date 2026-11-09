@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEORA — Create Room Schedule</title>
+
+    <!-- Google Fonts: Be Vietnam Pro & Material Symbols Outlined -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" th:href="@{/images/cineora-logo.png}">
+
+    <!-- Core CINEORA Manager Stylesheets -->
+    <link rel="stylesheet" th:href="@{/css/cineora-manager.css}">
+    <link rel="stylesheet" th:href="@{/css/cineora-manager-legacy.css}">
+    <link rel="stylesheet" th:href="@{/css/manager-common.css}">
+    <link rel="stylesheet" th:href="@{/css/manager-scheduler.css(v=${#dates.createNow().time})}">
+</head>
+<body class="cm-body">
+
+<!-- Sidebar -->
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='showtimes')}"></aside>
+
+<!-- Main Shell -->
+<div class="cm-shell">
+    <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
+    <div class="cm-main">
+
+        <!-- Top Header & Breadcrumb -->
+        <div class="scheduler-page-header">
+            <div>
+                <div class="scheduler-breadcrumb">
+                    <a th:href="@{/manager/dashboard}">Overview</a>
+                    <span class="slash">/</span>
+                    <a th:href="@{/manager/showtimes}">Showtime Management</a>
+                    <span class="slash">/</span>
+                    <span class="current">Create Room Schedule</span>
+                </div>
+                <h1 class="scheduler-page-title">Create Room Schedule</h1>
+                <p class="scheduler-page-subtitle">Select a room, add movie slots, and let the system calculate film end times automatically.</p>
+            </div>
+            <div>
+                <a th:href="@{/manager/showtimes}" class="btn-back-showtimes">
+                    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> Back to Showtimes
+                </a>
+            </div>
+        </div>
+
+        <!-- Global Alerts -->
+        <div id="schedulerAlertBox" class="alert alert-error" style="display:none; margin-bottom: 16px;">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-body" id="schedulerAlertMsg">Alert message.</div>
+            <button type="button" class="alert-close" onclick="this.closest('.alert').style.display='none'">×</button>
+        </div>
+        <div id="schedulerSuccessBox" class="alert alert-success" style="display:none; margin-bottom: 16px;">
+            <span class="alert-icon">✅</span>
+            <div class="alert-body" id="schedulerSuccessMsg">Success message.</div>
+            <button type="button" class="alert-close" onclick="this.closest('.alert').style.display='none'">×</button>
+        </div>
+
+        <div class="scheduler-container">
+
+            <!-- 1. Room Selection Card (Horizontal full width card) -->
+            <div class="room-selection-card">
+                <div class="room-selection-left">
+                    <!-- Screening Room Dropdown -->
+                    <div class="selection-field-group">
+                        <label for="roomSelect">Screening Room</label>
+                        <div class="input-with-icon">
+                            <span class="material-symbols-outlined input-icon">tv</span>
+                            <select id="roomSelect">
+                                <option th:each="r : ${eligibleRooms}"
+                                        th:value="${r.roomId}"
+                                        th:text="${r.roomName}"
+                                        th:data-name="${r.roomName}"
+                                        th:data-type="${r.roomType}"
+                                        th:data-capacity="${r.capacity}"
+                                        th:data-status="${r.status}"
+                                        th:selected="${selectedRoomId == r.roomId}">Cinema Room</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Screening Date Picker -->
+                    <div class="selection-field-group">
+                        <label for="dateSelect">Screening Date</label>
+                        <div class="input-with-icon">
+                            <span class="material-symbols-outlined input-icon">calendar_today</span>
+                            <input type="date" id="dateSelect" th:value="${selectedDate}" th:min="${minDate}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Room Information Meta Group -->
+                <div class="room-meta-group">
+                    <div class="room-meta-item">
+                        <span class="material-symbols-outlined icon-pulse">ecg_heart</span>
+                        <span>Type: <strong id="infoRoomType" th:text="${selectedRoom != null ? selectedRoom.roomType : 'Standard Laser'}">Standard Laser</strong></span>
+                    </div>
+                    <div class="room-meta-item">
+                        <span class="material-symbols-outlined icon-group">group</span>
+                        <span>Capacity: <strong id="infoRoomCapacity" th:text="${selectedRoom != null ? selectedRoom.capacity : 120}">120</strong> seats</span>
+                    </div>
+                    <div class="room-meta-item">
+                        <span class="material-symbols-outlined icon-ready">check_circle</span>
+                        <span>Status: <strong id="infoRoomStatus" th:text="${selectedRoom != null ? selectedRoom.status : 'Ready'}">Ready</strong></span>
+                    </div>
+                    <div class="room-meta-item">
+                        <span class="material-symbols-outlined icon-clean">cleaning_services</span>
+                        <span>Cleaning Buffer: <strong>15 min</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Main Content Grid (Left: Timeline & Table, Right: Add Slot Form) -->
+            <div class="scheduler-main-grid">
+
+                <!-- Left Column (approx 68%) -->
+                <div class="scheduler-left-col">
+
+                    <!-- A. Room Schedule Timeline Card -->
+                    <div class="content-card">
+                        <div class="content-card-header">
+                            <span class="material-symbols-outlined icon-header-red">calendar_month</span>
+                            <h2>Room Schedule</h2>
+                        </div>
+
+                        <!-- Horizontal Scroll Canvas -->
+                        <div class="timeline-scroll-container">
+                            <div class="timeline-canvas">
+                                <!-- Top Hour Ruler: 08:00 to 24:00 (and cross midnight to 02:00) -->
+                                <div class="timeline-ruler-row" id="timelineRuler">
+                                    <!-- Injected by JS -->
+                                </div>
+
+                                <!-- Track Row: Room Badge on left, Interactive blocks on right -->
+                                <div class="timeline-track-row">
+                                    <div class="timeline-room-badge" id="timelineRoomBadge" th:text="${selectedRoom != null ? selectedRoom.roomName : 'Room'}">Room</div>
+                                    <div class="timeline-blocks-area" id="timelineTrackArea">
+                                        <!-- Injected by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Legend -->
+                        <div class="timeline-legend-row">
+                            <div class="legend-chip">
+                                <span class="legend-swatch swatch-saved"></span>
+                                <span>Saved Showtime (<strong id="legendSavedCount">0</strong>)</span>
+                            </div>
+                            <div class="legend-chip">
+                                <span class="legend-swatch swatch-draft"></span>
+                                <span>Draft Showtime (<strong id="legendDraftCount">0</strong>)</span>
+                            </div>
+                            <div class="legend-chip">
+                                <span class="legend-swatch swatch-buffer"></span>
+                                <span>Cleaning Buffer (15 min)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B. Schedule Slots Table Card -->
+                    <div class="content-card">
+                        <div class="content-card-header">
+                            <span class="material-symbols-outlined icon-header-red">format_list_bulleted</span>
+                            <h2>Schedule Slots</h2>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="scheduler-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 36px; text-align: center;">#</th>
+                                        <th class="col-movie">Movie</th>
+                                        <th style="width: 75px;">Start</th>
+                                        <th style="width: 85px;">Duration</th>
+                                        <th style="width: 85px;">Film End</th>
+                                        <th style="width: 115px;">Room Available</th>
+                                        <th style="width: 95px;">Price</th>
+                                        <th style="width: 85px; text-align: center;">Status</th>
+                                        <th style="width: 75px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleTableBody">
+                                    <!-- Injected dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Sub-table Info Note -->
+                        <div class="table-info-note">
+                            <span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">info</span>
+                            <span>15-minute cleaning buffer applies after each showtime.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column (approx 32%) -->
+                <div class="scheduler-right-col">
+
+                    <!-- Add Showtime Slot Card -->
+                    <div class="add-slot-card">
+                        <div class="add-slot-header">
+                            <span class="material-symbols-outlined icon-add-red">add_circle</span>
+                            <h2>Add Showtime Slot</h2>
+                        </div>
+
+                        <!-- Movie Selection -->
+                        <div class="form-group-custom">
+                            <label for="drawerMovieSelect">Movie</label>
+                            <div class="input-with-icon">
+                                <span class="material-symbols-outlined input-icon">movie</span>
+                                <select id="drawerMovieSelect" style="width:100%;">
+                                    <option value="">-- Select Movie --</option>
+                                    <option th:each="m : ${eligibleMovies}"
+                                            th:value="${m.movieId}"
+                                            th:data-title="${m.title}"
+                                            th:data-duration="${m.duration}"
+                                            th:data-rating="${m.ageRating}"
+                                            th:text="${m.title}">Movie Title</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Start Time -->
+                        <div class="form-group-custom">
+                            <label for="drawerStartTime">Start Time</label>
+                            <div class="input-with-icon">
+                                <span class="material-symbols-outlined input-icon">schedule</span>
+                                <input type="time" id="drawerStartTime">
+                            </div>
+                        </div>
+
+                        <!-- Auto Calculation Preview Box (Pinkish / Light Red Box) -->
+                        <div class="auto-calc-box">
+                            <div class="auto-calc-header">
+                                <span class="material-symbols-outlined" style="font-size:18px;">calculate</span>
+                                <span>Auto Calculation</span>
+                            </div>
+
+                            <div class="calc-row-item">
+                                <span>Movie Duration:</span>
+                                <span id="calcDuration">-- min</span>
+                            </div>
+                            <div class="calc-row-item highlight-end">
+                                <span>Film End Time:</span>
+                                <strong id="calcFilmEnd">--:--</strong>
+                            </div>
+                            <div class="calc-row-item">
+                                <span>Cleaning Buffer:</span>
+                                <span>15 min</span>
+                            </div>
+                            <div class="calc-row-item highlight-avail">
+                                <span>Room Available At:</span>
+                                <strong id="calcRoomAvailable">--:--</strong>
+                            </div>
+
+                            <div class="auto-calc-subnote">
+                                <span class="material-symbols-outlined" style="font-size:14px;color:#9CA3AF;">info</span>
+                                <span>You only choose the movie and the start time. Film end time is calculated automatically.</span>
+                            </div>
+
+                            <!-- Conflict Warning Box inside Auto Calc -->
+                            <div id="calcConflictAlert" class="calc-conflict-alert">
+                                <div style="display:flex;align-items:flex-start;gap:6px;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0;">warning</span>
+                                    <div>
+                                        <strong id="calcConflictTitle">Schedule Conflict!</strong>
+                                        <div id="calcConflictDesc">Room is occupied.</div>
+                                        <button type="button" id="btnApplySuggestion" class="btn-suggest-inline" style="display:none;margin-top:4px;">Use Next Time</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-buttons-row">
+                            <button type="button" id="btnAddSlot" class="btn-add-schedule">
+                                <span class="material-symbols-outlined" style="font-size:18px;">add</span> Add to Schedule
+                            </button>
+                            <button type="button" id="btnClearForm" class="btn-clear-slot">
+                                <span class="material-symbols-outlined" style="font-size:16px;">refresh</span> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- 3. Sticky Bottom Save Action Bar -->
+        <div id="schedulerStickyBar" class="scheduler-sticky-bar" style="display:none;">
+            <div class="sticky-bar-left">
+                <span class="material-symbols-outlined" style="color:#D92332;font-size:22px;">schedule</span>
+                <span id="stickyBarLabel">
+                    <strong id="draftCountNumber">0</strong> draft slot ready to save
+                </span>
+            </div>
+            <div class="sticky-bar-right">
+                <button type="button" id="btnDiscardDrafts" class="btn-discard-drafts">
+                    <span class="material-symbols-outlined" style="font-size:18px;">delete</span> Discard Drafts
+                </button>
+                <button type="button" id="btnSaveSchedule" class="btn-save-schedule-red">
+                    <span class="material-symbols-outlined" style="font-size:18px;">bookmark</span> Save Room Schedule
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal: Edit Existing Showtime -->
+<div id="editShowtimeModal" class="modal-backdrop">
+    <div class="modal-content-clean">
+        <div class="modal-header-clean">
+            <h3 id="editModalTitle">Edit Showtime</h3>
+            <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <form id="editShowtimeForm">
+            <input type="hidden" id="editShowtimeId" name="showtimeId">
+
+            <div class="modal-body-clean">
+                <div class="form-group-custom">
+                    <label>Movie</label>
+                    <select id="editMovieSelect" class="form-control" required style="height:38px;padding:0 10px;border-radius:6px;border:1px solid #D1D5DB;">
+                        <option th:each="m : ${eligibleMovies}"
+                                th:value="${m.movieId}"
+                                th:data-duration="${m.duration}"
+                                th:text="${m.title} + ' (' + ${m.duration} + ' min)'">Movie</option>
+                    </select>
+                </div>
+                <div class="form-group-custom">
+                    <label>Start Time</label>
+                    <input type="time" id="editStartTime" class="form-control" required style="height:38px;padding:0 10px;border-radius:6px;border:1px solid #D1D5DB;">
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background:#D92332;border-color:#D92332;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Initial Server Data Embedded Safely for JS -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    window.SERVER_DATA = {
+        selectedRoomId: /*[[${selectedRoomId}]]*/ 0,
+        selectedDate: /*[[${#temporals.format(selectedDate, 'yyyy-MM-dd')}]]*/ '',
+        minDate: /*[[${#temporals.format(minDate, 'yyyy-MM-dd')}]]*/ '',
+        cleaningBufferMinutes: /*[[${cleaningBuffer}]]*/ 15,
+        trailerDurationMinutes: /*[[${trailerDuration}]]*/ 0,
+        existingShowtimes: /*[[${existingShowtimes}]]*/ []
+    };
+    /*]]>*/
+</script>
+
+<script th:src="@{/js/manager-scheduler.js(v=${#dates.createNow().time})}"></script>
+</body>
+</html>

@@ -1,7 +1,6 @@
 package com.cinema.controller;
 
 import com.cinema.exception.InvalidFBItemException;
-import com.cinema.exception.FBItemNotFoundException;
 import com.cinema.model.FBItem;
 import com.cinema.dto.FBItemForm;
 import com.cinema.service.FBItemService;

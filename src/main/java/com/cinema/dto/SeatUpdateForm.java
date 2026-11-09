@@ -20,10 +20,15 @@ public class SeatUpdateForm {
     private String seatTypeName;
 
     @Pattern(
-            regexp = "^(|Active|Maintenance|Unavailable)$",
-            message = "Invalid seat status. Allowed: Active, Maintenance, Unavailable."
+            regexp = "^(|Active|Maintenance|Lock|Locked|Unavailable)$",
+            message = "Invalid seat status. Allowed: Active, Lock."
     )
     private String status;
+
+    /**
+     * Optional comma-separated seat IDs for batch update (e.g. "12,13,14,15").
+     */
+    private String seatIds;
 
     public SeatUpdateForm() {
     }
@@ -35,11 +40,27 @@ public class SeatUpdateForm {
         this.status = status;
     }
 
+    public SeatUpdateForm(Integer seatId, Integer roomId, String seatTypeName, String status, String seatIds) {
+        this.seatId = seatId;
+        this.roomId = roomId;
+        this.seatTypeName = seatTypeName;
+        this.status = status;
+        this.seatIds = seatIds;
+    }
+
     @AssertTrue(message = "Must provide at least seat type or seat status to update.")
     public boolean isUpdateTargetProvided() {
         boolean hasType = seatTypeName != null && !seatTypeName.trim().isEmpty();
         boolean hasStatus = status != null && !status.trim().isEmpty();
         return hasType || hasStatus;
+    }
+
+    public String getSeatIds() {
+        return seatIds;
+    }
+
+    public void setSeatIds(String seatIds) {
+        this.seatIds = seatIds;
     }
 
     public Integer getSeatId() {

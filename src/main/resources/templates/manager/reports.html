@@ -15,35 +15,6 @@
             margin-bottom: 20px;
             box-shadow: var(--shadow-sm);
         }
-        .filter-presets {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px dashed var(--border);
-        }
-        .preset-btn {
-            background: var(--bg-body);
-            border: 1px solid var(--border);
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-700);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .preset-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        .preset-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
         .filter-row {
             display: flex;
             align-items: flex-end;
@@ -263,15 +234,6 @@
         <form id="reportFilterForm" th:action="@{/manager/reports}" method="get">
             <input type="hidden" name="preset" id="presetInput" th:value="${filterRequest.preset}">
 
-            <!-- Preset Tabs -->
-            <div class="filter-presets">
-                <span style="font-size:12.5px;font-weight:600;color:var(--text-500);margin-right:6px;">Period:</span>
-                <button type="button" class="preset-btn" data-preset="today" th:classappend="${filterRequest.preset == 'today'} ? ' active' : ''">Today</button>
-                <button type="button" class="preset-btn" data-preset="last7days" th:classappend="${filterRequest.preset == 'last7days'} ? ' active' : ''">Last 7 days</button>
-                <button type="button" class="preset-btn" data-preset="thismonth" th:classappend="${filterRequest.preset == 'thismonth'} ? ' active' : ''">This month</button>
-                <button type="button" class="preset-btn" data-preset="thisquarter" th:classappend="${filterRequest.preset == 'thisquarter'} ? ' active' : ''">This quarter</button>
-                <button type="button" class="preset-btn" data-preset="all" th:classappend="${filterRequest.preset == 'all'} ? ' active' : ''">All time</button>
-            </div>
 
             <!-- Inputs and Actions -->
             <div class="filter-row">

@@ -148,8 +148,29 @@ public class SeatController {
         }
 
         try {
-            seatService.updateSeat(form.getSeatId(), form.getSeatTypeName(), form.getStatus());
-            redirectAttributes.addFlashAttribute("successMessage", "Seat updated successfully!");
+            List<Integer> targetSeatIds = new java.util.ArrayList<>();
+            if (form.getSeatIds() != null && !form.getSeatIds().trim().isEmpty()) {
+                String[] parts = form.getSeatIds().split(",");
+                for (String p : parts) {
+                    try {
+                        int sid = Integer.parseInt(p.trim());
+                        if (sid > 0) targetSeatIds.add(sid);
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (targetSeatIds.isEmpty() && form.getSeatId() != null && form.getSeatId() > 0) {
+                targetSeatIds.add(form.getSeatId());
+            }
+
+            for (Integer sid : targetSeatIds) {
+                seatService.updateSeat(sid, form.getSeatTypeName(), form.getStatus());
+            }
+
+            if (targetSeatIds.size() > 1) {
+                redirectAttributes.addFlashAttribute("successMessage", "Successfully updated " + targetSeatIds.size() + " seats!");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Seat updated successfully!");
+            }
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error: " + ex.getMessage());
         }

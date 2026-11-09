@@ -109,6 +109,59 @@ public class ShowtimeController {
         return "manager/showtimes";
     }
 
+    @GetMapping("/scheduler")
+    public String viewRoomScheduler(
+            @RequestParam(required = false) Integer roomId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Model model,
+            HttpServletRequest request
+    ) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+
+        LocalDate minDate = LocalDate.now().plusDays(1);
+        LocalDate selectedDate = (date != null && !date.isBefore(minDate)) ? date : minDate;
+
+        List<Room> allRooms = roomService.getAll(null, null);
+        List<Room> eligibleRooms = allRooms.stream()
+                .filter(Room::isActiveForShowtimes)
+                .collect(Collectors.toList());
+
+        Integer activeRoomId = roomId;
+        if ((activeRoomId == null || activeRoomId <= 0) && !eligibleRooms.isEmpty()) {
+            activeRoomId = eligibleRooms.get(0).getRoomId();
+        }
+
+        Room selectedRoom = null;
+        List<Showtime> existingShowtimes = new java.util.ArrayList<>();
+        if (activeRoomId != null && activeRoomId > 0) {
+            final int targetId = activeRoomId;
+            selectedRoom = eligibleRooms.stream()
+                    .filter(r -> r.getRoomId() == targetId)
+                    .findFirst()
+                    .orElse(null);
+            if (selectedRoom != null) {
+                existingShowtimes = showtimeService.getRoomScheduleForDate(activeRoomId, selectedDate);
+            }
+        }
+
+        List<Movie> allMovies = movieService.getAllMovies(null, null, null, null);
+        List<Movie> eligibleMovies = allMovies.stream()
+                .filter(Movie::isActiveForShowtimes)
+                .collect(Collectors.toList());
+
+        model.addAttribute("eligibleRooms", eligibleRooms);
+        model.addAttribute("selectedRoomId", activeRoomId != null ? activeRoomId : 0);
+        model.addAttribute("selectedRoom", selectedRoom);
+        model.addAttribute("selectedDate", selectedDate);
+        model.addAttribute("minDate", minDate);
+        model.addAttribute("eligibleMovies", eligibleMovies);
+        model.addAttribute("existingShowtimes", existingShowtimes);
+        model.addAttribute("cleaningBuffer", ShowtimeService.CLEANING_BUFFER_MINUTES);
+        model.addAttribute("trailerDuration", 0);
+
+        return "manager/showtime-scheduler";
+    }
+
     @PostMapping("/save")
     public String saveShowtime(
             @Valid @ModelAttribute("showtimeForm") ShowtimeForm form,
