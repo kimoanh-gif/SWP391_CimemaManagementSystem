@@ -48,6 +48,22 @@ public class ShowtimeDao {
         st.setRoomType(rs.getString("RoomType"));
         st.setRoomCapacity(rs.getObject("RoomCapacity", Integer.class));
 
+        // Read TrailerDuration if column exists, else deduce safely
+        try {
+            Integer trailer = rs.getObject("TrailerDuration", Integer.class);
+            if (trailer != null) {
+                st.setTrailerDuration(trailer);
+            } else {
+                long diff = java.time.Duration.between(st.getStartTime(), st.getEndTime()).toMinutes();
+                int dur = st.getMovieDuration() != null ? st.getMovieDuration() : 120;
+                st.setTrailerDuration(diff >= dur + 10 ? 10 : (int) Math.max(0, diff - dur));
+            }
+        } catch (Exception ex) {
+            long diff = java.time.Duration.between(st.getStartTime(), st.getEndTime()).toMinutes();
+            int dur = st.getMovieDuration() != null ? st.getMovieDuration() : 120;
+            st.setTrailerDuration(diff >= dur + 10 ? 10 : (int) Math.max(0, diff - dur));
+        }
+
         return st;
     };
 
@@ -84,6 +100,30 @@ public class ShowtimeDao {
         sql.append("ORDER BY s.StartTime ASC");
 
         return jdbcTemplate.query(sql.toString(), params.toArray(), rowMapper);
+    }
+
+    /**
+     * Retrieve active/scheduled showtimes for a specific room across a date,
+     * including cross-midnight schedules extending up to 06:00 of the following day.
+     */
+    public List<Showtime> findRoomScheduleForDate(int roomId, LocalDate date) {
+        LocalDateTime dayStart = date.atStartOfDay();
+        LocalDateTime nextDayEnd = date.plusDays(1).atTime(6, 0);
+        String sql = "SELECT s.*, s.BasePrice AS BaseTicketPrice, " +
+                "m.Title AS MovieTitle, m.PosterURL AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
+                "r.RoomName, r.RoomCode, r.RoomType, r.Capacity AS RoomCapacity " +
+                "FROM Showtime s " +
+                "JOIN Movie m ON s.MovieID = m.MovieID " +
+                "LEFT JOIN Room r ON s.RoomID = r.RoomID " +
+                "WHERE s.RoomID = ? " +
+                "AND s.Status NOT IN ('Cancelled', 'Stopped') " +
+                "AND (s.StartTime < ? AND s.EndTime > ?) " +
+                "ORDER BY s.StartTime ASC";
+        return jdbcTemplate.query(sql, ps -> {
+            ps.setInt(1, roomId);
+            ps.setTimestamp(2, Timestamp.valueOf(nextDayEnd));
+            ps.setTimestamp(3, Timestamp.valueOf(dayStart));
+        }, rowMapper);
     }
 
     public Optional<Showtime> findById(int id) {
@@ -131,8 +171,9 @@ public class ShowtimeDao {
 
 
     public int insert(ShowtimeForm form) {
-        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
-                "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
+        int trailer = form.getTrailerDuration() != null ? form.getTrailerDuration() : 0;
+        String sql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, TrailerDuration, CreatedAt) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
         try {
             return jdbcTemplate.update(sql,
                     form.getMovieId(),
@@ -140,14 +181,15 @@ public class ShowtimeDao {
                     Timestamp.valueOf(form.getStartTime()),
                     Timestamp.valueOf(form.getEndTime()),
                     form.getBaseTicketPrice(),
-                    form.getStatus() != null ? form.getStatus() : "Scheduled"
+                    form.getStatus() != null ? form.getStatus() : "Scheduled",
+                    trailer
             );
         } catch (org.springframework.dao.DataAccessException ex) {
             String msg = ex.getMessage();
-            if (msg != null && (msg.contains("BasePrice") || msg.contains("computed column") || msg.contains("271"))) {
-                String fallbackSql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, CreatedAt) " +
+            if (msg != null && msg.contains("TrailerDuration")) {
+                String legacySql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, Status, CreatedAt) " +
                         "VALUES (?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
-                return jdbcTemplate.update(fallbackSql,
+                return jdbcTemplate.update(legacySql,
                         form.getMovieId(),
                         form.getRoomId(),
                         Timestamp.valueOf(form.getStartTime()),
@@ -156,13 +198,27 @@ public class ShowtimeDao {
                         form.getStatus() != null ? form.getStatus() : "Scheduled"
                 );
             }
+            if (msg != null && (msg.contains("Invalid column name 'BasePrice'") || msg.contains("computed column") || msg.contains("271"))) {
+                String fallbackSql = "INSERT INTO Showtime (MovieID, RoomID, StartTime, EndTime, BaseTicketPrice, Status, TrailerDuration, CreatedAt) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME())";
+                return jdbcTemplate.update(fallbackSql,
+                        form.getMovieId(),
+                        form.getRoomId(),
+                        Timestamp.valueOf(form.getStartTime()),
+                        Timestamp.valueOf(form.getEndTime()),
+                        form.getBaseTicketPrice(),
+                        form.getStatus() != null ? form.getStatus() : "Scheduled",
+                        trailer
+                );
+            }
             throw ex;
         }
     }
 
     public int update(int id, ShowtimeForm form) {
+        int trailer = form.getTrailerDuration() != null ? form.getTrailerDuration() : 0;
         String sql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
+                "BasePrice = ?, Status = ?, TrailerDuration = ? WHERE ShowtimeID = ?";
         try {
             return jdbcTemplate.update(sql,
                     form.getMovieId(),
@@ -171,13 +227,27 @@ public class ShowtimeDao {
                     Timestamp.valueOf(form.getEndTime()),
                     form.getBaseTicketPrice(),
                     form.getStatus(),
+                    trailer,
                     id
             );
         } catch (org.springframework.dao.DataAccessException ex) {
             String msg = ex.getMessage();
-            if (msg != null && (msg.contains("BasePrice") || msg.contains("computed column") || msg.contains("271"))) {
+            if (msg != null && msg.contains("TrailerDuration")) {
+                String legacySql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
+                        "BasePrice = ?, Status = ? WHERE ShowtimeID = ?";
+                return jdbcTemplate.update(legacySql,
+                        form.getMovieId(),
+                        form.getRoomId(),
+                        Timestamp.valueOf(form.getStartTime()),
+                        Timestamp.valueOf(form.getEndTime()),
+                        form.getBaseTicketPrice(),
+                        form.getStatus(),
+                        id
+                );
+            }
+            if (msg != null && (msg.contains("Invalid column name 'BasePrice'") || msg.contains("computed column") || msg.contains("271"))) {
                 String fallbackSql = "UPDATE Showtime SET MovieID = ?, RoomID = ?, StartTime = ?, EndTime = ?, " +
-                        "BaseTicketPrice = ?, Status = ? WHERE ShowtimeID = ?";
+                        "BaseTicketPrice = ?, Status = ?, TrailerDuration = ? WHERE ShowtimeID = ?";
                 return jdbcTemplate.update(fallbackSql,
                         form.getMovieId(),
                         form.getRoomId(),
@@ -185,6 +255,7 @@ public class ShowtimeDao {
                         Timestamp.valueOf(form.getEndTime()),
                         form.getBaseTicketPrice(),
                         form.getStatus(),
+                        trailer,
                         id
                 );
             }

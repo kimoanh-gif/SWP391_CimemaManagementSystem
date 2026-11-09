@@ -119,9 +119,7 @@ function openAddMovieModal() {
     // Enforce future dates (from tomorrow onwards)
     var tomorrowStr = getTomorrowDateStr();
     var releaseInput = document.getElementById("movieReleaseDate");
-    var endInput = document.getElementById("movieEndDate");
     if (releaseInput) releaseInput.min = tomorrowStr;
-    if (endInput) endInput.min = tomorrowStr;
 
     var backdrop = document.getElementById("movieModalBackdrop");
     if (backdrop) backdrop.classList.add("open");
@@ -153,9 +151,7 @@ function openEditMovieModal(button) {
     if (modalTitle) modalTitle.textContent = "Edit movie: " + title;
 
     var releaseInput = document.getElementById("movieReleaseDate");
-    var endInput = document.getElementById("movieEndDate");
     if (releaseInput) releaseInput.removeAttribute("min");
-    if (endInput) endInput.removeAttribute("min");
 
     setValue("movieId", id);
     setValue("movieTitle", title);
@@ -164,7 +160,6 @@ function openEditMovieModal(button) {
     setValue("movieAgeRating", ageRating);
     setValue("movieStatus", status);
     setValue("movieReleaseDate", releaseDate);
-    setValue("movieEndDate", endDate);
     setValue("movieDirector", director);
     setValue("movieActors", actors);
     setValue("movieLanguage", language);
@@ -177,22 +172,12 @@ function openEditMovieModal(button) {
 
     var todayStr = getTodayDateStr();
     var releaseInput = document.getElementById("movieReleaseDate");
-    var endInput = document.getElementById("movieEndDate");
     if (releaseInput) {
         releaseInput.setAttribute("data-original-date", releaseDate);
         if (releaseDate && releaseDate < todayStr) {
             releaseInput.min = releaseDate;
         } else {
             releaseInput.min = todayStr;
-        }
-    }
-    if (endInput) {
-        endInput.setAttribute("data-original-date", endDate);
-        var baseMin = (releaseDate && releaseDate > todayStr) ? releaseDate : todayStr;
-        if (endDate && endDate < baseMin) {
-            endInput.min = endDate;
-        } else {
-            endInput.min = baseMin;
         }
     }
 
@@ -294,13 +279,6 @@ function resetMovieForm() {
         releaseInput.classList.remove("is-invalid");
     }
 
-    var endInput = document.getElementById("movieEndDate");
-    if (endInput) {
-        endInput.removeAttribute("min");
-        endInput.removeAttribute("data-original-date");
-        endInput.classList.remove("is-invalid");
-    }
-
     var errorAlert = document.getElementById("modalErrorAlert");
     if (errorAlert) {
         errorAlert.textContent = "";
@@ -315,9 +293,6 @@ function resetMovieForm() {
 
     var releaseInput = document.getElementById("movieReleaseDate");
     if (releaseInput) releaseInput.classList.remove("is-invalid");
-
-    var endInput = document.getElementById("movieEndDate");
-    if (endInput) endInput.classList.remove("is-invalid");
 
     var counter = document.getElementById("descCharCounter");
     if (counter) counter.textContent = "0/1000";
@@ -349,7 +324,6 @@ function validateMovieDuration() {
 
 function validateMovieDates() {
     var releaseDate = getValue("movieReleaseDate");
-    var endDate = getValue("movieEndDate");
     var isCreate = !getValue("movieId");
     var todayStr = getTodayDateStr();
     var isValid = true;
@@ -363,20 +337,6 @@ function validateMovieDates() {
         }
     } else {
         clearError("movieReleaseDate", "releaseDateFeedback");
-    }
-
-    if (endDate) {
-        if (isCreate && endDate <= todayStr) {
-            showError("movieEndDate", "dateFeedback", "End date must be in the future (from tomorrow onward).");
-            isValid = false;
-        } else if (releaseDate && endDate < releaseDate) {
-            showError("movieEndDate", "dateFeedback", "End date must be after release date.");
-            isValid = false;
-        } else {
-            clearError("movieEndDate", "dateFeedback");
-        }
-    } else {
-        clearError("movieEndDate", "dateFeedback");
     }
 
     return isValid;
@@ -514,18 +474,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var releaseInput = document.getElementById("movieReleaseDate");
-    var endInput = document.getElementById("movieEndDate");
-    if (releaseInput && endInput) {
-        releaseInput.addEventListener("change", function () {
-            var val = this.value;
-            var tomorrow = getTomorrowDateStr();
-            var minEnd = (val && val > tomorrow) ? val : tomorrow;
-            endInput.min = minEnd;
-            validateMovieDates();
-        });
-        endInput.addEventListener("change", validateMovieDates);
+    if (releaseInput) {
+        releaseInput.addEventListener("change", validateMovieDates);
         releaseInput.addEventListener("input", validateMovieDates);
-        endInput.addEventListener("input", validateMovieDates);
     }
 
     // Close on backdrop click
@@ -577,7 +528,6 @@ document.addEventListener("DOMContentLoaded", function () {
             var title = getValue("movieTitle").trim();
             var duration = parseInt(getValue("movieDuration"), 10);
             var releaseDate = getValue("movieReleaseDate");
-            var endDate = getValue("movieEndDate");
             var id = getValue("movieId").trim();
 
             var hasError = false;
@@ -609,9 +559,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (dEl) dEl.focus();
                 } else {
                     var rEl = document.getElementById("movieReleaseDate");
-                    var eEl = document.getElementById("movieEndDate");
                     if (rEl && rEl.classList.contains("is-invalid")) rEl.focus();
-                    else if (eEl && eEl.classList.contains("is-invalid")) eEl.focus();
                 }
                 return;
             }
@@ -628,7 +576,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 originalTitle: getValue("movieOriginalTitle").trim(),
                 duration: duration,
                 releaseDate: releaseDate || null,
-                endDate: endDate || null,
+                endDate: null,
                 language: getValue("movieLanguage").trim(),
                 director: getValue("movieDirector").trim(),
                 actors: getValue("movieActors").trim(),

@@ -14,8 +14,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,5 +80,52 @@ public class ShowtimeApiControllerTest extends com.cinema.support.AuthenticatedM
         mockMvc.perform(get("/api/manager/showtimes")
                         .session(authSession("ADMIN")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testGetRoomSchedule_AuthorizedManager() throws Exception {
+        LocalDateTime start = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0);
+        Showtime st = new Showtime(1, 1, 1, start, start.plusMinutes(120), new BigDecimal("85000"), "Scheduled");
+        st.setMovieTitle("Avatar 2");
+
+        when(showtimeService.getRoomScheduleForDate(eq(1), any())).thenReturn(List.of(st));
+
+        mockMvc.perform(get("/api/manager/showtimes/room-schedule")
+                        .param("roomId", "1")
+                        .param("date", "2026-11-12")
+                        .session(authSession("MANAGER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].movieTitle").value("Avatar 2"));
+    }
+
+    @Test
+    void testCreateShowtimeBatch_AuthorizedManager_Success() throws Exception {
+        Showtime st = new Showtime(101, 1, 1, LocalDateTime.now().plusDays(2).withHour(9).withMinute(0),
+                LocalDateTime.now().plusDays(2).withHour(11).withMinute(0), new BigDecimal("85000"), "Scheduled");
+
+        when(showtimeService.createShowtimeBatch(eq(1), any())).thenReturn(List.of(st));
+
+        String jsonPayload = """
+                {
+                    "roomId": 1,
+                    "showtimes": [
+                        {
+                            "movieId": 1,
+                            "roomId": 1,
+                            "startTime": "2026-11-12T09:00:00",
+                            "baseTicketPrice": 85000
+                        }
+                    ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/manager/showtimes/batch")
+                        .contentType("application/json")
+                        .content(jsonPayload)
+                        .session(authSession("MANAGER")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].showtimeId").value(101));
     }
 }

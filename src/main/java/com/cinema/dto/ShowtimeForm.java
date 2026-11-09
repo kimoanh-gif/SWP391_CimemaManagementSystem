@@ -32,7 +32,8 @@ public class ShowtimeForm {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;
 
-    @NotNull(message = "Please enter base ticket price")
+    private Integer trailerDuration = 0;
+
     @DecimalMin(value = "0.0", message = "Base ticket price cannot be negative")
     @DecimalMax(value = "10000000.0", message = "Base ticket price cannot exceed 10,000,000 VND")
     private BigDecimal baseTicketPrice;
@@ -84,6 +85,14 @@ public class ShowtimeForm {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getTrailerDuration() {
+        return trailerDuration != null ? trailerDuration : 0;
+    }
+
+    public void setTrailerDuration(Integer trailerDuration) {
+        this.trailerDuration = trailerDuration;
     }
 
     public BigDecimal getBaseTicketPrice() {

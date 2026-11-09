@@ -14,6 +14,7 @@ public class Showtime {
     private Integer roomId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Integer trailerDuration = 0;
     private BigDecimal baseTicketPrice;
     private String status; // 'Scheduled', 'Showing', 'Completed', 'Cancelled', 'Stopped'
     private LocalDateTime createdAt;
@@ -81,6 +82,14 @@ public class Showtime {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getTrailerDuration() {
+        return trailerDuration != null ? trailerDuration : 0;
+    }
+
+    public void setTrailerDuration(Integer trailerDuration) {
+        this.trailerDuration = trailerDuration;
     }
 
     public BigDecimal getBaseTicketPrice() {

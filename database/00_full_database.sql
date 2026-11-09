@@ -386,6 +386,7 @@ BEGIN
         [Status] NVARCHAR(30) NOT NULL CONSTRAINT DF_Showtime_Status DEFAULT 'Scheduled',
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Showtime_CreatedAt DEFAULT SYSUTCDATETIME(),
         UpdatedAt DATETIME2 NULL,
+        TrailerDuration INT NOT NULL CONSTRAINT DF_Showtime_TrailerDuration DEFAULT 0,
         CONSTRAINT FK_Showtime_Movie FOREIGN KEY (MovieID) REFERENCES dbo.Movie(MovieID),
         CONSTRAINT FK_Showtime_Room FOREIGN KEY (RoomID) REFERENCES dbo.Room(RoomID),
         CONSTRAINT CK_Showtime_TimeRange CHECK (EndTime > StartTime),
@@ -395,6 +396,7 @@ END;
 
 IF COL_LENGTH(N'dbo.Showtime', N'CreatedAt') IS NULL ALTER TABLE dbo.Showtime ADD CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME() WITH VALUES;
 IF COL_LENGTH(N'dbo.Showtime', N'UpdatedAt') IS NULL ALTER TABLE dbo.Showtime ADD UpdatedAt DATETIME2 NULL;
+IF COL_LENGTH(N'dbo.Showtime', N'TrailerDuration') IS NULL ALTER TABLE dbo.Showtime ADD TrailerDuration INT NOT NULL CONSTRAINT DF_Showtime_TrailerDuration DEFAULT 0;
 
 IF EXISTS (SELECT 1 FROM sys.computed_columns WHERE object_id = OBJECT_ID(N'dbo.Showtime') AND [name] = N'BasePrice')
 BEGIN
@@ -1047,17 +1049,17 @@ GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-01')
     INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
-    VALUES (N'ROOM-01', N'Phòng Chiếu 01', N'2D Digital', 48, 6, 8, N'Laser 4K', N'Dolby 7.1', N'15m x 8m', N'Ready', N'Phòng chiếu tiêu chuẩn');
+    VALUES (N'ROOM-01', N'Phòng Chiếu 01', N'Standard Laser', 48, 6, 8, N'Laser 4K', N'Dolby 7.1', N'15m x 8m', N'Ready', N'Phòng chiếu tiêu chuẩn');
 IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-02')
     INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
-    VALUES (N'ROOM-02', N'Phòng Chiếu 02', N'Dolby Atmos', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'18m x 10m', N'Ready', N'Phòng chiếu âm thanh Dolby Atmos');
+    VALUES (N'ROOM-02', N'Phòng Chiếu 02', N'Standard Laser', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'18m x 10m', N'Ready', N'Phòng chiếu âm thanh Dolby Atmos');
 IF NOT EXISTS (SELECT 1 FROM dbo.Room WHERE RoomCode = N'ROOM-03')
     INSERT dbo.Room (RoomCode, RoomName, RoomType, Capacity, TotalRows, SeatsPerRow, Projector, SoundSystem, ScreenSize, [Status], [Description])
-    VALUES (N'ROOM-03', N'Cinema 03', N'VIP Recliner', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'16m x 9m', N'Ready', N'Premium VIP recliner auditorium');
+    VALUES (N'ROOM-03', N'Cinema 03', N'Gold Class VIP', 48, 6, 8, N'Laser 4K', N'Dolby Atmos', N'16m x 9m', N'Ready', N'Premium VIP recliner auditorium');
 
-UPDATE dbo.Room SET RoomName=N'Cinema 01', [Description]=N'Standard digital auditorium' WHERE RoomCode=N'ROOM-01';
-UPDATE dbo.Room SET RoomName=N'Cinema 02', [Description]=N'Premium Dolby Atmos auditorium' WHERE RoomCode=N'ROOM-02';
-UPDATE dbo.Room SET RoomName=N'Cinema 03', [Description]=N'Premium VIP recliner auditorium' WHERE RoomCode=N'ROOM-03';
+UPDATE dbo.Room SET RoomName=N'Cinema 01', RoomType=N'Standard Laser', [Description]=N'Standard digital auditorium' WHERE RoomCode=N'ROOM-01';
+UPDATE dbo.Room SET RoomName=N'Cinema 02', RoomType=N'Standard Laser', [Description]=N'Premium laser auditorium' WHERE RoomCode=N'ROOM-02';
+UPDATE dbo.Room SET RoomName=N'Cinema 03', RoomType=N'Gold Class VIP', [Description]=N'Premium VIP recliner auditorium' WHERE RoomCode=N'ROOM-03';
 
 DECLARE @RoomID INT;
 DECLARE @RowNumber INT;

@@ -218,45 +218,6 @@
             </div>
         </section>
 
-        <!-- Quick access -->
-        <section>
-            <h3 class="cm-section-title">Quick Admin Access</h3>
-            <div class="cm-quick-grid">
-                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('movie:manage')} ? @{/manager/movies} : null">
-                    <span class="cm-quick-icon"><span class="material-symbols-outlined">movie</span></span>
-                    <span class="cm-quick-text">
-                        <strong>Movie Management</strong>
-                        <span th:text="${stats.totalMovies} + ' movies managed'">24 movies managed</span>
-                    </span>
-                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
-                </a>
-                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('genre:manage')} ? @{/manager/genres} : null">
-                    <span class="cm-quick-icon"><span class="material-symbols-outlined">category</span></span>
-                    <span class="cm-quick-text">
-                        <strong>Movie Genre Management</strong>
-                        <span th:text="${stats.totalGenres} + ' genre categories'">14 genre categories</span>
-                    </span>
-                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
-                </a>
-                <a class="cm-quick" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">
-                    <span class="cm-quick-icon"><span class="material-symbols-outlined">schedule</span></span>
-                    <span class="cm-quick-text">
-                        <strong>Showtime Management</strong>
-                        <span th:text="${stats.todayShowtimesCount} + ' showtimes today'">34 showtimes today</span>
-                    </span>
-                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
-                </a>
-                <a class="cm-quick" th:href="@{/manager/reports}">
-                    <span class="cm-quick-icon"><span class="material-symbols-outlined">analytics</span></span>
-                    <span class="cm-quick-text">
-                        <strong>Reports &amp; Statistics</strong>
-                        <span>Revenue &amp; ticket report</span>
-                    </span>
-                    <span class="material-symbols-outlined cm-quick-arrow">arrow_forward</span>
-                </a>
-            </div>
-        </section>
-
     </main>
 </div>
 

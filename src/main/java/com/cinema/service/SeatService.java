@@ -69,11 +69,15 @@ public class SeatService {
 
         if (status != null && !status.isBlank()) {
             validateSeatStatus(status.trim());
-            if (!"Active".equalsIgnoreCase(status.trim())
+            String normalizedStatus = status.trim();
+            if ("Lock".equalsIgnoreCase(normalizedStatus) || "Locked".equalsIgnoreCase(normalizedStatus)) {
+                normalizedStatus = "Maintenance";
+            }
+            if (!"Active".equalsIgnoreCase(normalizedStatus)
                     && seatDao.isSeatBookedInUpcomingShowtimes(seatId, seat.getRoomId())) {
                 throw new InvalidSeatLayoutException("Cannot set seat to maintenance because the seat has booked tickets in an upcoming showtime.");
             }
-            seat.setStatus(status.trim());
+            seat.setStatus(normalizedStatus);
         }
 
         seatDao.update(seat);
@@ -376,8 +380,8 @@ public class SeatService {
     }
 
     private void validateSeatStatus(String status) {
-        if (!"Active".equalsIgnoreCase(status) && !"Maintenance".equalsIgnoreCase(status) && !"Unavailable".equalsIgnoreCase(status)) {
-            throw new InvalidSeatLayoutException("Invalid seat status: '" + status + "'. Allowed: Active, Maintenance, Unavailable.");
+        if (!"Active".equalsIgnoreCase(status) && !"Maintenance".equalsIgnoreCase(status) && !"Lock".equalsIgnoreCase(status) && !"Locked".equalsIgnoreCase(status) && !"Unavailable".equalsIgnoreCase(status)) {
+            throw new InvalidSeatLayoutException("Invalid seat status: '" + status + "'. Allowed: Active, Lock.");
         }
     }
 }

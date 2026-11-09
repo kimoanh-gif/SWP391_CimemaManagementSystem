@@ -5,6 +5,7 @@ import com.cinema.exception.ShowtimeConflictException;
 import com.cinema.exception.ShowtimeNotFoundException;
 import com.cinema.model.ApiResponse;
 import com.cinema.model.Showtime;
+import com.cinema.dto.BatchShowtimeRequest;
 import com.cinema.dto.ShowtimeForm;
 import com.cinema.service.ShowtimeService;
 import com.cinema.util.ManagerSecurityUtils;
@@ -58,6 +59,29 @@ public class ShowtimeApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
         Showtime st = showtimeService.getShowtimeById(id);
         return ResponseEntity.ok(ApiResponse.ok("Showtime details", st));
+    }
+
+    @GetMapping("/room-schedule")
+    public ResponseEntity<ApiResponse<List<Showtime>>> getRoomSchedule(
+            @RequestParam int roomId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            HttpServletRequest request) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        List<Showtime> schedule = showtimeService.getRoomScheduleForDate(roomId, date);
+        return ResponseEntity.ok(ApiResponse.ok("Room schedule loaded successfully", schedule));
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<List<Showtime>>> createShowtimeBatch(
+            @Valid @RequestBody BatchShowtimeRequest batchRequest,
+            HttpServletRequest request) {
+        ManagerSecurityUtils.verifyManagerAccess(request);
+        List<Showtime> created = showtimeService.createShowtimeBatch(
+                batchRequest.getRoomId(),
+                batchRequest.getShowtimes()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Schedule saved successfully! " + created.size() + " showtimes added.", created));
     }
 
     @PostMapping

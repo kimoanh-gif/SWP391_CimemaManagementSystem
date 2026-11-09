@@ -91,6 +91,7 @@ public class ShowtimeServiceTest {
 
         Showtime created = showtimeService.createShowtime(form);
         assertNotNull(created);
+        // Under simplified business rule: Film End = Start + 180m movie duration = start + 180m (no trailer)
         assertEquals(start.plusMinutes(180), form.getEndTime());
         verify(showtimeDao).insert(form);
     }
@@ -275,7 +276,7 @@ public class ShowtimeServiceTest {
         form.setStatus("Scheduled");
 
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
 
         int rows = realDao.insert(form);
         assertEquals(1, rows);
@@ -301,7 +302,7 @@ public class ShowtimeServiceTest {
         form.setStatus("Scheduled");
 
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(jdbcTemplate.update(sqlCaptor.capture(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
 
         int rows = realDao.update(10, form);
         assertEquals(1, rows);
@@ -333,5 +334,166 @@ public class ShowtimeServiceTest {
         Optional<Showtime> found = realDao.findById(25);
         assertTrue(found.isPresent());
         assertEquals(new BigDecimal("110000.00"), found.get().getBaseTicketPrice());
+    }
+
+    @Test
+    @DisplayName("Batch Save: Successfully creates multiple showtimes in one room on the same day")
+    void testCreateShowtimeBatch_Success_MultipleSlots() {
+        when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(100);
+        when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie)); // Duration 180m (09:00 - 12:00 + 15m buf -> 12:15)
+
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(2);
+        ShowtimeForm slot1 = new ShowtimeForm();
+        slot1.setMovieId(1);
+        slot1.setRoomId(1);
+        slot1.setStartTime(tomorrow.withHour(9).withMinute(0).withSecond(0).withNano(0));
+        slot1.setBaseTicketPrice(new BigDecimal("85000"));
+
+        // Slot 2: starts at 12:30 (after 12:15)
+        ShowtimeForm slot2 = new ShowtimeForm();
+        slot2.setMovieId(1);
+        slot2.setRoomId(1);
+        slot2.setStartTime(tomorrow.withHour(12).withMinute(30).withSecond(0).withNano(0));
+        slot2.setBaseTicketPrice(new BigDecimal("90000"));
+
+        Showtime created1 = new Showtime();
+        created1.setShowtimeId(101);
+        created1.setMovieTitle("Avatar 2");
+        Showtime created2 = new Showtime();
+        created2.setShowtimeId(102);
+        created2.setMovieTitle("Avatar 2");
+
+        when(showtimeDao.findOverlappingShowtimes(eq(1), any(), any(), isNull()))
+                .thenReturn(Collections.emptyList(), List.of(created1), Collections.emptyList(), List.of(created2));
+
+        List<Showtime> result = showtimeService.createShowtimeBatch(1, List.of(slot1, slot2));
+
+        assertEquals(2, result.size());
+        verify(roomDao).lockRoomForUpdate(1);
+        verify(showtimeDao, times(2)).insert(any());
+    }
+
+    @Test
+    @DisplayName("Batch Save: Detects and rejects Draft vs Draft conflict including 15-minute cleaning buffer")
+    void testCreateShowtimeBatch_Fails_DraftVsDraftConflict() {
+        when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(100);
+        when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie)); // Duration 180m (09:00 - 12:00 + 15m buf -> 12:15)
+
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(2);
+        // Slot 1: 09:00 - 12:00 (Cleaning buffer until 12:15)
+        ShowtimeForm slot1 = new ShowtimeForm();
+        slot1.setMovieId(1);
+        slot1.setRoomId(1);
+        slot1.setStartTime(tomorrow.withHour(9).withMinute(0).withSecond(0).withNano(0));
+        slot1.setBaseTicketPrice(new BigDecimal("85000"));
+
+        // Slot 2: 12:10 (starts during 15m cleaning buffer of slot 1!)
+        ShowtimeForm slot2 = new ShowtimeForm();
+        slot2.setMovieId(1);
+        slot2.setRoomId(1);
+        slot2.setStartTime(tomorrow.withHour(12).withMinute(10).withSecond(0).withNano(0));
+        slot2.setBaseTicketPrice(new BigDecimal("90000"));
+
+        ShowtimeConflictException ex = assertThrows(ShowtimeConflictException.class, () ->
+                showtimeService.createShowtimeBatch(1, List.of(slot1, slot2)));
+
+        assertTrue(ex.getMessage().contains("Schedule conflict between draft slots"));
+        assertTrue(ex.getMessage().contains("Slot #1"));
+        assertTrue(ex.getMessage().contains("Slot #2"));
+        verify(showtimeDao, never()).insert(any());
+    }
+
+    @Test
+    @DisplayName("Batch Save: Exact 15-minute cleaning boundary is allowed without conflict")
+    void testCreateShowtimeBatch_Boundary15MinuteCleaning_Success() {
+        when(roomDao.findById(1)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(1)).thenReturn(100);
+        when(movieDao.findById(1)).thenReturn(Optional.of(activeMovie)); // Duration 180m (09:00 - 12:00)
+
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(2);
+        // Slot 1: 09:00 - 12:00. Room available at 12:15.
+        ShowtimeForm slot1 = new ShowtimeForm();
+        slot1.setMovieId(1);
+        slot1.setRoomId(1);
+        slot1.setStartTime(tomorrow.withHour(9).withMinute(0).withSecond(0).withNano(0));
+        slot1.setBaseTicketPrice(new BigDecimal("85000"));
+
+        // Slot 1: 09:00 to 12:00 (180m movie, no trailer), buffer until 12:15
+        // Slot 2: exactly starts at 12:15!
+        ShowtimeForm slot2 = new ShowtimeForm();
+        slot2.setMovieId(1);
+        slot2.setRoomId(1);
+        slot2.setStartTime(tomorrow.withHour(12).withMinute(15).withSecond(0).withNano(0));
+        slot2.setBaseTicketPrice(new BigDecimal("90000"));
+
+        Showtime created1 = new Showtime();
+        created1.setShowtimeId(201);
+        Showtime created2 = new Showtime();
+        created2.setShowtimeId(202);
+
+        when(showtimeDao.findOverlappingShowtimes(eq(1), any(), any(), isNull()))
+                .thenReturn(Collections.emptyList(), List.of(created1), Collections.emptyList(), List.of(created2));
+
+        List<Showtime> result = showtimeService.createShowtimeBatch(1, List.of(slot1, slot2));
+        assertEquals(2, result.size());
+        verify(showtimeDao, times(2)).insert(any());
+    }
+
+    @Test
+    @DisplayName("Batch Save: Empty slot list throws InvalidShowtimeException")
+    void testCreateShowtimeBatch_EmptyList_ThrowsException() {
+        assertThrows(InvalidShowtimeException.class, () ->
+                showtimeService.createShowtimeBatch(1, Collections.emptyList()));
+    }
+
+    @Test
+    @DisplayName("Task Requirements: Batman 140m at 17:00 -> EndTime 19:30, Room Avail 19:45; 19:44 conflicts, 19:45 succeeds")
+    void testBatmanCalculationAndConflict_PromptScenario() {
+        Movie batman = new Movie();
+        batman.setMovieId(99);
+        batman.setTitle("Batman");
+        batman.setDuration(140);
+        batman.setStatus("Now Showing");
+
+        when(movieDao.findById(99)).thenReturn(Optional.of(batman));
+        when(roomDao.findById(2)).thenReturn(Optional.of(activeRoom));
+        when(seatDao.countActiveSeatsByRoomId(2)).thenReturn(120);
+
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
+        LocalDateTime start1700 = tomorrow.withHour(17).withMinute(0).withSecond(0).withNano(0);
+
+        // 1. Slot 1 at 17:00 (140m duration -> Film End: 19:20, Room Available: 19:35)
+        ShowtimeForm slot1 = new ShowtimeForm();
+        slot1.setMovieId(99);
+        slot1.setRoomId(2);
+        slot1.setStartTime(start1700);
+        slot1.setBaseTicketPrice(new BigDecimal("90000"));
+
+        // Slot 2 starting at 19:34 (should conflict because room occupied until 19:35)
+        ShowtimeForm slotConflict = new ShowtimeForm();
+        slotConflict.setMovieId(99);
+        slotConflict.setRoomId(2);
+        slotConflict.setStartTime(tomorrow.withHour(19).withMinute(34).withSecond(0).withNano(0));
+        slotConflict.setBaseTicketPrice(new BigDecimal("90000"));
+
+        // Test conflict between slot1 and slotConflict
+        assertThrows(ShowtimeConflictException.class, () ->
+                showtimeService.createShowtimeBatch(2, List.of(slot1, slotConflict)));
+
+        // Slot 2 starting at exactly 19:35 (should be valid!)
+        ShowtimeForm slotValid = new ShowtimeForm();
+        slotValid.setMovieId(99);
+        slotValid.setRoomId(2);
+        slotValid.setStartTime(tomorrow.withHour(19).withMinute(35).withSecond(0).withNano(0));
+        slotValid.setBaseTicketPrice(new BigDecimal("90000"));
+
+        when(showtimeDao.findOverlappingShowtimes(eq(2), any(), any(), isNull()))
+                .thenReturn(Collections.emptyList(), List.of(new Showtime()), Collections.emptyList(), List.of(new Showtime()));
+
+        List<Showtime> batch = showtimeService.createShowtimeBatch(2, List.of(slot1, slotValid));
+        assertEquals(2, batch.size());
+        assertEquals(start1700.plusMinutes(140), slot1.getEndTime()); // 19:20 (no trailer)
     }
 }

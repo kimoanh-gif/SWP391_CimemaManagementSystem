@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("showtimeModal");
-    const openCreateBtn = document.getElementById("btnCreateShowtime");
     const movieSelect = document.getElementById("formMovieId");
     const startTimeInput = document.getElementById("formStartTime");
     const endTimeDisplay = document.getElementById("endTimeDisplay");
@@ -46,31 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    if (openCreateBtn) {
-        openCreateBtn.addEventListener("click", () => {
-            document.getElementById("formShowtimeId").value = "";
-            document.getElementById("formMovieId").value = "";
-            document.getElementById("formRoomId").value = "";
-            document.getElementById("formBaseTicketPrice").value = "85000";
-            document.getElementById("modalTitle").innerText = "Create new showtime";
-            if (endTimeDisplay) endTimeDisplay.innerText = "--:--";
-
-            // Enforce minimum date as tomorrow 00:00 (cannot choose past or current date)
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const minDateStr = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00`;
-            startTimeInput.min = minDateStr;
-
-            // Default time to tomorrow at 10:00 AM
-            const defaultTime = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T10:00`;
-            startTimeInput.value = defaultTime;
-
-            clearStartTimeValidation();
-            updateEndTimePreview();
-            modal.classList.add("open");
-        });
-    }
-
     document.querySelectorAll(".modal-close, .btn-cancel").forEach(btn => {
         btn.addEventListener("click", () => {
             if (modal) modal.classList.remove("open");
@@ -78,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Auto-calculate expected end time using movie duration (BR-55)
+    // Auto-calculate expected end time: Film End = Start + Movie Duration; Cleaning = 15m (BR-55)
     function updateEndTimePreview() {
         if (!movieSelect || !startTimeInput || !endTimeDisplay) return;
         const selectedOption = movieSelect.options[movieSelect.selectedIndex];
@@ -88,9 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const start = new Date(startTimeInput.value);
         if (isNaN(start.getTime())) return;
 
-        const end = new Date(start.getTime() + duration * 60000);
-        const endStr = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
-            " (" + duration + " min + 15 min cleaning)";
+        const filmEnd = new Date(start.getTime() + duration * 60000);
+        const roomAvail = new Date(filmEnd.getTime() + 15 * 60000);
+
+        const endStr = filmEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+            " (Film End) • Room ready at " + roomAvail.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         endTimeDisplay.innerText = endStr;
     }
 

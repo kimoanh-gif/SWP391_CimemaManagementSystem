@@ -34,11 +34,13 @@ import java.util.List;
 public class ShowtimeService {
 
     public static final int CLEANING_BUFFER_MINUTES = 15; // 15-minute room cleaning buffer per SRS
+    public static final int TRAILER_DURATION_MINUTES = 0; // Simplified scheduling: 0-minute trailer duration
 
     private final ShowtimeDao showtimeDao;
     private final MovieDao movieDao;
     private final RoomDao roomDao;
     private final SeatDao seatDao;
+    private TicketPricingService ticketPricingService;
 
     public ShowtimeService(ShowtimeDao showtimeDao, MovieDao movieDao, RoomDao roomDao) {
         this(showtimeDao, movieDao, roomDao, null);
@@ -50,6 +52,11 @@ public class ShowtimeService {
         this.movieDao = movieDao;
         this.roomDao = roomDao;
         this.seatDao = seatDao;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setTicketPricingService(TicketPricingService ticketPricingService) {
+        this.ticketPricingService = ticketPricingService;
     }
 
     public List<Showtime> getAllShowtimes(LocalDate date, Integer roomId, Integer movieId, String status) {
@@ -81,6 +88,156 @@ public class ShowtimeService {
             return createdList.get(0);
         }
         return showtimeDao.findAll(form.getStartTime().toLocalDate(), form.getRoomId(), form.getMovieId(), null).get(0);
+    }
+
+    /**
+     * Retrieve room schedule for a specific date, including cross-midnight showtimes.
+     */
+    public List<Showtime> getRoomScheduleForDate(int roomId, LocalDate date) {
+        return showtimeDao.findRoomScheduleForDate(roomId, date);
+    }
+
+    /**
+     * Batch save multiple showtime slots for a room in a single atomic transaction.
+     * Enforces:
+     * - Room lock for update (anti-race condition)
+     * - Draft vs Draft conflict check
+     * - Draft vs Existing DB showtime conflict check with 15-minute cleaning buffer (BR-09)
+     * - All business rules (BR-07, BR-08, BR-55, P1-01) per slot
+     * - Atomic rollback if any slot fails
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public List<Showtime> createShowtimeBatch(int roomId, List<ShowtimeForm> forms) {
+        if (forms == null || forms.isEmpty()) {
+            throw new InvalidShowtimeException("Please add at least one showtime slot before saving.");
+        }
+
+        // 1. Lock room to prevent race conditions during scheduling
+        roomDao.lockRoomForUpdate(roomId);
+
+        // 2. Validate Room & active seats
+        Room room = roomDao.findById(roomId)
+                .orElseThrow(() -> new InvalidShowtimeException("Screening room not found with ID: " + roomId));
+        if (!room.isActiveForShowtimes()) {
+            throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' is not ready for guests (BR-08). Status: " + room.getStatus());
+        }
+        if (seatDao != null) {
+            int usableSeats = seatDao.countActiveSeatsByRoomId(roomId);
+            if (usableSeats <= 0) {
+                throw new InvalidShowtimeException("Screening room '" + room.getRoomName() + "' does not have a valid seat layout. Please configure seat layout before scheduling.");
+            }
+        }
+
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter fullFmt = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+        // 3. Pre-process each slot (ensure roomId and calculate EndTime)
+        for (int i = 0; i < forms.size(); i++) {
+            final int slotNum = i + 1;
+            ShowtimeForm f = forms.get(i);
+            f.setRoomId(roomId);
+            if (f.getMovieId() == null || f.getMovieId() <= 0) {
+                throw new InvalidShowtimeException("Slot #" + slotNum + ": Please select a valid movie.");
+            }
+            if (f.getStartTime() == null) {
+                throw new InvalidShowtimeException("Slot #" + slotNum + ": Start time is required.");
+            }
+            if (f.getBaseTicketPrice() == null) {
+                f.setBaseTicketPrice(resolveShowtimePrice(f.getStartTime(), room));
+            } else if (f.getBaseTicketPrice().compareTo(BigDecimal.ZERO) < 0) {
+                throw new InvalidShowtimeException("Slot #" + slotNum + ": Base ticket price cannot be negative.");
+            }
+            Movie movie = movieDao.findById(f.getMovieId())
+                    .orElseThrow(() -> new InvalidShowtimeException("Slot #" + slotNum + ": Movie not found."));
+            int duration = (movie.getDuration() != null && movie.getDuration() > 0) ? movie.getDuration() : 120;
+            f.setTrailerDuration(0);
+            // Mandatory new formula: Film End Time = Start Time + Movie Duration (no trailer added)
+            f.setEndTime(f.getStartTime().plusMinutes(duration));
+        }
+
+        // 4. Draft vs Draft Conflict Check
+        for (int i = 0; i < forms.size(); i++) {
+            ShowtimeForm a = forms.get(i);
+            Movie movieA = movieDao.findById(a.getMovieId()).orElse(null);
+            String titleA = movieA != null ? movieA.getTitle() : "Movie #" + a.getMovieId();
+
+            for (int j = i + 1; j < forms.size(); j++) {
+                ShowtimeForm b = forms.get(j);
+                Movie movieB = movieDao.findById(b.getMovieId()).orElse(null);
+                String titleB = movieB != null ? movieB.getTitle() : "Movie #" + b.getMovieId();
+
+                // Symmetrical conflict condition including 15-minute buffer:
+                // a.start < b.end + 15m AND b.start < a.end + 15m
+                boolean conflict = a.getStartTime().isBefore(b.getEndTime().plusMinutes(CLEANING_BUFFER_MINUTES))
+                        && b.getStartTime().isBefore(a.getEndTime().plusMinutes(CLEANING_BUFFER_MINUTES));
+
+                if (conflict) {
+                    throw new ShowtimeConflictException(
+                            "Schedule conflict between draft slots! Slot #" + (i + 1) + " ('" + titleA + "', " +
+                                    a.getStartTime().format(timeFmt) + " – " + a.getEndTime().format(timeFmt) +
+                                    ") overlaps with Slot #" + (j + 1) + " ('" + titleB + "', " +
+                                    b.getStartTime().format(timeFmt) + " – " + b.getEndTime().format(timeFmt) +
+                                    ") including 15-minute cleaning buffer."
+                    );
+                }
+            }
+        }
+
+        // 5. Validate each slot against DB and business rules, then insert
+        List<Showtime> createdShowtimes = new java.util.ArrayList<>();
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i < forms.size(); i++) {
+            ShowtimeForm f = forms.get(i);
+            Movie movie = movieDao.findById(f.getMovieId()).orElseThrow();
+
+            // BR-55: Future date only
+            if (!f.getStartTime().toLocalDate().isAfter(today)) {
+                throw new InvalidShowtimeException("Slot #" + (i + 1) + " ('" + movie.getTitle() + "'): Cannot schedule past or today date. Must be scheduled from tomorrow onward (BR-55).");
+            }
+
+            // BR-07: Movie status
+            if (!movie.isActiveForShowtimes()) {
+                throw new InvalidShowtimeException("Slot #" + (i + 1) + ": Movie '" + movie.getTitle() + "' has status '" + movie.getStatus() + "'. Only 'Now Showing' or 'Upcoming' can be scheduled (BR-07).");
+            }
+
+            // Release date & end date restrictions
+            if (movie.getReleaseDate() != null && f.getStartTime().toLocalDate().isBefore(movie.getReleaseDate())) {
+                throw new InvalidShowtimeException("Slot #" + (i + 1) + " ('" + movie.getTitle() + "'): Cannot schedule on " + f.getStartTime().toLocalDate() + " because movie release date is " + movie.getReleaseDate() + ".");
+            }
+            if (movie.getEndDate() != null && f.getStartTime().toLocalDate().isAfter(movie.getEndDate())) {
+                throw new InvalidShowtimeException("Slot #" + (i + 1) + " ('" + movie.getTitle() + "'): Cannot schedule on " + f.getStartTime().toLocalDate() + " because movie screening period ended on " + movie.getEndDate() + ".");
+            }
+
+            // Check conflict with EXISTING showtimes in database
+            List<Showtime> existingConflicts = showtimeDao.findOverlappingShowtimes(
+                    roomId,
+                    f.getStartTime(),
+                    f.getEndTime(),
+                    null
+            );
+
+            if (!existingConflicts.isEmpty()) {
+                Showtime conflict = existingConflicts.get(0);
+                throw new ShowtimeConflictException(
+                        "Slot #" + (i + 1) + " ('" + movie.getTitle() + "'): Schedule conflict! Room '" +
+                                room.getRoomName() + "' is occupied by '" + conflict.getMovieTitle() + "' until " +
+                                conflict.getEndTime().plusMinutes(CLEANING_BUFFER_MINUTES).format(fullFmt) +
+                                " (including 15-minute cleaning buffer)."
+                );
+            }
+
+            // Insert slot
+            showtimeDao.insert(f);
+
+            // Fetch newly inserted record
+            List<Showtime> created = showtimeDao.findOverlappingShowtimes(roomId, f.getStartTime(), f.getEndTime(), null);
+            if (!created.isEmpty()) {
+                createdShowtimes.add(created.get(0));
+            }
+        }
+
+        return createdShowtimes;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -159,7 +316,10 @@ public class ShowtimeService {
         if (form.getStartTime() == null) {
             throw new InvalidShowtimeException("Please select a start time.");
         }
-        if (form.getBaseTicketPrice() == null || form.getBaseTicketPrice().compareTo(BigDecimal.ZERO) < 0) {
+        if (form.getBaseTicketPrice() == null) {
+            Room r = form.getRoomId() != null ? roomDao.findById(form.getRoomId()).orElse(null) : null;
+            form.setBaseTicketPrice(resolveShowtimePrice(form.getStartTime(), r));
+        } else if (form.getBaseTicketPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidShowtimeException("Base ticket price cannot be negative.");
         }
 
@@ -206,9 +366,24 @@ public class ShowtimeService {
             }
         }
 
-        // Calculate and auto-set EndTime = StartTime + Movie Duration (BR-55)
-        int duration = (movie.getDuration() != null && movie.getDuration() > 0) ? movie.getDuration() : 120;
-        form.setEndTime(form.getStartTime().plusMinutes(duration));
+        // Calculate and auto-set EndTime = StartTime + Movie Duration (BR-55) without trailer
+        if (currentShowtimeId != null) {
+            Showtime existing = showtimeDao.findById(currentShowtimeId).orElse(null);
+            if (existing != null && form.getMovieId().equals(existing.getMovieId()) && form.getStartTime().equals(existing.getStartTime())) {
+                // Editing non-time fields (e.g. price or status) preserves existing EndTime & TrailerDuration
+                form.setEndTime(existing.getEndTime());
+                form.setTrailerDuration(existing.getTrailerDuration());
+            } else {
+                int duration = (movie.getDuration() != null && movie.getDuration() > 0) ? movie.getDuration() : 120;
+                form.setTrailerDuration(0);
+                form.setEndTime(form.getStartTime().plusMinutes(duration));
+            }
+        } else {
+            // New showtime: Formula: Film End = Start Time + Movie Duration (no trailer)
+            int duration = (movie.getDuration() != null && movie.getDuration() > 0) ? movie.getDuration() : 120;
+            form.setTrailerDuration(0);
+            form.setEndTime(form.getStartTime().plusMinutes(duration));
+        }
 
         // BR-09: Overlap checking (newStart < existingEnd + 15m AND existingStart < newEnd + 15m)
         List<Showtime> conflicts = showtimeDao.findOverlappingShowtimes(
@@ -229,6 +404,14 @@ public class ShowtimeService {
                             " (including 15-minute cleaning time)."
             );
         }
+    }
+
+    public BigDecimal resolveShowtimePrice(LocalDateTime startTime, Room room) {
+        if (ticketPricingService != null && startTime != null) {
+            String expType = (room != null && room.getRoomType() != null) ? room.getRoomType() : "2D Digital";
+            return ticketPricingService.resolveEffectiveBasePrice(startTime, expType, new BigDecimal("85000"));
+        }
+        return new BigDecimal("85000");
     }
 
 }
