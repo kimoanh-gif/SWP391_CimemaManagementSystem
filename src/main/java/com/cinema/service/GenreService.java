@@ -132,7 +132,10 @@ public class GenreService {
         if (form == null || form.getName() == null || form.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Genre name cannot be empty.");
         }
-        if (form.getName().trim().length() < 2 || form.getName().trim().length() > 100) {
+        if (form.getName().trim().length() < 2) {
+            throw new IllegalArgumentException("Genre name must be at least 2 characters.");
+        }
+        if (form.getName().trim().length() > 100) {
             throw new IllegalArgumentException("Genre name cannot exceed 100 characters.");
         }
     }

@@ -593,6 +593,8 @@
                 <input type="hidden" id="modalSeatId" name="seatId">
                 <input type="hidden" id="modalSeatIds" name="seatIds">
                 <input type="hidden" id="modalRoomId" name="roomId">
+                <input type="hidden" id="modalExpectedUpdatedAt" name="expectedUpdatedAt"
+                       th:value="${selectedRoom != null and selectedRoom.updatedAt != null ? selectedRoom.updatedAt : ''}">
                 <div class="modal-body">
                     <div id="seatModalError" class="alert alert-error"
                         style="display:none; margin:0; padding:8px 12px; font-size:13px;"></div>

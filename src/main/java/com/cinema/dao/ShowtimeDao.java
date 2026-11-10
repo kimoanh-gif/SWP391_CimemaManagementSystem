@@ -68,6 +68,10 @@ public class ShowtimeDao {
     };
 
     public List<Showtime> findAll(LocalDate date, Integer roomId, Integer movieId, String status) {
+        return findAll(date, date, roomId, movieId, status);
+    }
+
+    public List<Showtime> findAll(LocalDate startDate, LocalDate endDate, Integer roomId, Integer movieId, String status) {
         StringBuilder sql = new StringBuilder(
                 "SELECT s.*, s.BasePrice AS BaseTicketPrice, " +
                 "m.Title AS MovieTitle, m.PosterURL AS MoviePoster, m.Duration AS MovieDuration, m.AgeRating AS MovieAgeRating, " +
@@ -80,10 +84,23 @@ public class ShowtimeDao {
 
         List<Object> params = new ArrayList<>();
 
-        if (date != null) {
-            sql.append("AND CAST(s.StartTime AS DATE) = ? ");
-            params.add(date);
+        if (startDate != null && endDate != null) {
+            if (startDate.equals(endDate)) {
+                sql.append("AND CAST(s.StartTime AS DATE) = ? ");
+                params.add(startDate);
+            } else {
+                sql.append("AND CAST(s.StartTime AS DATE) >= ? AND CAST(s.StartTime AS DATE) <= ? ");
+                params.add(startDate);
+                params.add(endDate);
+            }
+        } else if (startDate != null) {
+            sql.append("AND CAST(s.StartTime AS DATE) >= ? ");
+            params.add(startDate);
+        } else if (endDate != null) {
+            sql.append("AND CAST(s.StartTime AS DATE) <= ? ");
+            params.add(endDate);
         }
+
         if (roomId != null && roomId > 0) {
             sql.append("AND s.RoomID = ? ");
             params.add(roomId);

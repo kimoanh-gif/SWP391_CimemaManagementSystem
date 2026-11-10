@@ -193,4 +193,18 @@ class GenreServiceTest {
 
         verify(genreDao).delete(2);
     }
+
+    @Test
+    @DisplayName("validateForm: Short genre name (< 2 chars) returns accurate minimum length message")
+    void testValidateForm_ShortNameVsLongName() {
+        GenreForm shortForm = new GenreForm(null, "A", "Too short", "ACTIVE");
+        assertThatThrownBy(() -> genreService.createGenre(shortForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Genre name must be at least 2 characters.");
+
+        GenreForm longForm = new GenreForm(null, "A".repeat(101), "Too long", "ACTIVE");
+        assertThatThrownBy(() -> genreService.createGenre(longForm))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Genre name cannot exceed 100 characters.");
+    }
 }

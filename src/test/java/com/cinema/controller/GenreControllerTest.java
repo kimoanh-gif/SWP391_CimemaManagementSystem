@@ -83,4 +83,28 @@ class GenreControllerTest {
                 .andExpect(redirectedUrl("/manager/genres"))
                 .andExpect(flash().attributeExists("errorMessage"));
     }
+
+    @Test
+    @DisplayName("GET /manager/genres: Supports real pagination parameters (page & size) while keeping KPI counts")
+    void testViewGenreList_Pagination() throws Exception {
+        Genre g1 = new Genre(1, "Action", "Desc 1", "ACTIVE");
+        Genre g2 = new Genre(2, "Comedy", "Desc 2", "ACTIVE");
+        Genre g3 = new Genre(3, "Drama", "Desc 3", "INACTIVE");
+        when(genreService.getAllGenres(any(), anyString())).thenReturn(List.of(g1, g2, g3));
+
+        mockMvc.perform(get("/manager/genres")
+                        .sessionAttr("userRole", "MANAGER")
+                        .param("page", "2")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/genres"))
+                .andExpect(model().attribute("currentPage", 2))
+                .andExpect(model().attribute("totalPages", 2))
+                .andExpect(model().attribute("totalFilteredCount", 3))
+                .andExpect(model().attribute("startItem", 3))
+                .andExpect(model().attribute("endItem", 3))
+                .andExpect(model().attribute("totalCount", 3L))
+                .andExpect(model().attribute("activeCount", 2L))
+                .andExpect(model().attribute("genres", List.of(g3)));
+    }
 }

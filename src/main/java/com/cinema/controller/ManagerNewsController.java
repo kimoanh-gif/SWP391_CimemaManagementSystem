@@ -152,7 +152,7 @@ public class ManagerNewsController {
     // ------------------------------------------------------------------ helpers
 
     private boolean isManager(HttpSession session) {
-        return sessionService.hasRole(session, "MANAGER");
+        return com.cinema.util.ManagerSecurityUtils.verifyOrRedirectManager(session, sessionService);
     }
 
     private Integer managerAccountId(HttpSession session) {

@@ -104,7 +104,9 @@ public class RoomService {
         if ("Maintenance".equalsIgnoreCase(form.getStatus())
                 && (existing.getStatus() == null || !"Maintenance".equalsIgnoreCase(existing.getStatus()))
                 && hasUpcomingShowtimes) {
-            throw new RoomHasActiveShowtimesException(form.getRoomId());
+            throw new RoomHasActiveShowtimesException(
+                    "Cannot set screening room '" + existing.getRoomName() + "' (ID: " + form.getRoomId()
+                            + ") to Maintenance because it has ongoing or upcoming showtimes. Please cancel or reschedule those showtimes first.");
         }
 
         // Prevent changing room capacity or dimensions if upcoming showtimes are scheduled
@@ -158,7 +160,9 @@ public class RoomService {
         Room room = getById(roomId);
         // BR-52: cannot deactivate if upcoming showtimes exist
         if (roomDao.hasUpcomingShowtimes(roomId)) {
-            throw new RoomHasActiveShowtimesException(roomId);
+            throw new RoomHasActiveShowtimesException(
+                    "Cannot set screening room '" + room.getRoomName() + "' (ID: " + roomId
+                            + ") to Maintenance because it has ongoing or upcoming showtimes. Please cancel or reschedule those showtimes first.");
         }
         // Change status to Maintenance (or a dedicated Deactivated status if defined)
         room.setStatus("Maintenance");
@@ -191,13 +195,22 @@ public class RoomService {
     @Transactional
     public void delete(int roomId) {
         Room room = getById(roomId);
-        int showtimes = roomDao.countTotalShowtimes(roomId);
-        if (showtimes > 0) {
+        if (roomDao.hasUpcomingShowtimes(roomId)) {
+            int showtimes = roomDao.countTotalShowtimes(roomId);
             throw new RoomHasActiveShowtimesException(
                     "Cannot delete screening room '" + room.getRoomName() + "' because it has " + showtimes
-                            + " linked showtime(s). Please delete showtimes first or set room to Maintenance.");
+                            + " linked showtime(s) including ongoing or upcoming screenings. Please cancel or reschedule those showtimes first.");
         }
-        roomDao.deleteSeatsByRoomId(roomId);
-        roomDao.delete(roomId);
+
+        int showtimes = roomDao.countTotalShowtimes(roomId);
+        if (showtimes > 0) {
+            // Room has historical showtimes with booking/ticket history.
+            // Soft delete: marks room as deleted, removing it from active room list while preserving historical revenue, tickets, and bookings
+            roomDao.softDelete(roomId);
+        } else {
+            // Room has NO showtimes ever: safe to perform hard delete
+            roomDao.deleteSeatsByRoomId(roomId);
+            roomDao.delete(roomId);
+        }
     }
 }

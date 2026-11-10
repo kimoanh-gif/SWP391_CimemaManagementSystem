@@ -12,13 +12,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service for Screen 58: Seat Management / Seat Layout Management (UC-29).
@@ -85,6 +88,114 @@ public class SeatService {
         return getSeatById(seatId);
     }
 
+    /**
+     * Batch update multiple seats in a room atomically within a single transaction.
+     * Enforces:
+     * - Pessimistic room lock (lockRoomForUpdate)
+     * - Optimistic version check against Room.updatedAt
+     * - Full pre-validation of all target seats & booking constraints before any modification
+     * - Atomic rollback if any seat update fails (AC03)
+     * - Bumps Room.updatedAt timestamp on successful commit
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public List<Seat> batchUpdateSeats(int roomId, List<Integer> seatIds, String seatTypeName, String status, LocalDateTime expectedUpdatedAt) {
+        if (seatIds == null || seatIds.isEmpty()) {
+            throw new IllegalArgumentException("Seat IDs list cannot be empty for batch update.");
+        }
+        if ((seatTypeName == null || seatTypeName.isBlank()) && (status == null || status.isBlank())) {
+            throw new IllegalArgumentException("Must provide at least seat type or seat status to update.");
+        }
+
+        // 1. Lock room row to serialize concurrent seat operations on this room
+        roomDao.lockRoomForUpdate(roomId);
+        Room room = ensureRoomExists(roomId);
+
+        // 2. Optimistic versioning check: reject stale updates
+        validateRoomVersion(room, expectedUpdatedAt);
+
+        // 3. Resolve seat type & status to be applied
+        String targetTypeName = null;
+        Integer targetTypeId = null;
+        if (seatTypeName != null && !seatTypeName.isBlank()) {
+            SeatType matchedType = validateSeatType(seatTypeName.trim());
+            targetTypeName = matchedType != null && matchedType.getTypeName() != null ? matchedType.getTypeName() : seatTypeName.trim();
+            targetTypeId = matchedType != null && matchedType.getSeatTypeId() != null ? matchedType.getSeatTypeId() : resolveSeatTypeId(seatTypeName.trim());
+        }
+
+        String targetStatus = null;
+        if (status != null && !status.isBlank()) {
+            validateSeatStatus(status.trim());
+            targetStatus = status.trim();
+            if ("Lock".equalsIgnoreCase(targetStatus) || "Locked".equalsIgnoreCase(targetStatus)) {
+                targetStatus = "Maintenance";
+            }
+        }
+
+        // 4. Fetch all room seats and validate all target seats belong to this room
+        List<Seat> roomSeats = seatDao.findByRoomId(roomId);
+        Map<Integer, Seat> seatMap = roomSeats.stream()
+                .collect(Collectors.toMap(Seat::getSeatId, s -> s));
+
+        List<Seat> targetSeats = new ArrayList<>();
+        Set<Integer> uniqueSeatIds = new LinkedHashSet<>(seatIds);
+
+        for (Integer sid : uniqueSeatIds) {
+            Seat seat = seatMap.get(sid);
+            if (seat == null) {
+                throw new InvalidSeatLayoutException("Seat with ID " + sid + " does not belong to room ID " + roomId + ".");
+            }
+            targetSeats.add(seat);
+        }
+
+        // 5. Pre-validate booking constraints for ALL target seats BEFORE any DB modification
+        for (Seat seat : targetSeats) {
+            String seatLabel = seat.getRowLabel() + seat.getSeatNumber();
+            boolean typeChanged = targetTypeName != null && !targetTypeName.equalsIgnoreCase(seat.getSeatTypeName());
+            boolean statusChanged = targetStatus != null && !targetStatus.equalsIgnoreCase(seat.getStatus());
+
+            if (typeChanged && seatDao.isSeatBookedInUpcomingShowtimes(seat.getSeatId(), roomId)) {
+                throw new InvalidSeatLayoutException("Cannot change seat type of seat " + seatLabel
+                        + " because it has been booked by customers in an upcoming showtime.");
+            }
+
+            if (statusChanged && !"Active".equalsIgnoreCase(targetStatus)
+                    && seatDao.isSeatBookedInUpcomingShowtimes(seat.getSeatId(), roomId)) {
+                throw new InvalidSeatLayoutException("Cannot set seat to maintenance for seat " + seatLabel
+                        + " because it has booked tickets in an upcoming showtime.");
+            }
+        }
+
+        // 6. Apply updates to all target seats
+        for (Seat seat : targetSeats) {
+            if (targetTypeName != null) {
+                seat.setSeatTypeName(targetTypeName);
+                seat.setSeatTypeId(targetTypeId);
+            }
+            if (targetStatus != null) {
+                seat.setStatus(targetStatus);
+            }
+            seatDao.update(seat);
+        }
+
+        // 7. Bump room timestamp so concurrent clients become aware
+        roomDao.updateRoomTimestamp(roomId);
+
+        return targetSeats;
+    }
+
+    private void validateRoomVersion(Room room, LocalDateTime expectedUpdatedAt) {
+        if (room.getUpdatedAt() != null) {
+            if (expectedUpdatedAt == null) {
+                throw new InvalidSeatLayoutException("Room seat layout was updated by another user at "
+                        + room.getUpdatedAt() + ". Please refresh the page before saving.");
+            }
+            if (room.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS).isAfter(expectedUpdatedAt.truncatedTo(ChronoUnit.SECONDS))) {
+                throw new InvalidSeatLayoutException("Room seat layout was updated by another user at "
+                        + room.getUpdatedAt() + ". Please refresh the page before saving.");
+            }
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public List<Seat> saveRoomLayout(int roomId, List<Seat> seats) {
         return saveRoomLayout(roomId, seats, null);
@@ -107,11 +218,8 @@ public class SeatService {
         Room room = ensureRoomExists(roomId);
 
         // AC06: Optimistic versioning check if expectedUpdatedAt provided
-        if (expectedUpdatedAt != null && room.getUpdatedAt() != null) {
-            if (room.getUpdatedAt().isAfter(expectedUpdatedAt)) {
-                throw new InvalidSeatLayoutException("Room seat layout was updated by another user at "
-                        + room.getUpdatedAt() + ". Please refresh the page before saving.");
-            }
+        if (expectedUpdatedAt != null) {
+            validateRoomVersion(room, expectedUpdatedAt);
         }
 
         if (seats == null || seats.isEmpty()) {

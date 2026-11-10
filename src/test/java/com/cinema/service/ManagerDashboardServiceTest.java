@@ -101,5 +101,13 @@ class ManagerDashboardServiceTest {
         assertEquals(new BigDecimal("87500"), stats.getAverageTicketPrice());
         assertEquals(1, stats.getTotalFBItems());
         assertEquals(1, stats.getActiveFBItems());
+        assertNotNull(stats.getActiveMovies());
+        assertEquals(2, stats.getActiveMovies().size());
+        assertNotNull(stats.getRoomsSummary());
+        assertEquals(1, stats.getRoomsSummary().size());
+        assertNotNull(stats.getTodayShowtimes());
+        org.mockito.Mockito.verify(movieService, org.mockito.Mockito.times(1)).getAllMovies(isNull(), isNull(), isNull(), isNull());
+        org.mockito.Mockito.verify(roomService, org.mockito.Mockito.times(1)).getAll(isNull(), isNull());
+        org.mockito.Mockito.verify(showtimeService, org.mockito.Mockito.times(1)).getAllShowtimes(any(LocalDate.class), isNull(), isNull(), isNull());
     }
 }

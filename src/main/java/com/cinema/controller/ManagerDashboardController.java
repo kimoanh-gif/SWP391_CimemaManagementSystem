@@ -49,11 +49,10 @@ public class ManagerDashboardController {
         model.addAttribute("movieCount", stats.getTotalMovies());
         model.addAttribute("roomCount", stats.getActiveRooms());
         model.addAttribute("upcomingShowtimeCount", stats.getTodayShowtimesCount());
-        model.addAttribute("todayShowtimes", dashboardService.getTodayShowtimes());
-        model.addAttribute("activeMovies", dashboardService.getActiveMovies());
-        model.addAttribute("rooms", dashboardService.getRoomsSummary());
+        model.addAttribute("todayShowtimes", stats.getTodayShowtimes() != null ? stats.getTodayShowtimes() : dashboardService.getTodayShowtimes());
+        model.addAttribute("activeMovies", stats.getActiveMovies() != null ? stats.getActiveMovies() : dashboardService.getActiveMovies());
+        model.addAttribute("rooms", stats.getRoomsSummary() != null ? stats.getRoomsSummary() : dashboardService.getRoomsSummary());
         model.addAttribute("userRole", ManagerSecurityUtils.resolveRole(request));
-        model.addAttribute("roomsActiveLabel", stats.getActiveRooms() + "/" + stats.getTotalRooms() + " Screening rooms active");
 
         // Revenue overview chart (last 7 days) + recent bookings table
         List<DashboardRevenueDay> weeklyRevenue = insightsService.getWeeklyRevenue();

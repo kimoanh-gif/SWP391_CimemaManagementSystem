@@ -152,4 +152,29 @@ class MovieControllerTest {
 
         verify(movieService).reactivateMovie(5);
     }
+
+    @Test
+    @DisplayName("GET /manager/movies: Supports real pagination parameters (page & size) while keeping system KPI counts")
+    void testViewMovieList_Pagination() throws Exception {
+        Movie m1 = new Movie(1, "Movie 1", 120, "Now Showing");
+        Movie m2 = new Movie(2, "Movie 2", 130, "Upcoming");
+        Movie m3 = new Movie(3, "Movie 3", 140, "Archived");
+
+        when(movieService.getAllMovies(any(), any(), anyString(), anyString())).thenReturn(List.of(m1, m2, m3));
+        when(genreService.getAllGenres(any(), anyString())).thenReturn(List.of());
+
+        mockMvc.perform(get("/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .param("page", "2")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/movies"))
+                .andExpect(model().attribute("currentPage", 2))
+                .andExpect(model().attribute("totalPages", 2))
+                .andExpect(model().attribute("totalFilteredCount", 3))
+                .andExpect(model().attribute("startItem", 3))
+                .andExpect(model().attribute("endItem", 3))
+                .andExpect(model().attribute("totalCount", 3L))
+                .andExpect(model().attribute(" movies".trim(), List.of(m3)));
+    }
 }

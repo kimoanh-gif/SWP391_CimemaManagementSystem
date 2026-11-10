@@ -51,6 +51,15 @@ class ManagerNewsControllerTest {
     }
 
     @Test
+    void authenticatedNonManagerRoleThrowsForbidden() {
+        when(sessionService.hasRole(session, "MANAGER")).thenReturn(false);
+        when(sessionService.currentRole(session)).thenReturn("CUSTOMER");
+
+        org.junit.jupiter.api.Assertions.assertThrows(com.cinema.exception.UnauthorizedManagerException.class,
+                () -> controller.viewNewsManagement(null, null, null, null, null, null, session, new ConcurrentModel()));
+    }
+
+    @Test
     void listDefaultsToPendingFilter() {
         when(sessionService.hasRole(session, "MANAGER")).thenReturn(true);
         when(newsService.getStats()).thenReturn(ManagerNewsStats.empty());

@@ -60,7 +60,11 @@ public class ShowtimeService {
     }
 
     public List<Showtime> getAllShowtimes(LocalDate date, Integer roomId, Integer movieId, String status) {
-        return showtimeDao.findAll(date, roomId, movieId, status);
+        return getAllShowtimes(date, date, roomId, movieId, status);
+    }
+
+    public List<Showtime> getAllShowtimes(LocalDate startDate, LocalDate endDate, Integer roomId, Integer movieId, String status) {
+        return showtimeDao.findAll(startDate, endDate, roomId, movieId, status);
     }
 
     public Showtime getShowtimeById(int id) {
@@ -244,10 +248,17 @@ public class ShowtimeService {
     public Showtime updateShowtime(int id, ShowtimeForm form) {
         Showtime existing = getShowtimeById(id);
 
+        // Lock room(s) in deterministic ascending RoomID order to eliminate cross-room AB-BA deadlocks
         if (form.getRoomId() != null && form.getRoomId() > 0) {
-            roomDao.lockRoomForUpdate(form.getRoomId());
-            if (existing.getRoomId() != null && !existing.getRoomId().equals(form.getRoomId())) {
-                roomDao.lockRoomForUpdate(existing.getRoomId());
+            int newRoomId = form.getRoomId();
+            Integer oldRoomId = existing.getRoomId();
+            if (oldRoomId != null && oldRoomId > 0 && !oldRoomId.equals(newRoomId)) {
+                int firstLock = Math.min(newRoomId, oldRoomId);
+                int secondLock = Math.max(newRoomId, oldRoomId);
+                roomDao.lockRoomForUpdate(firstLock);
+                roomDao.lockRoomForUpdate(secondLock);
+            } else {
+                roomDao.lockRoomForUpdate(newRoomId);
             }
         }
 
@@ -270,6 +281,9 @@ public class ShowtimeService {
     @Transactional(rollbackFor = Exception.class)
     public Showtime stopShowtime(int id) {
         Showtime existing = getShowtimeById(id);
+        if (existing.getRoomId() != null && existing.getRoomId() > 0) {
+            roomDao.lockRoomForUpdate(existing.getRoomId());
+        }
 
         // BR-54: cannot stop if there are active bookings
         if (showtimeDao.hasActiveBookings(id)) {
@@ -283,6 +297,9 @@ public class ShowtimeService {
     @Transactional(rollbackFor = Exception.class)
     public Showtime cancelShowtime(int id) {
         Showtime existing = getShowtimeById(id);
+        if (existing.getRoomId() != null && existing.getRoomId() > 0) {
+            roomDao.lockRoomForUpdate(existing.getRoomId());
+        }
 
         if (showtimeDao.hasActiveBookings(id)) {
             throw new InvalidShowtimeException("Showtime already has bookings; cannot cancel schedule (BR-54).");
@@ -295,6 +312,9 @@ public class ShowtimeService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteShowtime(int id) {
         Showtime existing = getShowtimeById(id);
+        if (existing.getRoomId() != null && existing.getRoomId() > 0) {
+            roomDao.lockRoomForUpdate(existing.getRoomId());
+        }
 
         if (showtimeDao.hasAnyBookings(id)) {
             throw new InvalidShowtimeException("Showtime has booking history or sold tickets and cannot be deleted directly. You can use the Stop/Cancel feature.");

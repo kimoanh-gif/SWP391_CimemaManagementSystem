@@ -6,7 +6,7 @@ package com.cinema.exception;
  */
 public class RoomHasActiveShowtimesException extends RuntimeException {
     public RoomHasActiveShowtimesException(int roomId) {
-        super("Screening room (ID: " + roomId + ") has ongoing or upcoming showtimes and cannot be deleted.");
+        super("Screening room (ID: " + roomId + ") has ongoing or upcoming showtimes and cannot be set to Maintenance or deleted.");
     }
 
     public RoomHasActiveShowtimesException(String message) {

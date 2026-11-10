@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,20 +48,66 @@ public class ShowtimeController {
         this.roomService = roomService;
     }
 
+    public String viewShowtimes(
+            LocalDate date,
+            Integer roomId,
+            Integer movieId,
+            String status,
+            Model model,
+            HttpServletRequest request
+    ) {
+        return viewShowtimes(date, null, null, roomId, movieId, status, 1, 10, model, request);
+    }
+
+    public String viewShowtimes(
+            LocalDate date,
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer roomId,
+            Integer movieId,
+            String status,
+            Model model,
+            HttpServletRequest request
+    ) {
+        return viewShowtimes(date, startDate, endDate, roomId, movieId, status, 1, 10, model, request);
+    }
+
     @GetMapping
     public String viewShowtimes(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer roomId,
             @RequestParam(required = false) Integer movieId,
             @RequestParam(required = false, defaultValue = "ALL") String status,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             Model model,
             HttpServletRequest request
     ) {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
-        LocalDate filterDate = (date != null) ? date : LocalDate.now();
+        LocalDate filterStartDate = startDate != null ? startDate : date;
+        LocalDate filterEndDate = endDate != null ? endDate : date;
 
-        List<Showtime> showtimes = showtimeService.getAllShowtimes(filterDate, roomId, movieId, status);
+        if (filterStartDate != null && filterEndDate != null && filterStartDate.isAfter(filterEndDate)) {
+            LocalDate temp = filterStartDate;
+            filterStartDate = filterEndDate;
+            filterEndDate = temp;
+        }
+
+        // If no filter at all, default to today
+        if (filterStartDate == null && filterEndDate == null && (roomId == null || roomId <= 0) && (movieId == null || movieId <= 0)) {
+            filterStartDate = LocalDate.now();
+            filterEndDate = LocalDate.now();
+        }
+
+        List<Showtime> showtimes;
+        if (startDate != null || endDate != null) {
+            showtimes = showtimeService.getAllShowtimes(filterStartDate, filterEndDate, roomId, movieId, status);
+        } else {
+            showtimes = showtimeService.getAllShowtimes(filterStartDate, roomId, movieId, status);
+        }
 
         // Fetch eligible movies for creating showtimes (BR-07: Upcoming or Now Showing)
         List<Movie> allMovies = movieService.getAllMovies(null, null, null, null);
@@ -78,22 +125,65 @@ public class ShowtimeController {
         long showingCount = showtimes.stream().filter(s -> "Showing".equalsIgnoreCase(s.getStatus())).count();
         long stoppedCount = showtimes.stream().filter(s -> "Stopped".equalsIgnoreCase(s.getStatus()) || "Cancelled".equalsIgnoreCase(s.getStatus())).count();
 
-        model.addAttribute("showtimes", showtimes);
+        if (size <= 0) size = 10;
+        int totalFiltered = showtimes.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalFiltered / size));
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, totalFiltered);
+        List<Showtime> pagedShowtimes = totalFiltered > 0 ? showtimes.subList(start, end) : java.util.Collections.emptyList();
+
+        model.addAttribute("showtimes", pagedShowtimes);
         model.addAttribute("allMovies", allMovies);
         model.addAttribute("eligibleMovies", eligibleMovies);
         model.addAttribute("allRooms", allRooms);
         model.addAttribute("eligibleRooms", eligibleRooms);
 
-        model.addAttribute("selectedDate", filterDate);
+        model.addAttribute("selectedDate", filterStartDate != null ? filterStartDate : LocalDate.now());
+        model.addAttribute("startDate", filterStartDate);
+        model.addAttribute("endDate", filterEndDate);
+
+        String dateRangeLabel = "Showtimes on selected date";
+        String dateRangeSub;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (filterStartDate != null && filterEndDate != null) {
+            if (filterStartDate.equals(filterEndDate)) {
+                dateRangeLabel = "Showtimes on " + filterStartDate.format(dtf);
+                dateRangeSub = "Date: " + filterStartDate.format(dtf);
+            } else {
+                dateRangeLabel = "Showtimes in date range";
+                dateRangeSub = "From " + filterStartDate.format(dtf) + " to " + filterEndDate.format(dtf);
+            }
+        } else if (filterStartDate != null) {
+            dateRangeLabel = "Showtimes from date";
+            dateRangeSub = "From " + filterStartDate.format(dtf) + " onwards";
+        } else if (filterEndDate != null) {
+            dateRangeLabel = "Showtimes until date";
+            dateRangeSub = "Up to " + filterEndDate.format(dtf);
+        } else {
+            dateRangeLabel = "All showtimes";
+            dateRangeSub = "All scheduled dates";
+        }
+        model.addAttribute("dateRangeLabel", dateRangeLabel);
+        model.addAttribute("dateRangeSub", dateRangeSub);
         model.addAttribute("selectedRoomId", roomId != null ? roomId : 0);
         model.addAttribute("selectedMovieId", movieId != null ? movieId : 0);
         model.addAttribute("selectedStatus", status);
 
-        model.addAttribute("totalShowtimes", showtimes.size());
+        model.addAttribute("totalShowtimes", totalFiltered);
         model.addAttribute("scheduledCount", scheduledCount);
         model.addAttribute("showingCount", showingCount);
         model.addAttribute("stoppedCount", stoppedCount);
         model.addAttribute("cleaningBuffer", ShowtimeService.CLEANING_BUFFER_MINUTES);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalFilteredCount", totalFiltered);
+        model.addAttribute("startItem", totalFiltered == 0 ? 0 : start + 1);
+        model.addAttribute("endItem", end);
 
         if (!model.containsAttribute("showtimeForm")) {
             ShowtimeForm defaultForm = new ShowtimeForm();

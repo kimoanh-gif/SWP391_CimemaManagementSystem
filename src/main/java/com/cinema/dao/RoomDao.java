@@ -20,6 +20,10 @@ public class RoomDao {
 
     public RoomDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        try {
+            jdbcTemplate.execute("IF COL_LENGTH(N'dbo.Room', N'IsDeleted') IS NULL ALTER TABLE dbo.Room ADD IsDeleted BIT NOT NULL CONSTRAINT DF_Room_IsDeleted DEFAULT 0 WITH VALUES;");
+        } catch (Exception ignored) {
+        }
     }
 
     private final RowMapper<Room> roomRowMapper = (rs, rowNum) -> {
@@ -47,6 +51,10 @@ public class RoomDao {
             room.setActiveSeatCount(rs.getInt("SeatCount"));
         }
         room.setShowtimeCount(rs.getInt("ShowtimeCount"));
+        try {
+            room.setDeleted(rs.getBoolean("IsDeleted"));
+        } catch (Exception ignored) {
+        }
         return room;
     };
 
@@ -56,7 +64,7 @@ public class RoomDao {
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID) AS SeatCount, " +
                 "(SELECT COUNT(*) FROM Seat s WHERE s.RoomID = r.RoomID AND s.Status = 'Active') AS ActiveSeatCount, " +
                 "(SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = r.RoomID) AS ShowtimeCount " +
-                "FROM Room r WHERE 1=1 ");
+                "FROM Room r WHERE COALESCE(r.IsDeleted, 0) = 0 ");
 
         List<Object> params = new ArrayList<>();
 
@@ -132,6 +140,11 @@ public class RoomDao {
         return jdbcTemplate.update(sql, roomId);
     }
 
+    public int softDelete(int roomId) {
+        String sql = "UPDATE Room SET IsDeleted = 1, Status = 'Maintenance', UpdatedAt = ? WHERE RoomID = ?";
+        return jdbcTemplate.update(sql, java.time.LocalDateTime.now(), roomId);
+    }
+
     public int countTotalShowtimes(int roomId) {
         String sql = "SELECT COUNT(*) FROM Showtime WHERE RoomID = ?";
         Integer cnt = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
@@ -147,7 +160,7 @@ public class RoomDao {
      * Used for BR-52 validation before deactivation.
      */
     public boolean hasUpcomingShowtimes(int roomId) {
-        String sql = "SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = ? AND sh.StartTime > GETDATE()";
+        String sql = "SELECT COUNT(*) FROM Showtime sh WHERE sh.RoomID = ? AND sh.StartTime > GETDATE() AND (sh.Status IS NULL OR sh.Status NOT IN ('Cancelled', 'Stopped'))";
         Integer cnt = jdbcTemplate.queryForObject(sql, Integer.class, roomId);
         return cnt != null && cnt > 0;
     }

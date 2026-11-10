@@ -56,11 +56,14 @@ public class RevenueReportController {
                 throw new IllegalArgumentException(msg);
             }
             RevenueReportData reportData = revenueReportService.getReportData(reportRequest);
+            if (reportData == null) {
+                reportData = new RevenueReportData();
+            }
             model.addAttribute("reportData", reportData);
             model.addAttribute("summary", reportData.getSummary());
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
-            // Fallback to default dates if validation failed
+            // Fallback to default dates if validation failed (single attempt, no unconditional retry loop)
             reportRequest.setPreset("thismonth");
             reportRequest.setStartDate(null);
             reportRequest.setEndDate(null);
@@ -68,11 +71,24 @@ public class RevenueReportController {
             RevenueReportData reportData;
             try {
                 reportData = revenueReportService.getReportData(reportRequest);
-            } catch (IllegalArgumentException retryEx) {
-                reportData = revenueReportService.getReportData(reportRequest);
+                if (reportData == null) {
+                    reportData = new RevenueReportData();
+                }
+            } catch (Exception fallbackEx) {
+                reportData = new RevenueReportData();
+                model.addAttribute("loadError", true);
+                model.addAttribute("errorMessage", ex.getMessage() + " (Fallback report load failed: " + fallbackEx.getMessage() + ")");
             }
             model.addAttribute("reportData", reportData);
-            model.addAttribute("summary", reportData != null ? reportData.getSummary() : null);
+            model.addAttribute("summary", reportData.getSummary());
+        } catch (com.cinema.exception.UnauthorizedManagerException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            RevenueReportData emptyReportData = new RevenueReportData();
+            model.addAttribute("loadError", true);
+            model.addAttribute("errorMessage", "Unable to load revenue report data: " + ex.getMessage());
+            model.addAttribute("reportData", emptyReportData);
+            model.addAttribute("summary", emptyReportData.getSummary());
         }
 
         model.addAttribute("filterRequest", reportRequest);

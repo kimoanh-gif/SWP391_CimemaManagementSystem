@@ -67,4 +67,17 @@ class RevenueReportControllerTest {
                 .andExpect(view().name("manager/reports"))
                 .andExpect(model().attributeExists("errorMessage"));
     }
+
+    @Test
+    @DisplayName("GET /manager/reports: Database failure sets loadError and errorMessage instead of silent 0 revenue")
+    void testViewReports_DatabaseFailureNotifiesUser() throws Exception {
+        when(revenueReportService.getReportData(any()))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("DB connection lost"));
+
+        mockMvc.perform(get("/manager/reports").sessionAttr("userRole", "MANAGER"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/reports"))
+                .andExpect(model().attribute("loadError", true))
+                .andExpect(model().attributeExists("errorMessage"));
+    }
 }

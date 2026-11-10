@@ -25,6 +25,7 @@ public class Room {
     private int seatCount;
     private int activeSeatCount; // Usable / Active seats in Seat table (P1-01)
     private int showtimeCount;
+    private boolean deleted;
 
     public Room() {
     }
@@ -90,11 +91,14 @@ public class Room {
     public int getShowtimeCount() { return showtimeCount; }
     public void setShowtimeCount(int showtimeCount) { this.showtimeCount = showtimeCount; }
 
+    public boolean isDeleted() { return deleted; }
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
+
     /**
      * BR-08: Only rooms with active operational status can receive new showtimes.
      */
     public boolean isActiveForShowtimes() {
-        return "Ready".equalsIgnoreCase(this.status) || "Screening".equalsIgnoreCase(this.status);
+        return !this.deleted && ("Ready".equalsIgnoreCase(this.status) || "Screening".equalsIgnoreCase(this.status));
     }
 
     /**
