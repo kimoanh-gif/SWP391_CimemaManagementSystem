@@ -83,6 +83,11 @@
     </div>
 
     <!-- Alerts -->
+    <div id="dynamicAlert" class="alert alert-error" style="display:none;margin:0;">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body" id="dynamicAlertText">Something went wrong.</div>
+        <button class="alert-close" onclick="this.closest('.alert').style.display='none'">×</button>
+    </div>
     <div class="alert alert-success" th:if="${successMessage}" style="margin:0;">
         <span class="alert-icon">✅</span>
         <div class="alert-body" th:text="${successMessage}">Saved successfully.</div>
@@ -218,10 +223,10 @@
 
                         <form th:action="@{/manager/genres/{id}/delete(id=${genre.genreId})}"
                               method="post" style="display: inline;" class="delete-genre-form"
-                              th:data-name="${genre.name}">
+                              th:data-name="${genre.name}"
+                              th:data-movie-count="${genre.movieCount}">
                             <button type="submit" class="action-btn action-btn-del"
-                                    th:disabled="${genre.movieCount > 0}"
-                                    th:title="${genre.movieCount > 0 ? 'Genres linked to movies cannot be deleted' : 'Delete genre'}">
+                                    title="Delete genre">
                                 🗑
                             </button>
                         </form>
@@ -304,6 +309,6 @@
     </div>
 </div>
 
-<script th:src="@{/js/manager-genres.js}"></script>
+<script th:src="@{/js/manager-genres.js(v=${#dates.createNow().time})}"></script>
 </body>
 </html>

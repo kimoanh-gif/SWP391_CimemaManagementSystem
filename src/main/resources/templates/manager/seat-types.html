@@ -173,13 +173,7 @@
                         </div>
                     </td>
                     <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span class="multiplier-badge" th:text="${st.priceMultiplier} + 'x'">1.00x</span>
-                            <button type="button" class="btn btn-secondary btn-sm btn-edit-multiplier"
-                                    th:data-id="${st.seatTypeId}"
-                                    th:data-name="${st.typeName}"
-                                    th:data-multiplier="${st.priceMultiplier}">Edit multiplier</button>
-                        </div>
+                        <span class="multiplier-badge" th:text="${st.priceMultiplier} + 'x'">1.00x</span>
                     </td>
                     <td>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -314,6 +308,6 @@
     </div>
 </div>
 
-<script th:src="@{/js/manager-seat-types.js}"></script>
+<script th:src="@{/js/manager-seat-types.js(v=${#dates.createNow().time})}"></script>
 </body>
 </html>
