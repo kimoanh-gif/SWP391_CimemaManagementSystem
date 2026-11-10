@@ -76,7 +76,8 @@ public class MovieService {
         LocalDate today = LocalDate.now();
         if (form.getReleaseDate() != null && form.getReleaseDate().isBefore(today)) {
             if (existing.getReleaseDate() == null || !existing.getReleaseDate().equals(form.getReleaseDate())) {
-                throw new IllegalArgumentException("New release date must be from today onward, cannot be in the past.");
+                throw new IllegalArgumentException(
+                        "New release date must be from today onward, cannot be in the past.");
             }
         }
         if (form.getEndDate() != null && form.getEndDate().isBefore(today)) {
@@ -212,9 +213,10 @@ public class MovieService {
     /**
      * AC04: Retrieves active movies for customer-facing views (Now Showing and
      * Upcoming only, excluding Ended and Archived).
+     * Delegates to getAvailableMoviesForShowtimes() to avoid duplicate DAO logic.
      */
     public List<Movie> getCustomerMovies() {
-        return movieDao.findMoviesAvailableForShowtimes();
+        return getAvailableMoviesForShowtimes();
     }
 
     private void validateMovieForm(MovieForm form, boolean isNew) {

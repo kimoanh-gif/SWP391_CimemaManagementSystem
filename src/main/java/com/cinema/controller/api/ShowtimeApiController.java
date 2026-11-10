@@ -43,12 +43,19 @@ public class ShowtimeApiController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<Showtime>>> getShowtimes(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Integer roomId,
             @RequestParam(required = false) Integer movieId,
             @RequestParam(required = false) String status,
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
-        List<Showtime> list = showtimeService.getAllShowtimes(date, roomId, movieId, status);
+        List<Showtime> list;
+        if (startDate != null || endDate != null) {
+            list = showtimeService.getAllShowtimes(startDate, endDate, roomId, movieId, status);
+        } else {
+            list = showtimeService.getAllShowtimes(date, roomId, movieId, status);
+        }
         return ResponseEntity.ok(ApiResponse.ok("Showtime list retrieved successfully", list));
     }
 

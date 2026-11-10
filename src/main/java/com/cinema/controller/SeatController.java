@@ -162,12 +162,16 @@ public class SeatController {
                 targetSeatIds.add(form.getSeatId());
             }
 
-            for (Integer sid : targetSeatIds) {
-                seatService.updateSeat(sid, form.getSeatTypeName(), form.getStatus());
-            }
+            List<Seat> updated = seatService.batchUpdateSeats(
+                    form.getRoomId(),
+                    targetSeatIds,
+                    form.getSeatTypeName(),
+                    form.getStatus(),
+                    form.getExpectedUpdatedAt()
+            );
 
-            if (targetSeatIds.size() > 1) {
-                redirectAttributes.addFlashAttribute("successMessage", "Successfully updated " + targetSeatIds.size() + " seats!");
+            if (updated.size() > 1) {
+                redirectAttributes.addFlashAttribute("successMessage", "Successfully updated " + updated.size() + " seats!");
             } else {
                 redirectAttributes.addFlashAttribute("successMessage", "Seat updated successfully!");
             }

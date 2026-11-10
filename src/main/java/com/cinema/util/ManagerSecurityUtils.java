@@ -34,10 +34,43 @@ public final class ManagerSecurityUtils {
     }
 
     /**
+     * Verifies Manager access for session-based controllers.
+     * - Returns true if the current user has MANAGER role (via SessionService, HttpSession, or SecurityContext).
+     * - Throws UnauthorizedManagerException (403 Forbidden) if authenticated with a non-MANAGER role.
+     * - Returns false if unauthenticated so the caller can redirect to /login.
+     */
+    public static boolean verifyOrRedirectManager(HttpSession session, SessionService sessionService) {
+        if (sessionService != null && sessionService.hasRole(session, "MANAGER")) {
+            return true;
+        }
+        String role = sessionService != null ? sessionService.currentRole(session) : null;
+        if (role == null || role.isBlank()) {
+            role = resolveRole(session);
+        }
+        if ("MANAGER".equalsIgnoreCase(role != null ? role.trim() : null)) {
+            return true;
+        }
+        if (role != null && !role.isBlank()) {
+            throw new UnauthorizedManagerException(
+                    "Access denied: Account with role '" + role.trim()
+                            + "' does not have permission to access the manager area."
+            );
+        }
+        return false;
+    }
+
+    /**
      * Resolves the current user's role strictly from SecurityContextHolder or trusted HttpSession attributes.
      * Untrusted HTTP headers, query parameters, and silent default fallbacks are never used.
      */
     public static String resolveRole(HttpServletRequest request) {
+        return resolveRole(request != null ? request.getSession(false) : null);
+    }
+
+    /**
+     * Resolves the current user's role strictly from SecurityContextHolder or trusted HttpSession attributes.
+     */
+    public static String resolveRole(HttpSession session) {
         // 1. Check trusted Spring Security context first
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
@@ -56,26 +89,23 @@ public final class ManagerSecurityUtils {
         }
 
         // 2. Check trusted server-side HttpSession
-        if (request != null) {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Object authenticated = session.getAttribute(SessionService.ATTR_USER);
-                if (authenticated instanceof AuthenticatedUser user
-                        && user.getRole() != null && !user.getRole().isBlank()) {
-                    return user.getRole().trim();
-                }
-                Object sessionRole = session.getAttribute("role");
-                if (sessionRole == null) {
-                    sessionRole = session.getAttribute("userRole");
-                }
-                if (sessionRole instanceof String str && !str.isBlank()) {
-                    return str.trim();
-                }
-                Object userObj = session.getAttribute("currentUser");
-                if (userObj instanceof AuthenticatedUser au
-                        && au.getRole() != null && !au.getRole().isBlank()) {
-                    return au.getRole().trim();
-                }
+        if (session != null) {
+            Object authenticated = session.getAttribute(SessionService.ATTR_USER);
+            if (authenticated instanceof AuthenticatedUser user
+                    && user.getRole() != null && !user.getRole().isBlank()) {
+                return user.getRole().trim();
+            }
+            Object sessionRole = session.getAttribute("role");
+            if (sessionRole == null) {
+                sessionRole = session.getAttribute("userRole");
+            }
+            if (sessionRole instanceof String str && !str.isBlank()) {
+                return str.trim();
+            }
+            Object userObj = session.getAttribute("currentUser");
+            if (userObj instanceof AuthenticatedUser au
+                    && au.getRole() != null && !au.getRole().isBlank()) {
+                return au.getRole().trim();
             }
         }
 

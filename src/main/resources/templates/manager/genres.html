@@ -238,13 +238,21 @@
         <!-- Pagination -->
         <div class="pagination-row" th:if="${not #lists.isEmpty(genres)}">
             <span style="font-size: 13px; color: var(--text-500);">
-                Showing 1 – <span th:text="${#lists.size(genres)}">5</span> out of <span th:text="${totalCount}">5</span> genres
+                Showing <span th:text="${startItem != null ? startItem : 1}">1</span> – <span th:text="${endItem != null ? endItem : #lists.size(genres)}">5</span> out of <span th:text="${totalCount}">5</span> genres
             </span>
-            <div class="pagination">
-                <button type="button" class="page-btn" disabled>&lsaquo;</button>
-                <button type="button" class="page-btn active">1</button>
-                <button type="button" class="page-btn">2</button>
-                <button type="button" class="page-btn">&rsaquo;</button>
+            <div class="pagination" style="display:flex;gap:4px;">
+                <a th:href="@{/manager/genres(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage <= 1} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage <= 1} ? 'pointer-events:none;opacity:0.4;' : ''">&lsaquo;</a>
+                <a th:each="p : ${#numbers.sequence(1, totalPages != null ? totalPages : 1)}"
+                   th:href="@{/manager/genres(page=${p}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus})}"
+                   th:text="${p}" class="page-btn" th:classappend="${p == currentPage} ? ' active' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">1</a>
+                <a th:href="@{/manager/genres(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage >= totalPages} ? 'pointer-events:none;opacity:0.4;' : ''">&rsaquo;</a>
             </div>
         </div>
     </div>

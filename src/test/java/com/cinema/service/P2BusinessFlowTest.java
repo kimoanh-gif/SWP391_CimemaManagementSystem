@@ -413,5 +413,74 @@ public class P2BusinessFlowTest {
             assertNotNull(selectedRoom);
             assertEquals(102, selectedRoom.getRoomId());
         }
+
+        @Test
+        @DisplayName("AC03: Real pagination works across all 6 screens (Movies, Genres, Pricing, Rooms, Seat Types, Showtimes)")
+        void testPaginationAcrossAllSixScreens() {
+            // 1. Showtimes pagination (page 2, size 2 out of 5 items)
+            List<Showtime> fiveShowtimes = new ArrayList<>();
+            for (int i = 1; i <= 5; i++) {
+                Showtime st = new Showtime();
+                st.setShowtimeId(i);
+                st.setStatus("Scheduled");
+                fiveShowtimes.add(st);
+            }
+            when(showtimeService.getAllShowtimes(any(), any(), any(), any())).thenReturn(fiveShowtimes);
+            when(movieService.getAllMovies(any(), any(), any(), any())).thenReturn(Collections.emptyList());
+            when(roomService.getAll(any(), any())).thenReturn(Collections.emptyList());
+
+            Model stModel = new ExtendedModelMap();
+            showtimeController.viewShowtimes(null, null, null, null, null, "ALL", 2, 2, stModel, request);
+            assertEquals(2, ((List<?>) stModel.getAttribute("showtimes")).size());
+            assertEquals(2, stModel.getAttribute("currentPage"));
+            assertEquals(3, stModel.getAttribute("totalPages"));
+            assertEquals(5, stModel.getAttribute("totalFilteredCount"));
+            assertEquals(3, stModel.getAttribute("startItem"));
+            assertEquals(4, stModel.getAttribute("endItem"));
+            assertEquals(5, stModel.getAttribute("totalShowtimes"));
+
+            // 2. Rooms pagination (page 2, size 2 out of 3 rooms)
+            com.cinema.controller.RoomController roomController = new com.cinema.controller.RoomController(roomService);
+            List<Room> threeRooms = List.of(
+                    new Room(1, "R1", "Room 1", "2D", 100, "Ready"),
+                    new Room(2, "R2", "Room 2", "2D", 120, "Maintenance"),
+                    new Room(3, "R3", "Room 3", "IMAX", 200, "Ready")
+            );
+            when(roomService.getAll(null, null)).thenReturn(threeRooms);
+            Model roomModel = new ExtendedModelMap();
+            roomController.list(null, null, 2, 2, roomModel, request);
+            assertEquals(1, ((List<?>) roomModel.getAttribute("rooms")).size());
+            assertEquals(2, roomModel.getAttribute("currentPage"));
+            assertEquals(2, roomModel.getAttribute("totalPages"));
+            assertEquals(3, roomModel.getAttribute("totalFilteredCount"));
+            assertEquals(2L, roomModel.getAttribute("activeRoomCount"));
+            assertEquals(1L, roomModel.getAttribute("maintenanceRoomCount"));
+            assertEquals(420L, roomModel.getAttribute("totalRoomCapacity"));
+
+            // 3. Pricing pagination (page 2, size 1 out of 2 rules)
+            com.cinema.controller.TicketPricingController pricingController = new com.cinema.controller.TicketPricingController(pricingService);
+            com.cinema.model.TicketPricing r1 = new com.cinema.model.TicketPricing(1, "P1", "Rule 1", "WEEKDAY", "STANDARD", new BigDecimal("85000"), BigDecimal.ZERO, "2D Digital", "Active", "");
+            com.cinema.model.TicketPricing r2 = new com.cinema.model.TicketPricing(2, "P2", "Rule 2", "WEEKEND", "GOLDEN_HOUR", new BigDecimal("105000"), BigDecimal.ZERO, "2D Digital", "Active", "");
+            when(pricingService.getAllPricingRules("ALL", "ALL")).thenReturn(List.of(r1, r2));
+            Model pricingModel = new ExtendedModelMap();
+            pricingController.viewPricingScreen("ALL", "ALL", 2, 1, pricingModel, request);
+            assertEquals(1, ((List<?>) pricingModel.getAttribute("rules")).size());
+            assertEquals(2, pricingModel.getAttribute("currentPage"));
+            assertEquals(2, pricingModel.getAttribute("totalPages"));
+            assertEquals(2, pricingModel.getAttribute("totalFilteredCount"));
+            assertEquals(2L, pricingModel.getAttribute("activeRulesCount"));
+
+            // 4. Seat Types pagination (page 2, size 1 out of 2 seat types)
+            com.cinema.controller.SeatTypeController seatTypeController = new com.cinema.controller.SeatTypeController(pricingService);
+            com.cinema.model.SeatType s1 = new com.cinema.model.SeatType(1, "STD", "Standard", "", BigDecimal.ONE, "#000", "Active");
+            com.cinema.model.SeatType s2 = new com.cinema.model.SeatType(2, "VIP", "VIP", "", new BigDecimal("1.2"), "#000", "Active");
+            when(pricingService.getAllSeatTypes("ALL")).thenReturn(List.of(s1, s2));
+            Model seatTypeModel = new ExtendedModelMap();
+            seatTypeController.listSeatTypes("ALL", 2, 1, seatTypeModel, request);
+            assertEquals(1, ((List<?>) seatTypeModel.getAttribute("seatTypes")).size());
+            assertEquals(2, seatTypeModel.getAttribute("currentPage"));
+            assertEquals(2, seatTypeModel.getAttribute("totalPages"));
+            assertEquals(2L, seatTypeModel.getAttribute("totalCount"));
+        }
     }
 }

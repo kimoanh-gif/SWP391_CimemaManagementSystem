@@ -37,12 +37,26 @@ public class GenreController {
     }
 
     /**
-     * Displays the Genre Management screen with search, filter, and metrics.
+     * Backward-compatible overload for direct invocations in tests.
+     */
+    public String viewGenreList(
+            String keyword,
+            String status,
+            Model model,
+            HttpServletRequest request
+    ) {
+        return viewGenreList(keyword, status, 1, 10, model, request);
+    }
+
+    /**
+     * Displays the Genre Management screen with search, filter, metrics, and pagination.
      */
     @GetMapping
     public String viewGenreList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false, defaultValue = "ALL") String status,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             Model model,
             HttpServletRequest request
     ) {
@@ -50,19 +64,36 @@ public class GenreController {
 
         List<Genre> genres = genreService.getAllGenres(keyword, status);
 
-        // Compute summary metrics
+        // Compute summary metrics across all matching genres before pagination
         long totalCount = genres.size();
         long activeCount = genres.stream().filter(Genre::isActive).count();
         long inactiveCount = totalCount - activeCount;
         long genresWithMovies = genres.stream().filter(g -> g.getMovieCount() > 0).count();
 
-        model.addAttribute("genres", genres);
+        if (size <= 0) size = 10;
+        int totalFiltered = genres.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalFiltered / size));
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, totalFiltered);
+        List<Genre> pagedGenres = totalFiltered > 0 ? genres.subList(start, end) : java.util.Collections.emptyList();
+
+        model.addAttribute("genres", pagedGenres);
         model.addAttribute("keyword", keyword != null ? keyword : "");
         model.addAttribute("selectedStatus", status);
         model.addAttribute("totalCount", totalCount);
         model.addAttribute("activeCount", activeCount);
         model.addAttribute("inactiveCount", inactiveCount);
         model.addAttribute("genresWithMovies", genresWithMovies);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalFilteredCount", totalFiltered);
+        model.addAttribute("startItem", totalFiltered == 0 ? 0 : start + 1);
+        model.addAttribute("endItem", end);
 
         if (!model.containsAttribute("genreForm")) {
             model.addAttribute("genreForm", new GenreForm());

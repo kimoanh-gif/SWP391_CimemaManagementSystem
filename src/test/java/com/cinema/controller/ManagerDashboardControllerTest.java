@@ -78,4 +78,29 @@ class ManagerDashboardControllerTest {
         mockMvc.perform(get("/manager/dashboard").param("role", "CUSTOMER"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("GET /manager/dashboard: Reuses pre-fetched collections in ManagerDashboardStats without duplicate service queries")
+    void testShowDashboard_ReusesPreFetchedCollections() throws Exception {
+        ManagerDashboardStats stats = new ManagerDashboardStats();
+        stats.setTotalMovies(4);
+        stats.setActiveRooms(2);
+        stats.setTodayShowtimesCount(3);
+        stats.setTodayShowtimes(Collections.emptyList());
+        stats.setActiveMovies(Collections.emptyList());
+        stats.setRoomsSummary(Collections.emptyList());
+
+        when(dashboardService.getDashboardStats()).thenReturn(stats);
+
+        mockMvc.perform(get("/manager/dashboard").sessionAttr("userRole", "MANAGER"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager/dashboard"))
+                .andExpect(model().attribute("movieCount", 4))
+                .andExpect(model().attribute("roomCount", 2))
+                .andExpect(model().attribute("upcomingShowtimeCount", 3));
+
+        org.mockito.Mockito.verify(dashboardService, org.mockito.Mockito.never()).getTodayShowtimes();
+        org.mockito.Mockito.verify(dashboardService, org.mockito.Mockito.never()).getActiveMovies();
+        org.mockito.Mockito.verify(dashboardService, org.mockito.Mockito.never()).getRoomsSummary();
+    }
 }

@@ -64,4 +64,37 @@ public class RevenueReportSummary {
     public void setTotalPaidBookings(int totalPaidBookings) {
         this.totalPaidBookings = totalPaidBookings;
     }
+
+    /**
+     * Gross sales revenue = Ticket gross + F&B gross (before discount).
+     */
+    public BigDecimal getGrossRevenue() {
+        BigDecimal ticket = getTicketRevenue();
+        BigDecimal fb = getFbRevenue();
+        return ticket.add(fb);
+    }
+
+    /**
+     * Ticket percentage of gross sales (0.0 to 100.0%).
+     */
+    public double getTicketGrossPercentage() {
+        BigDecimal gross = getGrossRevenue();
+        if (gross.compareTo(BigDecimal.ZERO) <= 0) return 0.0;
+        BigDecimal ticket = getTicketRevenue();
+        return ticket.multiply(BigDecimal.valueOf(100))
+                .divide(gross, 1, java.math.RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
+    /**
+     * F&B percentage of gross sales (0.0 to 100.0%).
+     */
+    public double getFbGrossPercentage() {
+        BigDecimal gross = getGrossRevenue();
+        if (gross.compareTo(BigDecimal.ZERO) <= 0) return 0.0;
+        BigDecimal fb = getFbRevenue();
+        return fb.multiply(BigDecimal.valueOf(100))
+                .divide(gross, 1, java.math.RoundingMode.HALF_UP)
+                .doubleValue();
+    }
 }

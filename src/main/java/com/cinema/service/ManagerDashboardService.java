@@ -51,7 +51,7 @@ public class ManagerDashboardService {
     public ManagerDashboardStats getDashboardStats() {
         ManagerDashboardStats stats = new ManagerDashboardStats();
 
-        // 1. Movie stats
+        // 1. Movie stats (also pre-populates activeMovies to avoid duplicate query in Controller)
         List<Movie> allMovies = movieService.getAllMovies(null, null, null, null);
         stats.setTotalMovies(allMovies.size());
         stats.setNowShowingMovies((int) allMovies.stream()
@@ -60,22 +60,28 @@ public class ManagerDashboardService {
         stats.setUpcomingMovies((int) allMovies.stream()
                 .filter(m -> "Upcoming".equalsIgnoreCase(m.getStatus()))
                 .count());
+        stats.setActiveMovies(allMovies.stream()
+                .filter(m -> "Now Showing".equalsIgnoreCase(m.getStatus()) || "Upcoming".equalsIgnoreCase(m.getStatus()))
+                .limit(8)
+                .collect(Collectors.toList()));
 
         // 2. Genre stats
         List<Genre> allGenres = genreService.getAllGenres(null, "ALL");
         stats.setTotalGenres(allGenres.size());
 
-        // 3. Room stats
+        // 3. Room stats (also pre-populates roomsSummary to avoid duplicate query in Controller)
         List<Room> allRooms = roomService.getAll(null, null);
         stats.setTotalRooms(allRooms.size());
         stats.setActiveRooms((int) allRooms.stream()
                 .filter(r -> "Ready".equalsIgnoreCase(r.getStatus()) || "Screening".equalsIgnoreCase(r.getStatus()))
                 .count());
+        stats.setRoomsSummary(allRooms);
 
-        // 4. Showtime stats (Today)
+        // 4. Showtime stats (Today - also pre-populates todayShowtimes to avoid duplicate query in Controller)
         LocalDate today = LocalDate.now();
         List<Showtime> todayShowtimes = showtimeService.getAllShowtimes(today, null, null, null);
         stats.setTodayShowtimesCount(todayShowtimes.size());
+        stats.setTodayShowtimes(todayShowtimes);
 
         // 5. Seat Type & Pricing stats
         List<SeatType> seatTypes = pricingService.getAllSeatTypes("ALL");
@@ -131,33 +137,46 @@ public class ManagerDashboardService {
             }
 
             Integer paidCount = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM dbo.Booking WHERE UPPER([Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
+                    "SELECT COUNT(*) FROM dbo.Booking WHERE UPPER([Status]) = 'CONFIRMED' " +
+                    "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = dbo.Booking.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL)",
+                    Integer.class);
 
             if (paidCount != null && paidCount > 0) {
                 stats.setHasTransactionData(true);
                 BigDecimal totalRev = jdbcTemplate.queryForObject(
-                        "SELECT COALESCE(SUM(TotalAmount), 0) FROM dbo.Booking WHERE UPPER([Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
+                        "SELECT COALESCE(SUM(TotalAmount), 0) FROM dbo.Booking WHERE UPPER([Status]) = 'CONFIRMED' " +
+                        "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = dbo.Booking.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL)",
                         BigDecimal.class);
                 stats.setTotalRevenue(totalRev != null ? totalRev : BigDecimal.ZERO);
 
                 BigDecimal ticketRev = jdbcTemplate.queryForObject(
-                        "SELECT COALESCE(SUM(bs.UnitPrice), 0) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON bs.BookingID = b.BookingID WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
+                        "SELECT COALESCE(SUM(bs.UnitPrice), 0) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON bs.BookingID = b.BookingID " +
+                        "WHERE UPPER(b.[Status]) = 'CONFIRMED' AND UPPER(bs.[Status]) = 'BOOKED' " +
+                        "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = b.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL) " +
+                        "AND NOT EXISTS (SELECT 1 FROM dbo.Ticket t WHERE t.BookingSeatID = bs.BookingSeatID AND UPPER(t.TicketStatus) = 'CANCELLED')",
                         BigDecimal.class);
-                stats.setTicketRevenue(ticketRev != null && ticketRev.compareTo(BigDecimal.ZERO) > 0 ? ticketRev : (totalRev != null ? totalRev : BigDecimal.ZERO));
+                stats.setTicketRevenue(ticketRev != null ? ticketRev : BigDecimal.ZERO);
 
                 BigDecimal fbRev = jdbcTemplate.queryForObject(
-                        "SELECT COALESCE(SUM(bfb.Quantity * bfb.UnitPrice), 0) FROM dbo.BookingFoodBeverage bfb JOIN dbo.Booking b ON bfb.BookingID = b.BookingID WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')",
+                        "SELECT COALESCE(SUM(bfb.Quantity * bfb.UnitPrice), 0) FROM dbo.BookingFoodBeverage bfb JOIN dbo.Booking b ON bfb.BookingID = b.BookingID " +
+                        "WHERE UPPER(b.[Status]) = 'CONFIRMED' " +
+                        "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = b.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL)",
                         BigDecimal.class);
                 stats.setFbRevenue(fbRev != null ? fbRev : BigDecimal.ZERO);
 
-                // Booked tickets count (count from BookingSeat; fallback to digital Ticket count if needed)
+                // Booked tickets count (count from BOOKED BookingSeat with non-cancelled tickets)
                 Integer bookedCount = jdbcTemplate.queryForObject(
                         "SELECT COALESCE(COUNT(bs.BookingSeatID), 0) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON bs.BookingID = b.BookingID " +
-                        "WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
+                        "WHERE UPPER(b.[Status]) = 'CONFIRMED' AND UPPER(bs.[Status]) = 'BOOKED' " +
+                        "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = b.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL) " +
+                        "AND NOT EXISTS (SELECT 1 FROM dbo.Ticket t WHERE t.BookingSeatID = bs.BookingSeatID AND UPPER(t.TicketStatus) = 'CANCELLED')",
+                        Integer.class);
                 if ((bookedCount == null || bookedCount == 0)) {
                     Integer digitalTickets = jdbcTemplate.queryForObject(
                             "SELECT COALESCE(COUNT(t.TicketID), 0) FROM dbo.Ticket t JOIN dbo.BookingSeat bs ON t.BookingSeatID = bs.BookingSeatID JOIN dbo.Booking b ON bs.BookingID = b.BookingID " +
-                            "WHERE UPPER(b.[Status]) IN ('PAID', 'CONFIRMED', 'COMPLETED')", Integer.class);
+                            "WHERE UPPER(b.[Status]) = 'CONFIRMED' AND UPPER(bs.[Status]) = 'BOOKED' AND UPPER(t.TicketStatus) IN ('VALID', 'USED') " +
+                            "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID = b.BookingID AND UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL)",
+                            Integer.class);
                     if (digitalTickets != null && digitalTickets > 0) {
                         bookedCount = digitalTickets;
                     }

@@ -135,7 +135,6 @@ public class TicketPricingService {
                 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) {
             throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00");
         }
-        if (form.getPriceMultiplier() == null || form.getPriceMultiplier().compareTo(new BigDecimal("0.50")) < 0 || form.getPriceMultiplier().compareTo(new BigDecimal("3.00")) > 0) { throw new InvalidPricingConfigurationException("Seat price multiplier must be between 0.50 and 3.00"); }
         seatTypeDao.findByCode(form.getTypeCode().trim()).ifPresent(s -> {
             if (!s.getSeatTypeId().equals(id)) {
                 throw new InvalidPricingConfigurationException(

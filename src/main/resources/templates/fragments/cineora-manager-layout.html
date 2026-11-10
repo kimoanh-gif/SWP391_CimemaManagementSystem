@@ -5,11 +5,10 @@
 
 <!--
   CINEORA Manager shell (mockups "CINEORA_Manager_Mockups_EN").
-  Pages migrated to the new design include:
+  All Manager pages include:
     <th:block th:replace="~{fragments/cineora-manager-layout :: head}"></th:block>   (inside <head>)
     <aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='dashboard')}"></aside>
     <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
-  Pages not migrated yet keep using fragments/manager-layout.html.
 -->
 
 <th:block th:fragment="head">
@@ -87,11 +86,6 @@
         <span>CINEORA Management System</span>
     </div>
     <div class="cm-topbar-right">
-        <span class="cm-pill cm-pill-success" th:if="${roomsActiveLabel != null}">
-            <span class="cm-dot"></span>
-            <span th:text="${roomsActiveLabel}">5/5 Screening rooms active</span>
-        </span>
-        <span class="cm-divider"></span>
         <th:block th:replace="~{fragments/workspace-account :: menu(displayName=${userName != null ? userName : 'Cinema Manager'}, displayRole='Manager')}"></th:block>
     </div>
 </header>

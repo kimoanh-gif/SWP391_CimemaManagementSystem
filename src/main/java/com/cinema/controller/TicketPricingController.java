@@ -40,10 +40,21 @@ public class TicketPricingController {
         this.pricingService = pricingService;
     }
 
+    public String viewPricingScreen(
+            String dayType,
+            String status,
+            Model model,
+            HttpServletRequest request
+    ) {
+        return viewPricingScreen(dayType, status, 1, 10, model, request);
+    }
+
     @GetMapping
     public String viewPricingScreen(
             @RequestParam(required = false, defaultValue = "ALL") String dayType,
             @RequestParam(required = false, defaultValue = "ALL") String status,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             Model model,
             HttpServletRequest request
     ) {
@@ -63,7 +74,17 @@ public class TicketPricingController {
 
         long activeRulesCount = rules.stream().filter(TicketPricing::isActive).count();
 
-        model.addAttribute("rules", rules);
+        if (size <= 0) size = 10;
+        int totalFiltered = rules.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalFiltered / size));
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, totalFiltered);
+        List<TicketPricing> pagedRules = totalFiltered > 0 ? rules.subList(start, end) : java.util.Collections.emptyList();
+
+        model.addAttribute("rules", pagedRules);
         model.addAttribute("seatTypes", seatTypes);
         model.addAttribute("matrix", matrix);
         model.addAttribute("atp", atp);
@@ -71,6 +92,13 @@ public class TicketPricingController {
         model.addAttribute("activeRulesCount", activeRulesCount);
         model.addAttribute("selectedDayType", dayType);
         model.addAttribute("selectedStatus", status);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalFilteredCount", totalFiltered);
+        model.addAttribute("startItem", totalFiltered == 0 ? 0 : start + 1);
+        model.addAttribute("endItem", end);
 
         if (!model.containsAttribute("pricingForm")) {
             model.addAttribute("pricingForm", new TicketPricingForm());

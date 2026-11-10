@@ -30,6 +30,11 @@ public class ManagerDashboardStats {
     private Double seatOccupancyRate;
     private int totalBookedTickets;
 
+    // Pre-fetched collections to eliminate duplicate queries during Dashboard rendering (Phase 3)
+    private java.util.List<Showtime> todayShowtimes;
+    private java.util.List<Movie> activeMovies;
+    private java.util.List<Room> roomsSummary;
+
     public ManagerDashboardStats() {
         this.baseTicketPrice = BigDecimal.ZERO;
         this.averageTicketPrice = BigDecimal.ZERO;
@@ -97,4 +102,13 @@ public class ManagerDashboardStats {
 
     public int getTotalBookedTickets() { return totalBookedTickets; }
     public void setTotalBookedTickets(int totalBookedTickets) { this.totalBookedTickets = totalBookedTickets; }
+
+    public java.util.List<Showtime> getTodayShowtimes() { return todayShowtimes; }
+    public void setTodayShowtimes(java.util.List<Showtime> todayShowtimes) { this.todayShowtimes = todayShowtimes; }
+
+    public java.util.List<Movie> getActiveMovies() { return activeMovies; }
+    public void setActiveMovies(java.util.List<Movie> activeMovies) { this.activeMovies = activeMovies; }
+
+    public java.util.List<Room> getRoomsSummary() { return roomsSummary; }
+    public void setRoomsSummary(java.util.List<Room> roomsSummary) { this.roomsSummary = roomsSummary; }
 }

@@ -496,4 +496,18 @@ public class ShowtimeServiceTest {
         assertEquals(2, batch.size());
         assertEquals(start1700.plusMinutes(140), slot1.getEndTime()); // 19:20 (no trailer)
     }
+
+    @Test
+    void testGetAllShowtimes_DateRangeDelegation() {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(7);
+        Showtime st = new Showtime(10, 1, 1, start.atTime(10, 0), start.atTime(12, 0), new BigDecimal("85000"), "Scheduled");
+
+        when(showtimeDao.findAll(start, end, 1, null, "ALL")).thenReturn(List.of(st));
+
+        List<Showtime> result = showtimeService.getAllShowtimes(start, end, 1, null, "ALL");
+        assertEquals(1, result.size());
+        assertEquals(10, result.get(0).getShowtimeId());
+        verify(showtimeDao).findAll(start, end, 1, null, "ALL");
+    }
 }

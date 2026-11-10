@@ -100,14 +100,30 @@ class RoomServiceTest {
     }
 
     @Test
-    void delete_withShowtimes_shouldThrow() {
+    void delete_withUpcomingShowtimes_shouldThrow() {
         Room room = new Room();
         room.setRoomId(8);
         room.setRoomName("Test Cinema 8");
         when(roomDao.findById(8)).thenReturn(Optional.of(room));
+        when(roomDao.hasUpcomingShowtimes(8)).thenReturn(true);
         when(roomDao.countTotalShowtimes(8)).thenReturn(2);
 
         assertThrows(RoomHasActiveShowtimesException.class, () -> roomService.delete(8));
+        verify(roomDao, never()).delete(anyInt());
+        verify(roomDao, never()).softDelete(anyInt());
+    }
+
+    @Test
+    void delete_withHistoricalShowtimes_shouldSoftDelete() {
+        Room room = new Room();
+        room.setRoomId(8);
+        room.setRoomName("Test Cinema 8");
+        when(roomDao.findById(8)).thenReturn(Optional.of(room));
+        when(roomDao.hasUpcomingShowtimes(8)).thenReturn(false);
+        when(roomDao.countTotalShowtimes(8)).thenReturn(2);
+
+        assertDoesNotThrow(() -> roomService.delete(8));
+        verify(roomDao).softDelete(8);
         verify(roomDao, never()).delete(anyInt());
     }
 

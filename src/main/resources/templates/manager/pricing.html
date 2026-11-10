@@ -433,12 +433,21 @@
                 <!-- Pagination -->
                 <div class="pagination-row" th:if="${not #lists.isEmpty(rules)}">
                     <span style="font-size: 13px; color: var(--text-500);">
-                        Showing 1 – <span th:text="${#lists.size(rules)}">6</span> price configurations (<span th:text="${activeRulesCount}">6</span> active)
+                        Showing <span th:text="${startItem != null ? startItem : 1}">1</span> – <span th:text="${endItem != null ? endItem : #lists.size(rules)}">6</span> of <span th:text="${totalFilteredCount != null ? totalFilteredCount : #lists.size(rules)}">6</span> price configurations (<span th:text="${activeRulesCount}">6</span> active)
                     </span>
-                    <div class="pagination">
-                        <button type="button" class="page-btn" disabled>&lsaquo;</button>
-                        <button type="button" class="page-btn active">1</button>
-                        <button type="button" class="page-btn">&rsaquo;</button>
+                    <div class="pagination" style="display:flex;gap:4px;">
+                        <a th:href="@{/manager/pricing(page=${currentPage - 1}, size=${pageSize}, dayType=${selectedDayType}, status=${selectedStatus})}"
+                           class="page-btn" th:classappend="${currentPage <= 1} ? ' disabled' : ''"
+                           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                           th:styleappend="${currentPage <= 1} ? 'pointer-events:none;opacity:0.4;' : ''">&lsaquo;</a>
+                        <a th:each="p : ${#numbers.sequence(1, totalPages != null ? totalPages : 1)}"
+                           th:href="@{/manager/pricing(page=${p}, size=${pageSize}, dayType=${selectedDayType}, status=${selectedStatus})}"
+                           th:text="${p}" class="page-btn" th:classappend="${p == currentPage} ? ' active' : ''"
+                           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">1</a>
+                        <a th:href="@{/manager/pricing(page=${currentPage + 1}, size=${pageSize}, dayType=${selectedDayType}, status=${selectedStatus})}"
+                           class="page-btn" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''"
+                           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                           th:styleappend="${currentPage >= totalPages} ? 'pointer-events:none;opacity:0.4;' : ''">&rsaquo;</a>
                     </div>
                 </div>
 

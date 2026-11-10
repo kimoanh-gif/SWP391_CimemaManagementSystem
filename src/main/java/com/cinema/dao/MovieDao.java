@@ -37,11 +37,7 @@ public class MovieDao {
         Movie movie = new Movie();
         movie.setMovieId(rs.getInt("MovieID"));
         movie.setTitle(rs.getString("Title"));
-
-        try {
-            movie.setOriginalTitle(rs.getString("OriginalTitle"));
-        } catch (Exception ignored) {
-        }
+        movie.setOriginalTitle(rs.getString("OriginalTitle"));
         movie.setDuration(rs.getInt("Duration"));
 
         Date releaseDate = rs.getDate("ReleaseDate");
@@ -49,47 +45,19 @@ public class MovieDao {
             movie.setReleaseDate(releaseDate.toLocalDate());
         }
 
-        try {
-            Date endDate = rs.getDate("EndDate");
-            if (endDate != null) {
-                movie.setEndDate(endDate.toLocalDate());
-            }
-        } catch (Exception ignored) {
+        Date endDate = rs.getDate("EndDate");
+        if (endDate != null) {
+            movie.setEndDate(endDate.toLocalDate());
         }
 
-        try {
-            movie.setLanguage(rs.getString("Language"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setDirector(rs.getString("Director"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setActors(rs.getString("Actors"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setAgeRating(rs.getString("AgeRating"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setDescription(rs.getString("Description"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setPoster(rs.getString("Poster"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setBanner(rs.getString("Banner"));
-        } catch (Exception ignored) {
-        }
-        try {
-            movie.setTrailer(rs.getString("Trailer"));
-        } catch (Exception ignored) {
-        }
-
+        movie.setLanguage(rs.getString("Language"));
+        movie.setDirector(rs.getString("Director"));
+        movie.setActors(rs.getString("Actors"));
+        movie.setAgeRating(rs.getString("AgeRating"));
+        movie.setDescription(rs.getString("Description"));
+        movie.setPoster(rs.getString("Poster"));
+        movie.setBanner(rs.getString("Banner"));
+        movie.setTrailer(rs.getString("Trailer"));
         movie.setStatus(rs.getString("Status"));
 
         Timestamp createdAt = rs.getTimestamp("CreatedAt");
@@ -97,12 +65,9 @@ public class MovieDao {
             movie.setCreatedAt(createdAt.toLocalDateTime());
         }
 
-        try {
-            Timestamp updatedAt = rs.getTimestamp("UpdatedAt");
-            if (updatedAt != null) {
-                movie.setUpdatedAt(updatedAt.toLocalDateTime());
-            }
-        } catch (Exception ignored) {
+        Timestamp updatedAt = rs.getTimestamp("UpdatedAt");
+        if (updatedAt != null) {
+            movie.setUpdatedAt(updatedAt.toLocalDateTime());
         }
 
         return movie;
@@ -116,6 +81,10 @@ public class MovieDao {
         genre.setStatus(rs.getString("Status"));
         return genre;
     };
+
+    public List<Movie> findAll(String keyword, String status) {
+        return findAll(keyword, null, null, status);
+    }
 
     /**
      * Retrieves movies with multi-criteria filtering: search keyword, genre, age
@@ -580,14 +549,14 @@ public class MovieDao {
                 WITH paid_booking AS (
                     SELECT p.BookingID, MAX(p.Amount) AS PaidAmount
                     FROM dbo.Payment p
-                    WHERE UPPER(p.[Status]) IN ('PAID', 'SUCCESS', 'COMPLETED')
+                    WHERE UPPER(p.[Status]) = 'PAID' AND p.PaidAt IS NOT NULL
                     GROUP BY p.BookingID
                 ), movie_revenue AS (
                     SELECT st.MovieID, SUM(pb.PaidAmount) AS Revenue
                     FROM paid_booking pb
                     JOIN dbo.Booking b ON b.BookingID = pb.BookingID
                     JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
-                    WHERE UPPER(b.[Status]) NOT IN ('CANCELLED', 'EXPIRED')
+                    WHERE UPPER(b.[Status]) = 'CONFIRMED'
                     GROUP BY st.MovieID
                 )
                 SELECT m.MovieID, m.Title, m.OriginalTitle, m.Duration, m.ReleaseDate, m.EndDate,

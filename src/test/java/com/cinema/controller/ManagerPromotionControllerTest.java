@@ -54,6 +54,15 @@ class ManagerPromotionControllerTest {
     }
 
     @Test
+    void authenticatedNonManagerRoleThrowsForbidden() {
+        when(sessionService.hasRole(session, "MANAGER")).thenReturn(false);
+        when(sessionService.currentRole(session)).thenReturn("STAFF");
+
+        org.junit.jupiter.api.Assertions.assertThrows(com.cinema.exception.UnauthorizedManagerException.class,
+                () -> controller.list(null, null, null, null, null, session, new ConcurrentModel()));
+    }
+
+    @Test
     void listShowsPromotionTab() {
         when(sessionService.hasRole(session, "MANAGER")).thenReturn(true);
         when(promotionService.search(any(ManagerPromotionFilter.class)))

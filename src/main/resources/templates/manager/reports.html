@@ -277,25 +277,25 @@
     <!-- Top Summary KPI Cards (SRS Section 4.9 II) -->
     <div class="kpi-grid">
         <div class="kpi-card blue">
-            <div class="kpi-label">Total revenue</div>
+            <div class="kpi-label">Total net revenue</div>
             <div class="kpi-value">
                 <span th:text="${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub">Recognized revenue (BR-22)</div>
+            <div class="kpi-sub">Collected cash after discounts (BR-22)</div>
         </div>
         <div class="kpi-card green">
-            <div class="kpi-label">Ticket revenue</div>
+            <div class="kpi-label">Ticket revenue (Gross)</div>
             <div class="kpi-value">
                 <span th:text="${#numbers.formatDecimal(summary.ticketRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub"><span th:if="${summary.totalRevenue > 0}" th:text="${#numbers.formatDecimal((summary.ticketRevenue / summary.totalRevenue) * 100, 1, 1)}">0</span><span th:unless="${summary.totalRevenue > 0}">0</span>% of total</div>
+            <div class="kpi-sub"><span th:text="${#numbers.formatDecimal(summary.ticketGrossPercentage, 1, 'POINT', 1, 'COMMA')}">0.0</span>% of gross sales</div>
         </div>
         <div class="kpi-card gold">
-            <div class="kpi-label">F&amp;B revenue</div>
+            <div class="kpi-label">F&amp;B revenue (Gross)</div>
             <div class="kpi-value">
                 <span th:text="${#numbers.formatDecimal(summary.fbRevenue, 0, 'COMMA', 0, 'POINT')}">0</span> ₫
             </div>
-            <div class="kpi-sub">Popcorn, drinks &amp; combos</div>
+            <div class="kpi-sub"><span th:text="${#numbers.formatDecimal(summary.fbGrossPercentage, 1, 'POINT', 1, 'COMMA')}">0.0</span>% of gross sales</div>
         </div>
         <div class="kpi-card purple">
             <div class="kpi-label">Tickets sold</div>

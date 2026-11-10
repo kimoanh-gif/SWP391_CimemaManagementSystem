@@ -4,9 +4,12 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 
 /**
- * Form DTO for updating a single seat's type and/or status (Screen 58 / Function 38).
+ * Form DTO for updating a single seat or batch seats' type and/or status (Screen 58 / Function 38).
  */
 public class SeatUpdateForm {
 
@@ -29,6 +32,12 @@ public class SeatUpdateForm {
      * Optional comma-separated seat IDs for batch update (e.g. "12,13,14,15").
      */
     private String seatIds;
+
+    /**
+     * Optimistic versioning timestamp of the room when loaded by client.
+     */
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime expectedUpdatedAt;
 
     public SeatUpdateForm() {
     }
@@ -93,6 +102,14 @@ public class SeatUpdateForm {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getExpectedUpdatedAt() {
+        return expectedUpdatedAt;
+    }
+
+    public void setExpectedUpdatedAt(LocalDateTime expectedUpdatedAt) {
+        this.expectedUpdatedAt = expectedUpdatedAt;
     }
 }
 

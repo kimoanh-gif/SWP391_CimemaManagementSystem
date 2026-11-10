@@ -114,9 +114,9 @@
     <!-- 3 Stats Cards (Image 5) -->
     <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-label">Showtimes on selected date</div>
+            <div class="stat-label" th:text="${dateRangeLabel != null ? dateRangeLabel : 'Showtimes on selected date'}">Showtimes on selected date</div>
             <div class="stat-value" th:text="${totalShowtimes}">0</div>
-            <div class="stat-sub">Date: <b th:text="${#temporals.format(selectedDate, 'dd/MM/yyyy')}">14/10/2026</b></div>
+            <div class="stat-sub"><b th:text="${dateRangeSub != null ? dateRangeSub : ('Date: ' + #temporals.format(selectedDate, 'dd/MM/yyyy'))}">14/10/2026</b></div>
             <span class="stat-icon"><span class="material-symbols-outlined cm-fill">schedule</span></span>
         </div>
         <div class="stat-card">
@@ -141,10 +141,14 @@
 
     <!-- Toolbar Filters -->
     <div class="toolbar">
-        <form th:action="@{/manager/showtimes}" method="get" class="toolbar-form">
+        <form th:action="@{/manager/showtimes}" method="get" class="toolbar-form" style="flex-wrap: wrap; gap: 10px;">
             <div class="toolbar-field">
-                <label>Screening date:</label>
-                <input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()">
+                <label>From date:</label>
+                <input type="date" name="startDate" th:value="${startDate}">
+            </div>
+            <div class="toolbar-field">
+                <label>To date:</label>
+                <input type="date" name="endDate" th:value="${endDate}">
             </div>
             <select name="roomId" onchange="this.form.submit()">
                 <option value="0">All rooms</option>
@@ -184,7 +188,7 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width:170px">Showtime</th>
+                    <th style="width:180px">Date &amp; Time</th>
                     <th>Movie</th>
                     <th style="width:160px">Screening room</th>
                     <th style="width:100px">Duration</th>
@@ -196,11 +200,13 @@
             <tbody>
                 <tr th:if="${#lists.isEmpty(showtimes)}">
                     <td colspan="7" style="text-align:center;padding:36px;color:var(--text-400)">
-                        No showtimes for the selected date or filters. Click <b>Create new showtime</b> to schedule one.
+                        No showtimes for the selected date range or filters. Click <b>Create new showtime</b> to schedule one.
                     </td>
                 </tr>
                 <tr th:each="st : ${showtimes}">
                     <td>
+                        <div style="font-size:12.5px;font-weight:700;color:var(--text-900);margin-bottom:2px;"
+                             th:text="${#temporals.format(st.startTime, 'dd/MM/yyyy')}">14/10/2026</div>
                         <div class="time-slot" th:text="${#temporals.format(st.startTime, 'HH:mm')} + ' – ' + ${#temporals.format(st.endTime, 'HH:mm')}">
                             14:15 – 17:01
                         </div>
@@ -248,12 +254,21 @@
         <!-- Pagination -->
         <div class="pagination-row" th:if="${not #lists.isEmpty(showtimes)}">
             <span style="font-size: 13px; color: var(--text-500);">
-                Showing 1 – <span th:text="${#lists.size(showtimes)}">1</span> of <span th:text="${totalShowtimes}">1</span> showtimes
+                Showing <span th:text="${startItem != null ? startItem : 1}">1</span> – <span th:text="${endItem != null ? endItem : #lists.size(showtimes)}">1</span> of <span th:text="${totalShowtimes}">1</span> showtimes
             </span>
-            <div class="pagination">
-                <button type="button" class="page-btn" disabled>&lsaquo;</button>
-                <button type="button" class="page-btn active">1</button>
-                <button type="button" class="page-btn">&rsaquo;</button>
+            <div class="pagination" style="display:flex;gap:4px;">
+                <a th:href="@{/manager/showtimes(page=${currentPage - 1}, size=${pageSize}, startDate=${startDate}, endDate=${endDate}, roomId=${selectedRoomId > 0 ? selectedRoomId : null}, movieId=${selectedMovieId > 0 ? selectedMovieId : null}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage <= 1} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage <= 1} ? 'pointer-events:none;opacity:0.4;' : ''">&lsaquo;</a>
+                <a th:each="p : ${#numbers.sequence(1, totalPages != null ? totalPages : 1)}"
+                   th:href="@{/manager/showtimes(page=${p}, size=${pageSize}, startDate=${startDate}, endDate=${endDate}, roomId=${selectedRoomId > 0 ? selectedRoomId : null}, movieId=${selectedMovieId > 0 ? selectedMovieId : null}, status=${selectedStatus})}"
+                   th:text="${p}" class="page-btn" th:classappend="${p == currentPage} ? ' active' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">1</a>
+                <a th:href="@{/manager/showtimes(page=${currentPage + 1}, size=${pageSize}, startDate=${startDate}, endDate=${endDate}, roomId=${selectedRoomId > 0 ? selectedRoomId : null}, movieId=${selectedMovieId > 0 ? selectedMovieId : null}, status=${selectedStatus})}"
+                   class="page-btn" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''"
+                   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;"
+                   th:styleappend="${currentPage >= totalPages} ? 'pointer-events:none;opacity:0.4;' : ''">&rsaquo;</a>
             </div>
         </div>
     </div>

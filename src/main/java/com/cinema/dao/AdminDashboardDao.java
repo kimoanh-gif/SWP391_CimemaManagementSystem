@@ -13,12 +13,16 @@ public class AdminDashboardDao {
     private final JdbcTemplate jdbc;
     public AdminDashboardDao(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
-    // doanh thu theo 
+    // Doanh thu theo đơn đặt đã xác nhận (CONFIRMED) và thanh toán thành công (PAID, PaidAt IS NOT NULL)
     private static final String PAID = """
             WITH paid AS (
-                SELECT BookingID, MAX(Amount) Amount, MIN(COALESCE(PaidAt, CreatedAt)) PaidTime
-                FROM dbo.Payment WHERE UPPER([Status]) IN ('PAID', 'SUCCESS', 'COMPLETED')
-                GROUP BY BookingID
+                SELECT b.BookingID, b.TotalAmount AS Amount, MIN(p.PaidAt) AS PaidTime
+                FROM dbo.Payment p
+                JOIN dbo.Booking b ON b.BookingID = p.BookingID
+                WHERE UPPER(p.[Status]) = 'PAID'
+                  AND p.PaidAt IS NOT NULL
+                  AND UPPER(b.[Status]) = 'CONFIRMED'
+                GROUP BY b.BookingID, b.TotalAmount
             )
             """;
 
@@ -27,7 +31,8 @@ public class AdminDashboardDao {
             SELECT
               (SELECT COALESCE(SUM(Amount),0) FROM paid WHERE PaidTime >= ? AND PaidTime < ?) revenue,
               (SELECT COUNT(*) FROM dbo.BookingSeat bs JOIN paid p ON p.BookingID=bs.BookingID
-               WHERE p.PaidTime >= ? AND p.PaidTime < ? AND UPPER(bs.[Status]) IN ('BOOKED','CONFIRMED')) tickets,
+               WHERE p.PaidTime >= ? AND p.PaidTime < ? AND UPPER(bs.[Status]) = 'BOOKED'
+                 AND NOT EXISTS (SELECT 1 FROM dbo.Ticket t WHERE t.BookingSeatID = bs.BookingSeatID AND UPPER(t.TicketStatus) = 'CANCELLED')) tickets,
               (SELECT COUNT(*) FROM dbo.Booking WHERE UPPER([Status]) IN ('PENDING','PAYMENT_PENDING')) pending,
               (SELECT COUNT(*) FROM dbo.Customer c JOIN dbo.Account a ON a.AccountID=c.AccountID
                WHERE UPPER(a.[Status])='ACTIVE') activeCustomers,
@@ -81,7 +86,7 @@ public class AdminDashboardDao {
               (SELECT COUNT(*) FROM dbo.Seat s WHERE s.RoomID=st.RoomID AND UPPER(s.[Status])='ACTIVE') capacity,
               (SELECT COUNT(*) FROM dbo.BookingSeat bs JOIN dbo.Booking b ON b.BookingID=bs.BookingID
                WHERE bs.ShowtimeID=st.ShowtimeID AND UPPER(b.[Status]) NOT IN ('CANCELLED','EXPIRED')
-               AND (UPPER(bs.[Status]) IN ('BOOKED','CONFIRMED')
+               AND (UPPER(bs.[Status]) = 'BOOKED'
                     OR (UPPER(bs.[Status])='HELD' AND bs.HeldUntil > ?))) reserved
             FROM dbo.Showtime st JOIN dbo.Movie m ON m.MovieID=st.MovieID
             JOIN dbo.Room r ON r.RoomID=st.RoomID
