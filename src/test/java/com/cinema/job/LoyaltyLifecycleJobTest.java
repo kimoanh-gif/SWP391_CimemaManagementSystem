@@ -1,5 +1,6 @@
 package com.cinema.job;
 
+import com.cinema.dao.LoyaltyPointDAO;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -12,10 +13,11 @@ class LoyaltyLifecycleJobTest {
     @Test
     void lifecycleExpiresPointBatchesAndStartsTheCurrentTierCycle() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
+        LoyaltyPointDAO loyaltyPoints = mock(LoyaltyPointDAO.class);
 
-        new LoyaltyLifecycleJob(jdbc).applyLifecycle();
+        new LoyaltyLifecycleJob(jdbc, loyaltyPoints).applyLifecycle();
 
         verify(jdbc).update(contains("TransactionType='EARN'"));
-        verify(jdbc).update(contains("TierPoints=0"));
+        verify(loyaltyPoints).reviewTierCycle(null);
     }
 }

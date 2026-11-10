@@ -5,6 +5,8 @@ package com.cinema.model;
  */
 public class MembershipRank {
 
+    public static final int CYCLE_SPEND_VND_PER_POINT = 10_000;
+
     private Integer rankId;
     private String name;           // SILVER, GOLD, PLATINUM, DIAMOND
     private String displayName;   // Display name in UI
@@ -51,6 +53,10 @@ public class MembershipRank {
 
     public Integer getMinPoints() { return minPoints; }
     public void setMinPoints(Integer minPoints) { this.minPoints = minPoints; }
+
+    public Long getCycleMinSpendVnd() {
+        return minPoints == null ? null : (long) minPoints * CYCLE_SPEND_VND_PER_POINT;
+    }
 
     public Integer getMaxPoints() { return maxPoints; }
     public void setMaxPoints(Integer maxPoints) { this.maxPoints = maxPoints; }

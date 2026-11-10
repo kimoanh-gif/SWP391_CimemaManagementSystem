@@ -9,7 +9,7 @@ const path = require('path');
     try {
         // 1. Login
         console.log('Navigating to login...');
-        await page.goto('http://localhost:8080/login');
+        await page.goto('http://localhost:8081/login');
         await page.fill('#identifier', 'manager@cinema.com');
         await page.fill('#password', 'Manager123');
         await Promise.all([
@@ -19,7 +19,7 @@ const path = require('path');
         console.log('Logged in successfully!');
 
         // 2. Scheduler
-        await page.goto('http://localhost:8080/manager/showtimes/scheduler?roomId=1');
+        await page.goto('http://localhost:8081/manager/showtimes/scheduler?roomId=1');
         await page.waitForLoadState('networkidle');
 
         // Check room header text
@@ -54,7 +54,7 @@ const path = require('path');
         });
 
         // 3. Check Seat types modal
-        await page.goto('http://localhost:8080/manager/seat-types');
+        await page.goto('http://localhost:8081/manager/seat-types');
         await page.waitForLoadState('networkidle');
         await page.click('button:has-text("Add seat type")');
         await page.waitForTimeout(500);

@@ -23,7 +23,7 @@ async function runRealBrowserAudit() {
   try {
     // 1. AUTHENTICATION
     log('AUTH', 'INFO', 'Navigating to /login');
-    await page.goto('http://localhost:8080/login');
+    await page.goto('http://localhost:8081/login');
     await page.fill('#identifier', 'manager@cinema.com');
     await page.fill('#password', 'Manager123');
     await Promise.all([
@@ -35,7 +35,7 @@ async function runRealBrowserAudit() {
 
     // 2. MODULE 01 - OVERVIEW DASHBOARD
     log('MOD_01_OVERVIEW', 'INFO', 'Checking Overview Dashboard metrics');
-    await page.goto('http://localhost:8080/manager/dashboard');
+    await page.goto('http://localhost:8081/manager/dashboard');
     await page.waitForLoadState('networkidle');
     const pageTitle = await page.title();
     log('MOD_01_OVERVIEW', 'PASS', `Overview loaded. Page title: ${pageTitle}`);
@@ -43,7 +43,7 @@ async function runRealBrowserAudit() {
 
     // 3. MODULE 02 - MOVIES
     log('MOD_02_MOVIES', 'INFO', 'Checking Movie Management table');
-    await page.goto('http://localhost:8080/manager/movies');
+    await page.goto('http://localhost:8081/manager/movies');
     await page.waitForLoadState('networkidle');
     const movieRows = await page.locator('tbody tr').count();
     log('MOD_02_MOVIES', 'PASS', `Movies page loaded with ${movieRows} rows`);
@@ -51,7 +51,7 @@ async function runRealBrowserAudit() {
 
     // 4. MODULE 03 - GENRES
     log('MOD_03_GENRES', 'INFO', 'Checking Movie Genre Management');
-    await page.goto('http://localhost:8080/manager/genres');
+    await page.goto('http://localhost:8081/manager/genres');
     await page.waitForLoadState('networkidle');
     const genreRows = await page.locator('tbody tr').count();
     log('MOD_03_GENRES', 'PASS', `Genres page loaded with ${genreRows} rows`);
@@ -59,7 +59,7 @@ async function runRealBrowserAudit() {
 
     // 5. MODULE 04 - SCREENING ROOMS
     log('MOD_04_ROOMS', 'INFO', 'Checking Screening Rooms table and room types');
-    await page.goto('http://localhost:8080/manager/rooms');
+    await page.goto('http://localhost:8081/manager/rooms');
     await page.waitForLoadState('networkidle');
     const roomRows = await page.locator('tbody tr').count();
     log('MOD_04_ROOMS', 'PASS', `Rooms page loaded with ${roomRows} rooms`);
@@ -67,7 +67,7 @@ async function runRealBrowserAudit() {
 
     // 6. MODULE 05 - SEAT TYPES
     log('MOD_05_SEAT_TYPES', 'INFO', 'Checking Seat Types page and modal');
-    await page.goto('http://localhost:8080/manager/seat-types');
+    await page.goto('http://localhost:8081/manager/seat-types');
     await page.waitForLoadState('networkidle');
     const stCount = await page.locator('tbody tr').count();
     log('MOD_05_SEAT_TYPES', 'PASS', `Seat types loaded with ${stCount} seat types`);
@@ -75,14 +75,14 @@ async function runRealBrowserAudit() {
 
     // 7. MODULE 06 - SEAT MAP
     log('MOD_06_SEAT_MAP', 'INFO', 'Checking Seat Map visualizer');
-    await page.goto('http://localhost:8080/manager/seats');
+    await page.goto('http://localhost:8081/manager/seats');
     await page.waitForLoadState('networkidle');
     log('MOD_06_SEAT_MAP', 'PASS', 'Seat Map editor loaded successfully');
     await page.screenshot({ path: path.join(ARTIFACT_DIR, '07_seat_map_page.png') });
 
     // 8. MODULE 08 - F&B
     log('MOD_08_FB', 'INFO', 'Checking F&B Items management');
-    await page.goto('http://localhost:8080/manager/fb');
+    await page.goto('http://localhost:8081/manager/fb');
     await page.waitForLoadState('networkidle');
     const fbCount = await page.locator('tbody tr').count();
     log('MOD_08_FB', 'PASS', `F&B items page loaded with ${fbCount} items`);
@@ -90,14 +90,14 @@ async function runRealBrowserAudit() {
 
     // 9. MODULE 09 - REPORTS
     log('MOD_09_REPORTS', 'INFO', 'Checking Reports & Statistics charts and summaries');
-    await page.goto('http://localhost:8080/manager/reports');
+    await page.goto('http://localhost:8081/manager/reports');
     await page.waitForLoadState('networkidle');
     log('MOD_09_REPORTS', 'PASS', 'Reports page loaded successfully');
     await page.screenshot({ path: path.join(ARTIFACT_DIR, '09_reports_page.png') });
 
     // 10. MODULE 07 - DEEP DIVE: ROOM SHOWTIME SCHEDULER
     log('MOD_07_SCHEDULER', 'INFO', 'Navigating to /manager/showtimes/scheduler');
-    await page.goto('http://localhost:8080/manager/showtimes/scheduler');
+    await page.goto('http://localhost:8081/manager/showtimes/scheduler');
     await page.waitForLoadState('networkidle');
     await page.screenshot({ path: path.join(ARTIFACT_DIR, '10_scheduler_initial.png') });
 

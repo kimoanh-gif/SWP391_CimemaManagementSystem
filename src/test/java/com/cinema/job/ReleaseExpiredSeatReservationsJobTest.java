@@ -1,6 +1,7 @@
 package com.cinema.job;
 
 import com.cinema.dao.CustomerBookingDAO;
+import com.cinema.dao.LoyaltyPointDAO;
 import com.cinema.service.CustomerBookingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -101,7 +102,7 @@ class ReleaseExpiredSeatReservationsJobTest {
     @DisplayName("P0-03: Mid-execution SQL failure escapes @Transactional boundary to trigger rollback before job catches it")
     void testMidExecutionSqlFailure_PropagatesForRollbackAndJobHandlesCleanly() throws Exception {
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        CustomerBookingDAO realDao = new CustomerBookingDAO(jdbcTemplate);
+        CustomerBookingDAO realDao = new CustomerBookingDAO(jdbcTemplate, mock(LoyaltyPointDAO.class));
         reset(jdbcTemplate); // clear constructor schema check invocations
 
         // Statement 1 (Payment) succeeds, Statement 2 (Booking) succeeds, Statement 3 (F&B) fails
@@ -141,7 +142,7 @@ class ReleaseExpiredSeatReservationsJobTest {
     @DisplayName("P0-03: Confirmed, paid, and ticketed reservations remain protected in cleanup SQL")
     void testReleaseSqlProtectsConfirmedPaidAndTicketedBookings() {
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        CustomerBookingDAO realDao = new CustomerBookingDAO(jdbcTemplate);
+        CustomerBookingDAO realDao = new CustomerBookingDAO(jdbcTemplate, mock(LoyaltyPointDAO.class));
         reset(jdbcTemplate);
 
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);

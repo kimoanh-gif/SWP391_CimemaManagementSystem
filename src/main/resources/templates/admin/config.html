@@ -505,8 +505,9 @@ function renderMembershipRanks() {
     <span class="membership-count">${ranks.length} ranks</span>
   </div>
   <div class="membership-rule">Points must be non-negative whole numbers. Maximum must be at least minimum, and rank ranges must not overlap. Leave maximum blank for unlimited on the highest rank only. Uses are per customer per rank with no reset; 0 disables member discounts. Money is whole VND. Member discounts do not stack with vouchers. Click Save on each row.</div>
+  <p class="membership-rule">The six-month spending threshold is calculated from the saved minimum points. The system compares it with the customer's total from paid bookings in the previous cycle.</p>
   <div class="membership-table-wrap"><table class="membership-table">
-    <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th>${rankPolicyFields.map(f => `<th scope="col">${f.label}</th>`).join('')}<th scope="col">Actions</th></tr></thead>
+    <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th><th scope="col">Six-month spending threshold (VND)</th>${rankPolicyFields.map(f => `<th scope="col">${f.label}</th>`).join('')}<th scope="col">Actions</th></tr></thead>
     <tbody>${ranks.length ? ranks.map(rank => `<tr>
       <td><span class="membership-code">${escHtml(rank.name)}</span><strong class="membership-name">${escHtml(rank.displayName || rank.name)}</strong></td>
       <td class="membership-threshold"><label class="sr-only" for="rank-${rank.rankId}">Minimum points for ${escHtml(rank.displayName || rank.name)}</label>
@@ -519,12 +520,13 @@ function renderMembershipRanks() {
           value="${escHtml(rankMaxInputs[rank.rankId] ?? rank.maxPoints ?? '')}" aria-describedby="rank-max-error-${rank.rankId}"
           oninput="handleRankMaxInput(${rank.rankId}, this.value)" ${savingRankId !== null ? 'disabled' : ''}>
         <div class="setting-error" role="alert" id="rank-max-error-${rank.rankId}"></div></td>
+      <td>${rank.cycleMinSpendVnd == null ? '—' : Number(rank.cycleMinSpendVnd).toLocaleString('en-US')}</td>
       ${rankPolicyFields.map(f => `<td class="membership-threshold"><label class="sr-only" for="rank-${f.key}-${rank.rankId}">${f.label} for ${escHtml(rank.displayName || rank.name)}</label><input type="number" class="setting-input" id="rank-${f.key}-${rank.rankId}" min="0" max="${f.max}" step="${f.step}" required value="${escHtml(rankPolicyValue(rank,f.key))}" aria-describedby="rank-${f.key}-error-${rank.rankId}" oninput="handleRankPolicyInput(${rank.rankId}, '${f.key}', this.value)" ${savingRankId !== null ? 'disabled' : ''}><div class="setting-error" role="alert" id="rank-${f.key}-error-${rank.rankId}"></div></td>`).join('')}
       <td><div class="membership-actions">
         <button type="button" class="btn btn-primary btn-sm" id="save-rank-${rank.rankId}" onclick="updateRankThreshold(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Save</button>
         <button type="button" class="btn btn-secondary btn-sm" id="discard-rank-${rank.rankId}" onclick="discardRank(${rank.rankId})" ${rankInputs[rank.rankId] === undefined || savingRankId !== null ? 'disabled' : ''}>Discard</button>
       </div></td>
-    </tr>`).join('') : '<tr><td colspan="8" class="membership-empty">No membership ranks found.</td></tr>'}</tbody>
+    </tr>`).join('') : '<tr><td colspan="9" class="membership-empty">No membership ranks found.</td></tr>'}</tbody>
   </table></div>`;
 }
 

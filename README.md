@@ -40,11 +40,17 @@ View → Controller → Service → DAO → SQL Server
    ```powershell
    mvn spring-boot:run
    ```
-4. Open http://localhost:8080.
+4. Open http://localhost:8081.
+
+## Membership cycle thresholds
+
+On January 1 and July 1, the system reviews the previous six months of paid bookings. Each active rank's spending threshold is its minimum Tier Points multiplied by 10,000 VND.
+
+To enable order-count qualification for a rank, add a positive integer `cycleMinOrders` to that rank's existing `MembershipRank.Benefits` JSON. Keep the existing benefits when setting this key. Members qualify by meeting either threshold. Ranks without the key use spending alone.
 
 ## Local ticket QR codes with Cloudflare Quick Tunnel
 
-Start Spring Boot on port 8080, then run this command in a second PowerShell
+Start Spring Boot on port 8081, then run this command in a second PowerShell
 terminal:
 
 ```powershell

@@ -167,6 +167,7 @@ public class LoyaltyService {
             case "birthdayBonus" -> "Birthday bonus";
             case "priorityBooking" -> "Priority booking";
             case "freeSnacks" -> "Free snacks";
+            case "cycleMinOrders" -> null;
             default -> value.isBoolean() ? humanize(key) : humanize(key) + ": " + value.asText();
         };
     }

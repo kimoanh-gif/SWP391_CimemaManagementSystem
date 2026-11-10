@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch({ headless: true, channel: 'msedge' });
   const page = await browser.newPage();
   
-  await page.goto('http://localhost:8080/login');
+  await page.goto('http://localhost:8081/login');
   await page.fill('#identifier', 'manager@cinema.com');
   await page.fill('#password', 'Manager123');
   await Promise.all([
@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
     page.click('#submitBtn')
   ]);
 
-  await page.goto('http://localhost:8080/manager/showtimes/scheduler');
+  await page.goto('http://localhost:8081/manager/showtimes/scheduler');
   await page.waitForLoadState('networkidle');
   await page.selectOption('#roomSelect', { index: 0 });
   await page.fill('#dateSelect', '2026-11-13');

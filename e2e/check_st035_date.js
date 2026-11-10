@@ -37,21 +37,21 @@ async function checkDate0711() {
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  await page.goto('http://localhost:8080/login');
+  await page.goto('http://localhost:8081/login');
   await page.fill('#identifier', 'manager@cinema.com');
   await page.fill('#password', 'Manager123');
   await Promise.all([
-    page.waitForURL('http://localhost:8080/**'),
+    page.waitForURL('http://localhost:8081/**'),
     page.press('#password', 'Enter')
   ]);
 
-  const csvRes = await context.request.get('http://localhost:8080/api/manager/reports/export?preset=custom&startDate=2026-11-07&endDate=2026-11-07&reportType=MOVIE');
+  const csvRes = await context.request.get('http://localhost:8081/api/manager/reports/export?preset=custom&startDate=2026-11-07&endDate=2026-11-07&reportType=MOVIE');
   const csvText = await csvRes.text();
   console.log('\nCSV Export for 07/11/2026:');
   console.log(csvText);
 
   // 4. Also check UI table on 07/11/2026
-  await page.goto('http://localhost:8080/manager/reports?preset=custom&startDate=2026-11-07&endDate=2026-11-07&reportType=MOVIE');
+  await page.goto('http://localhost:8081/manager/reports?preset=custom&startDate=2026-11-07&endDate=2026-11-07&reportType=MOVIE');
   await page.waitForLoadState('networkidle');
   const rows = await page.$$eval('#reportTable tbody tr', trs => trs.map(tr => Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())));
   console.log('\nUI Table Rows for 07/11/2026:');

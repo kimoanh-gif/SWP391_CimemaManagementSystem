@@ -1,25 +1,28 @@
 package com.cinema.job;
 
+import com.cinema.dao.LoyaltyPointDAO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Applies point expiry and six-month membership cycles, following Shopee-style rules. */
+/** Expires reward points and reviews membership at the start of each six-month cycle. */
 @Component
 public class LoyaltyLifecycleJob {
 
     private final JdbcTemplate jdbcTemplate;
+    private final LoyaltyPointDAO loyaltyPointDAO;
 
-    public LoyaltyLifecycleJob(JdbcTemplate jdbcTemplate) {
+    public LoyaltyLifecycleJob(JdbcTemplate jdbcTemplate, LoyaltyPointDAO loyaltyPointDAO) {
         this.jdbcTemplate = jdbcTemplate;
+        this.loyaltyPointDAO = loyaltyPointDAO;
     }
 
     @Scheduled(cron = "${app.jobs.loyalty-lifecycle.cron:0 15 0 * * *}", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void applyLifecycle() {
         expirePoints();
-        startNewTierCycle();
+        loyaltyPointDAO.reviewTierCycle(null);
     }
 
     void expirePoints() {
@@ -44,12 +47,4 @@ public class LoyaltyLifecycleJob {
                 """);
     }
 
-    void startNewTierCycle() {
-        jdbcTemplate.update("""
-                DECLARE @CycleStart DATE=DATEFROMPARTS(YEAR(GETDATE()),CASE WHEN MONTH(GETDATE())<=6 THEN 1 ELSE 7 END,1);
-                DECLARE @BaseRank INT=(SELECT TOP 1 RankID FROM dbo.MembershipRank WHERE IsActive=1 ORDER BY MinPoints);
-                UPDATE dbo.Customer SET TierPoints=0,RankID=@BaseRank,TierCycleStart=@CycleStart
-                WHERE TierCycleStart<>@CycleStart;
-                """);
-    }
 }

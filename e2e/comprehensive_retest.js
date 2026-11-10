@@ -11,11 +11,11 @@ async function run() {
 
   // Step 0: Login as Manager
   console.log('\n--- Step 0: Logging in as Manager ---');
-  await page.goto('http://localhost:8080/login');
+  await page.goto('http://localhost:8081/login');
   await page.fill('#identifier', 'manager@cinema.com');
   await page.fill('#password', 'Manager123');
   await Promise.all([
-    page.waitForURL('http://localhost:8080/**'),
+    page.waitForURL('http://localhost:8081/**'),
     page.press('#password', 'Enter')
   ]);
   console.log('Current URL after login:', page.url());
@@ -26,12 +26,12 @@ async function run() {
   // Test ST_017A: Seat Type Validation (Screen 57)
   // -------------------------------------------------------------
   console.log('\n--- Retesting ST_017A: Seat Type Validation ---');
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.waitForLoadState('networkidle');
 
   // Subtest 1: Multiplier 0.40 (min is 0.50)
   console.log('ST_017A Subtest 1: Testing Multiplier = 0.40');
-  const res17A1 = await context.request.post('http://localhost:8080/manager/seat-types/save', {
+  const res17A1 = await context.request.post('http://localhost:8081/manager/seat-types/save', {
     form: {
       typeCode: 'TEST_LOW',
       typeName: 'Test Seat Type Low',
@@ -41,7 +41,7 @@ async function run() {
       description: 'Testing low multiplier'
     }
   });
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.waitForLoadState('networkidle');
   const alertText17A1 = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_017A.1 Alert Message:', alertText17A1 ? alertText17A1.trim() : 'NONE');
@@ -49,7 +49,7 @@ async function run() {
 
   // Subtest 2: Multiplier 3.50 (max is 3.00)
   console.log('ST_017A Subtest 2: Testing Multiplier = 3.50');
-  const res17A2 = await context.request.post('http://localhost:8080/manager/seat-types/save', {
+  const res17A2 = await context.request.post('http://localhost:8081/manager/seat-types/save', {
     form: {
       typeCode: 'TEST_HIGH',
       typeName: 'Test Seat Type High',
@@ -59,7 +59,7 @@ async function run() {
       description: 'Testing high multiplier'
     }
   });
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.waitForLoadState('networkidle');
   const alertText17A2 = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_017A.2 Alert Message:', alertText17A2 ? alertText17A2.trim() : 'NONE');
@@ -67,7 +67,7 @@ async function run() {
 
   // Subtest 3: Color "blue" (HEX required)
   console.log('ST_017A Subtest 3: Testing Color = "blue"');
-  const res17A3 = await context.request.post('http://localhost:8080/manager/seat-types/save', {
+  const res17A3 = await context.request.post('http://localhost:8081/manager/seat-types/save', {
     form: {
       typeCode: 'TEST_BLUE',
       typeName: 'Test Seat Type Blue',
@@ -77,7 +77,7 @@ async function run() {
       description: 'Testing invalid color'
     }
   });
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.waitForLoadState('networkidle');
   const alertText17A3 = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_017A.3 Alert Message:', alertText17A3 ? alertText17A3.trim() : 'NONE');
@@ -91,12 +91,12 @@ async function run() {
   // Test ST_017B: Ticket Pricing Validation (Screen 60)
   // -------------------------------------------------------------
   console.log('\n--- Retesting ST_017B: Ticket Pricing Validation ---');
-  await page.goto('http://localhost:8080/manager/pricing');
+  await page.goto('http://localhost:8081/manager/pricing');
   await page.waitForLoadState('networkidle');
 
   // Submit basePrice = -1
   console.log('ST_017B: Testing Base Price = -1');
-  const res17B = await context.request.post('http://localhost:8080/manager/pricing/save', {
+  const res17B = await context.request.post('http://localhost:8081/manager/pricing/save', {
     form: {
       pricingCode: 'TEST_NEG_BASE',
       ruleName: 'Test Invalid Rule',
@@ -109,7 +109,7 @@ async function run() {
       status: 'Active'
     }
   });
-  await page.goto('http://localhost:8080/manager/pricing');
+  await page.goto('http://localhost:8081/manager/pricing');
   await page.waitForLoadState('networkidle');
   const alertText17B = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_017B Alert Message:', alertText17B ? alertText17B.trim() : 'NONE');
@@ -122,12 +122,12 @@ async function run() {
   // Test ST_017C: F&B Validation (Screen 61)
   // -------------------------------------------------------------
   console.log('\n--- Retesting ST_017C: F&B Validation ---');
-  await page.goto('http://localhost:8080/manager/fb');
+  await page.goto('http://localhost:8081/manager/fb');
   await page.waitForLoadState('networkidle');
 
   // Submit costPrice = 60000 > sellingPrice = 50000
   console.log('ST_017C: Testing Cost Price (60000) > Selling Price (50000)');
-  const res17C = await context.request.post('http://localhost:8080/manager/fb/save', {
+  const res17C = await context.request.post('http://localhost:8081/manager/fb/save', {
     form: {
       itemCode: 'FB_TEST_COST',
       itemName: 'Test Popcorn Deluxe',
@@ -138,7 +138,7 @@ async function run() {
       description: 'Testing cost price greater than selling price'
     }
   });
-  await page.goto('http://localhost:8080/manager/fb');
+  await page.goto('http://localhost:8081/manager/fb');
   await page.waitForLoadState('networkidle');
   const alertText17C = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_017C Alert Message:', alertText17C ? alertText17C.trim() : 'NONE');
@@ -153,7 +153,7 @@ async function run() {
   console.log('\n--- Retesting ST_025: Showtime Scheduling vs Movie Release Date ---');
   // Movie 15 is 'hay', ReleaseDate = 2026-11-11
   console.log('Movie 15: "hay", ReleaseDate: 2026-11-11. Attempting showtime on 2026-11-09 10:00:00 (before release date)');
-  const res25 = await context.request.post('http://localhost:8080/manager/showtimes/save', {
+  const res25 = await context.request.post('http://localhost:8081/manager/showtimes/save', {
     form: {
       movieId: '15',
       roomId: '1',
@@ -161,7 +161,7 @@ async function run() {
       basePrice: '85000'
     }
   });
-  await page.goto('http://localhost:8080/manager/showtimes?date=2026-11-09');
+  await page.goto('http://localhost:8081/manager/showtimes?date=2026-11-09');
   await page.waitForLoadState('networkidle');
   const alertText25 = await page.textContent('.alert-error').catch(() => null);
   console.log('ST_025 Alert Message:', alertText25 ? alertText25.trim() : 'NONE');
@@ -175,7 +175,7 @@ async function run() {
   // Test ST_035: Movie Report Date Range Filtering on 07/11/2026
   // -------------------------------------------------------------
   console.log('\n--- Retesting ST_035: Movie Report Date Range Filtering on 07/11/2026 ---');
-  await page.goto('http://localhost:8080/manager/reports?reportType=MOVIE&startDate=2026-11-07&endDate=2026-11-07');
+  await page.goto('http://localhost:8081/manager/reports?reportType=MOVIE&startDate=2026-11-07&endDate=2026-11-07');
   await page.waitForLoadState('networkidle');
   await page.screenshot({ path: 'e2e/st035_movie_report_20261107.png', fullPage: true });
 
@@ -207,7 +207,7 @@ async function run() {
   // Test ST_038: CSV Export Branding and Code Format
   // -------------------------------------------------------------
   console.log('\n--- Retesting ST_038: CSV Export Branding & Code Format ---');
-  const csvRes = await context.request.get('http://localhost:8080/manager/reports/export?reportType=MOVIE&startDate=2026-10-01&endDate=2026-11-07');
+  const csvRes = await context.request.get('http://localhost:8081/manager/reports/export?reportType=MOVIE&startDate=2026-10-01&endDate=2026-11-07');
   const csvText = await csvRes.text();
   const csvLines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   console.log('CSV Line 1 (Header):', csvLines[0]);

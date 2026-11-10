@@ -10,7 +10,6 @@ import com.cinema.model.CustomerTicket;
 import com.cinema.model.TicketVerification;
 import com.cinema.model.BookingHistoryItem;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -26,10 +25,11 @@ import java.util.UUID;
 public class CustomerBookingDAO {
 
     private final JdbcTemplate jdbcTemplate;
+    private final LoyaltyPointDAO loyaltyPointDAO;
 
-    public CustomerBookingDAO(JdbcTemplate jdbcTemplate) {
+    public CustomerBookingDAO(JdbcTemplate jdbcTemplate, LoyaltyPointDAO loyaltyPointDAO) {
         this.jdbcTemplate = jdbcTemplate;
-        ensureLoyaltySchema();
+        this.loyaltyPointDAO = loyaltyPointDAO;
     }
 
     public List<MovieBookingOption> findMoviesWithShowtimes(LocalDate date) {
@@ -530,13 +530,8 @@ public class CustomerBookingDAO {
     }
 
     private void awardLoyaltyPoints(int bookingId) {
+        loyaltyPointDAO.reviewTierCycle(bookingId);
         jdbcTemplate.update("""
-                DECLARE @CycleStart DATE=DATEFROMPARTS(YEAR(GETDATE()),CASE WHEN MONTH(GETDATE())<=6 THEN 1 ELSE 7 END,1);
-                UPDATE c SET TierPoints=0,TierCycleStart=@CycleStart,RankID=(
-                    SELECT TOP 1 RankID FROM dbo.MembershipRank WHERE IsActive=1 ORDER BY MinPoints)
-                FROM dbo.Customer c JOIN dbo.Booking b ON b.CustomerID=c.CustomerID
-                WHERE b.BookingID=? AND c.TierCycleStart<>@CycleStart;
-
                 DECLARE @Award TABLE (CustomerID INT, Points INT);
                 INSERT dbo.LoyaltyTransaction(CustomerID,BookingID,Points,TransactionType,[Description],ExpiresAt)
                 OUTPUT inserted.CustomerID,inserted.Points INTO @Award(CustomerID,Points)
@@ -559,28 +554,7 @@ public class CustomerBookingDAO {
                 FROM dbo.Customer c JOIN @Award a ON a.CustomerID=c.CustomerID
                 CROSS APPLY (SELECT TOP 1 mr.RankID FROM dbo.MembershipRank mr
                              WHERE mr.IsActive=1 AND mr.MinPoints<=c.TierPoints ORDER BY mr.MinPoints DESC) ranked;
-                """, bookingId, bookingId);
-    }
-
-    private void ensureLoyaltySchema() {
-        try {
-            jdbcTemplate.execute("""
-                    IF OBJECT_ID(N'dbo.LoyaltyTransaction',N'U') IS NULL
-                    BEGIN
-                      CREATE TABLE dbo.LoyaltyTransaction(
-                        LoyaltyTransactionID INT IDENTITY(1,1) PRIMARY KEY,CustomerID INT NOT NULL,
-                        BookingID INT NULL,Points INT NOT NULL,TransactionType VARCHAR(20) NOT NULL,
-                        [Description] NVARCHAR(250) NOT NULL,CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-                        ExpiresAt DATETIME2 NULL,ExpiredAt DATETIME2 NULL,
-                        CONSTRAINT FK_LoyaltyTx_Customer FOREIGN KEY(CustomerID) REFERENCES dbo.Customer(CustomerID),
-                        CONSTRAINT FK_LoyaltyTx_Booking FOREIGN KEY(BookingID) REFERENCES dbo.Booking(BookingID));
-                      CREATE UNIQUE INDEX UX_LoyaltyTransaction_BookingEarn ON dbo.LoyaltyTransaction(BookingID,TransactionType)
-                        WHERE BookingID IS NOT NULL AND TransactionType='EARN';
-                    END
-                    """);
-        } catch (DataAccessException ignored) {
-            // Managed deployments create this table through 00_full_database.sql.
-        }
+                """, bookingId);
     }
 
     public List<CustomerTicket> findTicketsByBooking(int bookingId, int accountId) {

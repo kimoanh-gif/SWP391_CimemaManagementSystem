@@ -7,18 +7,18 @@ async function testUIValidations() {
   const page = await context.newPage();
 
   // Login
-  await page.goto('http://localhost:8080/login');
+  await page.goto('http://localhost:8081/login');
   await page.fill('#identifier', 'manager@cinema.com');
   await page.fill('#password', 'Manager123');
   await Promise.all([
-    page.waitForURL('http://localhost:8080/**'),
+    page.waitForURL('http://localhost:8081/**'),
     page.press('#password', 'Enter')
   ]);
   console.log('Logged in. Current URL:', page.url());
 
   // 1. ST_017A Subtest 1: Multiplier 0.40
   console.log('\n--- Testing ST_017A Subtest 1: Multiplier 0.40 ---');
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.evaluate(() => {
     const form = document.querySelector('#seatTypeForm');
     form.noValidate = true;
@@ -35,7 +35,7 @@ async function testUIValidations() {
 
   // 2. ST_017A Subtest 2: Multiplier 3.50
   console.log('\n--- Testing ST_017A Subtest 2: Multiplier 3.50 ---');
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.evaluate(() => {
     const form = document.querySelector('#seatTypeForm');
     form.noValidate = true;
@@ -52,7 +52,7 @@ async function testUIValidations() {
 
   // 3. ST_017A Subtest 3: Color "blue"
   console.log('\n--- Testing ST_017A Subtest 3: Color "blue" ---');
-  await page.goto('http://localhost:8080/manager/seat-types');
+  await page.goto('http://localhost:8081/manager/seat-types');
   await page.evaluate(() => {
     const form = document.querySelector('#seatTypeForm');
     form.noValidate = true;
@@ -72,7 +72,7 @@ async function testUIValidations() {
 
   // 4. ST_017B: Base Price = -1
   console.log('\n--- Testing ST_017B: Base Price = -1 ---');
-  await page.goto('http://localhost:8080/manager/pricing');
+  await page.goto('http://localhost:8081/manager/pricing');
   await page.evaluate(() => {
     const form = document.querySelector('#pricingModal form');
     form.noValidate = true;
@@ -89,7 +89,7 @@ async function testUIValidations() {
 
   // 5. ST_017C: Cost Price > Selling Price
   console.log('\n--- Testing ST_017C: Cost Price 60,000 > Selling Price 50,000 ---');
-  await page.goto('http://localhost:8080/manager/fb');
+  await page.goto('http://localhost:8081/manager/fb');
   await page.evaluate(() => {
     const form = document.querySelector('#fbModal form, #fbForm, form[action*="/manager/fb/save"]');
     form.noValidate = true;
@@ -110,7 +110,7 @@ async function testUIValidations() {
 
   // 6. ST_025: Showtime scheduling before movie release date
   console.log('\n--- Testing ST_025: Showtime before movie release date ---');
-  await page.goto('http://localhost:8080/manager/showtimes?date=2026-11-09');
+  await page.goto('http://localhost:8081/manager/showtimes?date=2026-11-09');
   await page.evaluate(() => {
     const form = document.querySelector('#showtimeModal form, form[action*="/manager/showtimes/save"]');
     form.noValidate = true;
@@ -131,13 +131,13 @@ async function testUIValidations() {
 
   // 7. ST_035: Movie Report Date Range 07/11/2026
   console.log('\n--- Testing ST_035: Movie Report on 07/11/2026 ---');
-  await page.goto('http://localhost:8080/manager/reports?reportType=MOVIE&startDate=2026-11-07&endDate=2026-11-07');
+  await page.goto('http://localhost:8081/manager/reports?reportType=MOVIE&startDate=2026-11-07&endDate=2026-11-07');
   await page.waitForLoadState('networkidle');
   await page.screenshot({ path: 'e2e/st035_movie_report_20261107.png', fullPage: true });
 
   // 8. ST_038: CSV Export via API
   console.log('\n--- Testing ST_038: CSV Export ---');
-  const csvRes = await context.request.get('http://localhost:8080/api/manager/reports/export?preset=custom&startDate=2026-10-01&endDate=2026-11-07&reportType=MOVIE');
+  const csvRes = await context.request.get('http://localhost:8081/api/manager/reports/export?preset=custom&startDate=2026-10-01&endDate=2026-11-07&reportType=MOVIE');
   const csvContent = await csvRes.text();
   const fs = require('fs');
   fs.writeFileSync('e2e/st038_exported_report.csv', csvContent, 'utf-8');

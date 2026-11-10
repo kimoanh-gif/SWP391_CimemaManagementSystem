@@ -8,11 +8,11 @@ const { chromium } = require('./node_modules/playwright');
       console.log('RESPONSE:', res.status(), res.url(), '-> Location:', res.headers()['location']);
     }
   });
-  await page.goto('http://localhost:8080/login');
+  await page.goto('http://localhost:8081/login');
   await page.fill('#identifier', 'manager@cinema.com');
   await page.fill('#password', 'Manager123');
   await Promise.all([page.waitForURL('**/manager/**'), page.press('#password', 'Enter')]);
-  await page.goto('http://localhost:8080/manager/movies');
+  await page.goto('http://localhost:8081/manager/movies');
   
   await page.evaluate(() => {
     document.getElementById('movieTitle').value = 'Avatar 3: Fire and Ash';
