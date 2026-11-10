@@ -313,11 +313,57 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Event delegation for safe delete forms
+    // Event delegation for safe delete forms and buttons
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".delete-genre-form button");
+        if (btn) {
+            var form = btn.closest(".delete-genre-form");
+            if (form) {
+                var name = form.getAttribute("data-name") || "this genre";
+                var movieCount = parseInt(form.getAttribute("data-movie-count") || "0", 10);
+                if (movieCount > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var errorMsg = "Cannot delete genre '" + name + "' because it is linked to " + movieCount + " movie(s). Please deactivate the genre instead of deleting it.";
+                    var alertMsg = errorMsg + "\n\n(Không thể xóa thể loại '" + name + "' vì đang có " + movieCount + " phim liên kết. Vui lòng chuyển trạng thái sang Ngưng hoạt động (Deactivate) thay vì xóa.)";
+                    alert(alertMsg);
+
+                    var dynamicAlert = document.getElementById("dynamicAlert");
+                    var dynamicAlertText = document.getElementById("dynamicAlertText");
+                    if (dynamicAlert && dynamicAlertText) {
+                        dynamicAlertText.textContent = errorMsg;
+                        dynamicAlert.style.display = "flex";
+                        dynamicAlert.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                    return false;
+                }
+            }
+        }
+    });
+
     document.addEventListener("submit", function (e) {
         var deleteForm = e.target.closest(".delete-genre-form");
         if (deleteForm) {
             var name = deleteForm.getAttribute("data-name") || "this genre";
+            var movieCount = parseInt(deleteForm.getAttribute("data-movie-count") || "0", 10);
+
+            if (movieCount > 0) {
+                e.preventDefault();
+                var errorMsg = "Cannot delete genre '" + name + "' because it is linked to " + movieCount + " movie(s). Please deactivate the genre instead of deleting it.";
+                var alertMsg = errorMsg + "\n\n(Không thể xóa thể loại '" + name + "' vì đang có " + movieCount + " phim liên kết. Vui lòng chuyển trạng thái sang Ngưng hoạt động (Deactivate) thay vì xóa.)";
+                alert(alertMsg);
+
+                var dynamicAlert = document.getElementById("dynamicAlert");
+                var dynamicAlertText = document.getElementById("dynamicAlertText");
+                if (dynamicAlert && dynamicAlertText) {
+                    dynamicAlertText.textContent = errorMsg;
+                    dynamicAlert.style.display = "flex";
+                    dynamicAlert.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                return;
+            }
+
             if (!confirm("Are you sure you want to delete the genre '" + name + "'?")) {
                 e.preventDefault();
             }
