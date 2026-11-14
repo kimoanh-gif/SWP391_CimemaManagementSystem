@@ -88,5 +88,6 @@ class RegistrationControllerTest {
         assertEquals("auth/verify-activation-otp", controller.resendActivationOtp(session, model));
         assertTrue(model.containsAttribute("formError"));
         assertFalse(model.containsAttribute("fallbackOtp"));
+        assertInstanceOf(com.cinema.dto.auth.OtpForm.class, model.get("activationForm"));
     }
 }

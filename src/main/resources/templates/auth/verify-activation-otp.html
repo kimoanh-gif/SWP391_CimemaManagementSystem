@@ -36,6 +36,9 @@
         </button>
       </form>
 
+      <form id="resendForm" th:action="@{/verify-activation-otp/resend}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      </form>
       <div class="otp-resend" id="otpResend">
         <span class="cooldown">Didn't receive the code?
           <a href="#" id="resendLink" th:data-cooldown="${resendCooldownSeconds}">Resend</a>
@@ -105,11 +108,7 @@
     resend.addEventListener('click', (e) => {
       e.preventDefault();
       if (resend.style.pointerEvents === 'none') return;
-      // Submit to resend endpoint
-      const f = document.createElement('form');
-      f.method = 'POST';
-      f.action = '/verify-activation-otp/resend';
-      document.body.appendChild(f); f.submit();
+      document.getElementById('resendForm').requestSubmit();
     });
   }
 

@@ -113,6 +113,7 @@ public class SecurityConfig {
                 auth.requestMatchers(HttpMethod.POST,
                         "/login", "/register",
                         "/forgot-password", "/verify-activation-otp",
+                        "/verify-activation-otp/resend",
                         "/verify-reset-otp", "/reset-password",
                         "/logout",
                         "/movies/*/reviews",

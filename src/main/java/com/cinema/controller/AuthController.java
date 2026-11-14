@@ -206,6 +206,7 @@ public class AuthController {
         }
         model.addAttribute("email", email);
         model.addAttribute("resendCooldownSeconds", resendCooldownSeconds(email, com.cinema.model.OtpToken.PURPOSE_ACTIVATION));
+        model.addAttribute("activationForm", new OtpForm());
         return "auth/verify-activation-otp";
     }
 
