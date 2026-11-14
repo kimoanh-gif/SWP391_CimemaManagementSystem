@@ -205,10 +205,6 @@ public class SystemSettingDAO {
     }
 
     private void seedBookingSettings() {
-        seedIfNotExists("BOOKING_SEAT_HOLD_MINUTES", "Seat Hold Time", "BOOKING", "NUMBER",
-                "15", "15", "Minutes to hold seats before payment", "min:1,max:60");
-        seedIfNotExists("BOOKING_MAX_TICKETS", "Max Tickets Per Order", "BOOKING", "NUMBER",
-                "10", "10", "Maximum tickets per booking order", "min:1,max:20");
         seedIfNotExists("BOOKING_CANCEL_WINDOW_HOURS", "Cancellation Window", "BOOKING", "NUMBER",
                 "24", "24", "Hours before showtime to allow cancellation", "min:0,max:168");
         seedIfNotExists("BOOKING_BOOKING_FEE", "Booking Fee", "BOOKING", "NUMBER",

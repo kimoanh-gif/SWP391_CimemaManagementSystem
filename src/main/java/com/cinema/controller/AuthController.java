@@ -309,7 +309,7 @@ public class AuthController {
     @PostMapping("/logout")
     public String doLogout(HttpServletRequest request) {
         sessionService.logout(request.getSession(false));
-        return "redirect:/login?logout";
+        return "redirect:/login?logout=true";
     }
 
     // =========================================================== FORGOT PASSWORD
@@ -471,7 +471,7 @@ public class AuthController {
         switch (r) {
             case SUCCESS -> {
                 clearResetSession(session);
-                return "redirect:/login?passwordResetSuccess";
+                return "redirect:/login?passwordResetSuccess=true";
             }
             case TOO_MANY_ATTEMPTS -> {
                 clearResetSession(session);

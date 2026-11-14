@@ -1,6 +1,6 @@
 # Email lịch chiếu sau thanh toán
 
-Hệ thống gửi **một email xác nhận thanh toán kèm lịch chiếu**, không gửi thêm email trước giờ chiếu.
+Hệ thống gửi **một email xác nhận thanh toán kèm lịch chiếu**. Email nhắc trước giờ chiếu được xử lý riêng theo JOB-06 bên dưới.
 Áp dụng cho booking `ONLINE` của Customer, đã `CONFIRMED` và có Payment `PAID`.
 Email gồm mã booking, phim, ngày/giờ Việt Nam (UTC+7), phòng, ghế và tổng thanh toán.
 Nếu có `PUBLIC_BASE_URL`, email kèm link vé điện tử yêu cầu đăng nhập.
@@ -35,6 +35,26 @@ Có thể ghi đè người gửi bằng property `app.booking-email.from`; mặ
 - Nếu chạy nhiều instance, dùng chung đường dẫn ledger trên filesystem hỗ trợ khóa file; mỗi instance có file riêng có thể gửi trùng.
 - Khóa file và ghi thay thế file giúp chống gửi lặp thông thường và khi restart. SMTP không cung cấp giao dịch nguyên tử với file: tiến trình chết sau khi SMTP nhận email nhưng trước khi lưu dấu có thể gây một lần gửi lại. Không cam kết exactly-once.
 - Khôi phục lỗi tự động giới hạn ở payment trong 24 giờ; cần xử lý vận hành riêng nếu SMTP ngừng lâu hơn. File chỉ lưu booking ID/code và thời điểm gửi, không lưu email/mật khẩu.
+
+## Nhắc lịch trước giờ chiếu (JOB-06)
+
+`BookingReminderService` quét mỗi 60 giây, sau thời gian khởi động 30 giây.
+Chỉ nhắc booking CONFIRMED có payment PAID, suất chiếu còn ở tương lai và không bị hủy/vô hiệu hóa.
+Áp dụng cả booking tại quầy có tài khoản Customer và email hợp lệ.
+Thời gian được tính theo Asia/Ho_Chi_Minh; không gửi bù sau giờ chiếu.
+
+- `app.booking-reminder.enabled`: bật/tắt riêng email nhắc (mặc định true).
+- `app.booking-reminder.minutes-before`: số phút trước giờ chiếu (mặc định 60).
+- `app.booking-reminder.delay-ms` và `app.booking-reminder.initial-delay-ms`: chu kỳ và độ trễ khởi động.
+- Nếu có cấu hình SYSTEM đang hoạt động với khóa `SYSTEM_BOOKING_REMINDER_MINUTES`,
+  giá trị đó được ưu tiên, đọc lại mỗi lượt quét và Admin có thể sửa qua cấu hình hệ thống (1–10080 phút).
+  Không tự thêm bản ghi cấu hình; khi chưa có, dùng giá trị application property.
+- Dùng chung ledger với email xác nhận nhưng khóa riêng `reminder:<bookingId>:<bookingCode>`.
+  Gửi thất bại không ghi dấu, lượt quét sau thử lại khi suất chiếu chưa bắt đầu.
+  Các giới hạn lưu trữ/SMTP và nhiều instance ở trên cũng áp dụng cho email nhắc.
+
+Kiểm tra bằng booking hiện có đến hạn nhắc: nhận một email nhắc; restart giữ ledger không gửi trùng.
+Tạm làm SMTP lỗi rồi khôi phục trước giờ chiếu để kiểm tra thử lại; booking hủy hoặc đã qua giờ không nhận nhắc.
 
 ## Kiểm tra thủ công
 

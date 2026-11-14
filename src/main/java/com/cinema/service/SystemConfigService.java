@@ -46,11 +46,16 @@ public class SystemConfigService implements CommandLineRunner {
 
     // ==================== SETTINGS ====================
 
+    private boolean visibleSetting(SystemSetting setting) {
+        return !Set.of("BOOKING_SEAT_HOLD_MINUTES", "BOOKING_MAX_TICKETS")
+                .contains(setting.getSettingKey() == null ? "" : setting.getSettingKey());
+    }
+
     /**
      * Get all settings grouped by category.
      */
     public Map<String, List<SystemSetting>> getAllSettingsGrouped() {
-        List<SystemSetting> all = systemSettingDAO.findActive();
+        List<SystemSetting> all = getAllSettings();
         var system = SystemSecuritySettings.editable(all.stream().filter(s -> "SYSTEM".equalsIgnoreCase(s.getCategory())).toList());
         all = new ArrayList<>(all);
         all.removeIf(s -> "SYSTEM".equalsIgnoreCase(s.getCategory()));
@@ -63,14 +68,14 @@ public class SystemConfigService implements CommandLineRunner {
      * Get all settings as flat list.
      */
     public List<SystemSetting> getAllSettings() {
-        return systemSettingDAO.findActive();
+        return systemSettingDAO.findActive().stream().filter(this::visibleSetting).toList();
     }
 
     /**
      * Get settings by category.
      */
     public List<SystemSetting> getSettingsByCategory(String category) {
-        var rows = systemSettingDAO.findByCategory(category);
+        var rows = systemSettingDAO.findByCategory(category).stream().filter(this::visibleSetting).toList();
         return "SYSTEM".equalsIgnoreCase(category) ? SystemSecuritySettings.editable(rows) : rows;
     }
 

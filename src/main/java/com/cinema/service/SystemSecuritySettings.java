@@ -10,6 +10,7 @@ import java.util.*;
 public class SystemSecuritySettings {
     public record Rule(String key, String name, int min, int max, int defaultValue, String unit) {}
     public static final List<Rule> RULES = List.of(
+        new Rule("SYSTEM_BOOKING_REMINDER_MINUTES", "Booking Reminder Time",1,10080,60,"minutes before showtime"),
         new Rule("SYSTEM_PASSWORD_MIN_LENGTH", "Password Minimum Length",8,32,8,"characters"),
         new Rule("SYSTEM_LOGIN_ATTEMPTS", "Max Login Attempts",1,10,5,"attempts"),
         new Rule("SYSTEM_LOGIN_LOCKOUT_MINUTES", "Login Lockout Minutes",1,1440,5,"minutes"),

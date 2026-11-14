@@ -16,13 +16,34 @@ public class BookingEmailDAO {
     public BookingEmailDAO(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     private static final String ELIGIBLE = """
-            UPPER(b.[Status]) = 'CONFIRMED' AND UPPER(b.BookingType) = 'ONLINE'
+            UPPER(b.[Status]) = 'CONFIRMED'
             AND UPPER(st.[Status]) NOT IN ('CANCELLED', 'INACTIVE', 'DISABLED')
             AND EXISTS (SELECT 1 FROM dbo.Payment p
                         WHERE p.BookingID=b.BookingID AND UPPER(p.[Status])='PAID')
             """;
 
     public Optional<BookingEmailDetails> findPaidBooking(int bookingId) {
+        return findBooking(bookingId, ELIGIBLE + " AND UPPER(b.BookingType) = 'ONLINE'");
+    }
+
+    public Optional<BookingEmailDetails> findReminderBooking(int bookingId, LocalDateTime now, int minutes) {
+        return findBooking(bookingId, ELIGIBLE + " AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')")
+                .filter(b -> b.startTime().isAfter(now) && !b.startTime().isAfter(now.plusMinutes(minutes)));
+    }
+
+    public List<Integer> findReminderBookingIds(LocalDateTime now, int minutes) {
+        return jdbc.queryForList("""
+                SELECT b.BookingID FROM dbo.Booking b
+                JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
+                WHERE
+                """ + ELIGIBLE + """
+                AND UPPER(st.[Status]) IN ('SCHEDULED', 'ACTIVE')
+                AND st.StartTime > ? AND st.StartTime <= ?
+                ORDER BY st.StartTime, b.BookingID
+                """, Integer.class, now, now.plusMinutes(minutes));
+    }
+
+    private Optional<BookingEmailDetails> findBooking(int bookingId, String eligibility) {
         return jdbc.query("""
                 SELECT b.BookingID,b.BookingCode,a.Email,a.FullName,m.Title,r.RoomName,st.StartTime,b.TotalAmount,
                     (SELECT STRING_AGG(CONCAT(s.RowLabel,s.SeatNumber), ', ')
@@ -38,7 +59,7 @@ public class BookingEmailDAO {
                 JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
                 JOIN dbo.Movie m ON m.MovieID=st.MovieID JOIN dbo.Room r ON r.RoomID=st.RoomID
                 WHERE b.BookingID=? AND
-                """ + ELIGIBLE, (rs, n) -> new BookingEmailDetails(rs.getInt("BookingID"),
+                """ + eligibility, (rs, n) -> new BookingEmailDetails(rs.getInt("BookingID"),
                 rs.getString("BookingCode"), rs.getString("Email"), rs.getString("FullName"),
                 rs.getString("Title"), rs.getString("RoomName"), rs.getObject("StartTime", LocalDateTime.class),
                 rs.getString("Seats"), rs.getString("FoodAndDrinks"), rs.getBigDecimal("TotalAmount")), bookingId).stream().findFirst();
@@ -51,6 +72,7 @@ public class BookingEmailDAO {
                 JOIN dbo.Showtime st ON st.ShowtimeID=b.ShowtimeID
                 WHERE
                 """ + ELIGIBLE + """
+                AND UPPER(b.BookingType) = 'ONLINE'
                 AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.BookingID=b.BookingID
                             AND UPPER(p.[Status])='PAID'
                             AND COALESCE(p.PaidAt,p.CreatedAt)>=DATEADD(HOUR,-24,SYSDATETIME()))
