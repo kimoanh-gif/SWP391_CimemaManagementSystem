@@ -34,6 +34,7 @@
         <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
     </div>
 
+    <th:block th:if="${isVoucher}" th:replace="~{manager/promotions/voucher-policy :: policy}"></th:block>
     <form class="mp-form-card" method="post" novalidate
           th:action="@{${formAction}}"
           th:object="${form}">
@@ -137,7 +138,7 @@
                            th:value="*{maxDiscountInput}" placeholder="No cap">
                     <span>VND</span>
                 </div>
-                <p class="mp-hint-text">Only for percentage vouchers. Leave empty for no cap.</p>
+                <p class="mp-hint-text">Only for percentage vouchers. A positive cap is required when Admin sets a policy cap; it must not exceed that cap.</p>
                 <p class="mp-error" th:if="${fieldErrors['maxDiscountAmount'] != null}" th:text="${fieldErrors['maxDiscountAmount']}">Error</p>
             </div>
             <div class="mp-field">

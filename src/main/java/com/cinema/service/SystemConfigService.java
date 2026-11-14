@@ -121,6 +121,13 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E5: Invalid Configuration Value
      */
     public ValidationResult validateSetting(SystemSetting setting, String newValue) {
+        if ("VOUCHER".equalsIgnoreCase(setting.getCategory())) {
+            var rule = VoucherPolicyService.RULES.stream().filter(r -> r.key().equals(setting.getSettingKey())).findFirst();
+            if (rule.isEmpty()) return ValidationResult.error("UNSUPPORTED_SETTING", "This voucher policy is not supported.");
+            if (!VoucherPolicyService.valid(rule.get(), newValue)) return ValidationResult.error("INVALID_VALUE",
+                    "Enter a whole number from " + rule.get().min() + " to " + rule.get().max() + ".");
+            return ValidationResult.success();
+        }
         if ("SYSTEM".equalsIgnoreCase(setting.getCategory())) {
             if (Boolean.FALSE.equals(setting.getIsActive())) return ValidationResult.error("INACTIVE_SETTING", "This setting is inactive.");
             var rule = SystemSecuritySettings.ruleFor(setting);

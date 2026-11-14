@@ -75,6 +75,7 @@ public class ManagerVoucherController {
         model.addAttribute("pageSizes", ManagerPromotionFilter.PAGE_SIZES);
         model.addAttribute("loadError", false);
         try {
+            model.addAttribute("voucherPolicy", voucherService.getPolicy());
             AdminPage<ManagerVoucherRow> result = voucherService.search(filter);
             model.addAttribute("voucherPage", result);
             model.addAttribute("stats", promotionService.getStats());
@@ -96,6 +97,7 @@ public class ManagerVoucherController {
         if (!isManager(session)) return "redirect:/login";
         addShell(session, model);
         VoucherForm form = new VoucherForm();
+        voucherService.applyDefaults(form);
         form.setPromotionId(promotionId);
         model.addAttribute("form", form);
         return showForm(model, null);
@@ -127,6 +129,8 @@ public class ManagerVoucherController {
             ManagerVoucherRow voucher = voucherService.get(voucherId);
             addShell(session, model);
             model.addAttribute("voucher", voucher);
+            model.addAttribute("voucherPolicy", voucherService.getPolicy());
+            model.addAttribute("policyWarnings", voucherService.policyWarnings(voucher));
             model.addAttribute("confirmDelete", confirmDelete != null);
             return "manager/promotions/voucher-detail";
         } catch (PromotionAdminException ex) {
@@ -207,6 +211,8 @@ public class ManagerVoucherController {
     // ------------------------------------------------------------------ helpers
 
     private String showForm(Model model, ManagerVoucherRow current) {
+        model.addAttribute("voucherPolicy", voucherService.getPolicy());
+        model.addAttribute("policyWarnings", current == null ? Map.of() : voucherService.policyWarnings(current));
         model.addAttribute("tab", "vouchers");
         model.addAttribute("kind", "voucher");
         model.addAttribute("current", current);

@@ -23,6 +23,7 @@
         <span class="material-symbols-outlined">error</span><span th:text="${errorMessage}">Error</span>
     </div>
 
+    <th:block th:replace="~{manager/promotions/voucher-policy :: policy}"></th:block>
     <section class="cm-card mp-hero">
         <div class="mp-hero-tags">
             <span class="mp-tag-soft mp-tag-violet"><span class="material-symbols-outlined">confirmation_number</span>Voucher / Coupon</span>

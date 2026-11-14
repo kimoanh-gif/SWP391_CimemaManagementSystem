@@ -214,16 +214,8 @@ public class VoucherSelectionService {
     }
 
     private BigDecimal effectiveDiscountCap(VoucherCandidate voucher) {
-        BigDecimal ownCap = voucher.maxDiscountAmount();
-        if (!voucher.isPercentage()) return ownCap;
-        String value = settings.findByKey("VOUCHER_MAX_DISCOUNT_AMOUNT")
-                .map(com.cinema.model.SystemSetting::getValue).orElse("0");
-        if (!value.matches("[0-9]{1,12}")) {
-            throw new VoucherException("The voucher discount cap is invalid. Please contact an administrator.");
-        }
-        BigDecimal systemCap = new BigDecimal(value);
-        if (systemCap.signum() == 0) return ownCap;
-        return ownCap != null && ownCap.signum() > 0 ? ownCap.min(systemCap) : systemCap;
+        // Admin policy changes must not silently change terms of already issued vouchers.
+        return voucher.maxDiscountAmount();
     }
 
     private static VoucherOption reject(VoucherOption option, String status, String reason) {

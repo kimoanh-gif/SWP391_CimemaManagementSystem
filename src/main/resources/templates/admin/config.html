@@ -271,17 +271,17 @@ function renderVoucherSettings() {
     return;
   }
   const presentation = {
-    VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Validity period', label: 'Voucher validity period', unit: 'days' },
+    VOUCHER_VALIDITY_DAYS: { order: 1, title: 'Maximum validity', label: 'Maximum days from voucher start to end', unit: 'days' },
     VOUCHER_MIN_BOOKING_AMOUNT: { order: 2, title: 'Minimum order value', label: 'Minimum booking amount', unit: 'VND' },
     VOUCHER_MAX_DISCOUNT_AMOUNT: { order: 3.5, title: 'Maximum discount amount', label: 'Maximum discount per booking', unit: 'VND' },
     VOUCHER_MAX_DISCOUNT_PERCENT: { order: 3, title: 'Discount limit', label: 'Maximum discount percentage', unit: '%' },
-    VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Total quantity limit', label: 'Maximum voucher quantity', unit: 'codes' },
-    VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Per-account limit', label: 'Maximum vouchers per customer', unit: 'codes' }
+    VOUCHER_TOTAL_LIMIT: { order: 4, title: 'Total usage limit', label: 'Maximum uses per voucher', unit: 'uses' },
+    VOUCHER_PER_USER_LIMIT: { order: 5, title: 'Per-account usage limit', label: 'Maximum uses per customer per voucher', unit: 'uses' }
   };
   const ordered = [...voucherSettings].sort((a, b) => (presentation[a.settingKey]?.order || 99) - (presentation[b.settingKey]?.order || 99));
   container.innerHTML = `<div class="voucher-policy">
     <div class="voucher-toolbar">
-      <div><span class="voucher-eyebrow">VOUCHER SETTINGS</span><h2>Voucher rules</h2><p>Configure validity periods, discounts and quantity limits.</p></div>
+      <div><span class="voucher-eyebrow">VOUCHER SETTINGS</span><h2>Voucher rules</h2><p>Admin sets policy limits. Managers create and edit vouchers within these limits. Changes apply on save or first activation of a draft; issued vouchers and paid bookings retain their saved terms.</p></div>
       ${renderSaveBar('VOUCHER')}
     </div>
     <div class="voucher-policy-grid">
@@ -335,7 +335,7 @@ function renderSaveBar(category) {
 function renderSettingItem(setting) {
   const inputType = getInputType(setting);
   const isDiscountCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT';
-  const hint = isDiscountCap ? 'Whole VND amount. 0 = no system-wide cap. Applies to percentage vouchers. Lower voucher limits still apply.' : getValidationHint(setting) + (setting.category === 'SYSTEM' ? ' · ' + (setting.description || '') : '');
+  const hint = isDiscountCap ? 'Whole VND amount. 0 = no policy cap. Applies to percentage vouchers when saved. Issued voucher terms remain unchanged.' : getValidationHint(setting) + (setting.category === 'SYSTEM' ? ' · ' + (setting.description || '') : '');
   const readonly = (setting.validationRules || '').includes('readonly');
   const value = currentValues[setting.settingId] ?? setting.value ?? '';
   const min = (setting.validationRules || '').match(/min:([\d.-]+)/)?.[1];

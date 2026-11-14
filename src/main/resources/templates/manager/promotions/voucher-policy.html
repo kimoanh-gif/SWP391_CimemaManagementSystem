@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="policy" th:if="${voucherPolicy != null}" class="cm-card mp-group" aria-label="Admin voucher policy"
+         data-voucher-policy th:attr="data-max-percent=${voucherPolicy.maxPercent},data-max-cap=${voucherPolicy.maxDiscountAmount},data-min-order=${voucherPolicy.minBookingAmount},data-total=${voucherPolicy.totalLimit},data-per-account=${voucherPolicy.perAccountLimit},data-days=${voucherPolicy.validityDays}">
+    <h2>Voucher policy set by Admin</h2>
+    <p>Admin sets the limits below. Managers choose each voucher's terms within these limits.</p>
+    <div class="mp-info-grid mp-info-3">
+        <div class="mp-info"><small>Maximum percentage</small><strong th:text="${voucherPolicy.maxPercent + '%'}"></strong></div>
+        <div class="mp-info"><small>Maximum discount for percentage vouchers</small><strong th:text="${voucherPolicy.maxDiscountAmount.signum() == 0 ? 'No policy cap' : #numbers.formatDecimal(voucherPolicy.maxDiscountAmount, 0, 'COMMA', 0, 'POINT') + ' VND / booking'}"></strong></div>
+        <div class="mp-info"><small>Maximum validity from start to end</small><strong th:text="${voucherPolicy.validityDays + ' days'}"></strong></div>
+        <div class="mp-info"><small>Required minimum order</small><strong th:text="${#numbers.formatDecimal(voucherPolicy.minBookingAmount, 0, 'COMMA', 0, 'POINT') + ' VND or higher'}"></strong></div>
+        <div class="mp-info"><small>Maximum total uses per voucher</small><strong th:text="${voucherPolicy.totalLimit}"></strong></div>
+        <div class="mp-info"><small>Maximum uses per customer per voucher</small><strong th:text="${voucherPolicy.perAccountLimit}"></strong></div>
+    </div>
+    <p th:if="${voucherPolicy.updatedAt != null}" th:text="${'Last policy update: ' + #temporals.format(voucherPolicy.updatedAt, 'dd/MM/yyyy HH:mm')}"></p>
+    <p>Current policy applies when saving a new or edited voucher and activating a draft. Already issued vouchers keep their saved terms when policy changes. Paid bookings keep their discount.</p>
+    <div role="status" class="mp-alert mp-alert-error" th:if="${policyWarnings != null and !policyWarnings.isEmpty()}">
+        <div><strong>This voucher exceeds current Admin policy.</strong>
+            <p>Its saved terms remain effective. Review it, pause it, or edit it to comply before saving.</p>
+            <ul><li th:each="warning : ${policyWarnings.values()}" th:text="${warning}"></li></ul>
+        </div>
+    </div>
+</section>
+</body></html>

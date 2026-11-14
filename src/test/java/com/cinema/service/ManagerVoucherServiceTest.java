@@ -44,7 +44,8 @@ class ManagerVoucherServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ManagerVoucherService(voucherDAO, promotionDAO, rankDAO);
+        service = new ManagerVoucherService(voucherDAO, promotionDAO, rankDAO,
+                new VoucherPolicyService(org.mockito.Mockito.mock(com.cinema.dao.SystemSettingDAO.class)));
     }
 
     @Test
@@ -179,6 +180,9 @@ class ManagerVoucherServiceTest {
         f.setDiscountValue(new BigDecimal(value));
         f.setValidFrom(LocalDateTime.now());
         f.setValidTo(LocalDateTime.now().plusDays(7));
+        f.setMinBookingAmount(new BigDecimal("50000"));
+        f.setTotalUsageLimit(1000);
+        f.setPerAccountLimit(5);
         return f;
     }
 

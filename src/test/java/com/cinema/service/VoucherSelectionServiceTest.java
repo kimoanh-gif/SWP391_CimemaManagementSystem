@@ -54,14 +54,13 @@ class VoucherSelectionServiceTest {
 
     private void systemCap(String value) {
         var setting = new com.cinema.model.SystemSetting(); setting.setValue(value);
-        when(settings.findByKey("VOUCHER_MAX_DISCOUNT_AMOUNT")).thenReturn(Optional.of(setting));
+        lenient().when(settings.findByKey("VOUCHER_MAX_DISCOUNT_AMOUNT")).thenReturn(Optional.of(setting));
     }
 
-    @Test void systemCapLimitsTwentyPercentOfOneMillionToOneHundredThousand() {
+    @Test void changedAdminCapDoesNotReduceAlreadyIssuedVoucher() {
         systemCap("100000");
         var option = service.evaluate(voucher("SALE20", "PERCENT", 20, null, null), pricing(1_000_000, 0));
-        assertEquals(new BigDecimal("100000"), option.getDiscountAmount());
-        assertTrue(option.getDiscountValueDisplay().contains("max"));
+        assertEquals(new BigDecimal("200000"), option.getDiscountAmount());
     }
     @Test void lowerVoucherSpecificCapStillWins() {
         systemCap("100000");

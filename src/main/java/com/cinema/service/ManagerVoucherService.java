@@ -45,12 +45,28 @@ public class ManagerVoucherService {
     private final ManagerVoucherDAO voucherDAO;
     private final ManagerPromotionDAO promotionDAO;
     private final MembershipRankDAO membershipRankDAO;
+    private final VoucherPolicyService policies;
 
     public ManagerVoucherService(ManagerVoucherDAO voucherDAO, ManagerPromotionDAO promotionDAO,
-                                 MembershipRankDAO membershipRankDAO) {
+                                 MembershipRankDAO membershipRankDAO, VoucherPolicyService policies) {
         this.voucherDAO = voucherDAO;
         this.promotionDAO = promotionDAO;
         this.membershipRankDAO = membershipRankDAO;
+        this.policies = policies;
+    }
+
+    public VoucherPolicyService.Policy getPolicy() { return policies.current(); }
+
+    public Map<String, String> policyWarnings(ManagerVoucherRow row) {
+        return getPolicy().violations(VoucherForm.from(row));
+    }
+
+    public void applyDefaults(VoucherForm form) {
+        var policy = getPolicy();
+        form.setMinBookingAmount(policy.minBookingAmount());
+        form.setTotalUsageLimit(policy.totalLimit());
+        form.setPerAccountLimit(Math.min(policy.perAccountLimit(), policy.totalLimit()));
+        if (policy.maxDiscountAmount().signum() > 0) form.setMaxDiscountAmount(policy.maxDiscountAmount());
     }
 
     public AdminPage<ManagerVoucherRow> search(ManagerPromotionFilter filter) {
@@ -101,6 +117,9 @@ public class ManagerVoucherService {
         ManagerVoucherRow current = get(voucherId);
         String target = newStatus == null ? "" : newStatus.trim().toUpperCase();
         ManagerPromotionService.checkTransition(current.getStatus(), target, current.getValidTo());
+        if (PromotionLifecycle.ACTIVE.equals(target) && PromotionLifecycle.DRAFT.equals(current.getStatus())) {
+            throwIfInvalid(validate(VoucherForm.from(current), current));
+        }
         voucherDAO.updateStatus(voucherId, target);
         return current;
     }
@@ -198,6 +217,7 @@ public class ManagerVoucherService {
                 errors.put("discountValue", "The discount is locked because the voucher already has bookings.");
             }
         }
+        errors.putAll(getPolicy().violations(f));
         return errors;
     }
 
