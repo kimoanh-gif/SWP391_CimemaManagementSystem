@@ -7,7 +7,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-  <script th:src="@{/js/staff-print.js}" defer></script>
+  <script th:src="@{/js/staff-print.js(v=${#dates.createNow().time})}" defer></script>
+  <style>
+    /* QR is generated at high resolution and scaled to the box, on screen and on paper. */
+    .ticket-qr img, .ticket-qr canvas { width: 100% !important; height: 100% !important; image-rendering: pixelated; }
+
+    /* Print layout for this screen: ticket and receipt fill an A4 page instead of a small corner. */
+    @page { size: A4 portrait; margin: 12mm; }
+    @media print {
+      .print-ticket-row { max-width: none !important; }
+      .print-ticket { gap: 10mm; padding: 12mm 14mm; border-width: 2px; border-radius: 4mm; }
+      .print-ticket-head { font-size: 13pt; }
+      .print-ticket-movie { margin: 5mm 0 7mm; font-size: 28pt; line-height: 1.15; }
+      .print-ticket-info { gap: 4mm 10mm; font-size: 15pt; }
+      .print-ticket-info dt { font-size: 10pt; }
+      .print-ticket-foot { margin-top: 7mm; font-size: 12pt; }
+      .print-ticket-qr { gap: 3mm; font-size: 11pt; }
+      .ticket-qr { width: 62mm; height: 62mm; }
+
+      .print-receipt { width: 130mm; max-width: 100%; margin: 0 auto; padding: 0; font-size: 14pt; line-height: 1.5; }
+      .receipt-head strong { font-size: 20pt; }
+      .receipt-grand td { font-size: 17pt; }
+      .receipt-head, .receipt-meta, .receipt-movie, .receipt-lines { padding-bottom: 4mm; }
+    }
+  </style>
 </head>
 <body>
 

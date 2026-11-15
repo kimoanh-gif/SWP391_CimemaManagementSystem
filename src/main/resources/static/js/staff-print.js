@@ -8,7 +8,8 @@
       box.textContent = "QR";
       return;
     }
-    new QRCode(box, { text: box.dataset.qr, width: 104, height: 104, correctLevel: QRCode.CorrectLevel.M });
+    // Drawn at 300px and scaled down on screen by CSS, so the enlarged printed QR stays sharp.
+    new QRCode(box, { text: box.dataset.qr, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
   });
 
   printAll.addEventListener("click", () => {
