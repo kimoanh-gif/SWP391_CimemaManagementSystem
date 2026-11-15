@@ -53,6 +53,13 @@ public class StaffWorkspaceController {
     private final VnpayService vnpayService;
     private final PublicUrlResolver publicUrlResolver;
 
+    /**
+     * Shows a "Simulate Payment Success" button next to the VNPay QR so the counter flow can be
+     * demonstrated without paying through the sandbox. Turn off with app.payment.staff-simulate=false.
+     */
+    @org.springframework.beans.factory.annotation.Value("${app.payment.staff-simulate:true}")
+    private boolean simulatePaymentEnabled;
+
     public StaffWorkspaceController(SessionService sessionService, StaffNewsService staffNewsService,
                                     StaffCounterSalesService counterSalesService,
                                     StaffOperationsService operationsService,
@@ -227,6 +234,7 @@ public class StaffWorkspaceController {
             model.addAttribute("ageRating", ageRating);
             model.addAttribute("ageCheckRequired", StaffCounterSalesService.requiresAgeCheck(ageRating));
             model.addAttribute("payment", payment);
+            model.addAttribute("simulateEnabled", simulatePaymentEnabled);
             if (payment != null && !model.containsAttribute("selectedMethod")) {
                 model.addAttribute("selectedMethod", StaffCounterSalesService.METHOD_VNPAY);
             }
@@ -275,14 +283,16 @@ public class StaffWorkspaceController {
         if (accountId == null) return "redirect:/login";
         Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
         if (bookingId == null) return "redirect:/staff/sales";
-        if (vnpayService.isReady()) {
+        boolean simulated = vnpayService.isReady();
+        if (simulated && !simulatePaymentEnabled) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "VNPay confirms this payment automatically once the customer completes it.");
             return "redirect:/staff/sales/payment";
         }
         try {
             counterSalesService.confirmSimulatedVnpay(accountId, bookingId);
-            return paymentCompleted(session, redirectAttributes, bookingId, "VNPay payment received.");
+            return paymentCompleted(session, redirectAttributes, bookingId,
+                    simulated ? "VNPay payment simulated successfully." : "VNPay payment received.");
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage(exception));
             return "redirect:/staff/sales/payment";

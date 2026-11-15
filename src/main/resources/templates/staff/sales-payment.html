@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/cineora-staff.css}">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-  <script th:src="@{/js/staff-sales.js}" defer></script>
+  <script th:src="@{/js/staff-sales.js(v=${#dates.createNow().time})}" defer></script>
 </head>
 <body data-page="payment"
       th:attr="data-held-until=${summary.heldUntil},
@@ -83,15 +83,27 @@
               <th:block th:if="${payment.status == 'PENDING'}">
                 <div th:if="${gatewayUrl != null}" id="vnpayQr" class="payment-qr-code"
                      th:attr="data-payment-url=${gatewayUrl}" aria-label="VNPay payment QR code"></div>
-                <div th:if="${gatewayUrl == null}" class="payment-qr-code payment-qr-demo" aria-label="Simulated payment QR code">QR</div>
+                <!-- VNPay not configured: still draw a real QR (order reference + amount) so the demo looks complete. -->
+                <div th:if="${gatewayUrl == null}" id="vnpayQr" class="payment-qr-code"
+                     th:attr="data-payment-url=${'CINEORA|' + payment.transactionRef + '|' + payment.amount.toBigInteger() + ' VND'}"
+                     aria-label="Simulated payment QR code"></div>
                 <strong th:text="${payment.transactionRef}">PAY0001</strong>
                 <p class="payment-muted" th:text="'Amount: ' + ${#numbers.formatDecimal(payment.amount,0,'COMMA',0,'POINT')} + ' VND'"></p>
                 <p class="payment-muted">Code expires in <strong id="paymentCountdown">03:00</strong></p>
                 <p class="payment-muted" th:if="${gatewayUrl != null}" id="gatewayStatus">Waiting for the customer to complete the VNPay payment…</p>
+                <form th:if="${gatewayUrl != null and simulateEnabled}" th:action="@{/staff/sales/payment/vnpay/confirm}" method="post"
+                      class="payment-wide" style="margin-top:6px;"
+                      onsubmit="return confirm('Simulate a successful VNPay payment for this order? Tickets will be issued.');">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <button class="btn btn-secondary payment-wide" type="submit"
+                          style="justify-content:center;border-style:dashed;">Simulate Payment Success</button>
+                  <p class="payment-muted" style="margin-top:6px;font-size:11px;">Demo only: marks the VNPay payment as paid without scanning.</p>
+                </form>
                 <form th:if="${gatewayUrl == null}" th:action="@{/staff/sales/payment/vnpay/confirm}" method="post">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                  <p class="payment-muted">VNPay is not configured on this server. Confirm once the customer shows the completed transfer.</p>
-                  <button class="btn btn-primary payment-wide" type="submit">Confirm &amp; Paid</button>
+                  <p class="payment-muted">VNPay Sandbox is not configured on this server, so this QR is a demo code.</p>
+                  <button class="btn btn-primary payment-wide" type="submit"
+                          onclick="return confirm('Simulate a successful VNPay payment for this order? Tickets will be issued.');">Simulate Payment Success</button>
                 </form>
               </th:block>
               <div class="alert alert-error" th:if="${payment.status == 'EXPIRED'}">
