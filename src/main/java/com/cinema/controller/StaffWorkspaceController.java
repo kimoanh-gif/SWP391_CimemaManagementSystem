@@ -414,8 +414,20 @@ public class StaffWorkspaceController {
         }
         model.addAttribute("user", sessionService.getCurrentUser(session));
         model.addAttribute("print", print);
-        model.addAttribute("ticketVerifyBaseUrl", publicUrlResolver.resolve(request) + "/ticket/verify/");
+        // Staff tickets use the Staff verification page, which also finds walk-in orders (no customer account).
+        model.addAttribute("ticketVerifyBaseUrl", publicUrlResolver.resolve(request) + "/ticket/verify/counter/");
         return "staff/booking-print";
+    }
+
+    /**
+     * Same as /customer/booking/qr-base-url: the print page polls this so ticket QR codes follow the
+     * current Cloudflare Quick Tunnel URL (it changes every time the tunnel restarts).
+     */
+    @GetMapping("/qr-base-url")
+    @ResponseBody
+    public Map<String, String> qrBaseUrl(HttpSession session, HttpServletRequest request) {
+        if (staffAccountId(session) == null) return Map.of("baseUrl", "");
+        return Map.of("baseUrl", publicUrlResolver.resolve(request));
     }
 
     @GetMapping("/check-in")

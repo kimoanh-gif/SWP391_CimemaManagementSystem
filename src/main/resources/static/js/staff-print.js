@@ -3,14 +3,37 @@
   const printAll = document.getElementById("printAll");
   if (!printAll) return;
 
-  document.querySelectorAll(".ticket-qr[data-qr]").forEach((box) => {
+  const renderQr = (box, url) => {
     if (typeof QRCode === "undefined") {
       box.textContent = "QR";
       return;
     }
+    box.replaceChildren();
+    box.dataset.qr = url;
+    box.title = url;
     // Drawn at 300px and scaled down on screen by CSS, so the enlarged printed QR stays sharp.
-    new QRCode(box, { text: box.dataset.qr, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
-  });
+    new QRCode(box, { text: url, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
+  };
+  document.querySelectorAll(".ticket-qr[data-qr]").forEach((box) => renderQr(box, box.dataset.qr));
+
+  // Same behaviour as the customer ticket page: follow the current Cloudflare Quick Tunnel URL,
+  // so a phone can open /ticket/verify/{code} even if the tunnel started after this page loaded.
+  const refreshTunnelQrs = async () => {
+    try {
+      const response = await fetch("/staff/qr-base-url", { cache: "no-store" });
+      if (!response.ok) return;
+      const { baseUrl } = await response.json();
+      if (!baseUrl) return;
+      document.querySelectorAll(".ticket-qr[data-ticket-code]").forEach((box) => {
+        const url = `${baseUrl}/ticket/verify/counter/${encodeURIComponent(box.dataset.ticketCode)}`;
+        if (box.dataset.qr !== url) renderQr(box, url);
+      });
+    } catch (_) {
+      // Keep the most recently rendered QR while cloudflared is restarting.
+    }
+  };
+  refreshTunnelQrs();
+  window.setInterval(refreshTunnelQrs, 5000);
 
   printAll.addEventListener("click", () => {
     delete document.body.dataset.printTicket;

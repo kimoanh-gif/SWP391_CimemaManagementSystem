@@ -93,7 +93,7 @@
                   <p class="print-ticket-foot" th:text="'Booking ' + ${print.bookingCode}">Booking</p>
                 </div>
                 <div class="print-ticket-qr">
-                  <div class="ticket-qr" th:attr="data-qr=${ticketVerifyBaseUrl + ticket.qrCode}"
+                  <div class="ticket-qr" th:attr="data-qr=${ticketVerifyBaseUrl + ticket.qrCode},data-ticket-code=${ticket.qrCode}"
                        th:aria-label="'Entry QR code for seat ' + ${ticket.seatLabel}"></div>
                   <small>Scan at entrance</small>
                 </div>
