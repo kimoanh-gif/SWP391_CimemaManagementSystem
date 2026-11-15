@@ -240,25 +240,9 @@ document.addEventListener("DOMContentLoaded", function () {
             var status = genreStatusInput ? genreStatusInput.value : "ACTIVE";
             var id = genreIdInput ? genreIdInput.value.trim() : "";
 
-            var hasError = false;
-            if (!name) {
-                showInputError(genreNameInput, nameFeedback, "Genre name is required.");
-                hasError = true;
-            } else if (name.length < 2 || name.length > 100) {
-                showInputError(genreNameInput, nameFeedback, "Genre name must be 2 to 100 characters long.");
-                hasError = true;
-            } else {
-                clearInputError(genreNameInput, nameFeedback);
-            }
-
-            if (desc.length > 500) {
-                showInputError(genreDescInput, descFeedback, "Description must not exceed 500 characters.");
-                hasError = true;
-            } else {
-                clearInputError(genreDescInput, descFeedback);
-            }
-
-            if (hasError) return;
+            clearInputError(genreNameInput, nameFeedback);
+            clearInputError(genreDescInput, descFeedback);
+            hideModalAlert();
 
             var payload = {
                 name: name,
@@ -270,7 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             setButtonLoading(modalSubmitBtn, true);
-            hideModalAlert();
 
             try {
                 var url = (id && parseInt(id, 10) > 0) ? "/api/manager/genres/" + id : "/api/manager/genres";
@@ -293,6 +276,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     var message = result.message || (result.errors ? result.errors.join(", ") : "Something went wrong");
                     showModalAlert(message);
+                    if (result.errors && result.errors.length > 0) {
+                        result.errors.forEach(function (err) {
+                            if (/name/i.test(err)) {
+                                showInputError(genreNameInput, nameFeedback, err);
+                            } else if (/description/i.test(err)) {
+                                showInputError(genreDescInput, descFeedback, err);
+                            }
+                        });
+                    }
                 }
             } catch (err) {
                 // If fetch fails, fallback to normal form submit

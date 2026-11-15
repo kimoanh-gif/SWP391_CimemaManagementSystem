@@ -111,12 +111,13 @@ public class RoomApiController {
 
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex) {
-        String errorMsg = ex.getBindingResult().getFieldErrors().stream()
-                .map(org.springframework.validation.FieldError::getDefaultMessage)
-                .findFirst()
-                .orElse("Invalid input data.");
+        List<String> errors = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                .filter(msg -> msg != null && !msg.isBlank())
+                .collect(java.util.stream.Collectors.toList());
+        String errorMsg = errors.isEmpty() ? "Invalid input data." : errors.get(0);
         return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(false, errorMsg, null, null));
+                .body(new ApiResponse<>(false, errorMsg, null, errors));
     }
 
     @ExceptionHandler(com.cinema.exception.UnauthorizedManagerException.class)

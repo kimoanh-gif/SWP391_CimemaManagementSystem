@@ -282,7 +282,9 @@
                                 th:unless="${movie.isArchived() or movie.status == 'Ended'}"
                                 onclick="deactivateMovie(this)"
                                 th:data-id="${movie.id}" th:data-title="${movie.title}" th:data-showtimes="${movie.showtimeCount}">⏹</button>
-                        <form th:action="@{'/manager/movies/' + ${movie.id} + '/delete'}" method="post" style="display:inline;"
+                        <form class="delete-movie-form" th:action="@{'/manager/movies/' + ${movie.id} + '/delete'}" method="post" style="display:inline;"
+                              th:data-title="${movie.title}"
+                              th:data-showtimes="${movie.showtimeCount}"
                               th:data-confirm="|Are you sure you want to delete movie '${movie.title}'?|"
                               onsubmit="return confirm(this.getAttribute('data-confirm'));">
                             <button type="submit" class="action-btn action-btn-del"
@@ -326,7 +328,7 @@
             <h2 id="movieModalTitle">Add new movie</h2>
             <button type="button" class="modal-close" onclick="closeMovieModal()">×</button>
         </div>
-        <form id="movieModalForm" method="post" th:action="@{/manager/movies/save}">
+        <form id="movieModalForm" method="post" th:action="@{/manager/movies/save}" novalidate>
             <div class="modal-body">
                 <div class="alert alert-error" id="modalErrorAlert" style="display:none;margin-bottom:12px;"></div>
                 <input type="hidden" id="movieId" name="id" value="">

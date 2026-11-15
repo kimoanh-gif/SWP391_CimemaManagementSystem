@@ -304,42 +304,13 @@ function resetMovieForm() {
 }
 
 function validateMovieDuration() {
-    var raw = getValue("movieDuration").trim();
-    if (!raw) {
-        showError("movieDuration", "durationFeedback", "Movie duration cannot be empty.");
-        return false;
-    }
-    var num = Number(raw);
-    if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
-        showError("movieDuration", "durationFeedback", "Movie duration must be an integer greater than 0 minutes.");
-        return false;
-    }
-    if (num > 600) {
-        showError("movieDuration", "durationFeedback", "Movie duration cannot exceed 600 minutes.");
-        return false;
-    }
     clearError("movieDuration", "durationFeedback");
     return true;
 }
 
 function validateMovieDates() {
-    var releaseDate = getValue("movieReleaseDate");
-    var isCreate = !getValue("movieId");
-    var todayStr = getTodayDateStr();
-    var isValid = true;
-
-    if (releaseDate) {
-        if (isCreate && releaseDate <= todayStr) {
-            showError("movieReleaseDate", "releaseDateFeedback", "Release date must be in the future (from tomorrow onward).");
-            isValid = false;
-        } else {
-            clearError("movieReleaseDate", "releaseDateFeedback");
-        }
-    } else {
-        clearError("movieReleaseDate", "releaseDateFeedback");
-    }
-
-    return isValid;
+    clearError("movieReleaseDate", "releaseDateFeedback");
+    return true;
 }
 
 // =====================================================================
@@ -467,16 +438,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    var titleInput = document.getElementById("movieTitle");
+    if (titleInput) {
+        titleInput.addEventListener("input", function () {
+            clearError("movieTitle", "titleFeedback");
+            hideModalAlert();
+        });
+    }
+
     var durationInput = document.getElementById("movieDuration");
     if (durationInput) {
-        durationInput.addEventListener("input", validateMovieDuration);
-        durationInput.addEventListener("change", validateMovieDuration);
+        durationInput.addEventListener("input", function () {
+            clearError("movieDuration", "durationFeedback");
+            hideModalAlert();
+        });
     }
 
     var releaseInput = document.getElementById("movieReleaseDate");
     if (releaseInput) {
-        releaseInput.addEventListener("change", validateMovieDates);
-        releaseInput.addEventListener("input", validateMovieDates);
+        releaseInput.addEventListener("input", function () {
+            clearError("movieReleaseDate", "releaseDateFeedback");
+            hideModalAlert();
+        });
     }
 
     // Close on backdrop click
@@ -526,43 +509,18 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
 
             var title = getValue("movieTitle").trim();
-            var duration = parseInt(getValue("movieDuration"), 10);
+            var durationRaw = getValue("movieDuration").trim();
+            var duration = durationRaw ? parseInt(durationRaw, 10) : null;
+            if (isNaN(duration)) {
+                duration = null;
+            }
             var releaseDate = getValue("movieReleaseDate");
             var id = getValue("movieId").trim();
 
-            var hasError = false;
-
-            if (!title) {
-                showError("movieTitle", "titleFeedback", "Movie title cannot be empty.");
-                hasError = true;
-            } else if (title.length > 150) {
-                showError("movieTitle", "titleFeedback", "Movie title cannot exceed 150 characters.");
-                hasError = true;
-            } else {
-                clearError("movieTitle", "titleFeedback");
-            }
-
-            if (!validateMovieDuration()) {
-                hasError = true;
-            }
-
-            if (!validateMovieDates()) {
-                hasError = true;
-            }
-
-            if (hasError) {
-                if (!title) {
-                    var tEl = document.getElementById("movieTitle");
-                    if (tEl) tEl.focus();
-                } else if (!validateMovieDuration()) {
-                    var dEl = document.getElementById("movieDuration");
-                    if (dEl) dEl.focus();
-                } else {
-                    var rEl = document.getElementById("movieReleaseDate");
-                    if (rEl && rEl.classList.contains("is-invalid")) rEl.focus();
-                }
-                return;
-            }
+            clearError("movieTitle", "titleFeedback");
+            clearError("movieDuration", "durationFeedback");
+            clearError("movieReleaseDate", "releaseDateFeedback");
+            hideModalAlert();
 
             // Collect selected genres
             var selectedGenreIds = [];
@@ -594,7 +552,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             setLoading(submitBtn, true);
-            hideModalAlert();
 
             try {
                 var url = (id && parseInt(id, 10) > 0) ? "/api/manager/movies/" + id : "/api/manager/movies";
@@ -619,8 +576,28 @@ document.addEventListener("DOMContentLoaded", function () {
                     closeMovieModal();
                     window.location.reload();
                 } else {
-                    var message = result.message || (result.errors ? result.errors.join(", ") : "Something went wrong");
-                    showModalAlert(message);
+                    var errorMessages = [];
+                    if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+                        errorMessages = result.errors;
+                    } else if (result.message) {
+                        errorMessages = [result.message];
+                    } else {
+                        errorMessages = ["An error occurred while saving the movie."];
+                    }
+
+                    // Map errors back to corresponding form fields
+                    errorMessages.forEach(function (msg) {
+                        var lower = msg.toLowerCase();
+                        if (lower.indexOf("title") !== -1) {
+                            showError("movieTitle", "titleFeedback", msg);
+                        } else if (lower.indexOf("duration") !== -1) {
+                            showError("movieDuration", "durationFeedback", msg);
+                        } else if (lower.indexOf("date") !== -1 || lower.indexOf("release") !== -1) {
+                            showError("movieReleaseDate", "releaseDateFeedback", msg);
+                        }
+                    });
+
+                    showModalAlert(errorMessages.join("; "));
                 }
             } catch (err) {
                 movieForm.submit(); // fallback to standard POST

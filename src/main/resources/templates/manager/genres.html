@@ -267,7 +267,7 @@
             <h2 id="genreModalTitle">Add genre</h2>
             <button type="button" class="modal-close" onclick="closeGenreModal()">×</button>
         </div>
-        <form id="genreModalForm" th:action="@{/manager/genres/save}" th:object="${genreForm}" method="post">
+        <form id="genreModalForm" th:action="@{/manager/genres/save}" th:object="${genreForm}" method="post" novalidate>
             <input type="hidden" id="genreId" th:field="*{id}">
             <div class="modal-body">
                 <div id="modalErrorAlert" class="alert alert-error" style="display: none; margin-bottom: 12px;"></div>

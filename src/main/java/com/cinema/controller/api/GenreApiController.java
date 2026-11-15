@@ -86,10 +86,12 @@ public class GenreApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
+            List<String> errors = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
+            String firstError = errors.isEmpty() ? "Invalid input data" : errors.get(0);
+            return ResponseEntity.badRequest().body(ApiResponse.error(firstError, errors));
         }
 
         Genre created = genreService.createGenre(form);
@@ -107,10 +109,12 @@ public class GenreApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
+            List<String> errors = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
+            String firstError = errors.isEmpty() ? "Invalid input data" : errors.get(0);
+            return ResponseEntity.badRequest().body(ApiResponse.error(firstError, errors));
         }
 
         Genre updated = genreService.updateGenre(id, form);

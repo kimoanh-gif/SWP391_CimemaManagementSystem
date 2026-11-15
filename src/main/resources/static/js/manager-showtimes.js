@@ -83,13 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (showtimeForm) {
-        showtimeForm.addEventListener("submit", (e) => {
-            const isCreate = !document.getElementById("formShowtimeId").value;
-            if (isCreate && !validateStartTime()) {
-                e.preventDefault();
-                startTimeInput.focus();
-                return false;
-            }
+        showtimeForm.addEventListener("submit", () => {
+            // Form submits to backend for centralized DTO and Service validation
+            clearStartTimeValidation();
         });
     }
 

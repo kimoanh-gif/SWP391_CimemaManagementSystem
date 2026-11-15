@@ -236,7 +236,7 @@
             <h3 id="modalTitle">Add seat type</h3>
             <button class="modal-close" onclick="closeSeatTypeModal()">&times;</button>
         </div>
-        <form id="seatTypeForm" th:action="@{/manager/seat-types/save}" method="post">
+        <form id="seatTypeForm" th:action="@{/manager/seat-types/save}" method="post" novalidate>
             <input type="hidden" id="formSeatTypeId" name="seatTypeId">
             <div class="modal-body">
                 <div class="form-group">
@@ -285,7 +285,7 @@
             <h3>Quick multiplier update</h3>
             <button class="modal-close" onclick="closeMultiplierModal()">&times;</button>
         </div>
-        <form th:action="@{/manager/seat-types/multiplier}" method="post">
+        <form th:action="@{/manager/seat-types/multiplier}" method="post" novalidate>
             <input type="hidden" id="quickSeatTypeId" name="seatTypeId">
             <div class="modal-body">
                 <div>

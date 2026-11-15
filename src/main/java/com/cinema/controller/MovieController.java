@@ -136,7 +136,10 @@ public class MovieController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("movieForm", form);
-            String firstError = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid input data. Please check your information.");
+            String firstError = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                    .findFirst()
+                    .orElse("Invalid input data. Please check your information.");
             redirectAttributes.addFlashAttribute("errorMessage", firstError);
             return "redirect:/manager/movies";
         }

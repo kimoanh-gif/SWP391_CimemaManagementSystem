@@ -17,16 +17,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Form submission validation
-    filterForm.addEventListener('submit', function (e) {
-        if (startDateInput.value && endDateInput.value) {
-            if (startDateInput.value > endDateInput.value) {
-                e.preventDefault();
-                alert('The start date cannot be after the end date.');
-                return;
-            }
-        }
-    });
+    // Form submission passes to backend for centralized date validation
+    if (filterForm) {
+        filterForm.addEventListener('submit', function () {
+            // Let form submit so backend validation produces the standardized error banner
+        });
+    }
 
     // Export CSV handling
     if (btnExportCsv) {

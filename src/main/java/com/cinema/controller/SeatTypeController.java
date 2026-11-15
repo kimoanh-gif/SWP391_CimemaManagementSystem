@@ -94,8 +94,8 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            String errorMsg = bindingResult.getFieldErrors().stream()
-                    .map(org.springframework.validation.FieldError::getDefaultMessage)
+            String errorMsg = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
                     .filter(msg -> msg != null && !msg.isBlank())
                     .findFirst()
                     .orElse("Invalid seat type data.");
@@ -146,8 +146,8 @@ public class SeatTypeController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            String errorMsg = bindingResult.getFieldErrors().stream()
-                    .map(org.springframework.validation.FieldError::getDefaultMessage)
+            String errorMsg = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
                     .filter(msg -> msg != null && !msg.isBlank())
                     .findFirst()
                     .orElse("Invalid seat type data.");

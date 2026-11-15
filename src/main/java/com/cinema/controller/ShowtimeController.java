@@ -267,7 +267,11 @@ public class ShowtimeController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.showtimeForm", bindingResult);
             redirectAttributes.addFlashAttribute("showtimeForm", form);
-            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid showtime information. Please check again.");
+            String firstErr = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                    .filter(java.util.Objects::nonNull)
+                    .findFirst()
+                    .orElse("Invalid showtime information. Please check again.");
             redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return redirectUrl;
         }

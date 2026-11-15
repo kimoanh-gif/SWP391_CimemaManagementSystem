@@ -283,8 +283,12 @@
             <h3 id="modalTitle">Create new showtime</h3>
             <button class="modal-close">&times;</button>
         </div>
-        <form th:action="@{/manager/showtimes/save}" th:object="${showtimeForm}" method="post">
+        <form th:action="@{/manager/showtimes/save}" th:object="${showtimeForm}" method="post" novalidate>
             <input type="hidden" id="formShowtimeId" th:field="*{showtimeId}">
+            <div id="modalShowtimeError" class="alert alert-error" th:if="${errorMessage != null and showtimeForm != null and showtimeForm.movieId != null}" style="margin-bottom: 14px;">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-body" th:text="${errorMessage}">Invalid showtime details</div>
+            </div>
             <div class="form-group">
                 <label class="form-label">Movie (Now Showing &amp; Coming Soon only) <span class="req">*</span></label>
                 <select id="formMovieId" th:field="*{movieId}" class="form-control" required>
@@ -326,5 +330,11 @@
 </div>
 
 <script th:src="@{/js/manager-showtimes.js}"></script>
+<script th:if="${errorMessage != null and showtimeForm != null and showtimeForm.movieId != null}">
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("showtimeModal");
+        if (modal) modal.classList.add("open");
+    });
+</script>
 </body>
 </html>

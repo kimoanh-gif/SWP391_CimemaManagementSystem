@@ -84,10 +84,11 @@ public class MovieApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
+            List<String> errors = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
+            String errorMessage = errors.isEmpty() ? "Invalid input data" : errors.get(0);
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage, errors));
         }
 
         Movie created = movieService.createMovie(form);
@@ -105,10 +106,11 @@ public class MovieApiController {
         ManagerSecurityUtils.verifyManagerAccess(request);
 
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
+            List<String> errors = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid input data", errors));
+            String errorMessage = errors.isEmpty() ? "Invalid input data" : errors.get(0);
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage, errors));
         }
 
         Movie updated = movieService.updateMovie(id, form);
