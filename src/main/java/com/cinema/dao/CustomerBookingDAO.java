@@ -128,7 +128,7 @@ public class CustomerBookingDAO {
     public List<SeatOption> findSeats(int showtimeId, Integer currentBookingId) {
         String sql = """
                 SELECT seat.SeatID, seat.RowLabel, seat.SeatNumber, seat.GridRow, seat.GridColumn,
-                       seatType.TypeName, seatType.PriceMultiplier,
+                       seatType.TypeName, seatType.PriceMultiplier, seatType.ColorCode,
                        CAST(st.BasePrice * seatType.PriceMultiplier AS DECIMAL(18,2)) AS Price,
                        CASE WHEN EXISTS (
                            SELECT 1
@@ -161,6 +161,7 @@ public class CustomerBookingDAO {
             seat.setPriceMultiplier(rs.getBigDecimal("PriceMultiplier"));
             seat.setPrice(rs.getBigDecimal("Price"));
             seat.setAvailable(rs.getBoolean("Available"));
+            seat.setColorCode(rs.getString("ColorCode"));
             return seat;
         }, currentBookingId, showtimeId);
     }

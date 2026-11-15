@@ -13,12 +13,13 @@
     if (!form || !count || !labels || !total || !button || !limitMessage) return;
     const max = Number(document.body.dataset.maxSeats || 10);
     const boxes = [...form.querySelectorAll('input[name="seatIds"]:not(:disabled)')];
-    const seatLabel = (box) => box.closest(".staff-seat")?.querySelector(".seat-btn")?.textContent.trim() || box.value;
+    const seatLabel = (box) => box.closest(".seat-item")?.querySelector(".seat-label")?.textContent.trim() || box.value;
     const hint = document.getElementById("holdSeatsHint");
     const canSell = button.dataset.canSell !== "false";
 
     function updateSeatSummary() {
       const selected = boxes.filter((box) => box.checked);
+      boxes.forEach((box) => box.closest(".seat-item")?.classList.toggle("is-selected", box.checked));
       const overLimit = selected.length > max;
       count.textContent = String(selected.length);
       labels.textContent = selected.map(seatLabel).join(", ") || "None";

@@ -9,91 +9,86 @@
   <script th:src="@{/js/staff-sales.js}" defer></script>
   <script th:src="@{/js/staff-member-lookup.js}" defer></script>
   <style>
-    /* Seat map – same look as the customer booking seat map (customer-booking.css) */
-    .auditorium-wrap { overflow-x: auto; padding: 28px; min-height: 480px; }
-    .screen {
-      width: 72%;
-      height: 60px;
-      margin: 0 auto 50px;
-      color: var(--text-muted);
-      text-align: center;
-      perspective: 320px;
+    /* Seat map – copied from the Manager seat map (templates/manager/seats.html) so both screens look the same. */
+    .auditorium-wrap { padding: 24px; }
+    .screen-area { text-align: center; margin: 10px auto 30px; max-width: 640px; }
+    .screen-curve {
+      height: 12px;
+      border-top: 4px solid #D92332;
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
     }
-    .screen::before {
-      display: block;
-      height: 13px;
-      content: "";
-      border-radius: 50% 50% 8px 8px;
-      background: linear-gradient(#d7b6b4, #fff);
-      box-shadow: 0 15px 28px rgba(179, 0, 31, .16);
-      transform: rotateX(-30deg);
+    .screen-text { font-size: 11px; font-weight: 700; color: #D92332; text-transform: uppercase; letter-spacing: 2px; }
+    .seat-plan-container {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow-x: auto; padding: 24px 10px; width: 100%;
     }
-    .screen span { display: block; margin-top: 12px; font-size: 9px; font-weight: 800; letter-spacing: 4px; }
-    .staff-seat-grid {
-      display: grid;
-      grid-auto-columns: 43px;
-      grid-auto-rows: 42px;
-      justify-content: center;
-      gap: 9px;
-      min-width: max-content;
+    .cinema-seating-chart {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto; width: fit-content;
     }
-    label.staff-seat { position: relative; }
-    label.staff-seat input { position: absolute; opacity: 0; pointer-events: none; }
-    label.staff-seat .seat-btn {
-      display: grid;
-      width: 43px;
-      height: 37px;
-      place-items: center;
-      color: #6c5b62;
-      font-size: 10px;
-      font-weight: 800;
-      cursor: pointer;
-      border: 2px solid #bdaead;
-      border-radius: 8px 8px 12px 12px;
-      background: #fff;
-      box-shadow: inset 0 -4px 0 #ede4e3;
-      transition: .15s;
+    .cinema-seat-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .seat-block { display: flex; align-items: center; gap: 6px; }
+    .row-indicator {
+      width: 30px; height: 36px; border-radius: 6px;
+      background: #F1F5F9; color: #64748B; font-weight: 800; font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none; border: 1px solid #E2E8F0;
     }
-    label.staff-seat .seat-btn:hover { border-color: var(--cineora-red-dk); }
-    label.staff-seat.vip .seat-btn    { color: #805600; border-color: #dcaa3d; background: #fff7dc; }
-    label.staff-seat.couple .seat-btn { width: 52px; color: #9b315c; border-color: #df7eaa; background: #fff0f5; }
-    label.staff-seat input:checked + .seat-btn {
-      color: #fff;
-      border-color: var(--cineora-red-dk);
-      background: var(--cineora-red-dk);
-      box-shadow: inset 0 -4px 0 #860017, 0 7px 13px rgba(179, 0, 31, .2);
-      transform: translateY(-2px);
+    .aisle-walkway {
+      width: 48px; height: 36px; display: flex; align-items: center; justify-content: center;
+      position: relative; user-select: none; pointer-events: none; margin: 0 4px;
     }
-    label.staff-seat input:focus-visible + .seat-btn { outline: 2px solid var(--cineora-red); outline-offset: 2px; }
-    label.staff-seat.unavailable .seat-btn {
-      color: #b4a9ac;
-      cursor: not-allowed;
-      border-color: #ded7d9;
-      background: #e8e4e5;
-      box-shadow: none;
-      text-decoration: line-through;
+    .aisle-lane { width: 0; height: 100%; border-left: 2px dashed #CBD5E1; opacity: 0.85; }
+    .aisle-floor-label {
+      display: flex; justify-content: center; margin-top: 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94A3B8; text-transform: uppercase;
     }
-    .seat-legend {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 17px;
-      margin-top: 43px;
-      color: var(--text-muted);
-      font-size: 11px;
+    .seat-item {
+      position: relative;
+      width: 36px; height: 36px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s; user-select: none; border: 1px solid transparent;
     }
-    .seat-legend span { display: flex; align-items: center; gap: 6px; }
-    .seat-legend i { display: inline-block; width: 18px; height: 15px; border: 2px solid #bdaead; border-radius: 5px; background: #fff; }
-    .seat-legend i.vip         { border-color: #dcaa3d; background: #fff7dc; }
-    .seat-legend i.couple      { border-color: #df7eaa; background: #fff0f5; }
-    .seat-legend i.selected    { border-color: var(--cineora-red-dk); background: var(--cineora-red-dk); }
-    .seat-legend i.unavailable { border-color: #ded7d9; background: #e8e4e5; }
-    @media (max-width: 720px) {
-      .auditorium-wrap { padding: 24px 12px; }
-      .staff-seat-grid { grid-auto-columns: 36px; grid-auto-rows: 38px; gap: 6px; }
-      label.staff-seat .seat-btn { width: 36px; height: 34px; }
-      label.staff-seat.couple .seat-btn { width: 43px; }
+    .seat-item input { position: absolute; opacity: 0; pointer-events: none; }
+    .seat-item:hover { transform: scale(1.15); z-index: 2; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); }
+    .seat-item.seat-standard, .seat-item[class*="front"], .seat-item[class*="standard"], .seat-item[class*="std"] {
+      background: #FBF7F2; border-color: #EADBD2; color: #5E4A3D;
     }
+    .seat-item.seat-vip, .seat-item[class*="vip"], .seat-item[class*="amber"], .seat-item[class*="royal"] {
+      background: #FFE5D9; border-color: #F2A99F; color: #9E3524;
+    }
+    .seat-item.seat-couple, .seat-item[class*="sweetbox"], .seat-item[class*="couple"] {
+      background: #FEF6E4; border-color: #F2B84B; color: #8A5B08;
+    }
+    .seat-item.seat-unavailable {
+      background: #E5E7EB !important; border-color: #E5E7EB !important; color: #9CA3AF !important;
+      opacity: 0.4; cursor: not-allowed; text-decoration: line-through;
+    }
+    .seat-item.seat-unavailable:hover { transform: none; box-shadow: none; }
+    /* Selected seat – same highlight the Manager seat map uses */
+    .seat-item.is-selected {
+      outline: 2.5px solid #2563EB !important;
+      outline-offset: 2px !important;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.45) !important;
+      transform: scale(1.1) !important;
+      z-index: 5 !important;
+    }
+    .seat-item:has(input:focus-visible) { outline: 2px solid var(--cineora-red); outline-offset: 2px; }
+    .legend-bar {
+      display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+      padding: 16px; background: #FFF8F0; border-radius: 10px; margin-top: 24px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
+    .legend-box { width: 18px; height: 18px; border-radius: 4px; border: 1px solid transparent; }
+    /* Fallback colours when a seat type has no ColorCode (same as the seat cells above) */
+    .legend-box[class*="standard"], .legend-box[class*="front"] { background: #FBF7F2; border-color: #EADBD2; }
+    .legend-box[class*="vip"] { background: #FFE5D9; border-color: #F2A99F; }
+    .legend-box[class*="couple"], .legend-box[class*="sweetbox"] { background: #FEF6E4; border-color: #F2B84B; }
+    .legend-box.selected { background: #fff; outline: 2.5px solid #2563EB; outline-offset: 1px; }
+    .legend-box.seat-unavailable { background: #E5E7EB; opacity: 0.6; }
   </style>
 </head>
 <body data-page="seats" th:attr="data-max-seats=${maxSeats},data-hold-minutes=${holdMinutes}">
@@ -140,23 +135,63 @@
               <div><h2>Auditorium</h2><p>Click seats to select (max <span th:text="${maxSeats}">10</span>)</p></div>
             </div>
             <div class="panel-body auditorium-wrap">
-              <div class="screen"><span>SCREEN</span></div>
-              <div class="staff-seat-grid" th:if="${!#lists.isEmpty(seats)}">
-                <label class="staff-seat" th:each="seat : ${seats}"
-                       th:classappend="${!seat.available ? ' unavailable' : ' ' + #strings.toLowerCase(seat.typeName)}"
-                       th:style="'grid-row:' + ${seat.gridRow} + ';grid-column:' + ${seat.gridColumn} + ';'">
-                  <input type="checkbox" name="seatIds" th:value="${seat.seatId}"
-                         th:disabled="${!seat.available}" th:attr="data-price=${seat.price}">
-                  <div class="seat-btn" th:text="${seat.label}"
-                       th:title="${seat.label + ' · ' + seat.typeName + ' · ' + #numbers.formatDecimal(seat.price, 0, 'COMMA', 0, 'POINT') + ' VND'}">A1</div>
-                </label>
+              <div class="screen-area">
+                <div class="screen-curve"></div>
+                <div class="screen-text">SCREEN</div>
               </div>
-              <div class="seat-legend">
-                <span><i class="standard"></i>Standard</span>
-                <span><i class="vip"></i>VIP</span>
-                <span><i class="couple"></i>Couple</span>
-                <span><i class="selected"></i>Selected</span>
-                <span><i class="unavailable"></i>Unavailable</span>
+
+              <p th:if="${#lists.isEmpty(seats)}" style="text-align:center;color:var(--text-muted);">
+                This room has no active seats.
+              </p>
+
+              <div class="seat-plan-container" th:if="${!#lists.isEmpty(seats)}">
+                <div class="cinema-seating-chart">
+                  <div th:each="entry : ${seatsByRow}" class="cinema-seat-row">
+                    <div class="row-indicator" th:text="${entry.key}">A</div>
+                    <div class="seat-block left-block">
+                      <th:block th:each="seat : ${entry.value}" th:if="${seat.seatNumber <= midPoint}">
+                      <label class="seat-item"
+                             th:style="${!seat.available or seat.colorCode == null ? '' : ('border: 1.5px solid ' + seat.colorCode + '; background:' + seat.colorCode + '18; color:#1F2937;')}"
+                             th:classappend="${!seat.available ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.typeName, ' ', '-')))}"
+                             th:title="${seat.label + ' • ' + seat.typeName + ' • ' + #numbers.formatDecimal(seat.price, 0, 'COMMA', 0, 'POINT') + ' VND' + (seat.available ? '' : ' (Unavailable)')}">
+                        <input type="checkbox" name="seatIds" th:value="${seat.seatId}"
+                               th:disabled="${!seat.available}" th:attr="data-price=${seat.price}">
+                        <span class="seat-label" th:text="${seat.label}">A1</span>
+                      </label>
+                      </th:block>
+                    </div>
+                    <div class="aisle-walkway" title="Aisle"><span class="aisle-lane"></span></div>
+                    <div class="seat-block right-block">
+                      <th:block th:each="seat : ${entry.value}" th:if="${seat.seatNumber > midPoint}">
+                      <label class="seat-item"
+                             th:style="${!seat.available or seat.colorCode == null ? '' : ('border: 1.5px solid ' + seat.colorCode + '; background:' + seat.colorCode + '18; color:#1F2937;')}"
+                             th:classappend="${!seat.available ? 'seat-unavailable' : ('seat-' + #strings.toLowerCase(#strings.replace(seat.typeName, ' ', '-')))}"
+                             th:title="${seat.label + ' • ' + seat.typeName + ' • ' + #numbers.formatDecimal(seat.price, 0, 'COMMA', 0, 'POINT') + ' VND' + (seat.available ? '' : ' (Unavailable)')}">
+                        <input type="checkbox" name="seatIds" th:value="${seat.seatId}"
+                               th:disabled="${!seat.available}" th:attr="data-price=${seat.price}">
+                        <span class="seat-label" th:text="${seat.label}">A1</span>
+                      </label>
+                      </th:block>
+                    </div>
+                    <div class="row-indicator" th:text="${entry.key}">A</div>
+                  </div>
+                  <div class="aisle-floor-label"><span>CENTRAL AISLE</span></div>
+                </div>
+              </div>
+
+              <div class="legend-bar">
+                <div class="legend-item" th:each="type : ${seatTypeColors}">
+                  <span class="legend-box"
+                        th:classappend="${'seat-' + #strings.toLowerCase(#strings.replace(type.key, ' ', '-'))}"
+                        th:style="${type.value == null ? '' : ('border: 1.5px solid ' + type.value + '; background:' + type.value + '28;')}"></span>
+                  <span th:text="${type.key}">Standard</span>
+                </div>
+                <div class="legend-item"><span class="legend-box selected"></span><span>Selected</span></div>
+                <div class="legend-item"><span class="legend-box seat-unavailable"></span><span>Unavailable</span></div>
+                <div class="legend-item">
+                  <span class="legend-box" style="width:28px;border:1px dashed #C9B3AE;background:#FFF8F0;"></span>
+                  <span>Aisle</span>
+                </div>
               </div>
             </div>
           </div>

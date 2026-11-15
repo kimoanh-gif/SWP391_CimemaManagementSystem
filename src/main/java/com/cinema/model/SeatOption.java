@@ -12,6 +12,7 @@ public class SeatOption {
     private BigDecimal priceMultiplier;
     private BigDecimal price;
     private boolean available;
+    private String colorCode;
 
     public int getSeatId() { return seatId; }
     public void setSeatId(int seatId) { this.seatId = seatId; }
@@ -31,5 +32,7 @@ public class SeatOption {
     public void setPrice(BigDecimal price) { this.price = price; }
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+    public String getColorCode() { return colorCode; }
+    public void setColorCode(String colorCode) { this.colorCode = colorCode; }
     public String getLabel() { return rowLabel + seatNumber; }
 }
