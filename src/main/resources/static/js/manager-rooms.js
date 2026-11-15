@@ -202,54 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Form submit – create or update with strict validation
+    // Form submit – create or update (validation enforced authoritatively by backend)
     form.addEventListener('submit', async e => {
         e.preventDefault();
         clearMessages();
-
-        const r = totalRowsInput && totalRowsInput.value ? parseInt(totalRowsInput.value, 10) : 0;
-        const s = seatsPerRowInput && seatsPerRowInput.value ? parseInt(seatsPerRowInput.value, 10) : 0;
-        const c = capacityInput && capacityInput.value ? parseInt(capacityInput.value, 10) : 0;
-
-        // Validation rule requested: code, name, rows, seatsPerRow and capacity > 0
-        const codeVal = (form.roomCode?.value || '').trim();
-        const nameVal = (form.roomName?.value || '').trim();
-        if (!codeVal || codeVal.length > 20 || !/^[A-Za-z0-9_-]+$/.test(codeVal)) {
-            showFormError("Invalid room code (max 20 characters, alphanumeric with '-' and '_').");
-            form.roomCode?.focus();
-            return;
-        }
-        if (!nameVal || nameVal.length > 100) {
-            showFormError('Room name cannot be empty and max 100 characters.');
-            form.roomName?.focus();
-            return;
-        }
-        if (r <= 0 || s <= 0) {
-            showFormError('Please enter both rows and seats per row greater than 0.');
-            if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus();
-            return;
-        }
-        if (!c || c <= 0) {
-            showFormError('Please enter a valid total capacity (greater than 0).');
-            capacityInput.focus();
-            return;
-        }
-
-        // Validation rule requested: totalRows * seatsPerRow must equal capacity
-        if (r > 0 || s > 0) {
-            if (r <= 0 || s <= 0) {
-                showFormError('Please enter both rows and seats per row to verify capacity.');
-                if (r <= 0) totalRowsInput.focus(); else seatsPerRowInput.focus();
-                return;
-            }
-            const expected = r * s;
-            if (c !== expected) {
-                showFormError(`Total capacity (${c} seats) must equal rows (${r}) × seats per row (${s} = ${expected} seats). Please adjust accordingly.`);
-                capacityInput.classList.add('is-invalid');
-                capacityInput.focus();
-                return;
-            }
-        }
 
         const formData = new FormData(form);
         const json = Object.fromEntries(formData.entries());
@@ -284,7 +240,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showFormSuccess(data.message || 'Screening room saved successfully!');
                 setTimeout(() => location.reload(), 900);
             } else {
-                showFormError(data.message || 'Cannot save screening room. Please check again.');
+                const errMsg = data.message || (data.errors && data.errors.length > 0 ? data.errors[0] : 'Cannot save screening room. Please check again.');
+                showFormError(errMsg);
             }
         } catch (err) {
             console.error(err);

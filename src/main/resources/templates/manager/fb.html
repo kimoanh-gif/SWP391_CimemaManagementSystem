@@ -459,8 +459,12 @@
             <h3 id="modalTitle">Add new product</h3>
             <button class="modal-close">&times;</button>
         </div>
-        <form th:action="@{/manager/fb/save}" th:object="${fbForm}" method="post" enctype="multipart/form-data">
+        <form th:action="@{/manager/fb/save}" th:object="${fbForm}" method="post" enctype="multipart/form-data" novalidate>
             <input type="hidden" id="formItemId" th:field="*{itemId}">
+            <div id="modalFbError" class="alert alert-error" th:if="${errorMessage != null and fbForm != null and (fbForm.itemName != null or fbForm.itemCode != null)}" style="margin-bottom: 14px;">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-body" th:text="${errorMessage}">Invalid product details</div>
+            </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">SKU <span class="req">*</span></label>
@@ -539,5 +543,11 @@
 </div>
 
 <script th:src="@{/js/manager-fb.js}"></script>
+<script th:if="${errorMessage != null and fbForm != null and (fbForm.itemName != null or fbForm.itemCode != null)}">
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("fbModal");
+        if (modal) modal.classList.add("open");
+    });
+</script>
 </body>
 </html>

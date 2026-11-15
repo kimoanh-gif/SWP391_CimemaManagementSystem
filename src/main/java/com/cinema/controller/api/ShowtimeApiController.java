@@ -123,8 +123,9 @@ public class ShowtimeApiController {
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(
             org.springframework.web.bind.MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(org.springframework.validation.FieldError::getDefaultMessage)
+        List<String> errors = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .filter(java.util.Objects::nonNull)
                 .toList();
         String msg = errors.isEmpty() ? "Invalid showtime information" : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));

@@ -148,42 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Quick edit product
+    // Form submit relies on centralized backend validation
     const fbFormEl = modal ? modal.querySelector("form") : null;
     if (fbFormEl) {
-        fbFormEl.addEventListener("submit", (e) => {
-            const code = (document.getElementById("formItemCode")?.value || "").trim();
-            const name = (document.getElementById("formItemName")?.value || "").trim();
-            const sellingPrice = parseFloat(document.getElementById("formSellingPrice")?.value || "0");
-            const costPrice = parseFloat(document.getElementById("formCostPrice")?.value || "0");
-            const category = document.getElementById("formCategory")?.value || "Combo";
-            const itemId = document.getElementById("formItemId")?.value || "";
-            if (!/^[A-Za-z0-9_-]{2,50}$/.test(code)) {
-                e.preventDefault();
-                alert("SKU must contain only letters, numbers, hyphens or underscores (2-50 characters).");
-                return;
-            }
-            if (!name || name.length > 150) {
-                e.preventDefault();
-                alert("Product name cannot be empty and max 150 characters.");
-                return;
-            }
-            if (isNaN(sellingPrice) || sellingPrice < 0 || isNaN(costPrice) || costPrice < 0) {
-                e.preventDefault();
-                alert("Selling price and cost price cannot be negative.");
-                return;
-            }
-            if (costPrice > sellingPrice) {
-                e.preventDefault();
-                alert("Cost price cannot exceed selling price.");
-                return;
-            }
-            if (category === "Combo" && !itemId) {
-                const checked = fbFormEl.querySelectorAll(".combo-comp-cb:checked");
-                if (checked.length === 0) {
-                    e.preventDefault();
-                    alert("Combo package must have at least 1 component item selected.");
-                }
+        fbFormEl.addEventListener("submit", () => {
+            const modalAlert = document.getElementById("modalFbError");
+            if (modalAlert) {
+                modalAlert.style.display = "none";
+                modalAlert.innerText = "";
             }
         });
     }

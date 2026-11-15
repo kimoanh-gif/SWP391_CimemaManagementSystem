@@ -121,6 +121,136 @@ class MovieApiControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/manager/movies: Title at 150 characters is valid")
+    void testCreateMovieApi_Title150_Valid() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("A".repeat(150));
+        form.setDuration(120);
+        form.setAgeRating("P");
+        form.setStatus("Upcoming");
+
+        Movie created = new Movie();
+        created.setId(9);
+        created.setTitle(form.getTitle());
+        when(movieService.createMovie(any(MovieForm.class))).thenReturn(created);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: Title at 151 characters is rejected")
+    void testCreateMovieApi_Title151_Rejected() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("A".repeat(151));
+        form.setDuration(120);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("150 characters")));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: Duration 0 is rejected")
+    void testCreateMovieApi_DurationZero_Rejected() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("Valid Title");
+        form.setDuration(0);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: Duration 1 (lower bound) is valid")
+    void testCreateMovieApi_Duration1_Valid() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("Short Film");
+        form.setDuration(1);
+        form.setAgeRating("P");
+        form.setStatus("Upcoming");
+
+        Movie created = new Movie();
+        created.setId(10);
+        created.setTitle("Short Film");
+        when(movieService.createMovie(any(MovieForm.class))).thenReturn(created);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: Duration 600 (upper bound) is valid")
+    void testCreateMovieApi_Duration600_Valid() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("Epic Film");
+        form.setDuration(600);
+        form.setAgeRating("P");
+        form.setStatus("Upcoming");
+
+        Movie created = new Movie();
+        created.setId(11);
+        created.setTitle("Epic Film");
+        when(movieService.createMovie(any(MovieForm.class))).thenReturn(created);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: Duration 601 is rejected")
+    void testCreateMovieApi_Duration601_Rejected() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("Too Long Film");
+        form.setDuration(601);
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("POST /api/manager/movies: End date before release date is rejected by DTO @AssertTrue")
+    void testCreateMovieApi_EndDateBeforeReleaseDate_Rejected() throws Exception {
+        MovieForm form = new MovieForm();
+        form.setTitle("Chronology Film");
+        form.setDuration(120);
+        form.setReleaseDate(java.time.LocalDate.of(2027, 6, 20));
+        form.setEndDate(java.time.LocalDate.of(2027, 6, 10));
+
+        mockMvc.perform(post("/api/manager/movies")
+                        .sessionAttr("userRole", "MANAGER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(form)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("End date must be after release date"));
+    }
+
+    @Test
     @DisplayName("PUT /api/manager/movies/{id}: Should return 200 OK on valid update")
     void testUpdateMovieApi_Success() throws Exception {
         MovieForm form = new MovieForm();

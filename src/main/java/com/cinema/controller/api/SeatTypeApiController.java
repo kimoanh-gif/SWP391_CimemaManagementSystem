@@ -99,8 +99,9 @@ public class SeatTypeApiController {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
+        List<String> errors = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                .filter(msg -> msg != null && !msg.isBlank())
                 .collect(Collectors.toList());
         String msg = errors.isEmpty() ? "Invalid seat type data" : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));

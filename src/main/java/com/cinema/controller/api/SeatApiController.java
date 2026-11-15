@@ -90,8 +90,9 @@ public class SeatApiController {
             HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
+            List<String> errors = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
                     .collect(Collectors.toList());
             String message = errors.isEmpty() ? "Invalid seat update data" : errors.get(0);
             return ResponseEntity.badRequest().body(ApiResponse.error(message, errors));
@@ -102,8 +103,9 @@ public class SeatApiController {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
+        List<String> errors = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                .filter(msg -> msg != null && !msg.isBlank())
                 .collect(Collectors.toList());
         String msg = errors.isEmpty() ? "Invalid input data." : errors.get(0);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg, errors));

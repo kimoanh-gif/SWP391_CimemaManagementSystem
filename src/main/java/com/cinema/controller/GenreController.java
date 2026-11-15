@@ -120,7 +120,11 @@ public class GenreController {
                     bindingResult
             );
             redirectAttributes.addFlashAttribute("genreForm", form);
-            String firstErr = bindingResult.getFieldErrors().stream().map(org.springframework.validation.FieldError::getDefaultMessage).findFirst().orElse("Invalid input data. Please check your information.");
+            String firstErr = bindingResult.getAllErrors().stream()
+                    .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                    .filter(msg -> msg != null && !msg.isBlank())
+                    .findFirst()
+                    .orElse("Invalid input data. Please check your information.");
             redirectAttributes.addFlashAttribute("errorMessage", firstErr);
             return "redirect:/manager/genres";
         }
