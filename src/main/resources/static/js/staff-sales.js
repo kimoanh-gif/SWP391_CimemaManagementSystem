@@ -48,16 +48,83 @@
     const grandTotal = document.getElementById("staffGrandTotal");
     if (!foodTotal || !grandTotal) return;
     const seatTotal = Number(grandTotal.dataset.seatTotal || 0);
+    const lines = document.getElementById("staffFoodLines");
+    const MAX_QTY = 20;
+    const readQty = (input) => Math.min(MAX_QTY, Math.max(0, Number.parseInt(input.value || "0", 10) || 0));
+
     function updateFoodTotal() {
+      const picked = [];
       const sum = quantities.reduce((total, input) => {
-        const quantity = Math.max(0, Number.parseInt(input.value || "0", 10) || 0);
-        input.value = String(Math.min(20, quantity));
-        return total + Number(input.dataset.price || 0) * quantity;
+        const quantity = readQty(input);
+        input.value = String(quantity);
+        const card = input.closest(".fb-card");
+        if (card) {
+          card.classList.toggle("is-picked", quantity > 0);
+          const badge = card.querySelector(".fb-qty-badge");
+          if (badge) { badge.hidden = quantity === 0; badge.textContent = `×${quantity}`; }
+          const [minus, plus] = card.querySelectorAll("[data-fb-step]");
+          if (minus) minus.disabled = quantity === 0;
+          if (plus) plus.disabled = quantity === MAX_QTY;
+        }
+        const lineTotal = Number(input.dataset.price || 0) * quantity;
+        if (quantity > 0) picked.push({ name: input.dataset.name || "Item", quantity, lineTotal });
+        return total + lineTotal;
       }, 0);
       foodTotal.textContent = currency(sum);
       grandTotal.textContent = currency(seatTotal + sum);
+      if (lines) {
+        lines.replaceChildren();
+        if (picked.length === 0) {
+          const none = document.createElement("p");
+          none.className = "fb-line-none";
+          none.textContent = "No items added.";
+          lines.append(none);
+        }
+        picked.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "fb-line";
+          const label = document.createElement("span");
+          label.textContent = `${item.name} × ${item.quantity}`;
+          const amount = document.createElement("strong");
+          amount.textContent = currency(item.lineTotal);
+          row.append(label, amount);
+          lines.append(row);
+        });
+      }
     }
     quantities.forEach((input) => input.addEventListener("input", updateFoodTotal));
+    document.querySelectorAll("[data-fb-step]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = button.closest(".fb-stepper")?.querySelector('input[name="quantities"]');
+        if (!input) return;
+        input.value = String(readQty(input) + Number(button.dataset.fbStep));
+        updateFoodTotal();
+      });
+    });
+
+    // Search box + type chips only hide cards; every quantity is still submitted with the form.
+    const search = document.getElementById("fbSearch");
+    const chips = [...document.querySelectorAll("[data-fb-filter]")];
+    const cards = [...document.querySelectorAll(".fb-card")];
+    const noMatch = document.getElementById("fbNoMatch");
+    let activeType = "ALL";
+    function applyFilter() {
+      const term = (search?.value || "").trim().toLowerCase();
+      let shown = 0;
+      cards.forEach((card) => {
+        const visible = (activeType === "ALL" || card.dataset.type === activeType)
+          && (!term || (card.dataset.name || "").includes(term));
+        card.hidden = !visible;
+        if (visible) shown++;
+      });
+      if (noMatch) noMatch.hidden = shown > 0 || cards.length === 0;
+    }
+    search?.addEventListener("input", applyFilter);
+    chips.forEach((chip) => chip.addEventListener("click", () => {
+      activeType = chip.dataset.fbFilter;
+      chips.forEach((other) => other.classList.toggle("active", other === chip));
+      applyFilter();
+    }));
     updateFoodTotal();
   }
 
