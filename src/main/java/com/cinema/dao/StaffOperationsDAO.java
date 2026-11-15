@@ -1,6 +1,7 @@
 package com.cinema.dao;
 
 import com.cinema.model.PublicShowtime;
+import com.cinema.model.TicketVerification;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingListItem;
 import com.cinema.model.StaffBookingPrint;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -293,5 +295,32 @@ public class StaffOperationsDAO {
                   AND st.StartTime <= DATEADD(MINUTE, 30, SYSDATETIME())
                   AND st.EndTime >= SYSDATETIME()
                 """, ticketId);
+    }
+
+    /**
+     * Public ticket verification for tickets printed by Staff. Unlike the customer lookup it uses
+     * LEFT JOINs, so walk-in counter orders (Booking.CustomerID = NULL) are still found.
+     */
+    public Optional<TicketVerification> findTicketVerification(String qrCode) {
+        if (qrCode == null || qrCode.isBlank()) return Optional.empty();
+        return jdbcTemplate.query("""
+                SELECT t.TicketID, t.QRCode, t.TicketStatus, b.BookingCode,
+                       COALESCE(a.FullName, N'Walk-in customer') AS FullName, a.Email, a.Phone,
+                       m.Title, r.RoomName, st.StartTime, CONCAT(s.RowLabel, s.SeatNumber) AS SeatLabel
+                FROM dbo.Ticket t
+                JOIN dbo.BookingSeat bs ON bs.BookingSeatID = t.BookingSeatID
+                JOIN dbo.Booking b ON b.BookingID = bs.BookingID
+                LEFT JOIN dbo.Customer c ON c.CustomerID = b.CustomerID
+                LEFT JOIN dbo.Account a ON a.AccountID = c.AccountID
+                JOIN dbo.Showtime st ON st.ShowtimeID = b.ShowtimeID
+                JOIN dbo.Movie m ON m.MovieID = st.MovieID
+                JOIN dbo.Room r ON r.RoomID = st.RoomID
+                JOIN dbo.Seat s ON s.SeatID = bs.SeatID
+                WHERE t.QRCode = ?
+                """, (rs, n) -> new TicketVerification(rs.getInt("TicketID"), rs.getString("QRCode"),
+                rs.getString("TicketStatus"), rs.getString("BookingCode"), rs.getString("FullName"),
+                rs.getString("Email"), rs.getString("Phone"), rs.getString("Title"), rs.getString("RoomName"),
+                rs.getObject("StartTime", LocalDateTime.class), rs.getString("SeatLabel")), qrCode)
+                .stream().findFirst();
     }
 }
