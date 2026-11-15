@@ -38,6 +38,12 @@ public class StaffCounterSalesService {
     private final CustomerBookingService customerBookingService;
     private final MemberLookupDAO memberLookupDAO;
     private final StaffNewsDAO staffNewsDAO;
+    private SystemSecuritySettings bookingSettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setBookingSettings(SystemSecuritySettings settings) { this.bookingSettings = settings; }
+    public int maxSeatsPerBooking() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_MAX_TICKETS", 10); }
+    public int seatHoldMinutes() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_SEAT_HOLD_MINUTES", 10); }
+
     private MembershipDiscountService membershipDiscountService;
     @org.springframework.beans.factory.annotation.Autowired
     public void setMembershipDiscountService(MembershipDiscountService service) { membershipDiscountService = service; }
@@ -78,9 +84,10 @@ public class StaffCounterSalesService {
         ShowtimeOption showtime = customerBookingService.getBookableShowtime(showtimeId);
         List<Integer> seatIds = requestedSeatIds == null ? List.of()
                 : requestedSeatIds.stream().distinct().toList();
-        if (seatIds.isEmpty() || seatIds.size() > CustomerBookingService.MAX_SEATS_PER_BOOKING) {
+        int maxSeats = maxSeatsPerBooking();
+        if (seatIds.isEmpty() || seatIds.size() > maxSeats) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Select between 1 and " + CustomerBookingService.MAX_SEATS_PER_BOOKING + " seats.");
+                    "Select between 1 and " + maxSeats + " seats.");
         }
 
         Map<Integer, SeatOption> availableSeats = new LinkedHashMap<>();
@@ -105,7 +112,7 @@ public class StaffCounterSalesService {
 
         String code = "BK" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"))
                 + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(CustomerBookingService.HOLD_MINUTES);
+        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(seatHoldMinutes());
         try {
             int bookingId = bookingDAO.createPendingCounterBooking(customerId, staffId,
                     showtime.getShowtimeId(), code);

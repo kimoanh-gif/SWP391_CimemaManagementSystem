@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * Background Job Inventory: JOB-01: Release Expired Seat Reservations (SRS 6.1 / Item 74).
  * Periodically releases temporarily held seats when the customer does not complete payment
- * within the allowed booking time (HOLD_MINUTES = 10).
+ * within the expiry recorded when the seats were held.
  */
 @Component
 public class ReleaseExpiredSeatReservationsJob {

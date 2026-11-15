@@ -182,4 +182,42 @@ class DynamicSecuritySettingsTest {
         assertTrue(emails.getAllValues().get(0).getText().contains("2 minutes"));
         assertTrue(emails.getAllValues().get(1).getText().contains("9 minutes"));
     }
+
+    @Test void bookingLimitsAndHoldExpiryFollowAdminSavesForOnlineAndCounter() {
+        var bookings = mock(CustomerBookingDAO.class);
+        var online = new CustomerBookingService(bookings, mock(org.springframework.context.ApplicationEventPublisher.class));
+        online.setBookingSettings(policy);
+        var staff = mock(StaffNewsDAO.class);
+        var counter = new StaffCounterSalesService(bookings, online, mock(MemberLookupDAO.class), staff);
+        counter.setBookingSettings(policy);
+        var showtime = new ShowtimeOption(); showtime.setShowtimeId(5); showtime.setStartTime(LocalDateTime.now().plusHours(3));
+        when(bookings.findShowtime(5)).thenReturn(Optional.of(showtime));
+        when(staff.findActiveStaffId(12)).thenReturn(Optional.of(4));
+        var seat = new SeatOption(); seat.setSeatId(1); seat.setAvailable(true);
+        when(bookings.findSeats(5)).thenReturn(List.of(seat));
+        when(bookings.findCustomerId(1)).thenReturn(Optional.of(9));
+        when(bookings.createPendingBooking(eq(9),eq(5),anyString())).thenReturn(31);
+        when(bookings.createPendingCounterBooking(isNull(),eq(4),eq(5),anyString())).thenReturn(32);
+        save("BOOKING_MAX_TICKETS", "1"); save("BOOKING_SEAT_HOLD_MINUTES", "2");
+        assertThrows(CustomerBookingService.BookingException.class, () -> online.holdSeats(1,5,List.of(1,2),null));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> counter.createPendingCounterBooking(12,5,List.of(1,2),null));
+        var before = LocalDateTime.now();
+        online.holdSeats(1,5,List.of(1),null);
+        counter.createPendingCounterBooking(12,5,List.of(1),null);
+        var expiry = org.mockito.ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(bookings).holdSeat(eq(31),eq(5),eq(seat),expiry.capture());
+        assertFalse(expiry.getValue().isBefore(before.plusMinutes(2)));
+        assertFalse(expiry.getValue().isAfter(LocalDateTime.now().plusMinutes(2)));
+        verify(bookings).holdSeat(eq(32),eq(5),eq(seat),expiry.capture());
+        assertFalse(expiry.getValue().isBefore(before.plusMinutes(2)));
+        assertFalse(expiry.getValue().isAfter(LocalDateTime.now().plusMinutes(2)));
+        save("BOOKING_MAX_TICKETS", "15"); save("BOOKING_SEAT_HOLD_MINUTES", "20");
+        assertEquals(15, online.maxSeatsPerBooking()); assertEquals(15, counter.maxSeatsPerBooking());
+        clearInvocations(bookings);
+        before = LocalDateTime.now();
+        online.holdSeats(1,5,List.of(1),null);
+        verify(bookings).holdSeat(eq(31),eq(5),eq(seat),expiry.capture());
+        assertFalse(expiry.getValue().isBefore(before.plusMinutes(20)));
+        assertFalse(expiry.getValue().isAfter(LocalDateTime.now().plusMinutes(20)));
+    }
 }

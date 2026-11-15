@@ -179,7 +179,8 @@ public class CustomerBookingController {
             model.addAttribute("showtime", showtime);
             model.addAttribute("seats", bookingService.getSeats(showtimeId, currentBookingId));
             model.addAttribute("selectedSeatIds", selectedSeatIds);
-            model.addAttribute("maxSeats", CustomerBookingService.MAX_SEATS_PER_BOOKING);
+            model.addAttribute("maxSeats", bookingService.maxSeatsPerBooking());
+            model.addAttribute("holdMinutes", bookingService.seatHoldMinutes());
             model.addAttribute("activeStep", 2);
             return "customer/booking/seats";
         } catch (BookingException exception) {

@@ -15,7 +15,7 @@ class SystemConfigRankValidationTest {
     @BeforeEach void setup() {
         when(ranks.findAll()).thenReturn(List.of(rank(1,0,499),rank(2,500,1999),rank(3,2000,null)));
         when(ranks.findById(2)).thenReturn(Optional.of(rank(2,500,1999)));
-        when(ranks.updateThreshold(2,600)).thenReturn(1);
+        when(ranks.updateThreshold(2,500)).thenReturn(1);
     }
     @Test void maximumDiscountAmountMustBeWholeNonNegativeVnd() {
         var setting = new com.cinema.model.SystemSetting();
@@ -40,9 +40,9 @@ class SystemConfigRankValidationTest {
         assertFalse(service.validateMembershipThreshold(99,100).valid());
     }
     @Test void savesValidThresholdWhileHoldingRankLock() {
-        assertTrue(service.updateRankThreshold(2,600).success());
+        assertTrue(service.updateRankThreshold(2,500).success());
         var ordered=inOrder(ranks);ordered.verify(ranks).lockThresholds();ordered.verify(ranks).findById(2);
-        verify(ranks).updateThreshold(2,600);
+        verify(ranks).updateThreshold(2,500);
     }
 
     @Test void validatesBothBoundsAndOnlyAllowsUnlimitedOnHighestRank() {
@@ -51,19 +51,19 @@ class SystemConfigRankValidationTest {
         }
         assertFalse(service.updateRankThreshold(2, 499, 1800).success());
         verify(ranks, never()).updateThreshold(anyInt(), anyInt(), any());
-        assertTrue(service.validateMembershipThreshold(2, 500, 500).valid());
+        assertFalse(service.validateMembershipThreshold(2, 500, 500).valid());
         assertTrue(service.validateMembershipThreshold(3, 2000, null).valid());
-        assertTrue(service.validateMembershipThreshold(3, 2000, Integer.MAX_VALUE).valid());
+        assertFalse(service.validateMembershipThreshold(3, 2000, Integer.MAX_VALUE).valid());
     }
 
     @Test void savesBothBoundsAtomicallyWhileHoldingRankLock() {
-        when(ranks.updateThreshold(2, 600, 1800)).thenReturn(1);
-        assertTrue(service.updateRankThreshold(2, 600, 1800).success());
+        when(ranks.updateThreshold(2, 500, 1999)).thenReturn(1);
+        assertTrue(service.updateRankThreshold(2, 500, 1999).success());
         var ordered = inOrder(ranks);
         ordered.verify(ranks).lockThresholds();
         ordered.verify(ranks).findById(2);
         ordered.verify(ranks).findAll();
-        ordered.verify(ranks).updateThreshold(2, 600, 1800);
+        ordered.verify(ranks).updateThreshold(2, 500, 1999);
         assertFalse(service.updateRankThreshold(99, 0, null).success());
     }
 
@@ -71,24 +71,51 @@ class SystemConfigRankValidationTest {
         var zero = java.math.BigDecimal.ZERO;
         var ten = java.math.BigDecimal.TEN;
         for (String bad : List.of("-1", "1.5", "1000000000000")) {
-            assertFalse(service.updateRankPolicy(2, 500, 1800, ten, 3, new java.math.BigDecimal(bad), ten).success());
-            assertFalse(service.updateRankPolicy(2, 500, 1800, ten, 3, zero, new java.math.BigDecimal(bad)).success());
+            assertFalse(service.updateRankPolicy(2, 500, 1999, ten, 3, new java.math.BigDecimal(bad), ten).success());
+            assertFalse(service.updateRankPolicy(2, 500, 1999, ten, 3, zero, new java.math.BigDecimal(bad)).success());
         }
-        assertFalse(service.updateRankPolicy(2, 500, 1800, ten, -1, zero, ten).success());
-        assertFalse(service.updateRankPolicy(2, 500, 1800, ten, 3, zero, zero).success());
-        assertFalse(service.updateRankPolicy(2, 500, 1800, zero, 3, zero, ten).success());
-        assertFalse(service.updateRankPolicy(2, 500, 1800, new java.math.BigDecimal("100.01"), 3, zero, ten).success());
-        assertFalse(service.updateRankPolicy(2, 500, 1800, new java.math.BigDecimal("5.555"), 3, zero, ten).success());
+        assertFalse(service.updateRankPolicy(2, 500, 1999, ten, -1, zero, ten).success());
+        assertFalse(service.updateRankPolicy(2, 500, 1999, ten, 3, zero, zero).success());
+        assertFalse(service.updateRankPolicy(2, 500, 1999, zero, 3, zero, ten).success());
+        assertFalse(service.updateRankPolicy(2, 500, 1999, new java.math.BigDecimal("100.01"), 3, zero, ten).success());
+        assertFalse(service.updateRankPolicy(2, 500, 1999, new java.math.BigDecimal("5.555"), 3, zero, ten).success());
         verify(ranks, never()).updatePolicy(anyInt(), anyInt(), any(), any(), anyInt(), any(), any());
-        when(ranks.updatePolicy(2, 500, 1800, new java.math.BigDecimal("10.00"), 3,
+        when(ranks.updatePolicy(2, 500, 1999, new java.math.BigDecimal("10.00"), 3,
                 new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000"))).thenReturn(1);
-        assertTrue(service.updateRankPolicy(2, 500, 1800, ten, 3, new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000")).success());
+        assertTrue(service.updateRankPolicy(2, 500, 1999, ten, 3, new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000")).success());
         var sequence = inOrder(ranks);
         sequence.verify(ranks).lockThresholds();
         sequence.verify(ranks).findById(2);
         sequence.verify(ranks).findAll();
-        sequence.verify(ranks).updatePolicy(2, 500, 1800, new java.math.BigDecimal("10.00"), 3,
+        sequence.verify(ranks).updatePolicy(2, 500, 1999, new java.math.BigDecimal("10.00"), 3,
                 new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000"));
     }
 
+    @Test void rejectsGapsAndRequiresCoverageFromZeroToUnlimited() {
+        assertFalse(service.validateMembershipThreshold(1, 1, 499).valid());
+        assertFalse(service.validateMembershipThreshold(2, 600, 1999).valid());
+        assertFalse(service.validateMembershipThreshold(2, 500, 1800).valid());
+        assertFalse(service.validateMembershipThreshold(3, 2000, 8000).valid());
+        assertTrue(service.validateMembershipThreshold(1, 0, 499).valid());
+    }
+    @Test void savesAdjacentBoundariesTogetherAndRejectsIncompleteOrGappedBatches() {
+        var ranges = List.of(new SystemConfigService.RankRange(1,0,599),
+                new SystemConfigService.RankRange(2,600,1999), new SystemConfigService.RankRange(3,2000,null));
+        when(ranks.updateThreshold(anyInt(), anyInt(), any())).thenReturn(1);
+        assertTrue(service.updateRankRanges(ranges).success());
+        verify(ranks).updateThreshold(1,0,599);
+        verify(ranks).updateThreshold(2,600,1999);
+        clearInvocations(ranks);
+        assertFalse(service.updateRankRanges(ranges.subList(0,2)).success());
+        assertFalse(service.updateRankRanges(List.of(ranges.get(0),ranges.get(0),ranges.get(2))).success());
+        assertFalse(service.updateRankRanges(List.of(new SystemConfigService.RankRange(1,0,199),ranges.get(1),ranges.get(2))).success());
+        verify(ranks, never()).updateThreshold(anyInt(),anyInt(),any());
+    }
+    @Test void failedBatchWriteThrowsToRollBackTransaction() {
+        when(ranks.updateThreshold(1,0,499)).thenReturn(1);
+        when(ranks.updateThreshold(2,500,1999)).thenReturn(0);
+        assertThrows(org.springframework.dao.DataAccessResourceFailureException.class, () -> service.updateRankRanges(List.of(
+                new SystemConfigService.RankRange(1,0,499),new SystemConfigService.RankRange(2,500,1999),new SystemConfigService.RankRange(3,2000,null))));
+        verify(ranks,never()).updateThreshold(3,2000,null);
+    }
 }

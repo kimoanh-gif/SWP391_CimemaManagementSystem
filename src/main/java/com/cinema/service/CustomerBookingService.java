@@ -32,6 +32,12 @@ public class CustomerBookingService {
 
     private final CustomerBookingDAO bookingDAO;
     private final org.springframework.context.ApplicationEventPublisher events;
+    private SystemSecuritySettings bookingSettings;
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setBookingSettings(SystemSecuritySettings settings) { this.bookingSettings = settings; }
+    public int maxSeatsPerBooking() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_MAX_TICKETS", 10); }
+    public int seatHoldMinutes() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_SEAT_HOLD_MINUTES", 10); }
+
     private MembershipDiscountService membershipDiscountService;
     @org.springframework.beans.factory.annotation.Autowired
     public void setMembershipDiscountService(MembershipDiscountService service) { membershipDiscountService = service; }
@@ -86,8 +92,9 @@ public class CustomerBookingService {
         if (seatIds.isEmpty()) {
             throw new BookingException("Select at least one seat to continue.");
         }
-        if (seatIds.size() > MAX_SEATS_PER_BOOKING) {
-            throw new BookingException("You can select up to " + MAX_SEATS_PER_BOOKING + " seats per booking.");
+        int maxSeats = maxSeatsPerBooking();
+        if (seatIds.size() > maxSeats) {
+            throw new BookingException("You can select up to " + maxSeats + " seats per booking.");
         }
 
         if (previousBookingId != null) {
@@ -108,7 +115,7 @@ public class CustomerBookingService {
                 .orElseThrow(() -> new BookingException("Your customer profile could not be found."));
 
         String bookingCode = generateBookingCode();
-        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(HOLD_MINUTES);
+        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(seatHoldMinutes());
 
         try {
             int bookingId = bookingDAO.createPendingBooking(customerId, showtime.getShowtimeId(), bookingCode);

@@ -23,7 +23,7 @@ public class MembershipDiscountDAO {
                        mr.RankID,mr.DiscountUsageLimit,mr.MinBookingAmount,mr.MaxDiscountAmount,mr.DiscountPercent
                 FROM dbo.Booking b WITH (UPDLOCK,HOLDLOCK) JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
                 OUTER APPLY (SELECT TOP 1 * FROM dbo.MembershipRank r WHERE r.IsActive=1
-                    AND r.MinPoints<=c.TierPoints ORDER BY r.MinPoints DESC,r.RankID) mr
+                    AND r.MinPoints<=c.TierPoints AND (r.MaxPoints IS NULL OR c.TierPoints<=r.MaxPoints) ORDER BY r.MinPoints DESC,r.RankID) mr
                 WHERE b.BookingID=? AND
                 """ + owner, (rs, n) -> {
             int voucher = rs.getInt("VoucherID");

@@ -553,7 +553,7 @@ public class CustomerBookingDAO {
                 UPDATE c SET RankID=ranked.RankID
                 FROM dbo.Customer c JOIN @Award a ON a.CustomerID=c.CustomerID
                 CROSS APPLY (SELECT TOP 1 mr.RankID FROM dbo.MembershipRank mr
-                             WHERE mr.IsActive=1 AND mr.MinPoints<=c.TierPoints ORDER BY mr.MinPoints DESC) ranked;
+                             WHERE mr.IsActive=1 AND mr.MinPoints<=c.TierPoints AND (mr.MaxPoints IS NULL OR c.TierPoints<=mr.MaxPoints) ORDER BY mr.MinPoints DESC) ranked;
                 """, bookingId);
     }
 

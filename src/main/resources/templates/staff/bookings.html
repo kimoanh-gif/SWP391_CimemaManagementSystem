@@ -129,10 +129,10 @@
         <!-- Pagination -->
         <div class="pagination" th:if="${bookingPage.totalPages > 1}">
           <a th:if="${bookingPage.page > 0}"
-             th:href="@{/staff/bookings(page=${bookingPage.page - 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}">← Previous</a>
+             th:href="@{/staff/bookings(page=${bookingPage.page - 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}"> Previous</a>
           <span th:text="'Page ' + (${bookingPage.page + 1}) + ' of ' + ${bookingPage.totalPages} + ' · ' + ${bookingPage.totalItems} + ' bookings'"></span>
           <a th:if="${bookingPage.page + 1 < bookingPage.totalPages}"
-             th:href="@{/staff/bookings(page=${bookingPage.page + 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}">Next →</a>
+             th:href="@{/staff/bookings(page=${bookingPage.page + 1},q=${bookingPage.query},status=${bookingPage.status},date=${bookingPage.showDate})}">Next </a>
         </div>
       </div>
 

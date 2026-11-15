@@ -14,10 +14,10 @@ import java.util.Optional;
 @Component
 public class MembershipRankCalculator {
 
-    /** Highest active rank whose MinPoints &lt;= tierPoints. */
+    /** Highest active rank whose configured point range contains tierPoints. */
     public Optional<MembershipRank> currentRank(List<MembershipRank> ranks, int tierPoints) {
         return sorted(ranks).stream()
-                .filter(r -> minPoints(r) <= tierPoints)
+                .filter(r -> minPoints(r) <= tierPoints && (r.getMaxPoints() == null || tierPoints <= r.getMaxPoints()))
                 .reduce((lower, higher) -> higher);
     }
 

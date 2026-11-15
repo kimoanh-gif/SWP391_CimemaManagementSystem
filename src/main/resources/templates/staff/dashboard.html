@@ -81,7 +81,7 @@
         </div>
         <div class="heading-actions">
           <a class="btn btn-secondary" th:href="@{/staff/bookings}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:read')}">View Bookings</a>
-          <a class="btn btn-primary"   th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Counter Sales →</a>
+          <a class="btn btn-primary"   th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Counter Sales </a>
         </div>
       </div>
 
@@ -160,7 +160,7 @@
             <h2>Upcoming Showtimes (Next 2 Hours)</h2>
             <p>Shows starting soon – prepare counter operations</p>
           </div>
-          <a class="btn btn-primary" th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Create Order →</a>
+          <a class="btn btn-primary" th:href="@{/staff/sales}" th:if="${permissionUser != null and permissionUser.hasPermission('booking:create')}">Create Order </a>
         </div>
 
         <div th:if="${staffDashboard != null and !#lists.isEmpty(staffDashboard.upcomingShowtimes)}" class="table-wrap">

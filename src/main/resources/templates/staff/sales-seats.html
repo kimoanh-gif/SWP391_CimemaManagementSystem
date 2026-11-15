@@ -96,7 +96,7 @@
     }
   </style>
 </head>
-<body data-page="seats" th:attr="data-max-seats=${maxSeats}">
+<body data-page="seats" th:attr="data-max-seats=${maxSeats},data-hold-minutes=${holdMinutes}">
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
@@ -119,7 +119,7 @@
             &nbsp;·&nbsp;<span th:text="${showtime.roomName}"></span>
           </p>
         </div>
-        <a class="btn btn-secondary" th:href="@{/staff/sales}">← Choose Another Showtime</a>
+        <a class="btn btn-secondary" th:href="@{/staff/sales}"> Choose Another Showtime</a>
       </div>
 
       <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
@@ -200,7 +200,7 @@
               <button class="btn btn-primary" id="holdSeatsButton" type="submit" disabled
                       th:attr="data-can-sell=${canSell}"
                       style="width:100%;justify-content:center;">
-                Hold Seats &amp; Continue →
+                Hold Seats &amp; Continue
               </button>
               <p id="holdSeatsHint" style="font-size:11px;color:var(--text-muted);text-align:center;">
                 Select at least one seat to continue.

@@ -144,4 +144,17 @@ class LoyaltyServiceTest {
                 "Promo", null, "ACTIVE", now.minusDays(1), now.plusDays(1),
                 rankMin != null ? 9 : null, rankName, rankMin);
     }
+
+    @Test void rankSelectionHonorsBothBoundsAndUnlimitedTopRank() {
+        var calculator = new MembershipRankCalculator();
+        var standard = new MembershipRank(); standard.setMinPoints(0); standard.setMaxPoints(199);
+        var silver = new MembershipRank(); silver.setMinPoints(200); silver.setMaxPoints(null);
+        var ranks = java.util.List.of(standard, silver);
+        assertEquals(standard, calculator.currentRank(ranks, 0).orElseThrow());
+        assertEquals(standard, calculator.currentRank(ranks, 199).orElseThrow());
+        assertEquals(silver, calculator.currentRank(ranks, 200).orElseThrow());
+        assertEquals(silver, calculator.currentRank(ranks, Integer.MAX_VALUE).orElseThrow());
+        silver.setMinPoints(300);
+        assertTrue(calculator.currentRank(ranks, 250).isEmpty());
+    }
 }

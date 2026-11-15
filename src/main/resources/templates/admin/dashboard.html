@@ -51,7 +51,7 @@
     </div>
   </aside>
 <main class="admin-main">
-<header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div><div class="topbar-actions"><span class="profile-name" th:text="${adminDisplayName}">Admin</span><span class="admin-pill">ADMIN</span></div></header>
+<header class="admin-topbar"><div class="page-title">Admin / <strong>Dashboard</strong></div></header>
 <div class="admin-content dashboard-content">
 <div class="dashboard-heading"><div><span class="eyebrow">CINEORA / ADMIN CONSOLE</span><h1>Admin Dashboard</h1><p>Revenue, bookings and cinema activity at a glance.</p></div><div class="heading-actions"><a class="btn btn-secondary" th:href="@{/admin/customers}">Customer accounts</a><a class="btn btn-primary" th:href="@{/admin/dashboard(from=${dashboard != null ? dashboard.chartStart : null},to=${dashboard != null ? dashboard.chartEnd : null})}">Refresh dashboard &#8635;</a></div></div>
 <div class="dashboard-error" role="alert" th:if="${dashboardError}" th:text="${dashboardError}"></div>
@@ -96,7 +96,7 @@
 <section class="dashboard-panel account-summary"><h2>Account overview</h2><a th:href="@{/admin/customers}"><span>Customers</span><strong th:text="${d.customers}"></strong></a><a th:href="@{/admin/staffs}"><span>Staff &amp; managers</span><strong th:text="${d.staff}"></strong></a><a th:href="@{/admin/roles}"><span>System roles</span><strong th:text="${d.roles}"></strong></a><a th:href="@{/admin/customers}"><span>Locked / inactive accounts</span><strong th:text="${d.locked}"></strong></a></section></div>
 </div>
 </th:block>
-<nav class="dashboard-shortcuts" aria-label="Administration shortcuts"><a th:href="@{/admin/customers}">Customers &rarr;</a><a th:href="@{/admin/staffs}">Staff &amp; managers &rarr;</a><a th:href="@{/admin/roles}">Roles &amp; permissions &rarr;</a><a th:href="@{/admin/config}">System configuration &rarr;</a></nav>
+<nav class="dashboard-shortcuts" aria-label="Administration shortcuts"><a th:href="@{/admin/customers}">Customers </a><a th:href="@{/admin/staffs}">Staff &amp; managers </a><a th:href="@{/admin/roles}">Roles &amp; permissions </a><a th:href="@{/admin/config}">System configuration </a></nav>
 </div></main></div>
 <script th:src="@{/js/admin-revenue-filter.js(v='20261028-4')}" defer></script>
 <script>

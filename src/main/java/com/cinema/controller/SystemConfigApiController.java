@@ -251,6 +251,25 @@ public class SystemConfigApiController {
                 ));
     }
 
+    @PutMapping("/membership/ranks/ranges")
+    public ResponseEntity<?> updateRankRanges(@RequestBody com.fasterxml.jackson.databind.JsonNode body) {
+        requireCategory("MEMBERSHIP");
+        var ranges = new java.util.ArrayList<SystemConfigService.RankRange>();
+        if (body == null || !body.isArray() || body.isEmpty())
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Provide all rank ranges."));
+        for (var row : body) {
+            var id = row.get("rankId"); var min = row.get("minPoints"); var max = row.get("maxPoints");
+            if (id == null || !id.isIntegralNumber() || !id.canConvertToInt()
+                    || min == null || !min.isIntegralNumber() || !min.canConvertToInt() || min.intValue() < 0
+                    || max == null || (!max.isNull() && (!max.isIntegralNumber() || !max.canConvertToInt() || max.intValue() < 0)))
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Point bounds must be non-negative whole numbers; the highest maximum must be null."));
+            ranges.add(new SystemConfigService.RankRange(id.intValue(), min.intValue(), max.isNull() ? null : max.intValue()));
+        }
+        var result = service.updateRankRanges(ranges);
+        return ResponseEntity.status(result.success() ? 200 : 400)
+                .body(Map.of("success", result.success(), "message", result.message()));
+    }
+
     private static java.math.BigDecimal policyNumber(com.fasterxml.jackson.databind.JsonNode node, int scale, java.math.BigDecimal max) {
         if (node == null || !node.isNumber()) throw new IllegalArgumentException();
         var value = new java.math.BigDecimal(node.asText());

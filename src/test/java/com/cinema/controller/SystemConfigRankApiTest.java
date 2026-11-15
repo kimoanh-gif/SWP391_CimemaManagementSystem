@@ -80,4 +80,31 @@ class SystemConfigRankApiTest {
         verify(service).updateRankPolicy(2, 500, 1800, java.math.BigDecimal.TEN, 3, new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000"));
         verify(service).updateRankPolicy(3, 2000, null, java.math.BigDecimal.TEN, 3, new java.math.BigDecimal("100000"), new java.math.BigDecimal("50000"));
     }
+
+    @Test void rangeBatchRejectsMalformedBoundsBeforeServiceAndRequiresPermission() throws Exception {
+        var service = mock(SystemConfigService.class);
+        var controller = new SystemConfigApiController();
+        ReflectionTestUtils.setField(controller, "service", service);
+        var mapper = new ObjectMapper();
+        for (String json : new String[]{"null", "[]", "{}", "[null]",
+                "[{\"rankId\":1,\"minPoints\":0}]",
+                "[{\"rankId\":1,\"minPoints\":1.5,\"maxPoints\":null}]",
+                "[{\"rankId\":1,\"minPoints\":0,\"maxPoints\":2147483648}]"}) {
+            assertEquals(400, controller.updateRankRanges(mapper.readTree(json)).getStatusCode().value());
+        }
+        verifyNoInteractions(service);
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> controller.updateRankRanges(mapper.readTree("[]")));
+    }
+    @Test void batchResponseReflectsServiceValidation() throws Exception {
+        var service = mock(SystemConfigService.class);
+        var controller = new SystemConfigApiController();
+        ReflectionTestUtils.setField(controller, "service", service);
+        var body = new ObjectMapper().readTree("[{\"rankId\":1,\"minPoints\":0,\"maxPoints\":null}]");
+        when(service.updateRankRanges(anyList())).thenReturn(SystemConfigService.OperationResult.success("Saved"));
+        assertEquals(200, controller.updateRankRanges(body).getStatusCode().value());
+        when(service.updateRankRanges(anyList())).thenReturn(SystemConfigService.OperationResult.error("INVALID_THRESHOLD", "Gap"));
+        assertEquals(400, controller.updateRankRanges(body).getStatusCode().value());
+    }
 }

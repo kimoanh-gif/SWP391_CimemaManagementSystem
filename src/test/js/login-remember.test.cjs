@@ -4,11 +4,11 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const html=fs.readFileSync('src/main/resources/templates/auth/login.html','utf8');
 const script=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
-function fixture(storage=new Map(),identifier='',blocked=false){
+function fixture(storage=new Map(),identifier='',blocked=false,credentials=null){
  const events={};
  function control(id,value=''){return {value,checked:false,textContent:'',type:'text',addEventListener(name,fn){(events[id+':'+name]??=[]).push(fn);}};}
- const nodes={identifier:control('identifier',identifier),rememberIdentifier:control('rememberIdentifier'),loginForm:control('loginForm'),rememberHelp:control('rememberHelp'),password:control('password','never-store-this-password')};
- vm.runInNewContext(script,{document:{getElementById:id=>nodes[id]||null,querySelector:()=>null},localStorage:{getItem(key){if(blocked)throw Error('Blocked');return storage.get(key)||null;},setItem(key,value){if(blocked)throw Error('Blocked');storage.set(key,value);},removeItem(key){if(blocked)throw Error('Blocked');storage.delete(key);}},setTimeout(){}});
+ const nodes={identifier:control('identifier',identifier),rememberIdentifier:control('rememberIdentifier'),loginForm:control('loginForm'),rememberHelp:control('rememberHelp'),password:control('password',credentials ? '' : 'never-store-this-password'),fillSavedLogin:control('fillSavedLogin')};
+ vm.runInNewContext(script,{navigator:credentials ? {credentials} : {},PasswordCredential:credentials ? function(){} : undefined,document:{getElementById:id=>nodes[id]||null,querySelector:()=>null},localStorage:{getItem(key){if(blocked)throw Error('Blocked');return storage.get(key)||null;},setItem(key,value){if(blocked)throw Error('Blocked');storage.set(key,value);},removeItem(key){if(blocked)throw Error('Blocked');storage.delete(key);}},setTimeout(){}});
  return {nodes,storage,emit(id,event){for(const callback of events[id+':'+event]||[])callback();}};
 }
 test('checking remember stores identifier immediately and restores on next visit',()=>{
@@ -40,4 +40,10 @@ test('form supports native browser credential autofill',()=>{
  assert.match(html,/id="loginForm"[^>]*autocomplete="on"/);
  assert.match(html,/id="identifier"[^>]*autocomplete="username"/);
  assert.match(html,/id="password"[^>]*autocomplete="current-password"/);
+});
+
+test('login delegates password autofill to the browser without custom credential prompts',()=>{
+ assert.doesNotMatch(html,/fillSavedLogin|navigator\.credentials|id="rememberHelp"/);
+ assert.match(html,/autocomplete="username"/);assert.match(html,/autocomplete="current-password"/);
+ assert.doesNotMatch(html,/&rarr;|→|←/);
 });

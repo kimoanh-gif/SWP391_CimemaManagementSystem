@@ -28,7 +28,7 @@
       if (hint) {
         hint.textContent = !canSell ? "Only staff accounts can sell tickets."
           : selected.length === 0 ? "Select at least one seat to continue."
-          : "Seats will be held for 10 minutes.";
+          : `Seats will be held for ${Number(document.body.dataset.holdMinutes || 10)} minutes.`;
       }
     }
     boxes.forEach((box) => box.addEventListener("change", updateSeatSummary));

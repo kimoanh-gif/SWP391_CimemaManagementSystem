@@ -108,7 +108,7 @@
                         <span class="cm-chip"
                               th:text="${#numbers.formatDecimal(weeklyRevenueTotal, 1, 'POINT', 0, 'COMMA')} + ' ₫ / 7 days'">924.500.000 ₫ / week</span>
                     </div>
-                    <a class="cm-link" th:href="@{/manager/reports}">Full report →</a>
+                    <a class="cm-link" th:href="@{/manager/reports}">Full report </a>
                 </div>
                 <div class="cm-legend">
                     <span><i class="cm-swatch cm-swatch-red"></i>Ticket revenue (<span th:text="${ticketSharePercent}">68</span>%)</span>
@@ -130,7 +130,7 @@
             <div class="cm-card cm-showtimes">
                 <div class="cm-card-head cm-card-head-line">
                     <h2>Today's showtimes</h2>
-                    <a class="cm-link" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">View all →</a>
+                    <a class="cm-link" th:href="${permissionUser != null and permissionUser.hasPermission('showtime:manage')} ? @{/manager/showtimes} : null">View all </a>
                 </div>
                 <div class="cm-list">
                     <div class="cm-empty" th:if="${#lists.isEmpty(todayShowtimes)}">

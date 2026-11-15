@@ -212,6 +212,9 @@ public class SystemSettingDAO {
     }
 
     private void seedSystemSettings() {
+        jdbcTemplate.update("UPDATE dbo.SystemSetting SET SettingKey='BOOKING_SEAT_HOLD_MINUTES' WHERE SettingKey='BOOKING_HOLD_MINUTES' AND NOT EXISTS (SELECT 1 FROM dbo.SystemSetting WHERE SettingKey='BOOKING_SEAT_HOLD_MINUTES')");
+        // Restore legacy booking keys in the System tab without overwriting saved values.
+        jdbcTemplate.update("UPDATE dbo.SystemSetting SET Category='SYSTEM', IsActive=1 WHERE SettingKey IN ('BOOKING_SEAT_HOLD_MINUTES','BOOKING_MAX_TICKETS')");
         for (var rule : com.cinema.service.SystemSecuritySettings.RULES) {
             seedIfNotExists(rule.key(), rule.name(), "SYSTEM", "NUMBER", String.valueOf(rule.defaultValue()),
                     String.valueOf(rule.defaultValue()), rule.unit(), "min:" + rule.min() + ",max:" + rule.max());

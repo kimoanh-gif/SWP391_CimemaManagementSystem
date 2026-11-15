@@ -68,7 +68,7 @@ public class SystemConfigService implements CommandLineRunner {
      * Get all settings as flat list.
      */
     public List<SystemSetting> getAllSettings() {
-        return systemSettingDAO.findActive().stream().filter(this::visibleSetting).toList();
+        return systemSettingDAO.findActive();
     }
 
     /**
@@ -446,7 +446,53 @@ public class SystemConfigService implements CommandLineRunner {
             if (i > index && (maxPoints == null || maxPoints >= ranks.get(i).getMinPoints()))
                 return ValidationResult.error("INVALID_THRESHOLD", "Maximum points must be below the next rank's minimum. Only the highest rank can be unlimited.");
         }
+        if (index == 0 && minPoints != 0)
+            return ValidationResult.error("INVALID_THRESHOLD", "The lowest rank must start at 0 points.");
+        if (index > 0 && (ranks.get(index - 1).getMaxPoints() == null
+                || (long) ranks.get(index - 1).getMaxPoints() + 1 != minPoints))
+            return ValidationResult.error("INVALID_THRESHOLD", "Minimum points must equal the previous rank's maximum plus 1; gaps are not allowed.");
+        if (index == ranks.size() - 1 && maxPoints != null)
+            return ValidationResult.error("INVALID_THRESHOLD", "The highest rank must have no maximum points.");
+        if (index < ranks.size() - 1 && (maxPoints == null
+                || (long) maxPoints + 1 != ranks.get(index + 1).getMinPoints()))
+            return ValidationResult.error("INVALID_THRESHOLD", "Maximum points must equal the next rank's minimum minus 1; gaps are not allowed.");
         return ValidationResult.success();
+    }
+
+    public record RankRange(int rankId, int minPoints, Integer maxPoints) {}
+
+    @org.springframework.transaction.annotation.Transactional
+    public OperationResult updateRankRanges(List<RankRange> ranges) {
+        membershipRankDAO.lockThresholds();
+        var ranks = new ArrayList<>(membershipRankDAO.findAll());
+        ranks.sort(Comparator.comparingInt(MembershipRank::getMinPoints));
+        if (ranges == null || ranges.size() != ranks.size() || ranks.isEmpty())
+            return OperationResult.error("INVALID_THRESHOLD", "Provide every membership rank exactly once.");
+        Map<Integer, RankRange> proposed = new HashMap<>();
+        for (var range : ranges) {
+            if (range == null || proposed.putIfAbsent(range.rankId(), range) != null)
+                return OperationResult.error("INVALID_THRESHOLD", "Duplicate or missing membership rank.");
+        }
+        long next = 0;
+        for (int i = 0; i < ranks.size(); i++) {
+            var range = proposed.get(ranks.get(i).getRankId());
+            if (range == null || range.minPoints() < 0 || range.minPoints() != next)
+                return OperationResult.error("INVALID_THRESHOLD", "Rank ranges must start at 0 and be contiguous in rank order; gaps and overlaps are not allowed.");
+            if (i == ranks.size() - 1) {
+                if (range.maxPoints() != null)
+                    return OperationResult.error("INVALID_THRESHOLD", "The highest rank must have no maximum points.");
+            } else {
+                if (range.maxPoints() == null || range.maxPoints() < range.minPoints())
+                    return OperationResult.error("INVALID_THRESHOLD", "Each lower rank needs a maximum at least equal to its minimum.");
+                next = (long) range.maxPoints() + 1;
+            }
+        }
+        for (var rank : ranks) {
+            var range = proposed.get(rank.getRankId());
+            if (membershipRankDAO.updateThreshold(rank.getRankId(), range.minPoints(), range.maxPoints()) != 1)
+                throw new org.springframework.dao.DataAccessResourceFailureException("Failed to save membership ranges.");
+        }
+        return OperationResult.success("All membership point ranges saved.");
     }
 
     /**
@@ -455,56 +501,9 @@ public class SystemConfigService implements CommandLineRunner {
      * Exception E4: Invalid Membership Threshold
      */
     public ValidationResult validateMembershipThreshold(int rankId, int newMinPoints) {
-        List<MembershipRank> allRanks = new ArrayList<>(membershipRankDAO.findAll());
-        allRanks.sort(Comparator.comparingInt(MembershipRank::getMinPoints));
-
-        // Find current rank position
-        int currentIndex = -1;
-        for (int i = 0; i < allRanks.size(); i++) {
-            if (allRanks.get(i).getRankId() == rankId) {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        if (currentIndex == -1) {
-            return ValidationResult.error("NOT_FOUND", "Rank not found.");
-        }
-
-        MembershipRank current = allRanks.get(currentIndex);
-        if (current.getMaxPoints() != null && newMinPoints > current.getMaxPoints()) {
-            return ValidationResult.error("INVALID_THRESHOLD", "Minimum points cannot exceed this rank's maximum points.");
-        }
-
-        // Check lower bound (previous rank's max + 1)
-        if (currentIndex > 0) {
-            MembershipRank prevRank = allRanks.get(currentIndex - 1);
-            if (prevRank.getMaxPoints() != null && newMinPoints <= prevRank.getMaxPoints()) {
-                return ValidationResult.error("INVALID_THRESHOLD", "Minimum points must be greater than the previous rank's maximum (" + prevRank.getMaxPoints() + ").");
-            }
-            if (newMinPoints <= prevRank.getMinPoints()) {
-                return ValidationResult.error("INVALID_THRESHOLD", 
-                        "New threshold (" + newMinPoints + ") must be greater than " + 
-                        prevRank.getDisplayName() + " threshold (" + prevRank.getMinPoints() + ").");
-            }
-        }
-
-        // Check upper bound (next rank's min - 1)
-        if (currentIndex < allRanks.size() - 1) {
-            MembershipRank nextRank = allRanks.get(currentIndex + 1);
-            if (nextRank.getMinPoints() != null && newMinPoints >= nextRank.getMinPoints()) {
-                return ValidationResult.error("INVALID_THRESHOLD", 
-                        "New threshold (" + newMinPoints + ") must be less than " + 
-                        nextRank.getDisplayName() + " threshold (" + nextRank.getMinPoints() + ").");
-            }
-        }
-
-        // Non-negative check
-        if (newMinPoints < 0) {
-            return ValidationResult.error("INVALID_THRESHOLD", "Threshold cannot be negative.");
-        }
-
-        return ValidationResult.success();
+        var rank = membershipRankDAO.findAll().stream().filter(r -> r.getRankId() == rankId).findFirst();
+        return rank.map(r -> validateMembershipThreshold(rankId, newMinPoints, r.getMaxPoints()))
+                .orElseGet(() -> ValidationResult.error("NOT_FOUND", "Rank not found."));
     }
 
     /**

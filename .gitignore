@@ -77,4 +77,15 @@ audit_test_results.json
 uploads/movies/
 uploads/fb/
 
+# Local test plans, review documents and generated diagrams
+# Keep these after !*.md so new documentation remains ignored.
+/docs/*.md
+!/docs/README.md
+/docs/diagrams/
+/docs/testing/
+/outputs/
+/test-audit/
+/test-results/
+/testing-reports/
+
 

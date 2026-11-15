@@ -121,7 +121,8 @@ public class StaffWorkspaceController {
             model.addAttribute("user", sessionService.getCurrentUser(session));
             model.addAttribute("showtime", counterSalesService.showtime(showtimeId));
             model.addAttribute("seats", counterSalesService.seats(showtimeId));
-            model.addAttribute("maxSeats", 10);
+            model.addAttribute("maxSeats", counterSalesService.maxSeatsPerBooking());
+            model.addAttribute("holdMinutes", counterSalesService.seatHoldMinutes());
             model.addAttribute("canSell", counterSalesService.canSell(accountId));
             return "staff/sales-seats";
         } catch (CustomerBookingService.BookingException | ResponseStatusException exception) {

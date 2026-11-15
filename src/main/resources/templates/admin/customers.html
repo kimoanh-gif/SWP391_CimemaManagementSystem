@@ -754,13 +754,8 @@ function showToast(message, type) {
   setTimeout(() => t.classList.remove('show'), 4000);
 }
 
-// Close modals on overlay click
-document.querySelectorAll('.modal-overlay, .confirm-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
-});
-document.getElementById('detailPanel').addEventListener('click', e => {
-  if (e.target === document.getElementById('detailPanel')) closeDetail();
-});
+// Account dialogs close only through their explicit controls or a successful action.
+
 </script>
 </body>
 </html>

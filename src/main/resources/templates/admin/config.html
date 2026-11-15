@@ -312,7 +312,7 @@ function renderSystemSettings() {
       <div class="setting-card-header">
         <div>
           <h3>System Settings</h3>
-          <p class="setting-desc">Configure security and authentication rules. Saved values apply to new requests; issued OTP codes keep their original expiry.</p>
+          <p class="setting-desc">Configure booking limits, security and authentication. Seat hold duration and ticket limits apply to new seat selections. Existing holds and issued OTP codes keep their original expiry.</p>
         </div>
         <span class="setting-badge system">SYSTEM</span>
       </div>
@@ -350,7 +350,7 @@ function renderSettingItem(setting) {
         ${inputType === 'checkbox' ? `<input type="checkbox" class="setting-checkbox" id="input-${setting.settingId}"
           ${value === 'true' || value === '1' ? 'checked' : ''} ${readonly ? 'disabled' : ''}
           onchange="handleInputChange(${setting.settingId}, this.checked ? 'true' : 'false')">` :
-        `<input type="${inputType}" ${inputType === 'number' ? (isDiscountCap || setting.category === 'SYSTEM' ? 'step="1"' : 'step="any"') : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
+        `<input type="${inputType}" ${inputType === 'number' ? (isDiscountCap || ['SYSTEM', 'VOUCHER'].includes(setting.category) ? 'step="1"' : 'step="any"') : ''} class="setting-input" id="input-${setting.settingId}" value="${escHtml(value)}"
           aria-describedby="${hint ? 'hint-' + setting.settingId + ' ' : ''}error-${setting.settingId}" ${readonly ? 'disabled' : ''}
           ${min !== undefined ? `min="${min}"` : ''} ${max !== undefined ? `max="${max}"` : ''}
           oninput="handleInputChange(${setting.settingId}, this.value)">`}
@@ -395,9 +395,11 @@ function dirtySettings(category) {
 }
 
 function updateSaveState(category) {
-  const count = dirtySettings(category).length;
+  const changes = dirtySettings(category);
+  const count = changes.length;
+  const invalid = changes.some(setting => settingValidationMessage(setting, currentValues[setting.settingId]));
   const busy = savingCategory !== null;
-  document.getElementById('save-' + category).disabled = busy || count === 0;
+  document.getElementById('save-' + category).disabled = busy || count === 0 || invalid;
   document.getElementById('discard-' + category).disabled = busy || count === 0;
   document.getElementById('save-' + category).textContent = savingCategory === category ? 'Saving…' : 'Save changes';
   const status = document.getElementById('status-' + category);
@@ -407,8 +409,30 @@ function updateSaveState(category) {
 
 function handleInputChange(settingId, value) {
   currentValues[settingId] = value;
-  showSettingError(settingId, '');
-  updateSaveState(findSetting(settingId).category);
+  const setting = findSetting(settingId);
+  showSettingError(settingId, settingValidationMessage(setting, value));
+  updateSaveState(setting.category);
+}
+
+function settingValidationMessage(setting, raw) {
+  const value = String(raw ?? '').trim();
+  const rules = setting.validationRules || '';
+  const input = document.getElementById('input-' + setting.settingId);
+  if (rules.includes('readonly')) return '';
+  if (input?.validity?.badInput) return 'Enter a valid number.';
+  if (!value && (setting.valueType === 'NUMBER' || rules.includes('required'))) return 'This field is required.';
+  if (setting.valueType === 'NUMBER') {
+    const whole = ['VOUCHER', 'SYSTEM'].includes(setting.category) || setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT';
+    if (whole && !/^\d+$/.test(value)) return 'Enter a non-negative whole number (no decimals or exponents).';
+    const number = Number(value);
+    if (!Number.isFinite(number) || (whole && !Number.isSafeInteger(number))) return 'Enter a valid number within the allowed range.';
+    const min = rules.match(/min:([\d.-]+)/)?.[1];
+    const max = rules.match(/max:([\d.-]+)/)?.[1];
+    if (min !== undefined && number < Number(min)) return 'Value must be at least ' + min + '.';
+    if (max !== undefined && number > Number(max)) return 'Value must not exceed ' + max + '.';
+  }
+  if (input && !input.checkValidity()) return input.validationMessage || 'Enter a valid value.';
+  return '';
 }
 
 function showSettingError(settingId, message) {
@@ -449,10 +473,9 @@ async function saveCategory(category) {
   let invalid = false;
   for (const setting of changes) {
     const input = document.getElementById('input-' + setting.settingId);
-    const invalidCap = setting.settingKey === 'VOUCHER_MAX_DISCOUNT_AMOUNT' && !/^[0-9]{1,12}$/.test(input.value);
-    const invalidSystem = setting.category === 'SYSTEM' && !/^[0-9]{1,9}$/.test(input.value);
-    if (invalidSystem || invalidCap || !input.checkValidity() || (input.type === 'number' && input.value.trim() === '')) {
-      showSettingError(setting.settingId, input.validationMessage || 'Enter a valid number.');
+    const message = settingValidationMessage(setting, currentValues[setting.settingId]);
+    if (message) {
+      showSettingError(setting.settingId, message);
       if (!invalid) input.focus();
       invalid = true;
     }
@@ -502,9 +525,9 @@ function renderMembershipRanks() {
   const ranks = orderedRanks();
   document.getElementById('membership-ranks').innerHTML = `<div class="membership-heading">
     <div><span class="voucher-eyebrow">MEMBERSHIP RANKS</span><h2>Membership ranks</h2><p>Configure rank points and member discounts.</p></div>
-    <span class="membership-count">${ranks.length} ranks</span>
+    <span class="membership-count">${ranks.length} ranks</span><button type="button" class="btn btn-primary" onclick="saveAllRankRanges()">Save all point ranges</button>
   </div>
-  <div class="membership-rule">Points must be non-negative whole numbers. Maximum must be at least minimum, and rank ranges must not overlap. Leave maximum blank for unlimited on the highest rank only. Uses are per customer per rank with no reset; 0 disables member discounts. Money is whole VND. Member discounts do not stack with vouchers. Click Save on each row.</div>
+  <div class="membership-rule">Points must be non-negative whole numbers. Start the lowest rank at 0, leave the highest maximum blank, and set each next minimum to the previous maximum plus 1. Use Save all point ranges when changing adjacent boundaries. Uses are per customer per rank with no reset; 0 disables member discounts. Money is whole VND. Member discounts do not stack with vouchers. Click Save on each row.</div>
   <p class="membership-rule">The six-month spending threshold is calculated from the saved minimum points. The system compares it with the customer's total from paid bookings in the previous cycle.</p>
   <div class="membership-table-wrap"><table class="membership-table">
     <thead><tr><th scope="col">Membership rank</th><th scope="col">Minimum points</th><th scope="col">Maximum points</th><th scope="col">Six-month spending threshold (VND)</th>${rankPolicyFields.map(f => `<th scope="col">${f.label}</th>`).join('')}<th scope="col">Actions</th></tr></thead>
@@ -575,7 +598,50 @@ function rankValidationMessage(rankId, raw) {
   }
   if (index < ranks.length - 1 && (maximum === null || maximum >= ranks[index + 1].minPoints))
     return 'Maximum must be below the next rank’s minimum. Only the highest rank may be unlimited.';
+  if (index === 0 && points !== 0) return 'The lowest rank must start at 0 points.';
+  if (index > 0 && points !== Number(ranks[index - 1].maxPoints) + 1)
+    return 'Minimum points must equal the previous maximum plus 1; gaps are not allowed.';
+  if (index === ranks.length - 1 && maximum !== null) return 'Maximum must be blank for the highest rank.';
+  if (index < ranks.length - 1 && maximum + 1 !== ranks[index + 1].minPoints)
+    return 'Maximum must equal the next minimum minus 1; gaps are not allowed.';
   return '';
+}
+async function saveAllRankRanges() {
+  if (savingRankId !== null) return;
+  const ranges = [];
+  let next = 0;
+  const ranks = orderedRanks();
+  for (let i = 0; i < ranks.length; i++) {
+    const rank = ranks[i];
+    const min = String(rankInputs[rank.rankId] ?? rank.minPoints).trim();
+    const max = String(rankMaxInputs[rank.rankId] ?? rank.maxPoints ?? '').trim();
+    let error = '';
+    if (!/^\d+$/.test(min) || Number(min) > 2147483647 || Number(min) !== next)
+      error = 'Minimum points must be ' + next + ' to avoid gaps or overlaps.';
+    else if (i === ranks.length - 1 ? max !== '' : (!/^\d+$/.test(max) || Number(max) > 2147483647 || Number(max) < Number(min)))
+      error = i === ranks.length - 1 ? 'Maximum must be blank for the highest rank.' : 'Maximum must be a whole number at least equal to minimum.';
+    if (error) { showRankError(rank.rankId, error); showToast(error, 'error'); return; }
+    ranges.push({rankId:rank.rankId, minPoints:Number(min), maxPoints:max === '' ? null : Number(max)});
+    next = Number(max) + 1;
+  }
+  savingRankId = -1;
+  document.getElementById('membership-ranks').querySelectorAll('input, button').forEach(c => c.disabled = true);
+  try {
+    const response = await fetch('/api/admin/config/membership/ranks/ranges', {
+      method:'PUT', headers:{'Content-Type':'application/json', ...getCsrfHeaders()}, body:JSON.stringify(ranges)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.message || 'Unable to save point ranges.');
+    for (const range of ranges) {
+      Object.assign(membershipRanks.find(r => r.rankId === range.rankId), range);
+      delete rankMaxInputs[range.rankId];
+      if (rankPolicyInputs[range.rankId]) rankInputs[range.rankId] = String(range.minPoints);
+      else delete rankInputs[range.rankId];
+    }
+    await loadMembershipRanks();
+    showToast('All point ranges saved. Discount drafts are saved separately on each row.', 'success');
+  } catch (error) { showToast(error.message, 'error'); }
+  finally { savingRankId = null; renderMembershipRanks(); }
 }
 function showRankError(rankId, message) {
   const field = rankPolicyFields.find(f => message.startsWith(f.label + ':'));

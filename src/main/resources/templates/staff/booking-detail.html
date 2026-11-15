@@ -27,7 +27,7 @@
           <h1 th:text="'Booking ' + ${booking.bookingCode}">Booking Details</h1>
         </div>
         <div class="heading-actions">
-          <a class="btn btn-secondary" th:href="@{/staff/bookings}">← Back to Bookings</a>
+          <a class="btn btn-secondary" th:href="@{/staff/bookings}"> Back to Bookings</a>
           <a class="btn btn-primary" th:if="${booking.status == 'CONFIRMED'}"
              th:href="@{/staff/bookings/{id}/print(id=${booking.bookingId})}">🖨 Print Tickets &amp; Receipt</a>
           <span class="badge"
