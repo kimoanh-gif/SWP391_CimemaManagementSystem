@@ -291,6 +291,21 @@
             grid-column: 1 / -1;
         }
 
+        .seating-grid-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            background: #F9FAFB;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .seating-grid-row .form-field-input {
+            background: #FFFFFF;
+        }
+
         .form-field-label {
             font-size: 13px;
             font-weight: 600;
@@ -731,39 +746,32 @@
                         <hr />
                     </div>
 
-                    <!-- Row 3: Total Rows & Seats Per Row -->
-                    <div class="form-field">
-                        <label class="form-field-label">
-                            <span>Number of rows <span class="req">*</span></span>
-                            <span class="badge-tip">Rows</span>
-                        </label>
-                        <input type="number" id="field-totalRows" name="totalRows" min="1" max="100" required
-                            placeholder="e.g. 10" class="form-field-input" />
-                    </div>
-                    <div class="form-field">
-                        <label class="form-field-label">
-                            <span>Seats per row <span class="req">*</span></span>
-                            <span class="badge-tip">Seats/row</span>
-                        </label>
-                        <input type="number" id="field-seatsPerRow" name="seatsPerRow" min="1" max="100" required
-                            placeholder="e.g. 12" class="form-field-input" />
-                    </div>
-
-                    <!-- Row 4: Capacity & Screen size -->
-                    <div class="form-field">
-                        <label class="form-field-label">
-                            <span>Capacity (total seats) <span class="req">*</span></span>
-                            <span class="badge-tip" id="calc-hint-text">Rows × Seats/row</span>
-                        </label>
-                        <input type="number" id="field-capacity" name="capacity" min="1" max="5000" required
-                            placeholder="e.g. 120" class="form-field-input" />
-                    </div>
-                    <div class="form-field">
-                        <label class="form-field-label">
-                            <span>Screen size</span>
-                        </label>
-                        <input type="text" name="screenSize" placeholder="e.g. 26.5m x 15.2m"
-                            class="form-field-input" />
+                    <!-- 3-Column Seating Grid: Rows × Seats/row = Capacity -->
+                    <div class="seating-grid-row">
+                        <div class="form-field">
+                            <label class="form-field-label">
+                                <span>Rows <span class="req">*</span></span>
+                                <span class="badge-tip">Total rows</span>
+                            </label>
+                            <input type="number" id="field-totalRows" name="totalRows" min="1" max="100" required
+                                placeholder="e.g. 10" class="form-field-input" />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-field-label">
+                                <span>Seats / row <span class="req">*</span></span>
+                                <span class="badge-tip">Per row</span>
+                            </label>
+                            <input type="number" id="field-seatsPerRow" name="seatsPerRow" min="1" max="100" required
+                                placeholder="e.g. 12" class="form-field-input" />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-field-label">
+                                <span>Capacity <span class="req">*</span></span>
+                                <span class="badge-tip" id="calc-hint-text">Total seats</span>
+                            </label>
+                            <input type="number" id="field-capacity" name="capacity" min="1" max="5000" required
+                                placeholder="e.g. 120" class="form-field-input" />
+                        </div>
                     </div>
 
                     <!-- Interactive Calculation Notice -->

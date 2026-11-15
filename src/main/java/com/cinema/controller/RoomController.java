@@ -85,36 +85,6 @@ public class RoomController {
         model.addAttribute("endItem", end);
     }
 
-    @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("roomForm") RoomForm form,
-                       BindingResult result,
-                       Model model,
-                       RedirectAttributes redirectAttributes,
-                       jakarta.servlet.http.HttpServletRequest request) {
-        ManagerSecurityUtils.verifyManagerAccess(request);
-        if (result.hasErrors()) {
-            String errorMsg = result.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
-                    .findFirst()
-                    .orElse("Invalid input data");
-            populatePaginatedRoomModel(roomService.getAll(null, null), null, null, 1, 9, model);
-            model.addAttribute("errorMessage", errorMsg);
-            return "manager/rooms"; // redisplay list with error and required model attributes
-        }
-        try {
-            if (form.getRoomId() == null) {
-                roomService.create(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Screening room created successfully");
-            } else {
-                roomService.update(form);
-                redirectAttributes.addFlashAttribute("successMessage", "Screening room updated successfully");
-            }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/manager/rooms"; // PRG pattern
-    }
-
     @PostMapping("/deactivate/{id}")
     public String deactivate(@PathVariable int id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes, jakarta.servlet.http.HttpServletRequest request) {
         ManagerSecurityUtils.verifyManagerAccess(request);

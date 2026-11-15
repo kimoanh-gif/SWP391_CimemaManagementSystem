@@ -14,27 +14,6 @@
             width: 100%;
         }
 
-        .pricing-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .pricing-tab-btn {
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid var(--border);
-            background: #fff;
-            color: var(--text-700);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .pricing-tab-btn.active {
-            background: #D92332;
-            color: #fff;
-            border-color: #D92332;
-        }
 
         .matrix-table {
             width: 100%;
@@ -329,21 +308,8 @@
         <!-- Left: Matrix Table & Surcharge Cards -->
         <div style="display:flex;flex-direction:column;gap:20px;">
 
-            <!-- Tabs selector -->
-            <div class="pricing-tabs">
-                <button type="button" class="pricing-tab-btn active">Standard rooms (2D/3D)</button>
-                <button type="button" class="pricing-tab-btn">IMAX Laser &amp; Dolby Atmos rooms</button>
-            </div>
-
             <!-- Table Container -->
             <div class="table-wrapper">
-                <div class="table-header">
-                    <div>
-                        <span class="table-header-title">Seat type × time slot price matrix</span>
-                        <div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">● Effective from 01/05/2026 – no end date</div>
-                    </div>
-                    <span class="badge badge-blue">Unit: VND</span>
-                </div>
 
                 <div style="width:100%;overflow:hidden;">
                     <table class="matrix-table">

@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             form.capacity.value = room.capacity || '';
             form.projector.value = room.projector || '';
             form.soundSystem.value = room.soundSystem || '';
-            form.screenSize.value = room.screenSize || '';
+            if (form.screenSize) form.screenSize.value = room.screenSize || '';
             form.status.value = room.status || 'Ready';
             form.description.value = room.description || '';
             updateCapacityCalculation(false);

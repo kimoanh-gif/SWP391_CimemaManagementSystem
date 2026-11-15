@@ -169,26 +169,6 @@ public class FBItemController {
         return "redirect:/manager/fb";
     }
 
-    @PostMapping("/{id}/price")
-    public String updatePrice(
-            @PathVariable int id,
-            @RequestParam BigDecimal sellingPrice,
-            RedirectAttributes redirectAttributes,
-            HttpServletRequest request
-    ) {
-        ManagerSecurityUtils.verifyManagerAccess(request);
-
-        try {
-            FBItem item = fbItemService.updatePrice(id, sellingPrice);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Selling price for '" + item.getItemName() + "' updated successfully!");
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating price: " + ex.getMessage());
-        }
-
-        return "redirect:/manager/fb";
-    }
-
     @PostMapping("/{id}/status")
     public String toggleStatus(
             @PathVariable int id,

@@ -120,15 +120,6 @@ public class ShowtimeApiController {
         return ResponseEntity.ok(ApiResponse.ok("Showtime stopped successfully (BR-54)", stopped));
     }
 
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<ApiResponse<Showtime>> cancelShowtime(
-            @PathVariable int id,
-            HttpServletRequest request) {
-        ManagerSecurityUtils.verifyManagerAccess(request);
-        Showtime cancelled = showtimeService.cancelShowtime(id);
-        return ResponseEntity.ok(ApiResponse.ok("Showtime cancelled successfully", cancelled));
-    }
-
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(
             org.springframework.web.bind.MethodArgumentNotValidException ex) {
