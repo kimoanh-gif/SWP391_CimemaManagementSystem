@@ -3,6 +3,7 @@ package com.cinema.controller;
 import com.cinema.model.BookingSummary;
 import com.cinema.model.AuthenticatedUser;
 import com.cinema.model.PaymentView;
+import com.cinema.model.SeatOption;
 import com.cinema.model.StaffBookingDetail;
 import com.cinema.model.StaffBookingPage;
 import com.cinema.model.StaffBookingPrint;
@@ -33,6 +34,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -120,7 +122,20 @@ public class StaffWorkspaceController {
         try {
             model.addAttribute("user", sessionService.getCurrentUser(session));
             model.addAttribute("showtime", counterSalesService.showtime(showtimeId));
-            model.addAttribute("seats", counterSalesService.seats(showtimeId));
+            List<SeatOption> seats = counterSalesService.seats(showtimeId);
+            model.addAttribute("seats", seats);
+            // Same row / centre-aisle layout as the Manager seat map (SeatController).
+            Map<String, List<SeatOption>> seatsByRow = new LinkedHashMap<>();
+            Map<String, String> seatTypeColors = new LinkedHashMap<>();
+            int maxSeatNumber = 0;
+            for (SeatOption seat : seats) {
+                seatsByRow.computeIfAbsent(seat.getRowLabel(), k -> new ArrayList<>()).add(seat);
+                seatTypeColors.putIfAbsent(seat.getTypeName(), seat.getColorCode());
+                maxSeatNumber = Math.max(maxSeatNumber, seat.getSeatNumber());
+            }
+            model.addAttribute("seatsByRow", seatsByRow);
+            model.addAttribute("seatTypeColors", seatTypeColors);
+            model.addAttribute("midPoint", maxSeatNumber > 0 ? maxSeatNumber / 2 : 4);
             model.addAttribute("maxSeats", counterSalesService.maxSeatsPerBooking());
             model.addAttribute("holdMinutes", counterSalesService.seatHoldMinutes());
             model.addAttribute("canSell", counterSalesService.canSell(accountId));
