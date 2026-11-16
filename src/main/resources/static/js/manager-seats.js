@@ -13,12 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initRowSelection();
     initKeyboardShortcuts();
 
-    const seatModal = document.getElementById('seatModal');
-    window.addEventListener('click', (e) => {
-        if (e.target === seatModal) {
-            closeSeatModal();
-        }
-    });
 });
 
 /**

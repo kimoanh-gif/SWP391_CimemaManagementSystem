@@ -462,18 +462,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Close on backdrop click
-    ["movieModalBackdrop", "movieDetailModalBackdrop"].forEach(function (id) {
-        var backdrop = document.getElementById(id);
-        if (backdrop) {
-            backdrop.addEventListener("click", function (e) {
-                if (e.target === this) {
-                    this.classList.remove("open");
-                }
-            });
-        }
-    });
-
     // Wireup image upload and preview
     var posterFile = document.getElementById("moviePosterFile");
     if (posterFile) {

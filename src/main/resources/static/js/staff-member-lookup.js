@@ -23,10 +23,6 @@
     input.focus();
   });
   closeButton.addEventListener("click", () => dialog.close());
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const value = input.value.trim();

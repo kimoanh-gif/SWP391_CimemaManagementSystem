@@ -15,7 +15,7 @@
             <dl class="pass-details"><div><dt>Date</dt><dd th:text="${#temporals.format(ticket.startTime,'dd/MM/yyyy')}">20/02/2026</dd></div><div><dt>Showtime</dt><dd th:text="${#temporals.format(ticket.startTime,'HH:mm')}">10:30</dd></div><div><dt>Auditorium</dt><dd th:text="${ticket.roomName}">Room 1</dd></div><div><dt>Seat</dt><dd class="seat-value" th:text="${ticket.seatLabel}">F7</dd></div></dl>
           </div>
         </div>
-        <footer class="pass-footer"><div><small>Booking code</small><b th:text="${ticket.bookingCode}">BK00001</b></div><div><small>Ticket number</small><b th:text="${'#' + ticket.ticketId}">#1</b></div><div><small>Admission</small><b>One person</b></div></footer>
+        <footer class="pass-footer"><div><small>Booking code</small><b th:text="${ticket.bookingCode}">BK00001</b></div><div><small>Ticket ID for counter</small><b th:text="${ticket.ticketCode()}">TK-00000000</b></div><div><small>Admission</small><b>One person</b></div></footer>
       </section>
       <aside class="pass-stub"><p><b>SCAN TO ENTER</b><small>Present this code at the cinema entrance scanner</small></p><div class="ticket-verification-qr pass-qr" th:attr="data-ticket-code=${ticket.ticketCode}" aria-label="Digital ticket entry QR code"></div><em>Valid for one admission</em><div class="visible-ticket-code"><small>TICKET CODE</small><strong th:text="${ticket.ticketCode}">TK-00000001</strong><p>Provide this code at the counter</p></div><div class="stub-status"><span>●</span> <b th:text="${ticket.ticketStatus}">VALID</b></div></aside>
     </article>

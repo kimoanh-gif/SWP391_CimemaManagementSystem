@@ -252,12 +252,6 @@ function initTrailerModal() {
         closeBtn.addEventListener('click', window.closeTrailer);
     }
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            window.closeTrailer();
-        }
-    });
-
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('open')) {
             window.closeTrailer();

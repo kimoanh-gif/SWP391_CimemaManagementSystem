@@ -64,15 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Close on clicking backdrop
-    window.addEventListener('click', (e) => {
-        if (e.target === seatTypeModal) {
-            closeSeatTypeModal();
-        }
-        if (e.target === multiplierModal) {
-            closeMultiplierModal();
-        }
-    });
 });
 
 function closeSeatTypeModal() {

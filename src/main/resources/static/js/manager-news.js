@@ -45,9 +45,6 @@
       close(closer.closest(".mn-backdrop"));
       return;
     }
-    if (event.target.classList.contains("mn-backdrop") && !event.target.hidden && event.target.id !== "detail-modal") {
-      close(event.target);
-    }
   });
 
   document.addEventListener("keydown", function (event) {

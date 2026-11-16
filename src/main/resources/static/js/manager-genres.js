@@ -217,19 +217,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Close modal when clicking backdrop outside modal box
-    var genreModalBackdrop = document.getElementById("genreModalBackdrop");
-    var moviesModalBackdrop = document.getElementById("moviesModalBackdrop");
-    [genreModalBackdrop, moviesModalBackdrop].forEach(function (backdrop) {
-        if (backdrop) {
-            backdrop.addEventListener("click", function (e) {
-                if (e.target === this) {
-                    this.classList.remove("open");
-                }
-            });
-        }
-    });
-
     // Form submission via AJAX API with fallback
     if (genreForm) {
         genreForm.addEventListener("submit", async function (e) {

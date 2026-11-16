@@ -159,10 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (addBtn) addBtn.addEventListener('click', () => openModal());
     closeBtns.forEach(btn => btn.addEventListener('click', closeModal));
-    modal.addEventListener('click', e => {
-        if (e.target === modal) closeModal();
-    });
-
     // Edit buttons – delegated event
     document.querySelectorAll('.edit-room-btn').forEach(btn => {
         btn.addEventListener('click', async e => {

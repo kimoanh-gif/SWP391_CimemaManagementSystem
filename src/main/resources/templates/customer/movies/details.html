@@ -248,7 +248,7 @@
 <div th:replace="~{fragments/cinema-header-footer :: toast}"></div>
 <div th:replace="~{fragments/cinema-header-footer :: footer}"></div>
 <th:block th:replace="~{fragments/cinema-header-footer :: scripts}"></th:block>
-<script>document.querySelectorAll('[data-report-dialog]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.dataset.reportDialog).showModal()})});document.querySelectorAll('.review-report-dialog').forEach(function(d){d.querySelectorAll('.review-report-close,.review-report-cancel').forEach(function(b){b.addEventListener('click',function(){d.close()})});d.addEventListener('click',function(e){if(e.target===d)d.close()})});</script>
+<script>document.querySelectorAll('[data-report-dialog]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.dataset.reportDialog).showModal()})});document.querySelectorAll('.review-report-dialog').forEach(function(d){d.querySelectorAll('.review-report-close,.review-report-cancel').forEach(function(b){b.addEventListener('click',function(){d.close()})})});</script>
 
 </body>
 </html>

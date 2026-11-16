@@ -1310,53 +1310,67 @@ UPDATE dbo.Promotion SET BannerURL=N'https://images.unsplash.com/photo-148959984
 WHERE [Name]=N'New Member Offer' AND (BannerURL IS NULL OR BannerURL=N'');
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Showtime)
+/* Keep every Now Showing movie bookable from its detail page for today and
+   the following four days. Re-running this script only fills missing movie/dates. */
+DECLARE @SeedDate DATE, @SeedMovieID INT, @SeedDuration INT, @SeedRoomID INT;
+DECLARE @SeedStart DATETIME2, @SeedEnd DATETIME2, @SeedBaseStart DATETIME2;
+DECLARE @SeedDayOffset INT = 0;
+
+WHILE @SeedDayOffset <= 4
 BEGIN
-    DECLARE @Tomorrow DATE = DATEADD(DAY, 1, CAST(GETDATE() AS DATE));
-    DECLARE @DayAfter DATE = DATEADD(DAY, 2, CAST(GETDATE() AS DATE));
-    DECLARE @Movie1 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Light Speedway');
-    DECLARE @Movie2 INT = (SELECT MovieID FROM dbo.Movie WHERE Title = N'Blue Planet');
-    DECLARE @Room1 INT = (SELECT RoomID FROM dbo.Room WHERE RoomCode = N'ROOM-01');
-    DECLARE @Room2 INT = (SELECT RoomID FROM dbo.Room WHERE RoomCode = N'ROOM-02');
+    SET @SeedDate = DATEADD(DAY, @SeedDayOffset, CAST(GETDATE() AS DATE));
+    SET @SeedBaseStart = CASE WHEN @SeedDayOffset = 0
+        THEN DATEADD(HOUR, DATEDIFF(HOUR, 0, SYSDATETIME()) + 1, 0)
+        ELSE DATEADD(HOUR, 9, CAST(@SeedDate AS DATETIME2)) END;
 
-    INSERT dbo.Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, [Status]) VALUES
-        (@Movie1, @Room1, DATEADD(HOUR, 10, CAST(@Tomorrow AS DATETIME2)), DATEADD(MINUTE, 125, DATEADD(HOUR, 10, CAST(@Tomorrow AS DATETIME2))), 85000, N'Scheduled'),
-        (@Movie2, @Room2, DATEADD(HOUR, 14, CAST(@Tomorrow AS DATETIME2)), DATEADD(MINUTE, 110, DATEADD(HOUR, 14, CAST(@Tomorrow AS DATETIME2))), 110000, N'Scheduled'),
-        (@Movie1, @Room2, DATEADD(HOUR, 19, CAST(@DayAfter AS DATETIME2)), DATEADD(MINUTE, 125, DATEADD(HOUR, 19, CAST(@DayAfter AS DATETIME2))), 110000, N'Scheduled'),
-        (@Movie2, @Room1, DATEADD(HOUR, 20, CAST(@DayAfter AS DATETIME2)), DATEADD(MINUTE, 110, DATEADD(HOUR, 20, CAST(@DayAfter AS DATETIME2))), 95000, N'Scheduled');
+    DECLARE seed_movie_cursor CURSOR LOCAL FAST_FORWARD FOR
+        SELECT MovieID, Duration
+        FROM dbo.Movie
+        WHERE UPPER(LTRIM(RTRIM([Status]))) = N'NOW SHOWING'
+          AND NOT EXISTS (
+              SELECT 1 FROM dbo.Showtime st
+              WHERE st.MovieID = dbo.Movie.MovieID
+                AND CAST(st.StartTime AS DATE) = @SeedDate
+                AND UPPER(st.[Status]) IN (N'SCHEDULED', N'ACTIVE')
+                AND (@SeedDayOffset > 0 OR st.StartTime > SYSDATETIME())
+          )
+        ORDER BY MovieID;
+
+    OPEN seed_movie_cursor;
+    FETCH NEXT FROM seed_movie_cursor INTO @SeedMovieID, @SeedDuration;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT TOP (1)
+            @SeedRoomID = room.RoomID,
+            @SeedStart = availability.NextStart
+        FROM dbo.Room room
+        CROSS APPLY (
+            SELECT CASE
+                WHEN MAX(st.EndTime) IS NULL OR DATEADD(MINUTE, 15, MAX(st.EndTime)) < @SeedBaseStart
+                    THEN @SeedBaseStart
+                ELSE DATEADD(MINUTE, 15, MAX(st.EndTime))
+            END AS NextStart
+            FROM dbo.Showtime st
+            WHERE st.RoomID = room.RoomID
+              AND CAST(st.StartTime AS DATE) = @SeedDate
+              AND UPPER(st.[Status]) NOT IN (N'CANCELLED', N'STOPPED')
+        ) availability
+        WHERE UPPER(LTRIM(RTRIM(room.[Status]))) IN (N'READY', N'SCREENING', N'ACTIVE')
+          AND room.IsDeleted = 0
+        ORDER BY availability.NextStart, room.RoomID;
+
+        SET @SeedEnd = DATEADD(MINUTE, @SeedDuration, @SeedStart);
+        INSERT dbo.Showtime
+            (MovieID, RoomID, StartTime, EndTime, BasePrice, [Status], TrailerDuration)
+        VALUES
+            (@SeedMovieID, @SeedRoomID, @SeedStart, @SeedEnd, 95000, N'Scheduled', 0);
+
+        FETCH NEXT FROM seed_movie_cursor INTO @SeedMovieID, @SeedDuration;
+    END;
+    CLOSE seed_movie_cursor;
+    DEALLOCATE seed_movie_cursor;
+    SET @SeedDayOffset += 1;
 END;
-GO
-
-DECLARE @Today DATE = CAST(GETDATE() AS DATE);
-DECLARE @TodaySchedule TABLE (
-    MovieTitle NVARCHAR(250), RoomCode NVARCHAR(50), StartHour INT,
-    StartMinute INT, BasePrice DECIMAL(18,2)
-);
-INSERT @TodaySchedule VALUES
-    (N'Bambi: The Reckoning', N'ROOM-01', 9, 0, 85000),
-    (N'Bambi: The Reckoning', N'ROOM-02', 11, 0, 105000),
-    (N'Bambi: The Reckoning', N'ROOM-03', 13, 0, 125000),
-    (N'Street Fighter', N'ROOM-01', 12, 0, 95000),
-    (N'Street Fighter', N'ROOM-02', 14, 30, 115000),
-    (N'Street Fighter', N'ROOM-03', 17, 0, 135000),
-    (N'Death Whisperer: Saming the Werebeast', N'ROOM-01', 16, 0, 95000),
-    (N'Death Whisperer: Saming the Werebeast', N'ROOM-02', 19, 0, 115000),
-    (N'Death Whisperer: Saming the Werebeast', N'ROOM-03', 21, 0, 135000);
-
-INSERT dbo.Showtime (MovieID, RoomID, StartTime, EndTime, BasePrice, [Status])
-SELECT m.MovieID, r.RoomID, times.StartTime,
-       DATEADD(MINUTE, m.Duration, times.StartTime), s.BasePrice, N'Scheduled'
-FROM @TodaySchedule s
-JOIN dbo.Movie m ON m.Title = s.MovieTitle
-JOIN dbo.Room r ON r.RoomCode = s.RoomCode
-CROSS APPLY (SELECT DATEADD(MINUTE, s.StartMinute,
-                    DATEADD(HOUR, s.StartHour, CAST(@Today AS DATETIME2))) AS StartTime) times
-WHERE NOT EXISTS (
-    SELECT 1 FROM dbo.Showtime existing
-    WHERE existing.MovieID = m.MovieID
-      AND existing.RoomID = r.RoomID
-      AND existing.StartTime = times.StartTime
-);
 GO
 
 /* Demo accounts with BCrypt strength-10 password hashes. */

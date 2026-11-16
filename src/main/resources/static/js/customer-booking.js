@@ -295,11 +295,6 @@
         if (dialog?.showModal) dialog.showModal();
       });
     });
-    document.querySelectorAll(".history-ticket-dialog").forEach((dialog) => {
-      dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
-      });
-    });
     refresh();
   };
 
