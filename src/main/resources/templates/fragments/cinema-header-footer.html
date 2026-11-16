@@ -48,6 +48,12 @@
     </nav>
 
     <div class="header-actions">
+        <a th:if="${resumeBookingVisible}"
+           th:href="@{/customer/booking/checkout}"
+           class="resume-booking-link">
+            <span class="resume-booking-dot"></span>
+            Continue booking
+        </a>
         <!-- If Guest (Not Logged In) -->
         <div th:if="${currentUser == null}" class="auth-buttons">
             <a th:href="@{/login}" class="btn-auth-login">Sign In</a>

@@ -84,9 +84,14 @@ public class VoucherSelectionController {
         if (bookingId == null) return SEATS;
 
         try {
+            bookingService.returnFromCheckout(bookingId, accountId);
             voucherService.removeVoucher(accountId, bookingId);
             session.removeAttribute(SESSION_VOUCHER_CODE);
+            session.removeAttribute("customerPaymentId");
             redirectAttributes.addFlashAttribute("successMessage", "Voucher removed.");
+        } catch (BookingException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return SEATS;
         } catch (VoucherException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }

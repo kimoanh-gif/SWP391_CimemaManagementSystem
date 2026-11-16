@@ -37,10 +37,12 @@
     <main class="booking-shell">
       <section class="hero-row compact">
         <div>
-          <a class="back-link" th:href="@{/customer/booking/promotions}"
-            ><span class="material-symbols-outlined">arrow_back</span>Change
-            promotion</a
-          >
+          <form class="checkout-back-form" th:action="@{/customer/booking/promotions/remove}"
+                action="/customer/booking/promotions/remove" method="post">
+            <button class="back-link checkout-back-button" type="submit"
+              ><span class="material-symbols-outlined">arrow_back</span>Change promotion</button
+            >
+          </form>
           <p class="eyebrow">SECURE CHECKOUT</p>
           <h1>Payment &amp; Ticket Details</h1>
           <p class="lead">
@@ -84,7 +86,7 @@
                   >confirmation_number</span
                 >
                 <div>
-                  <h2>Ticket Recipient &amp; VAT Invoice</h2>
+                  <h2>Ticket Recipient</h2>
                   <p>
                     The e-ticket will be delivered to your registered account.
                   </p>
@@ -99,24 +101,6 @@
                     delivery.</small
                   ></span
                 >
-              </div>
-              <label class="invoice-toggle"
-                ><input type="checkbox" id="vat-toggle" /><span
-                  >Request a VAT invoice</span
-                ></label
-              >
-              <div class="vat-fields" id="vat-fields" hidden>
-                <label
-                  >Company / Organization<input
-                    name="companyName"
-                    type="text" /></label
-                ><label
-                  >Tax identification number<input
-                    name="taxCode"
-                    type="text" /></label
-                ><label class="wide"
-                  >Company address<input name="companyAddress" type="text"
-                /></label>
               </div>
             </div>
           </section>
@@ -173,6 +157,10 @@
             </p>
           </aside>
         </div>
+      </form>
+      <form th:action="@{/customer/booking/cancel-to-seats}" method="post" class="checkout-cancel-form"
+            onsubmit="return confirm('Cancel this booking and release all held seats?');">
+        <button class="checkout-cancel-link" type="submit">Cancel booking and release seats</button>
       </form>
     </main>
     <script th:src="@{/js/customer-booking.js}"></script>

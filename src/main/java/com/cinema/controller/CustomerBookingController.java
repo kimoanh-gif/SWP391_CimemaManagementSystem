@@ -166,19 +166,24 @@ public class CustomerBookingController {
         try {
             ShowtimeOption showtime = bookingService.getBookableShowtime(showtimeId);
             Integer currentBookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
-            List<Integer> selectedSeatIds = List.of();
             if (currentBookingId != null) {
                 try {
                     bookingService.getActiveBooking(currentBookingId, customerAccountId(session));
-                    selectedSeatIds = bookingService.getBookingSeatIds(currentBookingId, customerAccountId(session));
+                    return "redirect:/customer/booking/foods";
                 } catch (BookingException exception) {
                     session.removeAttribute(SESSION_BOOKING_ID);
                     currentBookingId = null;
                 }
             }
+            var seats = bookingService.getSeats(showtimeId, currentBookingId);
+            int seatMidPoint = seats.stream()
+                    .mapToInt(seat -> seat.getSeatNumber())
+                    .max()
+                    .orElse(0) / 2;
             model.addAttribute("showtime", showtime);
-            model.addAttribute("seats", bookingService.getSeats(showtimeId, currentBookingId));
-            model.addAttribute("selectedSeatIds", selectedSeatIds);
+            model.addAttribute("seats", seats);
+            model.addAttribute("seatMidPoint", seatMidPoint);
+            model.addAttribute("selectedSeatIds", List.of());
             model.addAttribute("maxSeats", bookingService.maxSeatsPerBooking());
             model.addAttribute("holdMinutes", bookingService.seatHoldMinutes());
             model.addAttribute("activeStep", 2);
@@ -201,6 +206,15 @@ public class CustomerBookingController {
 
         try {
             Integer previousBookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+            if (previousBookingId != null) {
+                try {
+                    bookingService.getActiveBooking(previousBookingId, accountId);
+                    return "redirect:/customer/booking/foods";
+                } catch (BookingException exception) {
+                    session.removeAttribute(SESSION_BOOKING_ID);
+                    previousBookingId = null;
+                }
+            }
             int bookingId = bookingService.holdSeats(
                     accountId, showtimeId, parseIntegerList(seatIds), previousBookingId);
             session.setAttribute(SESSION_BOOKING_ID, bookingId);
@@ -490,6 +504,20 @@ public class CustomerBookingController {
         }
         clearBookingSession(session);
         return accountId == null ? "redirect:/login" : "redirect:/customer/booking";
+    }
+
+    @PostMapping("/cancel-to-seats")
+    public String cancelBookingAndReturnToSeats(HttpSession session) {
+        Integer accountId = customerAccountId(session);
+        Integer bookingId = (Integer) session.getAttribute(SESSION_BOOKING_ID);
+        if (accountId == null) return "redirect:/login";
+        if (bookingId != null) bookingService.cancelBooking(bookingId, accountId);
+        session.removeAttribute(SESSION_BOOKING_ID);
+        session.removeAttribute("customerBookingVoucherCode");
+        session.removeAttribute("customerPaymentId");
+        return session.getAttribute(SESSION_SHOWTIME_ID) == null
+                ? "redirect:/customer/booking"
+                : "redirect:/customer/booking/seats";
     }
 
     private Integer customerAccountId(HttpSession session) {

@@ -9,6 +9,7 @@
     const total = document.querySelector("#seat-total");
     const continueButton = document.querySelector("#continue-button");
     const limitMessage = document.querySelector("#seat-limit-message");
+    const orphanMessage = document.querySelector("#orphan-seat-message");
     const maxSeats = Number(document.body.dataset.maxSeats || 10);
 
     const refresh = (changed) => {
@@ -27,10 +28,22 @@
         (sum, input) => sum + Number(input.dataset.price || 0),
         0,
       );
+      const byPosition = new Map(
+        checkboxes.map((input) => [`${input.dataset.row}:${input.dataset.column}`, input]),
+      );
+      const leavesOrphanSeat = checkboxes.some((input) => {
+        if (input.disabled || input.checked) return false;
+        const row = input.dataset.row;
+        const column = Number(input.dataset.column);
+        const left = byPosition.get(`${row}:${column - 1}`);
+        const right = byPosition.get(`${row}:${column + 1}`);
+        return Boolean(left?.checked && right?.checked);
+      });
       count.textContent = String(selected.length);
       labels.textContent = seatLabels.length ? seatLabels.join(", ") : "None";
       total.textContent = formatCurrency(amount);
-      continueButton.disabled = selected.length === 0;
+      if (orphanMessage) orphanMessage.hidden = !leavesOrphanSeat;
+      continueButton.disabled = selected.length === 0 || leavesOrphanSeat;
     };
 
     checkboxes.forEach((input) =>
@@ -211,40 +224,25 @@
 
   const setupTicketQrs = () => {
     if (!window.QRCode) return;
-    const renderQr = (element, url) => {
-      if (!url || element.dataset.renderedUrl === url) return;
+    const renderQr = (element, ticketCode) => {
+      if (!ticketCode || element.dataset.renderedTicketCode === ticketCode) return;
       element.replaceChildren();
-      element.dataset.renderedUrl = url;
+      element.dataset.renderedTicketCode = ticketCode;
       new window.QRCode(element, {
-        text: url,
+        // Gate scanners only need the stable ticket ID. Encoding the full public
+        // verification URL made the symbol unnecessarily dense and also tied
+        // admission to the current LAN/Cloudflare Tunnel address.
+        text: ticketCode,
         width: 142,
         height: 142,
         colorDark: "#000000",
         colorLight: "#ffffff",
-        correctLevel: window.QRCode.CorrectLevel.M,
+        correctLevel: window.QRCode.CorrectLevel.H,
       });
     };
     document.querySelectorAll(".ticket-verification-qr").forEach((element) => {
-      renderQr(element, element.dataset.ticketUrl);
+      renderQr(element, element.dataset.ticketCode);
     });
-
-    const refreshTunnelQrs = async () => {
-      try {
-        const response = await fetch("/customer/booking/qr-base-url", { cache: "no-store" });
-        if (!response.ok) return;
-        const { baseUrl } = await response.json();
-        if (!baseUrl) return;
-        document.querySelectorAll(".ticket-verification-qr[data-ticket-code]").forEach((element) => {
-          const url = `${baseUrl}/ticket/verify/${encodeURIComponent(element.dataset.ticketCode)}`;
-          element.dataset.ticketUrl = url;
-          renderQr(element, url);
-        });
-      } catch (_) {
-        // Keep the most recently rendered QR while cloudflared is restarting.
-      }
-    };
-    refreshTunnelQrs();
-    window.setInterval(refreshTunnelQrs, 5000);
   };
 
   const setupBookingHistory = () => {
@@ -313,17 +311,6 @@
   if (document.body.dataset.page === "payment-success") notifyPaymentOpener();
   if (document.querySelector(".ticket-verification-qr")) setupTicketQrs();
   if (document.body.classList.contains("booking-history-page")) setupBookingHistory();
-
-  const vatToggle = document.querySelector("#vat-toggle");
-  const vatFields = document.querySelector("#vat-fields");
-  if (vatToggle && vatFields) {
-    vatToggle.addEventListener("change", () => {
-      vatFields.hidden = !vatToggle.checked;
-      vatFields
-        .querySelectorAll("input")
-        .forEach((input) => (input.required = vatToggle.checked));
-    });
-  }
 
   const voucherButton = document.querySelector("#preview-voucher");
   const voucherMessage = document.querySelector("#voucher-message");

@@ -130,7 +130,9 @@ public class CustomerBookingDAO {
                 SELECT seat.SeatID, seat.RowLabel, seat.SeatNumber, seat.GridRow, seat.GridColumn,
                        seatType.TypeName, seatType.PriceMultiplier, seatType.ColorCode,
                        CAST(st.BasePrice * seatType.PriceMultiplier AS DECIMAL(18,2)) AS Price,
-                       CASE WHEN EXISTS (
+                       CASE WHEN UPPER(seat.[Status]) <> 'ACTIVE'
+                                  OR UPPER(seatType.[Status]) <> 'ACTIVE' THEN 0
+                            WHEN EXISTS (
                            SELECT 1
                            FROM dbo.BookingSeat bs
                            JOIN dbo.Booking b ON b.BookingID = bs.BookingID
@@ -145,8 +147,6 @@ public class CustomerBookingDAO {
                 JOIN dbo.Seat seat ON seat.RoomID = st.RoomID
                 JOIN dbo.SeatType seatType ON seatType.SeatTypeID = seat.SeatTypeID
                 WHERE st.ShowtimeID = ?
-                  AND UPPER(seat.[Status]) = 'ACTIVE'
-                  AND UPPER(seatType.[Status]) = 'ACTIVE'
                 ORDER BY seat.GridRow, seat.GridColumn
                 """;
 
@@ -489,6 +489,25 @@ public class CustomerBookingDAO {
                 JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
                 WHERE p.PaymentID=? AND c.AccountID=? AND p.[Status]='PENDING' AND p.ExpiresAt<=SYSDATETIME()
                 """, paymentId, accountId);
+    }
+
+    public void cancelPendingPayment(int bookingId, int accountId) {
+        jdbcTemplate.update("""
+                UPDATE p SET p.[Status]='CANCELLED',p.UpdatedAt=SYSDATETIME()
+                FROM dbo.Payment p
+                JOIN dbo.Booking b ON b.BookingID=p.BookingID
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                WHERE b.BookingID=? AND c.AccountID=? AND UPPER(p.[Status])='PENDING'
+                """, bookingId, accountId);
+        jdbcTemplate.update("""
+                UPDATE b SET b.[Status]='PENDING'
+                FROM dbo.Booking b
+                JOIN dbo.Customer c ON c.CustomerID=b.CustomerID
+                WHERE b.BookingID=? AND c.AccountID=?
+                  AND UPPER(b.[Status])='PAYMENT_PENDING'
+                  AND NOT EXISTS (SELECT 1 FROM dbo.Payment p
+                                  WHERE p.BookingID=b.BookingID AND UPPER(p.[Status])='PAID')
+                """, bookingId, accountId);
     }
 
     public int regeneratePayment(int oldPaymentId, int accountId, String transactionRef, LocalDateTime expiresAt) {
