@@ -40,7 +40,12 @@
       <a th:if="${payment.status == 'EXPIRED'}" class="button primary full" th:href="@{/customer/booking/seats}">
         <span class="material-symbols-outlined">event_seat</span>Select Seats Again
       </a>
-      <a class="button secondary full" th:href="@{/customer/booking/checkout}">Back to Payment Methods</a>
+      <form th:if="${payment.status == 'PENDING'}" th:action="@{/customer/booking/cancel-to-seats}" method="post"
+            onsubmit="return confirm('Cancel this payment and release all selected seats?');">
+        <button class="button secondary full" type="submit">
+          <span class="material-symbols-outlined">event_busy</span>Cancel &amp; Release Seats
+        </button>
+      </form>
     </section>
     <aside class="panel order-card sticky" th:if="${summary != null}">
       <p class="eyebrow">BOOKING SUMMARY</p><h2 th:text="${summary.movieTitle}"></h2><p class="booking-code" th:text="${summary.bookingCode}"></p>
