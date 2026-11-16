@@ -13,7 +13,7 @@
     if (!dialog) return;
     var form = dialog.querySelector("form[data-action-template]");
     if (form && trigger && trigger.dataset.id) {
-      form.action = form.dataset.actionTemplate.replace("__ID__", trigger.dataset.id);
+      form.action = form.dataset.actionTemplate.replace("NEWS_ID", trigger.dataset.id);
     }
     dialog.querySelectorAll("[data-fill]").forEach(function (el) {
       var key = el.dataset.fill;
