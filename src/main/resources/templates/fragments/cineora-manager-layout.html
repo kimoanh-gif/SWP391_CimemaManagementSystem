@@ -59,10 +59,10 @@
             <span class="material-symbols-outlined">fastfood</span><span>Food &amp; Beverage Management</span></a>
         <a th:href="@{/manager/promotions}" th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'promotions'} ? ' is-active'">
             <span class="material-symbols-outlined">redeem</span><span>Promotion Management</span></a>
-        <a th:href="@{/manager/reports}" th:if="${permissionUser != null and permissionUser.hasPermission('report:view')}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
-            <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
         <a th:href="@{/manager/vouchers}" th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" class="cm-nav-link" th:classappend="${activeMenu == 'vouchers'} ? ' is-active'">
             <span class="material-symbols-outlined">sell</span><span>Voucher Management</span></a>
+        <a th:href="@{/manager/reports}" th:if="${permissionUser != null and permissionUser.hasPermission('report:view')}" class="cm-nav-link" th:classappend="${activeMenu == 'reports'} ? ' is-active'">
+            <span class="material-symbols-outlined">analytics</span><span>Reports &amp; Statistics</span></a>
     </nav>
 
     <div class="cm-sidebar-footer">
