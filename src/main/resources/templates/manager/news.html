@@ -214,7 +214,7 @@
 <!-- ================= Approve dialog ================= -->
 <div class="mn-backdrop" id="approve-modal" role="dialog" aria-modal="true" aria-labelledby="approve-title" hidden>
     <form class="mn-modal" method="post" id="approve-form" th:action="@{/manager/news/0/approve}"
-          th:attr="data-action-template=@{/manager/news/__ID__/approve}">
+          th:attr="data-action-template=@{/manager/news/} + 'NEWS_ID/approve'">
         <input type="hidden" name="returnQuery" class="mn-return-query">
         <div class="mn-modal-head mn-head-approve">
             <span class="material-symbols-outlined">verified</span>
@@ -246,7 +246,7 @@
 <!-- ================= Reject dialog ================= -->
 <div class="mn-backdrop" id="reject-modal" role="dialog" aria-modal="true" aria-labelledby="reject-title" hidden>
     <form class="mn-modal" method="post" id="reject-form" th:action="@{/manager/news/0/reject}"
-          th:attr="data-action-template=@{/manager/news/__ID__/reject}">
+          th:attr="data-action-template=@{/manager/news/} + 'NEWS_ID/reject'">
         <input type="hidden" name="returnQuery" class="mn-return-query">
         <div class="mn-modal-head mn-head-reject">
             <span class="material-symbols-outlined">assignment_late</span>
