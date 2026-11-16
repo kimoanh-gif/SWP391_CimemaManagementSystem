@@ -4,6 +4,7 @@ import com.cinema.model.AuthenticatedUser;
 import com.cinema.service.CustomerProfileService;
 import com.cinema.service.SessionService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,5 +32,16 @@ public class CustomerHeaderAdvice {
         } catch (RuntimeException exception) {
             return null;
         }
+    }
+
+    @ModelAttribute("resumeBookingVisible")
+    public boolean resumeBookingVisible(HttpSession session, HttpServletRequest request) {
+        AuthenticatedUser user = sessionService.getCurrentUser(session);
+        if (user == null || !user.hasRole("CUSTOMER")
+                || session.getAttribute("customerPendingBookingId") == null) {
+            return false;
+        }
+        String path = request.getRequestURI();
+        return path == null || !path.startsWith("/customer/booking");
     }
 }

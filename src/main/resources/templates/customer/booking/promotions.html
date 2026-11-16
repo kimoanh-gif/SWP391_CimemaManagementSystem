@@ -156,18 +156,6 @@
               </article>
             </div>
 
-            <div class="voucher-actions">
-              <form th:action="@{/customer/booking/promotions/skip}" method="post">
-                <button class="button secondary full" type="submit">Skip</button>
-              </form>
-              <form th:if="${appliedVoucher != null}"
-                    th:action="@{/customer/booking/promotions/continue}" method="post">
-                <button class="button primary full" type="submit">
-                  Continue
-                  <span class="material-symbols-outlined">arrow_forward</span>
-                </button>
-              </form>
-            </div>
           </div>
         </section>
 
@@ -207,6 +195,17 @@
               th:text="${#numbers.formatDecimal(pricing != null ? pricing.totalAmount() : summary.totalAmount,0,'COMMA',0,'POINT') + ' ₫'}"
             ></strong>
           </div>
+          <form th:if="${appliedVoucher != null}"
+                th:action="@{/customer/booking/promotions/continue}" method="post">
+            <button class="button primary full" type="submit">
+              Continue
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </form>
+          <form class="voucher-summary-skip"
+                th:action="@{/customer/booking/promotions/skip}" method="post">
+            <button class="button secondary full" type="submit">Skip</button>
+          </form>
         </aside>
       </div>
     </main>

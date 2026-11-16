@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -72,6 +73,98 @@ class CustomerBookingServiceTest {
     }
 
     @Test
+    void reusesExistingBookingWhenSeatsDidNotChange() {
+        stubFutureShowtime();
+        SeatOption seat = seat(7, 1, 1, true);
+        when(bookingDAO.findSeats(5, 9)).thenReturn(List.of(seat));
+        BookingSummary active = new BookingSummary();
+        active.setStatus("PENDING");
+        active.setHeldUntil(LocalDateTime.now().plusMinutes(4));
+        when(bookingDAO.findBookingSummary(9, 1)).thenReturn(Optional.of(active));
+        when(bookingDAO.findBookingSeatIds(9, 1)).thenReturn(List.of(7));
+
+        assertEquals(9, customerBookingService.holdSeats(1, 5, List.of(7), 9));
+        verify(bookingDAO, never()).releaseBooking(9, 1);
+        verify(bookingDAO, never()).createPendingBooking(eq(1), eq(5), org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void rejectsSelectionThatLeavesOneOrphanSeat() {
+        stubFutureShowtime();
+        SeatOption selectedLeft = seat(1, 1, 1, true);
+        SeatOption orphan = seat(2, 1, 2, true);
+        SeatOption selectedRight = seat(3, 1, 3, true);
+        when(bookingDAO.findSeats(5)).thenReturn(List.of(selectedLeft, orphan, selectedRight));
+
+        assertThrows(CustomerBookingService.BookingException.class,
+                () -> customerBookingService.holdSeats(1, 5, List.of(1, 3), null));
+        verify(bookingDAO, never()).createPendingBooking(
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void allowsTwoAdjacentSelectedSeats() {
+        stubFutureShowtime();
+        SeatOption before = seat(1, 4, 3, true);
+        SeatOption selectedD4 = seat(2, 4, 4, true);
+        SeatOption selectedD5 = seat(3, 4, 5, true);
+        SeatOption after = seat(4, 4, 6, true);
+        when(bookingDAO.findSeats(5)).thenReturn(
+                List.of(before, selectedD4, selectedD5, after));
+        when(bookingDAO.findCustomerId(1)).thenReturn(Optional.of(2));
+        when(bookingDAO.createPendingBooking(eq(2), eq(5), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(13);
+
+        assertEquals(13, customerBookingService.holdSeats(1, 5, List.of(2, 3), null));
+    }
+
+    @Test
+    void allowsASingleSelectedSeat() {
+        stubFutureShowtime();
+        SeatOption selected = seat(1, 4, 3, true);
+        SeatOption next = seat(2, 4, 4, true);
+        when(bookingDAO.findSeats(5)).thenReturn(List.of(selected, next));
+        when(bookingDAO.findCustomerId(1)).thenReturn(Optional.of(2));
+        when(bookingDAO.createPendingBooking(eq(2), eq(5), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(14);
+
+        assertEquals(14, customerBookingService.holdSeats(1, 5, List.of(1), null));
+    }
+
+    @Test
+    void allowsSelectedSeatsSeparatedByTwoEmptySeats() {
+        stubFutureShowtime();
+        SeatOption selectedLeft = seat(1, 4, 3, true);
+        SeatOption emptyOne = seat(2, 4, 4, true);
+        SeatOption emptyTwo = seat(3, 4, 5, true);
+        SeatOption selectedRight = seat(4, 4, 6, true);
+        when(bookingDAO.findSeats(5)).thenReturn(
+                List.of(selectedLeft, emptyOne, emptyTwo, selectedRight));
+        when(bookingDAO.findCustomerId(1)).thenReturn(Optional.of(2));
+        when(bookingDAO.createPendingBooking(eq(2), eq(5), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(15);
+
+        assertEquals(15, customerBookingService.holdSeats(1, 5, List.of(1, 4), null));
+    }
+
+    @Test
+    void ignoresAnOrphanSeatThatAlreadyExistedBeforeSelection() {
+        stubFutureShowtime();
+        SeatOption occupiedLeft = seat(1, 1, 1, false);
+        SeatOption existingOrphan = seat(2, 1, 2, true);
+        SeatOption occupiedRight = seat(3, 1, 3, false);
+        SeatOption selected = seat(4, 2, 1, true);
+        when(bookingDAO.findSeats(5)).thenReturn(
+                List.of(occupiedLeft, existingOrphan, occupiedRight, selected));
+        when(bookingDAO.findCustomerId(1)).thenReturn(Optional.of(2));
+        when(bookingDAO.createPendingBooking(eq(2), eq(5), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(12);
+
+        assertEquals(12, customerBookingService.holdSeats(1, 5, List.of(4), null));
+    }
+
+    @Test
     void rejectsFoodQuantityAboveTwentyWithoutSaving() {
         BookingSummary activeBooking = new BookingSummary();
         activeBooking.setStatus("PENDING");
@@ -115,5 +208,15 @@ class CustomerBookingServiceTest {
 
     private void stubFutureShowtime() {
         when(bookingDAO.findShowtime(5)).thenReturn(Optional.of(futureShowtime()));
+    }
+
+    private SeatOption seat(int id, int row, int column, boolean available) {
+        SeatOption seat = new SeatOption();
+        seat.setSeatId(id);
+        seat.setGridRow(row);
+        seat.setGridColumn(column);
+        seat.setAvailable(available);
+        seat.setPrice(java.math.BigDecimal.valueOf(100000));
+        return seat;
     }
 }

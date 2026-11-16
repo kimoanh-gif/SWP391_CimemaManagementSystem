@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -36,7 +37,11 @@ public class CustomerBookingService {
     @org.springframework.beans.factory.annotation.Autowired
     public void setBookingSettings(SystemSecuritySettings settings) { this.bookingSettings = settings; }
     public int maxSeatsPerBooking() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_MAX_TICKETS", 10); }
-    public int seatHoldMinutes() { return bookingSettings == null ? 10 : bookingSettings.read("BOOKING_SEAT_HOLD_MINUTES", 10); }
+    public int seatHoldMinutes() {
+        return bookingSettings == null
+                ? HOLD_MINUTES
+                : bookingSettings.read("BOOKING_SEAT_HOLD_MINUTES", HOLD_MINUTES);
+    }
 
     private MembershipDiscountService membershipDiscountService;
     @org.springframework.beans.factory.annotation.Autowired
@@ -97,12 +102,11 @@ public class CustomerBookingService {
             throw new BookingException("You can select up to " + maxSeats + " seats per booking.");
         }
 
-        if (previousBookingId != null) {
-            bookingDAO.releaseBooking(previousBookingId, accountId);
-        }
-
         Map<Integer, SeatOption> availableSeats = new LinkedHashMap<>();
-        for (SeatOption seat : bookingDAO.findSeats(showtimeId)) {
+        List<SeatOption> seatMap = previousBookingId == null
+                ? bookingDAO.findSeats(showtimeId)
+                : bookingDAO.findSeats(showtimeId, previousBookingId);
+        for (SeatOption seat : seatMap) {
             if (seat.isAvailable() && seatIds.contains(seat.getSeatId())) {
                 availableSeats.put(seat.getSeatId(), seat);
             }
@@ -110,13 +114,23 @@ public class CustomerBookingService {
         if (availableSeats.size() != seatIds.size()) {
             throw new BookingException("One or more seats are no longer available. Please choose again.");
         }
+        validateNoOrphanSeats(seatMap, new HashSet<>(seatIds));
+
+        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(seatHoldMinutes());
+        if (previousBookingId != null) {
+            BookingSummary previous = getActiveBooking(previousBookingId, accountId);
+            List<Integer> previousSeatIds = bookingDAO.findBookingSeatIds(previousBookingId, accountId);
+            if (new HashSet<>(previousSeatIds).equals(new HashSet<>(seatIds))) {
+                return previousBookingId;
+            }
+            heldUntil = previous.getHeldUntil();
+            bookingDAO.releaseBooking(previousBookingId, accountId);
+        }
 
         int customerId = bookingDAO.findCustomerId(accountId)
                 .orElseThrow(() -> new BookingException("Your customer profile could not be found."));
 
         String bookingCode = generateBookingCode();
-        LocalDateTime heldUntil = LocalDateTime.now().plusMinutes(seatHoldMinutes());
-
         try {
             int bookingId = bookingDAO.createPendingBooking(customerId, showtime.getShowtimeId(), bookingCode);
             for (Integer seatId : seatIds) {
@@ -127,6 +141,25 @@ public class CustomerBookingService {
         } catch (DataIntegrityViolationException exception) {
             throw new BookingException("A seat was just reserved by another customer. Reload the seat map and try again.");
         }
+    }
+
+    private void validateNoOrphanSeats(List<SeatOption> seatMap, Set<Integer> selectedSeatIds) {
+        Map<String, SeatOption> positions = new LinkedHashMap<>();
+        for (SeatOption seat : seatMap) {
+            positions.put(seat.getGridRow() + ":" + seat.getGridColumn(), seat);
+        }
+        for (SeatOption seat : seatMap) {
+            if (!seat.isAvailable() || selectedSeatIds.contains(seat.getSeatId())) continue;
+            SeatOption left = positions.get(seat.getGridRow() + ":" + (seat.getGridColumn() - 1));
+            SeatOption right = positions.get(seat.getGridRow() + ":" + (seat.getGridColumn() + 1));
+            if (isSelected(left, selectedSeatIds) && isSelected(right, selectedSeatIds)) {
+                throw new BookingException("Please choose seats together without leaving a single empty seat between occupied seats.");
+            }
+        }
+    }
+
+    private boolean isSelected(SeatOption seat, Set<Integer> selectedSeatIds) {
+        return seat != null && selectedSeatIds.contains(seat.getSeatId());
     }
 
     @Transactional
@@ -197,6 +230,12 @@ public class CustomerBookingService {
     }
 
     @Transactional
+    public void returnFromCheckout(int bookingId, int accountId) {
+        getActiveBooking(bookingId, accountId);
+        bookingDAO.cancelPendingPayment(bookingId, accountId);
+    }
+
+    @Transactional
     public int startSimulatedPayment(int bookingId, int accountId, String paymentMethod) {
         BookingSummary booking = getActiveBooking(bookingId, accountId);
         if (membershipDiscountService != null && prepareCheckout(bookingId, accountId).getTotalAmount().compareTo(booking.getTotalAmount()) != 0)
@@ -205,10 +244,9 @@ public class CustomerBookingService {
         String method = switch (requestedMethod) {
             default -> "VNPAY";
         };
-        LocalDateTime qrExpiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);
-        if (booking.getHeldUntil().isBefore(qrExpiry)) qrExpiry = booking.getHeldUntil();
         try {
-            return bookingDAO.createPayment(bookingId, accountId, method, generateTransactionRef(), qrExpiry);
+            return bookingDAO.createPayment(
+                    bookingId, accountId, method, generateTransactionRef(), booking.getHeldUntil());
         } catch (RuntimeException exception) {
             throw new BookingException("Payment could not be started. Please try again.");
         }
@@ -224,12 +262,11 @@ public class CustomerBookingService {
     @Transactional
     public int regeneratePayment(int paymentId, int accountId) {
         PaymentView old = getPayment(paymentId, accountId);
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(PAYMENT_QR_MINUTES);
         if (old.heldUntil() == null || !old.heldUntil().isAfter(LocalDateTime.now()))
             throw new BookingException("Your seat hold has expired. Please select your seats again.");
-        if (old.heldUntil().isBefore(expiry)) expiry = old.heldUntil();
         try {
-            return bookingDAO.regeneratePayment(paymentId, accountId, generateTransactionRef(), expiry);
+            return bookingDAO.regeneratePayment(
+                    paymentId, accountId, generateTransactionRef(), old.heldUntil());
         } catch (IllegalStateException exception) {
             throw new BookingException(exception.getMessage());
         }

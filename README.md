@@ -40,7 +40,7 @@ View → Controller → Service → DAO → SQL Server
    ```powershell
    mvn spring-boot:run
    ```
-4. Open http://localhost:8081.
+4. Open the configured local port (currently http://localhost:8080).
 
 ## Membership cycle thresholds
 
@@ -50,8 +50,8 @@ To enable order-count qualification for a rank, add a positive integer `cycleMin
 
 ## Local ticket QR codes with Cloudflare Quick Tunnel
 
-Start Spring Boot on port 8081, then run this command in a second PowerShell
-terminal:
+Start Spring Boot, then run this command in a second PowerShell terminal. The
+script detects the configured/listening application port automatically:
 
 ```powershell
 .\tools\start-cineora-quick-tunnel.ps1

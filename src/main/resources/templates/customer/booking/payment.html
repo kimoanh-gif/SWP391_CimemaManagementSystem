@@ -17,7 +17,7 @@
       <p class="eyebrow">SECURE ONLINE PAYMENT</p>
       <h1 th:text="${gatewayUrl != null ? 'Complete Payment with VNPay' : 'Scan the QR Code to Pay'}">Complete Payment with VNPay</h1>
       <p class="payment-provider">Payment method: <strong th:text="${payment.method}">VNPAY</strong></p>
-      <p th:if="${payment.status == 'PENDING'}">Complete the transaction before the code expires. Your seats are held for ten minutes in total.</p>
+      <p th:if="${payment.status == 'PENDING'}">Complete the transaction before the configured seat-hold deadline expires.</p>
       <div class="qr-shell" th:if="${payment.status == 'PENDING' and gatewayUrl == null}">
         <div class="fake-qr" aria-label="Simulated payment QR code"><span>C</span></div>
         <strong th:text="${payment.transactionRef}">PAY0001</strong>
@@ -32,14 +32,14 @@
         <a id="open-vnpay" class="button primary full" th:href="${gatewayUrl}" target="vnpay-payment">Open VNPay Sandbox</a>
         <small id="gateway-status">Waiting for VNPay confirmation…</small>
       </div>
-      <div class="payment-clock" th:if="${payment.status == 'PENDING'}">Payment code expires in <strong id="payment-countdown">03:00</strong></div>
-      <div class="alert error" id="payment-expired" th:if="${payment.status == 'EXPIRED'}">This payment code has expired. Generate a new one if your seat hold is still active.</div>
+      <div class="payment-clock" th:if="${payment.status == 'PENDING'}">Seat hold and payment expire in <strong id="payment-countdown">--:--</strong></div>
+      <div class="alert error" id="payment-expired" th:if="${payment.status == 'EXPIRED'}">Your seat hold and payment code have expired. Please select your seats again.</div>
       <form th:if="${payment.status == 'PENDING' and gatewayUrl == null}" th:action="@{/customer/booking/payment/{id}/confirm(id=${payment.paymentId})}" method="post">
         <button class="button primary full" type="submit"><span class="material-symbols-outlined">verified</span>I Have Completed the Transfer</button>
       </form>
-      <form th:if="${payment.status == 'EXPIRED'}" th:action="@{/customer/booking/payment/{id}/regenerate(id=${payment.paymentId})}" method="post">
-        <button class="button primary full" type="submit"><span class="material-symbols-outlined">refresh</span>Generate a New Payment Code</button>
-      </form>
+      <a th:if="${payment.status == 'EXPIRED'}" class="button primary full" th:href="@{/customer/booking/seats}">
+        <span class="material-symbols-outlined">event_seat</span>Select Seats Again
+      </a>
       <a class="button secondary full" th:href="@{/customer/booking/checkout}">Back to Payment Methods</a>
     </section>
     <aside class="panel order-card sticky" th:if="${summary != null}">

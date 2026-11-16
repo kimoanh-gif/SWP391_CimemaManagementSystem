@@ -63,7 +63,7 @@
                 class="seat"
                 th:each="seat : ${seats}"
                 th:classappend="${!seat.available ? ' unavailable' : ' ' + #strings.toLowerCase(seat.typeName)}"
-                th:style="|grid-row:${seat.gridRow};grid-column:${seat.gridColumn};|"
+                th:style="|grid-row:${seat.gridRow};grid-column:${seat.gridColumn + (seat.seatNumber > seatMidPoint ? 1 : 0)};|"
                 th:title="${seat.label + ' · ' + seat.typeName}"
                 ><input
                   type="checkbox"
@@ -71,7 +71,7 @@
                   th:value="${seat.seatId}"
                   th:checked="${#lists.contains(selectedSeatIds, seat.seatId)}"
                   th:disabled="${!seat.available and !#lists.contains(selectedSeatIds, seat.seatId)}"
-                  th:attr="data-price=${seat.price}"
+                  th:attr="data-price=${seat.price},data-row=${seat.gridRow},data-column=${seat.gridColumn}"
                 /><span th:text="${seat.label}">A1</span></label
               >
             </div>
@@ -120,6 +120,9 @@
               hidden
               th:text="${'You can select up to ' + maxSeats + ' seats.'}"
             ></p>
+            <p class="inline-validation" id="orphan-seat-message" role="alert" hidden>
+              Please choose seats together without leaving a single empty seat between occupied seats.
+            </p>
             <div class="total-row">
               <span>Subtotal</span><strong id="seat-total">0 ₫</strong>
             </div>

@@ -183,6 +183,29 @@ button, input, select, textarea {
     gap: 16px;
 }
 
+.resume-booking-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+    border-radius: 999px;
+    background: #b3001f;
+    box-shadow: 0 5px 14px rgba(179, 0, 31, 0.2);
+}
+
+.resume-booking-link:hover { background: #8f0019; }
+.resume-booking-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.24);
+}
+
 .auth-buttons {
     display: flex;
     align-items: center;

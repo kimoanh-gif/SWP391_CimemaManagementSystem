@@ -9,7 +9,7 @@
     1. Finds cloudflared (PATH, or the copy this script downloads to %LOCALAPPDATA%\cineora-cloudflared).
        If none is found it downloads the official Windows build from Cloudflare's GitHub releases.
        No admin rights, winget or chocolatey needed, and PATH is not changed.
-    2. Detects the port the app is listening on (8080 / 8081 / server.port), unless -Port is given.
+    2. Detects the port the app is listening on (configured server.port first, then 8080 / 8081), unless -Port is given.
     3. Starts the tunnel with metrics on 127.0.0.1:20241 - the address PublicUrlResolver reads -
        so ticket QR codes (Customer and Staff) automatically use the new trycloudflare.com URL.
 
@@ -59,16 +59,17 @@ if (-not $cloudflared) {
 
 # ---------- 2. application port ----------
 if ($Port -le 0) {
-    foreach ($candidate in 8080, 8081) {
-        if (Test-PortListening $candidate) { $Port = $candidate; break }
-    }
-}
-if ($Port -le 0) {
+    $configuredPort = 0
     $props = Join-Path $PSScriptRoot "..\src\main\resources\application.properties"
     if (Test-Path $props) {
         $line = Select-String -Path $props -Pattern '^\s*server\.port\s*=\s*\$?\{?[A-Z_]*:?(\d+)' | Select-Object -First 1
-        if ($line) { $Port = [int]$line.Matches[0].Groups[1].Value }
+        if ($line) { $configuredPort = [int]$line.Matches[0].Groups[1].Value }
     }
+    $candidates = @($configuredPort, 8080, 8081) | Where-Object { $_ -gt 0 } | Select-Object -Unique
+    foreach ($candidate in $candidates) {
+        if (Test-PortListening $candidate) { $Port = $candidate; break }
+    }
+    if ($Port -le 0 -and $configuredPort -gt 0) { $Port = $configuredPort }
 }
 if ($Port -le 0) { $Port = 8080 }
 

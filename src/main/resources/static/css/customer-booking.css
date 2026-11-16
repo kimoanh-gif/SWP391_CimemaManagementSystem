@@ -1006,11 +1006,26 @@ h1 {
   display: grid;
   gap: 18px;
 }
+.checkout-cancel-form { margin-top: 14px; text-align: center; }
+.checkout-cancel-link {
+  padding: 5px 8px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+}
+.checkout-cancel-link:hover { color: var(--red); }
+.checkout-back-form { margin: 0; }
+.checkout-back-button { padding: 0; cursor: pointer; border: 0; background: transparent; }
+.seats-locked-note { cursor: default; color: var(--muted); }
 .voucher-panel,
 .payment-panel,
 .recipient-panel {
   padding: 24px;
 }
+.voucher-summary-skip { margin-top: 9px; }
 .field-label {
   display: block;
   margin: 20px 0 7px;
@@ -1502,6 +1517,12 @@ h1 {
 .history-popup-qr .ticket-verification-qr img,.history-popup-qr .ticket-verification-qr canvas { width:100%!important;height:100%!important; }
 .history-popup-qr em { margin-top:10px;padding:5px 9px;border-radius:5px;background:#ddf7e9;color:#147a44;font-size:9px;font-style:normal;font-weight:800; }
 .history-popup-qr code { max-width:200px;margin-top:10px;color:#4b302e;font-size:8px;overflow-wrap:anywhere; }
+.visible-ticket-code { display:grid;justify-items:center;gap:4px;width:100%;margin-top:12px;padding:10px;border:1px dashed #d9aca9;border-radius:9px;background:#fff; }
+.visible-ticket-code>small { color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.12em; }
+.visible-ticket-code>strong,.visible-ticket-code button strong { color:#b3001f;font-size:15px;letter-spacing:.08em; }
+.visible-ticket-code>p { margin:0;color:var(--muted);font-size:8px; }
+.visible-ticket-code button { display:flex;align-items:center;gap:6px;padding:0;cursor:pointer;border:0;background:transparent; }
+.visible-ticket-code button .material-symbols-outlined { color:#b3001f;font-size:16px; }
 @media(max-width:720px) {
   .history-ticket-dialog { width:calc(100vw - 18px);max-height:calc(100vh - 18px); }
   .history-ticket-modal { max-height:calc(100vh - 18px); }
