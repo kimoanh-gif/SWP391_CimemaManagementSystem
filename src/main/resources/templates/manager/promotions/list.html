@@ -10,7 +10,7 @@
 <!-- M11 Promotion & Voucher Management – list. Assignee: Nguyễn Đức Anh (Iter3) -->
 <body class="cm-body" th:with="base=${tab == 'vouchers'} ? '/manager/vouchers' : '/manager/promotions'">
 
-<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu='promotions')}"></aside>
+<aside th:replace="~{fragments/cineora-manager-layout :: sidebar(activeMenu=${tab == 'vouchers' ? 'vouchers' : 'promotions'})}"></aside>
 
 <div class="cm-shell">
 <header th:replace="~{fragments/cineora-manager-layout :: topbar}"></header>
