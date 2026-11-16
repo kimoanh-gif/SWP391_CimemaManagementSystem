@@ -81,9 +81,9 @@
     <!-- Tabs -->
     <div class="mp-tabs-row">
         <nav class="mp-tabs" aria-label="Promotion type">
-            <a th:if="${permissionUser != null and permissionUser.hasPermission('promotion:manage')}" th:href="@{/manager/promotions}" th:classappend="${tab == 'promotions'} ? 'is-active'">
+            <a th:if="${tab == 'promotions' and permissionUser != null and permissionUser.hasPermission('promotion:manage')}" th:href="@{/manager/promotions}" th:classappend="${tab == 'promotions'} ? 'is-active'">
                 <span class="material-symbols-outlined">campaign</span>Promotion campaigns<b th:text="${promotionCount}">6</b></a>
-            <a th:if="${permissionUser != null and permissionUser.hasPermission('voucher:manage')}" th:href="@{/manager/vouchers}" th:classappend="${tab == 'vouchers'} ? 'is-active'">
+            <a th:if="${tab == 'vouchers' and permissionUser != null and permissionUser.hasPermission('voucher:manage')}" th:href="@{/manager/vouchers}" th:classappend="${tab == 'vouchers'} ? 'is-active'">
                 <span class="material-symbols-outlined">confirmation_number</span>Vouchers / Coupons<b th:text="${voucherCount}">12</b></a>
         </nav>
         <span class="mp-lock-note"><span class="material-symbols-outlined">lock</span>Items used in a booking are locked from deletion</span>
